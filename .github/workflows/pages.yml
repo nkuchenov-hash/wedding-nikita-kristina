@@ -20,6 +20,19 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify wedding frontend
         run: npm run check
+      - name: Inspect editorial photography URLs
+        run: |
+          for spec in \
+            'couple|https://upload.wikimedia.org/wikipedia/commons/2/20/Groom_follows_behind_bride_%28Unsplash%29.jpg' \
+            'park|https://usadbamaryino.ru/sites/default/files/styles/photogal/public/images/photogallery/01_5.jpg?itok=u-XnOLTm' \
+            'columns|https://usadbamaryino.ru/sites/default/files/images/photogallery/048_0.jpg' \
+            'estate|https://usadbamaryino.ru/sites/default/files/images/single/603e1081138aa9001209ed52.jpg' \
+            'landscape|https://media.kudago.com/images/place/0f/6d/0f6dca476493446d87b197f827991971.jpg'
+          do
+            name="${spec%%|*}"
+            url="${spec#*|}"
+            echo "Image $name: $(curl -L -A 'Mozilla/5.0' --max-time 15 -s -o /dev/null -w '%{http_code} %{content_type}' "$url" || true)"
+          done
       - name: Prepare public website only
         run: |
           mkdir -p _site/src _site/public
