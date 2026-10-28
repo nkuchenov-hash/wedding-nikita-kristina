@@ -151,3 +151,5 @@ body:not(.admin-body) #app{max-width:none;min-height:100vh}
 @media(min-width:700px){body:not(.admin-body){background:radial-gradient(ellipse at 4% 34%,#a4bea0,transparent 35%),radial-gradient(ellipse at 93% 74%,#849b83,transparent 37%),#dce4da!important}.r-app{border-radius:28px 28px 0 0;margin-top:18px;min-height:calc(100vh - 18px)}.r-hero{height:800px}.r-tabs{border-radius:22px 22px 0 0}}
 @media(max-width:400px){.r-micro{font-size:10px}.r-hero-title h1{font-size:80px}.r-venue-text .r-heading h1{font-size:65px}.r-rsvp .r-heading h1{font-size:62px}.r-color-dots i{height:38px;width:38px}.r-photo-filters button{font-size:10px;padding:9px 11px}}
 @media(prefers-reduced-motion:reduce){.r-tabs a{transition:none!important}}
+
+.r-footer .r-photo-credit{display:block;max-width:410px;margin:24px auto 0;font:400 10px/1.7 'Manrope',Arial,sans-serif;color:#b8cbbd}
