@@ -84,8 +84,7 @@ function rsvp(){return '<section class="r-rsvp" id="rsvp">'+heading('ПОДТВ�
  '<label class="r-form-label">Имена гостей<input name="name" placeholder="Например: Анна и Сергей" disabled></label><label class="r-form-label">Особые пожелания<textarea placeholder="Например: аллергии, пожелания по рассадке" disabled></textarea></label>'+
  '<button type="submit" class="r-rsvp-submit">ПОСМОТРЕТЬ ДЕМО</button><output aria-live="polite"></output><p class="r-draft-note">Анкета демонстрационная: персональные данные пока не собираем и не сохраняем.</p></form></section>'}
 function details(){return '<section class="r-details">'+heading('КОНТАКТЫ И ВАЖНОЕ','Полезная<br>информация')+
- '<div class="r-map" role="img" aria-label="Схематическая карта расположения усадьбы Марьино">'+
- '<div class="r-map-lines"></div><span class="r-map-pin">'+ic('pin')+'</span><strong>Усадьба Марьино</strong></div>'+
+ '<div class="r-map r-map--real"><iframe title="Карта — усадьба Марьино, Андрианово" loading="lazy" referrerpolicy="no-referrer" src="https://www.openstreetmap.org/export/embed.html?bbox=30.895%2C59.414%2C30.914%2C59.423&layer=mapnik&marker=59.41806%2C30.90278"></iframe></div>'+
  '<p>Ленинградская область,<br>Тосненский район, д. Андрианово</p>'+
  '<div class="r-accordion">'+[
  ['pin','Как добраться','Адрес и маршрут можно посмотреть в Яндекс Картах. Площадка предварительная.'],
