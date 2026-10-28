@@ -1,4 +1,4 @@
-import {renderGuest, activateGuest} from './editorial.js';
+import {renderGuest, activateGuest} from './replica.js';
 import { wedding, sampleGuests, tentativeSchedule, adminModules } from './data.js';
 
 const app = document.querySelector('#app');
