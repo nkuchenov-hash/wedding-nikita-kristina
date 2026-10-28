@@ -70,6 +70,10 @@ jobs:
           fetch_photo lake 'https://media.kudago.com/images/place/0f/6d/0f6dca476493446d87b197f827991971.jpg'
           cp _site/public/photos/lake.jpg _site/public/photos/bridge.jpg
           test "$(find _site/public/photos -type f | wc -l)" -eq 10
+      - name: Render and verify the nine reference screens
+        run: |
+          npm install --no-save --no-package-lock puppeteer-core@24
+          node tools/visual-check.mjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
