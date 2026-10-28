@@ -23,7 +23,7 @@ const dockIcons = {
   '/info': '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.5"/></svg>',
 };
 function mobileNav(current){ return `<nav class="mobile-nav app-dock" aria-label="Основная навигация">${nav.map(([path,txt])=>`<a href="#${path}" class="${current===path?'active':''}" ${current===path?'aria-current="page"':''}>${dockIcons[path]}<span>${txt}</span></a>`).join('')}</nav>`; }
-function footer(){return `<footer class="site-footer"><span>Никита <span class="amp">&</span> Кристина</span><span>Наша история только начинается</span>${link('/admin','Для организаторов','admin-foot-link')}</footer>`;}
+function footer(){return `<footer class="site-footer"><span>Никита <span class="amp">&</span> Кристина</span><span>Наша история только начинается</span></footer>`;}
 function stamp(t='Дата и место уточняются'){return `<span class="status-stamp"><span class="stamp-dot"></span>${t}</span>`;}
 function pageHero(kicker,title,description){return `<section class="page-hero"><div class="eyebrow">${kicker}</div><h1>${title}</h1><p>${description}</p></section>`;}
 function home() {
@@ -48,7 +48,7 @@ function home() {
         <div class="hero-date"><span>17 июня 2027</span><span class="sep"></span><span>Усадьба Марьино</span></div>
         <span class="hero-tentative">Дата, время и площадка уточняются</span>
       </div>
-      <a class="hero-scroll-cue" href="#welcome" aria-label="Прокрутить к приглашению"><span>Листайте ниже</span><span class="scroll-cue-arrow">↓</span></a>
+      <button type="button" class="hero-scroll-cue" data-scroll-welcome aria-label="Прокрутить к приглашению"><span>Листайте ниже</span><span class="scroll-cue-arrow">↓</span></button>
     </div>
   </div>
 </section>
@@ -100,6 +100,7 @@ function render(){ const p=route(); let view;
   else if(p.startsWith('/admin/'))view=admin(p.split('/')[2]);
   else view=notFound();
   app.innerHTML=view;
+  app.querySelector('[data-scroll-welcome]')?.addEventListener('click', () => app.querySelector('#welcome')?.scrollIntoView({behavior:'smooth'}));
   const stage = app.querySelector('[data-depth-stage]');
   if (stage) {
     if (wedding.heroPhotoUrl) {
