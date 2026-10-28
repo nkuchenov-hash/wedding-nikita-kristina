@@ -1,0 +1,113 @@
+
+import {wedding} from './data.js';
+const PHOTO={
+ couple:'https://cdn.prod.website-files.com/67cf94b228fd4e5861369985/67f54fa93a9a201705f5e1d8_0f9ecaa51a2469dabb53071514080ea7_home%20pg-4.jpg',
+ couple2:'https://upload.wikimedia.org/wikipedia/commons/2/20/Groom_follows_behind_bride_%28Unsplash%29.jpg',
+ ceremony:'https://static.wixstatic.com/media/acd6c4_65c3b72242954e519b4ba76a06eb086a~mv2.jpg/v1/fill/w_811%2Ch_409%2Cal_c%2Cq_80%2Cusm_0.66_1.00_0.01%2Cenc_avif%2Cquality_auto/acd6c4_65c3b72242954e519b4ba76a06eb086a~mv2.jpg',
+ table:'https://i0.wp.com/www.theparisphotographer.com/wp-content/uploads/2023/04/Floral-decoration-for-a-destination-wedding-in-France.jpg?quality=100&resize=750%2C500&ssl=1',
+ columns:'https://usadbamaryino.ru/sites/default/files/images/photogallery/048_0.jpg',
+ estate:'https://usadbamaryino.ru/sites/default/files/images/single/603e1081138aa9001209ed52.jpg',
+ garden:'https://usadbamaryino.ru/sites/default/files/styles/photogal/public/images/photogallery/01_5.jpg?itok=u-XnOLTm',
+ lake:'https://media.kudago.com/images/place/0f/6d/0f6dca476493446d87b197f827991971.jpg',
+ statue:'https://www.xoticbrands.net/cdn/shop/files/Celestial_Cherub_Garden_Angel_Statue_Embracing_the_Spirit_of_Spring_1_1000x.png?v=1768617325',
+ bridge:'https://images.zola.com/3a2fddd4-ccd5-4bac-9c43-214ca531d8f0?fit=clip&fm=webp&w=600'
+};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+const img=(name,cls='',alt='',priority=false)=>'<img class="'+cls+'" src="'+PHOTO[name]+'" alt="'+esc(alt)+'" loading="'+(priority?'eager':'lazy')+'" decoding="async">';
+const icons={
+ home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
+ schedule:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/>',
+ guests:'<circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2m2-13a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"/>',
+ gallery:'<rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="m4 18 5-5 3 3 3-4 5 6"/>',
+ info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-9v.5"/>',
+ pin:'<path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
+ glass:'<path d="M5 3h14l-2 9a5 5 0 0 1-10 0L5 3ZM12 17v4m-5 0h10"/>',
+ rings:'<circle cx="9" cy="13" r="6"/><circle cx="16" cy="13" r="6"/><path d="m10 5 3-3 3 3-3 3Z"/>',
+ dish:'<circle cx="12" cy="12" r="7"/><path d="M3 3v18m18-18v18"/>',
+ music:'<path d="M9 18V5l12-2v13M9 8l12-2"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+ gift:'<rect x="4" y="9" width="16" height="12" rx="2"/><path d="M12 9v12M3 9h18v-4H3zm9 0S4 9 5 4c4-3 7 5 7 5s3-8 7-5c1 5-7 5-7 5"/>',
+ arrow:'<path d="M4 12h16m-6-6 6 6-6 6"/>',
+ heart:'<path d="M20.7 4.5a5.5 5.5 0 0 0-7.8 0l-.9.9-.9-.9a5.5 5.5 0 0 0-7.8 7.8L12 21l8.7-8.7a5.5 5.5 0 0 0 0-7.8Z"/>',
+ stay:'<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 14h18M7 8V5h10v3"/>',
+ check:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+ leaf:'<path d="M3 21C5 8 13 3 21 3c0 8-5 16-18 18Zm4-4c3-3 7-6 10-8"/>'
+};
+const ic=(n)=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+icons[n]+'</svg>';
+const nav=[['/','Главная','home'],['/schedule','Программа','schedule'],['/guests','Гости','guests'],['/gallery','Фото','gallery'],['/info','Информация','info']];
+function bottom(path){return '<nav class="r-tabs" aria-label="Разделы свадьбы">'+nav.map(([p,n,i])=>'<a class="'+(path===p?'r-selected':'')+'" href="#'+p+'" '+(path===p?'aria-current="page"':'')+'>'+ic(i)+'<span>'+n+'</span></a>').join('')+'</nav>'}
+function flour(){return '<div class="r-ornament" aria-hidden="true"><i></i><b>❧</b><i></i></div>'}
+function leaf(){return '<svg viewBox="0 0 180 210" fill="none" class="r-leaf" aria-hidden="true"><path d="M13 199c44-48 85-87 156-175" stroke="currentColor" stroke-width="1.5"/><path d="M49 156C6 147 7 105 16 93c28 13 38 36 33 63Zm23-27C55 91 78 61 91 58c10 27 3 52-19 71Zm31-38C71 80 72 45 89 33c24 20 26 42 14 58Zm27-36C118 31 135 10 154 8c8 18-1 36-24 47Z" stroke="currentColor" fill="currentColor" fill-opacity=".13"/><path d="M50 158c-21-22-27-43-34-65m56 35 19-70m13 33L89 33m41 21 24-46" stroke="currentColor" stroke-width="1"/></svg>'}
+function heading(top,title,sub=''){return '<div class="r-heading"><span class="r-micro">'+top+'</span><h1>'+title+'</h1>'+(sub?'<p>'+sub+'</p>':'')+'</div>'}
+function footer(){return '<footer class="r-footer">Никита <em>&</em> Кристина<span>Марьино · предварительно</span></footer>'}
+function shell(path,body,cls=''){return '<div class="r-app '+cls+'"><div class="r-site">'+body+footer()+'</div>'+bottom(path)+'</div>'}
+function home(){
+ return shell('/',
+ '<section class="r-hero">'+img('couple','r-cover-photo','Временная иллюстративная свадебная фотография пары',true)+'<div class="r-hero-dim"></div><div class="r-top-label">УСАДЬБА МАРЬИНО</div><div class="r-hero-title"><span>Приглашаем на нашу свадьбу</span><h1>Никита<br><em>&</em><br>Кристина</h1>'+flour()+'<p>17 ИЮНЯ 2027</p><small>Дата и место предварительные</small></div></section>'+
+ '<section class="r-invitation">'+leaf()+img('statue','r-invite-statue','Классическая садовая скульптура')+'<div class="r-invite-head"><span class="r-micro">МЫ ЖЕНИМСЯ!</span><h2>Никита<br><em>&</em><br>Кристина</h2><p>И хотим разделить этот особенный день с самыми близкими людьми. Будем счастливы видеть вас на нашей свадьбе в усадьбе Марьино.</p>'+flour()+'</div><div class="r-invite-picture">'+img('estate','','Исторический фасад усадьбы Марьино')+'<span>С любовью, Никита и Кристина</span></div></section>'+
+ '<section class="r-home-links">'+heading('НАШ ПРАЗДНИК','Всё, что нужно знать')+'<a href="#/schedule">'+ic('schedule')+'Программа дня <b>↗</b></a><a href="#/info">'+ic('pin')+'Усадьба Марьино <b>↗</b></a><a href="#/guests">'+ic('guests')+'Наши близкие <b>↗</b></a><a href="#/gallery">'+ic('gallery')+'Фотографии <b>↗</b></a></section>',
+ 'r-home');
+}
+const items=[['15:00','Сбор гостей','Встреча и общение','glass'],['16:00','Церемония','Самый важный момент нашего дня','rings'],['17:00','Банкет','Ужин, тосты, музыка и танцы','dish'],['22:00','Продолжение','Вечер в кругу самых близких','music']];
+function schedule(){
+ return shell('/schedule',
+ '<section class="r-photo-head r-schedule-head">'+img('ceremony','','Свадебный стол под деревьями в саду',true)+'</section>'+
+ '<section class="r-curve-content r-program">'+heading('ПРОГРАММА ДНЯ','Как всё<br>будет')+
+ '<div class="r-timeline">'+items.map((item,i)=>'<div class="r-time-item"><div class="r-time-icon">'+ic(item[3])+'</div><div class="r-time-line"><i></i></div><div class="r-time-description"><b>'+item[0]+'</b><h3>'+item[1]+'</h3><p>'+item[2]+'</p></div></div>').join('')+'</div><p class="r-draft-note">Программа и время приведены как пример оформления. Подтверждён только предварительный ориентир регистрации — 14:00; итоговый тайминг будет опубликован позже.</p></section>',
+ 'r-schedule');
+}
+function guests(){
+ return shell('/guests',
+ '<section class="r-photo-head r-guests-image">'+img('garden','','Зелёный парк Марьино',true)+'</section>'+
+ '<section class="r-curve-content r-guests">'+heading('НАШИ БЛИЗКИЕ','Люди нашей<br>истории','Скоро здесь появятся персональные страницы приглашённых.')+
+ '<div class="r-guest-card"><div class="r-guest-avatar">'+ic('heart')+'</div><div><span class="r-micro">ПРИМЕР ПРОФИЛЯ</span><h2>Наш гость</h2><p>Откуда мы знакомы, любимые воспоминания и фотографии с парой.</p><a href="#/guests/primer" class="r-pill">Посмотреть карточку →</a></div></div>'+
+ '<p class="r-draft-note">Настоящие имена гостей не публикуются до получения согласия и подключения защищённой части сайта.</p></section>',
+ 'r-guests-page');
+}
+function profile(){return shell('/guests','<section class="r-profile-page">'+heading('КАРТОЧКА ГОСТЯ','Наш гость','Это пример будущей страницы, без персональных данных.')+'<div class="r-guest-avatar">'+ic('heart')+'</div><p>Город · Знакомство с парой · Воспоминания · Личные фотографии</p><a href="#/guests" class="r-pill">← Все гости</a></section>','r-profile')}
+const photos=[['couple','Влюблённые'],['estate','Усадьба'],['table','Детали'],['ceremony','Праздник'],['couple2','Моменты'],['garden','Марьино'],['lake','Природа'],['columns','Колонны']];
+function gallery(){
+ return shell('/gallery','<section class="r-gallery-page"><div class="r-gallery-leaf">'+leaf()+'</div>'+heading('НАШИ ФОТОГРАФИИ','История<br>в кадрах')+
+ '<div class="r-photo-filters" role="group" aria-label="Фильтр фотогалереи"><button class="active" data-filter="all">Все</button><button data-filter="couple">Мы</button><button data-filter="estate">Усадьба</button><button data-filter="inspo">Вдохновение</button></div>'+
+ '<div class="r-masonry">'+photos.map(([key,title],i)=>'<figure class="r-gallery-tile" data-category="'+(['couple','estate','inspo','inspo','couple','estate','estate','estate'][i])+'">'+img(key,'',title)+'<figcaption>'+title+'</figcaption></figure>').join('')+'</div>'+
+ '<p class="r-draft-note">Это иллюстративные снимки для оформления. Гости смогут загружать настоящие фотографии после подключения приватного хранилища.</p></section>',
+ 'r-gallery-page-outer');
+}
+function venue(){return '<section class="r-venue"><div class="r-photo-head r-venue-photo">'+img('columns','','Колонны усадьбы в парке',true)+'</div><div class="r-curve-content r-venue-text">'+heading('МЕСТО','Усадьба<br>Марьино','Живописный парк, историческая архитектура и особая атмосфера — идеальное место для нашего праздника.')+
+ '<a href="https://yandex.ru/maps/?text=%D1%83%D1%81%D0%B0%D0%B4%D1%8C%D0%B1%D0%B0%20%D0%9C%D0%B0%D1%80%D1%8C%D0%B8%D0%BD%D0%BE%20%D0%90%D0%BD%D0%B4%D1%80%D0%B8%D0%B0%D0%BD%D0%BE%D0%B2%D0%BE" target="_blank" rel="noopener noreferrer" class="r-pill">КАК ДОБРАТЬСЯ <span>→</span></a>'+
+ '<div class="r-venue-tiles"><figure>'+img('garden','','Парк усадьбы Марьино')+'</figure><figure>'+img('statue','','Декоративная садовая скульптура')+'</figure></div><p class="r-draft-note">Площадка и дата предварительные. Фотографии отражают будущую атмосферу и локацию.</p></div></section>'}
+function dress(){return '<section class="r-dress">'+img('statue','r-dress-bg','Садовая статуя и зелень')+'<div class="r-dress-content">'+heading('ДРЕСС-КОД','Вдохновение<br>в деталях','Мы будем рады, если в своих образах вы поддержите эстетику нашего дня.')+
+ '<div class="r-color-dots"><i style="background:#214D31"></i><i style="background:#4C8C46"></i><i style="background:#83B96B"></i><i style="background:#E2E4E1"></i><i style="background:#C1A46C"></i></div>'+
+ '<p>Природные оттенки, элегантные образы, лёгкие ткани. Без кричащих и неоновых цветов.</p><small>Цвета пока служат стилистическим ориентиром сайта, а не утверждённым обязательным дресс-кодом.</small>'+
+ '<div class="r-dress-collage"><figure>'+img('couple2','','Свадебный образ')+'</figure><figure>'+img('ceremony','','Цветочное оформление')+'</figure><figure>'+img('table','','Цветы и детали')+'</figure></div></div></section>'}
+function rsvp(){return '<section class="r-rsvp" id="rsvp">'+heading('ПОДТВЕРЖДЕНИЕ','Будем рады<br>вашему ответу','Пожалуйста, подтвердите своё присутствие, когда откроется регистрация.')+
+ '<form data-rsvp><div class="r-rsvp-options"><label><input type="radio" name="yesno" value="yes" checked>'+ic('check')+' Я буду</label><label><input type="radio" name="yesno" value="no">'+ic('check')+' К сожалению, не смогу</label></div>'+
+ '<label class="r-form-label">Имена гостей<input name="name" placeholder="Например: Анна и Сергей" disabled></label><label class="r-form-label">Особые пожелания<textarea placeholder="Например: аллергии, пожелания по рассадке" disabled></textarea></label>'+
+ '<button type="submit" class="r-rsvp-submit">ПОСМОТРЕТЬ ДЕМО</button><output aria-live="polite"></output><p class="r-draft-note">Анкета демонстрационная: персональные данные пока не собираем и не сохраняем.</p></form></section>'}
+function details(){return '<section class="r-details">'+heading('КОНТАКТЫ И ВАЖНОЕ','Полезная<br>информация')+
+ '<div class="r-map" role="img" aria-label="Схематическая карта расположения усадьбы Марьино">'+
+ '<div class="r-map-lines"></div><span class="r-map-pin">'+ic('pin')+'</span><strong>Усадьба Марьино</strong></div>'+
+ '<p>Ленинградская область,<br>Тосненский район, д. Андрианово</p>'+
+ '<div class="r-accordion">'+[
+ ['pin','Как добраться','Адрес и маршрут можно посмотреть в Яндекс Картах. Площадка предварительная.'],
+ ['stay','Проживание','Рекомендации и варианты размещения добавим после подтверждения деталей праздника.'],
+ ['gift','Подарки','Пожелания пары пока уточняются.'],
+ ['info','Будут вопросы?','Контакты организаторов появятся перед отправкой приглашений.']].map(([ico,title,body])=>'<details><summary>'+ic(ico)+'<span>'+title+'</span><b>⌄</b></summary><p>'+body+'</p></details>').join('')+'</div>'+
+ '<div class="r-details-bottom">'+img('lake','','Летний усадебный парк и пруд')+'</div></section>'}
+function info(){return shell('/info',venue()+dress()+rsvp()+details(),'r-info')}
+export function renderGuest(path){
+ if(path==='/')return home();
+ if(path==='/schedule')return schedule();
+ if(path==='/guests')return guests();
+ if(path==='/guests/primer')return profile();
+ if(path==='/gallery')return gallery();
+ if(path==='/info')return info();
+ return shell('/','<section class="r-profile-page"><h1>Страница не найдена</h1><a href="#/">На главную</a></section>');
+}
+export function activateGuest(root){
+ const form=root.querySelector('[data-rsvp]');
+ if(form)form.addEventListener('submit',e=>{e.preventDefault();form.querySelector('output').textContent='Это пока демонстрация. Ваш ответ не сохранён.';});
+ root.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{
+  const filter=button.dataset.filter;root.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('active',b===button));
+  root.querySelectorAll('[data-category]').forEach(el=>{el.hidden=filter!=='all'&&el.dataset.category!==filter});
+ }));
+}
