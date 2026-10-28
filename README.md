@@ -57,3 +57,8 @@ npm run check
 - Для замены заглушки указать одобренную публичную фотографию в `src/data.js` как `heroPhotoUrl`; опциональный прозрачный передний план — `heroSubjectUrl`. Нельзя добавлять личные фотографии без разрешения пары.
 - Гостевые экраны, демонстрационная админка и ограничения по безопасности сохранены.
 - Автопубликация должна быть включена в GitHub → Settings → Pages → Build and deployment → Source: GitHub Actions. Без этого работа над репозиторием сохраняется, но сайт не публикуется.
+
+## Photographic redesign, 28 Oct 2026 (editorial)
+The actual active **guest** experience now uses `src/editorial.js` + `src/editorial.css`, independently of the existing admin demonstration. Reworked screens: landing, schedule, guests and sample profile, photography, details including location, styling and a non-saving RSVP preview. A fixed, labeled five-item dock works on mobile and desktop.
+
+Imagery is credited and **illustrative**. The temporary couple photograph by Brooke Cagle (CC0 via Wikimedia Commons) does not depict Nikita and Kristina. Venue photos are externally referenced from the estate's official website, for visual approval only; obtain permission or replace before a final public release. Confirm no guest data is stored. Venue and date are tentative. The iPhone-like spatial image will require the couple's real portrait and a depth-mapped / segmented foreground. No fake spatial photo claim.
