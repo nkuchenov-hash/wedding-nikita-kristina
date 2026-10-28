@@ -1,3 +1,4 @@
+import {renderGuest, activateGuest} from './editorial.js';
 import { wedding, sampleGuests, tentativeSchedule, adminModules } from './data.js';
 
 const app = document.querySelector('#app');
@@ -90,6 +91,14 @@ function adminGeneric(active){const m=adminModules.find(m=>m.id===active);if(!m)
 function admin(active='overview'){return `<div class="admin-layout">${adminSidebar(active)}<main class="admin-main"><div class="admin-topbar"><span>Wedding Management</span><span class="demo-badge">ДЕМО · БЕЗ БАЗЫ ДАННЫХ</span></div><div class="admin-content">${adminGeneric(active)}</div><div class="admin-warning">Это открытый демонстрационный интерфейс без реальных данных. Перед вводом данных гостей нужна авторизация администраторов и правила доступа к базе.</div></main></div>`;}
 function notFound(){return `${header('')}<main class="inner-page">${pageHero('404','Страница не найдена','Возможно, адрес изменился.') }<div class="section-wrap">${link('/','Вернуться на главную','btn btn-primary')}</div></main>${footer()}${mobileNav('')}`;}
 function render(){ const p=route(); let view;
+  if(!p.startsWith('/admin')){
+    app.innerHTML=renderGuest(p);
+    document.body.classList.remove('admin-body');
+    document.title='Никита & Кристина · Свадьба';
+    activateGuest(app);
+    window.scrollTo(0,0);
+    return;
+  }
   if(p==='/' )view=home();
   else if(p==='/schedule')view=schedule();
   else if(p==='/guests')view=guests();
