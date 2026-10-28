@@ -13,7 +13,7 @@ const PHOTO={
  bridge:'https://images.zola.com/3a2fddd4-ccd5-4bac-9c43-214ca531d8f0?fit=clip&fm=webp&w=600'
 };
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
-const img=(name,cls='',alt='',priority=false)=>'<img class="'+cls+'" src="'+PHOTO[name]+'" alt="'+esc(alt)+'" loading="'+(priority?'eager':'lazy')+'" decoding="async">';
+const img=(name,cls='',alt='',priority=false)=>'<img class="'+cls+'" src="'+PHOTO[name]+'" alt="'+esc(alt)+'" loading="'+(priority?'eager':'lazy')+'" decoding="async" referrerpolicy="no-referrer">';
 const icons={
  home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
  schedule:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/>',
@@ -38,7 +38,7 @@ function bottom(path){return '<nav class="r-tabs" aria-label="Разделы с�
 function flour(){return '<div class="r-ornament" aria-hidden="true"><i></i><b>❧</b><i></i></div>'}
 function leaf(){return '<svg viewBox="0 0 180 210" fill="none" class="r-leaf" aria-hidden="true"><path d="M13 199c44-48 85-87 156-175" stroke="currentColor" stroke-width="1.5"/><path d="M49 156C6 147 7 105 16 93c28 13 38 36 33 63Zm23-27C55 91 78 61 91 58c10 27 3 52-19 71Zm31-38C71 80 72 45 89 33c24 20 26 42 14 58Zm27-36C118 31 135 10 154 8c8 18-1 36-24 47Z" stroke="currentColor" fill="currentColor" fill-opacity=".13"/><path d="M50 158c-21-22-27-43-34-65m56 35 19-70m13 33L89 33m41 21 24-46" stroke="currentColor" stroke-width="1"/></svg>'}
 function heading(top,title,sub=''){return '<div class="r-heading"><span class="r-micro">'+top+'</span><h1>'+title+'</h1>'+(sub?'<p>'+sub+'</p>':'')+'</div>'}
-function footer(){return '<footer class="r-footer">Никита <em>&</em> Кристина<span>Марьино · предварительно</span></footer>'}
+function footer(){return '<footer class="r-footer">Никита <em>&</em> Кристина<span>Марьино · предварительно</span><small class="r-photo-credit">Изображения пары и декора временные и иллюстративные. На них не Никита и Кристина. Фото усадьбы — материалы Марьино.</small></footer>'}
 function shell(path,body,cls=''){return '<div class="r-app '+cls+'"><div class="r-site">'+body+footer()+'</div>'+bottom(path)+'</div>'}
 function home(){
  return shell('/',
@@ -104,6 +104,13 @@ export function renderGuest(path){
  return shell('/','<section class="r-profile-page"><h1>Страница не найдена</h1><a href="#/">На главную</a></section>');
 }
 export function activateGuest(root){
+ root.querySelectorAll('.r-app img').forEach(el=>{
+   el.addEventListener('error',()=>{
+     if(el.dataset.fallbackApplied)return;
+     el.dataset.fallbackApplied='true';
+     el.src=el.src===PHOTO.garden?PHOTO.estate:PHOTO.garden;
+   });
+ });
  const form=root.querySelector('[data-rsvp]');
  if(form)form.addEventListener('submit',e=>{e.preventDefault();form.querySelector('output').textContent='Это пока демонстрация. Ваш ответ не сохранён.';});
  root.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{
