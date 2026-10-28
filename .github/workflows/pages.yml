@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Verify wedding frontend
+        run: npm run check
       - name: Prepare public website only
         run: |
           mkdir -p _site/src _site/public
