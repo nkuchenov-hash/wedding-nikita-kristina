@@ -11,3 +11,7 @@ test('migration has RLS and private storage',async()=>{const sql=await read('../
 test('published workflow only copies known static assets',async()=>{const yaml=await read('../.github/workflows/pages.yml');assert.match(yaml,/cp src\/app\.js src\/data\.js src\/styles\.css/);assert.doesNotMatch(yaml,/cp -r \. /);});
 test('photo-first homepage uses distinct depth layers and placeholder slots',async()=>{const js=await read('../src/app.js');assert.match(js,/hero-photo-stage/);assert.match(js,/depth-subject/);assert.match(js,/data-scroll-welcome/);});
 test('guest tab bar uses accessible app navigation',async()=>{const js=await read('../src/app.js');assert.match(js,/aria-current="page"/);assert.match(js,/app-dock/);});
+
+test('editorial guest screens are assembled from photographic sections',async()=>{const ui=await read('../src/editorial.js');for(const token of ['w-hero-photo','w-moment-grid','w-page-top','w-dock','w-rsvp-form','w-botanical'])assert.match(ui,new RegExp(token));});
+test('every guest view renders through editorial route, admin stays separate',async()=>{const app=await read('../src/app.js');assert.match(app,/renderGuest\(p\)/);assert.match(app,/p\.startsWith\('\/admin'\)/);});
+test('published site includes visual assets and editorial frontend',async()=>{const workflow=await read('../.github/workflows/pages.yml');assert.match(workflow,/src\/editorial\.js/);assert.match(workflow,/src\/editorial\.css/);});
