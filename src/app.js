@@ -15,21 +15,44 @@ function header(current) {
     <a class="header-pill" href="#/info">О свадьбе <span aria-hidden="true">↗</span></a>
   </div></header>`;
 }
-function mobileNav(current){ return `<nav class="mobile-nav" aria-label="Мобильная навигация">${nav.map(([path,txt])=>`<a href="#${path}" class="${current===path?'active':''}">${txt}</a>`).join('')}</nav>`; }
+const dockIcons = {
+  '/': '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>',
+  '/schedule': '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18m-13 4h3m-3 4h6"/></svg>',
+  '/guests': '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2m2-15a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"/></svg>',
+  '/gallery': '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 3-3 6 6"/></svg>',
+  '/info': '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.5"/></svg>',
+};
+function mobileNav(current){ return `<nav class="mobile-nav app-dock" aria-label="Основная навигация">${nav.map(([path,txt])=>`<a href="#${path}" class="${current===path?'active':''}" ${current===path?'aria-current="page"':''}>${dockIcons[path]}<span>${txt}</span></a>`).join('')}</nav>`; }
 function footer(){return `<footer class="site-footer"><span>Никита <span class="amp">&</span> Кристина</span><span>Наша история только начинается</span>${link('/admin','Для организаторов','admin-foot-link')}</footer>`;}
 function stamp(t='Дата и место уточняются'){return `<span class="status-stamp"><span class="stamp-dot"></span>${t}</span>`;}
 function pageHero(kicker,title,description){return `<section class="page-hero"><div class="eyebrow">${kicker}</div><h1>${title}</h1><p>${description}</p></section>`;}
 function home() {
  return `${header('/')}<main>
- <section class="hero"><div class="hero-content"><div class="eyebrow hero-eyebrow"><span class="line"></span> НАША СВАДЬБА <span class="line"></span></div>
- <h1><span>Никита</span><em>&</em><span>Кристина</span></h1>
- <p class="hero-subtitle">История любви. День, который мы разделим с близкими.</p>
- <div class="hero-date"><span>17 июня 2027</span><span class="sep"></span><span>14:00</span><span class="sep"></span><span>Марьино</span></div>
- ${stamp('Предварительная дата и место')}
- <div class="hero-actions">${link('/schedule','Программа дня ↗','btn btn-primary')}${link('/guests','Наши гости','btn btn-light')}</div></div>
- <div class="hero-graphic" aria-hidden="true"><div class="rings rings-one"></div><div class="rings rings-two"></div><div class="hero-monogram">Н <i>&</i> К</div><div class="graphic-caption">17 / 06 / 2027</div></div>
- <div class="vertical-caption">A LITTLE CELEBRATION OF LOVE • 2027</div></section>
- <section class="intro-section section-wrap"><div><span class="eyebrow">01 / ДЛЯ НАС И ДЛЯ ВАС</span><h2>Наша история<br/><em>продолжается.</em></h2></div><div class="intro-copy"><p>Мы собираем здесь всё самое важное о нашем празднике: время и место, программу, фотографии и людей, с которыми хотим разделить этот день.</p><p>Этот сайт будет меняться по мере подготовки свадьбы.</p>${link('/info','Что нужно знать ↗','text-link')}</div></section>
+ <section class="hero hero-photo" aria-labelledby="wedding-title">
+  <div class="hero-photo-stage" data-depth-stage aria-hidden="true">
+    <div class="depth-layer depth-sky"></div>
+    <div class="depth-layer depth-hills"></div>
+    <div class="depth-layer depth-estate"><div class="estate-roof"></div><div class="estate-body"><div class="estate-wing"></div><div class="estate-columns"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="estate-wing"></div></div><div class="estate-steps"></div></div>
+    <div class="depth-layer depth-trees depth-trees-left"></div><div class="depth-layer depth-trees depth-trees-right"></div>
+    <div class="depth-layer depth-lawn"></div>
+    <div class="depth-layer depth-photo"></div><div class="depth-layer depth-subject"></div>
+  </div>
+  <div class="hero-shade" aria-hidden="true"></div>
+  <div class="hero-content photo-content">
+    <div class="hero-topline"><span class="hero-small-caps">Наша свадьба <span class="gold-spark">✦</span> Усадьба Марьино</span><span class="hero-placeholder-label">Место для нашего фото</span></div>
+    <div class="hero-bottomline">
+      <div class="hero-title-area">
+        <span class="hero-overline">The beginning of forever</span>
+        <h1 id="wedding-title"><span>Никита</span><em>&</em><span>Кристина</span></h1>
+        <p class="hero-subtitle">Самый важный день — рядом с самыми близкими.</p>
+        <div class="hero-date"><span>17 июня 2027</span><span class="sep"></span><span>Усадьба Марьино</span></div>
+        <span class="hero-tentative">Дата, время и площадка уточняются</span>
+      </div>
+      <a class="hero-scroll-cue" href="#welcome" aria-label="Прокрутить к приглашению"><span>Листайте ниже</span><span class="scroll-cue-arrow">↓</span></a>
+    </div>
+  </div>
+</section>
+ <section class="intro-section section-wrap" id="welcome"><div><span class="eyebrow">01 / ДЛЯ НАС И ДЛЯ ВАС</span><h2>Наша история<br/><em>продолжается.</em></h2></div><div class="intro-copy"><p>Мы собираем здесь всё самое важное о нашем празднике: время и место, программу, фотографии и людей, с которыми хотим разделить этот день.</p><p>Этот сайт будет меняться по мере подготовки свадьбы.</p>${link('/info','Что нужно знать ↗','text-link')}</div></section>
  <section class="feature-section section-wrap"><div class="section-head"><span class="eyebrow">02 / НА САЙТЕ</span><h2>Всё в одном месте</h2></div><div class="feature-grid">
  <a class="feature-card" href="#/schedule"><span class="feature-index">01</span><span class="feature-icon">◷</span><h3>Программа</h3><p>Что, где и во сколько — без лишних вопросов.</p><span class="card-arrow">↗</span></a>
  <a class="feature-card" href="#/guests"><span class="feature-index">02</span><span class="feature-icon">◉</span><h3>Наши гости</h3><p>Познакомьтесь с теми, кто разделит этот день.</p><span class="card-arrow">↗</span></a>
@@ -77,6 +100,25 @@ function render(){ const p=route(); let view;
   else if(p.startsWith('/admin/'))view=admin(p.split('/')[2]);
   else view=notFound();
   app.innerHTML=view;
+  const stage = app.querySelector('[data-depth-stage]');
+  if (stage) {
+    if (wedding.heroPhotoUrl) {
+      stage.classList.add('has-photo');
+      stage.querySelector('.depth-photo').style.backgroundImage = 'url("' + encodeURI(wedding.heroPhotoUrl).replace(/"/g,'%22') + '")';
+    }
+    if (wedding.heroSubjectUrl) {
+      stage.classList.add('has-subject');
+      stage.querySelector('.depth-subject').style.backgroundImage = 'url("' + encodeURI(wedding.heroSubjectUrl).replace(/"/g,'%22') + '")';
+    }
+    const hero = stage.closest('.hero-photo');
+    hero.addEventListener('pointermove', event => {
+      if (event.pointerType === 'touch' || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const r = hero.getBoundingClientRect();
+      hero.style.setProperty('--depth-x', ((event.clientX-r.left)/r.width-.5).toFixed(3));
+      hero.style.setProperty('--depth-y', ((event.clientY-r.top)/r.height-.5).toFixed(3));
+    }, {passive:true});
+    hero.addEventListener('pointerleave', () => {hero.style.setProperty('--depth-x','0');hero.style.setProperty('--depth-y','0');},{passive:true});
+  }
   document.body.classList.toggle('admin-body',p.startsWith('/admin'));
   document.title=`${p.startsWith('/admin')?'Админка — ':''}Никита & Кристина`;
   window.scrollTo(0,0);
