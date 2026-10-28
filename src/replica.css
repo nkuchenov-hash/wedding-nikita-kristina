@@ -206,3 +206,9 @@ body:not(.admin-body) #app{max-width:none;min-height:100vh}
 .r-map--real iframe{display:block;position:absolute;inset:0;width:100%;height:100%;border:0;filter:saturate(.62) contrast(.96) brightness(1.045)}
 .r-cover-photo{object-position:50% 43%;filter:sepia(.22) saturate(1.32) hue-rotate(-7deg) brightness(1.12) contrast(.98)}
 .r-hero-dim{background:linear-gradient(180deg,rgba(15,33,18,.25) 0%,rgba(19,41,22,.02) 30%,rgba(17,35,19,.09) 49%,rgba(10,27,16,.37) 69%,rgba(6,22,12,.82) 100%)}
+
+/* Reference composition correction after inspecting real mobile screenshots. */
+.r-rsvp .r-heading h1{font-size:clamp(48px,12.5vw,56px);line-height:.96;letter-spacing:-.036em}
+.r-invite-head h2{font-size:clamp(56px,16vw,69px)}
+.r-cover-photo{object-position:50% 67%}
+.r-hero:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 79% 26%,rgba(226,202,144,.11),transparent 46%);mix-blend-mode:screen}
