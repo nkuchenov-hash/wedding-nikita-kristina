@@ -40,6 +40,36 @@ jobs:
           cp src/app.js src/data.js src/styles.css src/editorial.js src/editorial.css src/replica.js src/replica.css _site/src/
           cp public/mark.svg _site/public/
           touch _site/.nojekyll
+      - name: Build local photographic assets from individual references
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site/public/photos
+          fetch_photo() {
+            local name="$1"
+            local url="$2"
+            echo "Downloading ${name}"
+            curl --fail --location --silent --show-error --retry 2 --max-time 45 \
+              --user-agent 'Mozilla/5.0 (compatible; WeddingPreview/1.0)' \
+              --output "_site/public/photos/${name}.jpg" "$url"
+            test "$(stat -c%s "_site/public/photos/${name}.jpg")" -gt 10000
+            case "$(file --mime-type -b "_site/public/photos/${name}.jpg")" in
+              image/jpeg|image/png|image/webp) ;;
+              *) echo "Invalid photo: ${name}"; exit 1;;
+            esac
+            echo "Photo ${name}: $(du -h "_site/public/photos/${name}.jpg")"
+          }
+          fetch_photo couple 'https://images.unsplash.com/photo-1768508659931-c28da83dad13?fit=crop&w=1400&q=85&fm=jpg'
+          fetch_photo couple2 'https://upload.wikimedia.org/wikipedia/commons/2/20/Groom_follows_behind_bride_%28Unsplash%29.jpg'
+          fetch_photo ceremony 'https://images.unsplash.com/photo-1769812344099-8e52466aea8e?fit=crop&w=1200&q=85&fm=jpg'
+          fetch_photo table 'https://images.unsplash.com/photo-1769812343362-39484bff6db4?fit=crop&w=1100&q=85&fm=jpg'
+          fetch_photo statue 'https://images.unsplash.com/photo-1764061040784-9e50d16060e0?fit=crop&w=1100&q=85&fm=jpg'
+          fetch_photo columns 'https://usadbamaryino.ru/sites/default/files/images/photogallery/048_0.jpg'
+          fetch_photo estate 'https://usadbamaryino.ru/sites/default/files/styles/photogal/public/images/photogallery/010_1.jpg?itok=WjCDwPJU'
+          fetch_photo garden 'https://usadbamaryino.ru/sites/default/files/styles/photogal/public/images/photogallery/01_5.jpg?itok=u-XnOLTm'
+          fetch_photo lake 'https://media.kudago.com/images/place/0f/6d/0f6dca476493446d87b197f827991971.jpg'
+          cp _site/public/photos/lake.jpg _site/public/photos/bridge.jpg
+          test "$(find _site/public/photos -type f | wc -l)" -eq 10
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
