@@ -181,3 +181,5 @@ body:not(.admin-body) .mobile-nav.app-dock a:focus-visible{outline:2px solid #C1
  body:not(.admin-body) .site-footer{padding-bottom:35px}
 }
 @media(prefers-reduced-motion:reduce){.hero-photo .depth-layer{transition:none!important;transform:none!important}}
+
+.hero-scroll-cue{background:none;border:0;cursor:pointer;font-family:inherit;padding:0}.hero-scroll-cue:hover .scroll-cue-arrow{background:rgba(226,228,225,.15);border-color:#C1A46C}
