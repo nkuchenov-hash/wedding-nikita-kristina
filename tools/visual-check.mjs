@@ -39,6 +39,10 @@ try {
     if(name!=='01-home')await page.$eval(selector,el=>el.scrollIntoView({block:'start',behavior:'instant'}));
     await delay(200);
     await page.screenshot({path:output+'/'+name+'.png',fullPage:false,animations:'disabled'});
+    if (['01-home','04-venue','06-rsvp'].includes(name)) {
+      const jpeg=await page.screenshot({type:'jpeg',quality:50,fullPage:false,animations:'disabled'});
+      console.log('SCREEN_JPEG_'+name.replace(/-/g,'_')+'='+Buffer.from(jpeg).toString('base64'));
+    }
     outcomes.push({screen:name,brokenImages:broken.length});
   }
   await page.setViewport({width:1280,height:900,deviceScaleFactor:1});
