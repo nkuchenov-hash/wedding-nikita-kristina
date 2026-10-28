@@ -153,3 +153,50 @@ body:not(.admin-body) #app{max-width:none;min-height:100vh}
 @media(prefers-reduced-motion:reduce){.r-tabs a{transition:none!important}}
 
 .r-footer .r-photo-credit{display:block;max-width:410px;margin:24px auto 0;font:400 10px/1.7 'Manrope',Arial,sans-serif;color:#b8cbbd}
+
+
+/* Fine alignment to the eight reference crops: placement and overlays, not stock cards. */
+.r-hero-title{left:38px;right:22px;bottom:calc(90px + env(safe-area-inset-bottom));align-items:flex-start;text-align:left}
+.r-hero-title>span{font-size:18px;letter-spacing:.03em;opacity:0;height:0;overflow:hidden}
+.r-hero-title h1{font-size:clamp(85px,19.8vw,116px);line-height:.76;letter-spacing:-.067em;margin:12px 0 15px}
+.r-hero-title h1 em{display:inline-block;margin-left:24%;line-height:1.13}
+.r-hero-title .r-ornament{margin:14px 0 22px 35px}
+.r-hero-title p{margin-left:40px;letter-spacing:.14em}
+.r-hero-title small{margin-left:25px;opacity:.8}
+.r-cover-photo{object-position:50% 28%}
+.r-hero-dim{background:linear-gradient(180deg,rgba(13,27,13,.22) 0%,rgba(7,24,14,.03) 27%,rgba(6,24,14,.04) 43%,rgba(10,25,15,.32) 59%,rgba(8,23,14,.78) 100%)}
+.r-top-label{top:64px;letter-spacing:.24em}
+.r-invitation{background:#F2F4F2}
+.r-invite-head h2{font-style:italic}
+.r-invite-head h2 em{font-style:italic}
+.r-invite-head p{font-weight:500}
+.r-invite-picture:before{background:linear-gradient(180deg,#F2F4F2 0%,transparent 22%,rgba(9,28,17,.02) 72%,rgba(6,27,15,.43) 100%)}
+.r-curve-content,.r-rsvp,.r-gallery-page,.r-dress,.r-details{background:#F2F4F2}
+.r-photo-head{filter:saturate(1.08)}
+.r-program{border-radius:44px 44px 0 0}
+.r-program .r-heading h1{margin-bottom:47px}
+.r-time-description h3{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:27px}
+.r-time-description b{font-size:13px}
+.r-venue-text:before{content:"";position:absolute;top:-13px;left:0;right:0;background:#F2F4F2;height:24px;border-radius:50% 50% 0 0}
+.r-venue-photo{height:395px}
+.r-venue-tiles figure{height:205px}
+.r-color-dots i{border-radius:50%;box-shadow:0 0 0 4px rgba(255,255,255,.58)}
+.r-dress-collage{height:175px;margin-top:22px}
+.r-dress-content .r-heading h1{line-height:.94}
+.r-rsvp{background:linear-gradient(165deg,#FFFFFF 0%,#F2F4F2 65%,#E2E4E1 100%)}
+.r-rsvp-options label{min-height:49px}
+.r-photo-filters button{white-space:nowrap}
+.r-map{background:#DFE8DE}
+.r-details-bottom img{object-position:50% 65%}
+.r-photo-credit{line-height:1.65}
+@media(max-width:760px){
+ .r-hero-title h1{font-size:clamp(80px,20vw,112px)}
+ .r-hero-title{left:8%;bottom:calc(84px + env(safe-area-inset-bottom))}
+ .r-hero-title .r-ornament{margin-left:13%}
+ .r-hero-title p{margin-left:15%}
+}
+@media(max-width:380px){
+ .r-hero-title h1{font-size:75px}
+ .r-hero-title{bottom:95px}
+ .r-time-item{grid-template-columns:42px 18px 1fr;gap:12px}
+}
