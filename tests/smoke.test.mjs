@@ -9,3 +9,5 @@ test('no real attendees are seeded',()=>assert.ok(sampleGuests.every(x=>x.isSamp
 test('public shell exposes responsive entry point',async()=>{const html=await read('../index.html');assert.match(html,/viewport/);assert.match(html,/src\/app\.js/);});
 test('migration has RLS and private storage',async()=>{const sql=await read('../supabase/migrations/001_initial.sql');assert.match(sql,/enable row level security/);assert.match(sql,/wedding-private.*false/);});
 test('published workflow only copies known static assets',async()=>{const yaml=await read('../.github/workflows/pages.yml');assert.match(yaml,/cp src\/app\.js src\/data\.js src\/styles\.css/);assert.doesNotMatch(yaml,/cp -r \. /);});
+test('photo-first homepage uses distinct depth layers and placeholder slots',async()=>{const js=await read('../src/app.js');assert.match(js,/hero-photo-stage/);assert.match(js,/depth-subject/);assert.match(js,/data-scroll-welcome/);});
+test('guest tab bar uses accessible app navigation',async()=>{const js=await read('../src/app.js');assert.match(js,/aria-current="page"/);assert.match(js,/app-dock/);});
