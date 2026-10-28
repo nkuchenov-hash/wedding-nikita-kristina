@@ -6,6 +6,9 @@ export const wedding = {
   time: '14:00',
   location: 'Марьино',
   tentative: true,
+  // Replace these with approved public image paths; a cutout foreground makes the depth effect possible.
+  heroPhotoUrl: null,
+  heroSubjectUrl: null,
 };
 export const sampleGuests = [
   { id: 'primer', name: 'Гость — пример', city: 'Санкт-Петербург', relation: 'Друг семьи', about: 'Здесь гость сможет рассказать о себе, о знакомстве с парой и добавить свои фотографии.', isSample: true, photos: [] },
