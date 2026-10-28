@@ -1,16 +1,16 @@
 
 import {wedding} from './data.js';
 const PHOTO={
- couple:'https://cdn.prod.website-files.com/67cf94b228fd4e5861369985/67f54fa93a9a201705f5e1d8_0f9ecaa51a2469dabb53071514080ea7_home%20pg-4.jpg',
- couple2:'https://upload.wikimedia.org/wikipedia/commons/2/20/Groom_follows_behind_bride_%28Unsplash%29.jpg',
- ceremony:'https://static.wixstatic.com/media/acd6c4_65c3b72242954e519b4ba76a06eb086a~mv2.jpg/v1/fill/w_811%2Ch_409%2Cal_c%2Cq_80%2Cusm_0.66_1.00_0.01%2Cenc_avif%2Cquality_auto/acd6c4_65c3b72242954e519b4ba76a06eb086a~mv2.jpg',
- table:'https://i0.wp.com/www.theparisphotographer.com/wp-content/uploads/2023/04/Floral-decoration-for-a-destination-wedding-in-France.jpg?quality=100&resize=750%2C500&ssl=1',
- columns:'https://usadbamaryino.ru/sites/default/files/images/photogallery/048_0.jpg',
- estate:'https://usadbamaryino.ru/sites/default/files/images/single/603e1081138aa9001209ed52.jpg',
- garden:'https://usadbamaryino.ru/sites/default/files/styles/photogal/public/images/photogallery/01_5.jpg?itok=u-XnOLTm',
- lake:'https://media.kudago.com/images/place/0f/6d/0f6dca476493446d87b197f827991971.jpg',
- statue:'https://www.xoticbrands.net/cdn/shop/files/Celestial_Cherub_Garden_Angel_Statue_Embracing_the_Spirit_of_Spring_1_1000x.png?v=1768617325',
- bridge:'https://images.zola.com/3a2fddd4-ccd5-4bac-9c43-214ca531d8f0?fit=clip&fm=webp&w=600'
+ couple:'./public/photos/couple.jpg',
+ couple2:'./public/photos/couple2.jpg',
+ ceremony:'./public/photos/ceremony.jpg',
+ table:'./public/photos/table.jpg',
+ columns:'./public/photos/columns.jpg',
+ estate:'./public/photos/estate.jpg',
+ garden:'./public/photos/garden.jpg',
+ lake:'./public/photos/lake.jpg',
+ statue:'./public/photos/statue.jpg',
+ bridge:'./public/photos/bridge.jpg'
 };
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 const img=(name,cls='',alt='',priority=false)=>'<img class="'+cls+'" src="'+PHOTO[name]+'" alt="'+esc(alt)+'" loading="'+(priority?'eager':'lazy')+'" decoding="async" referrerpolicy="no-referrer">';
@@ -38,7 +38,7 @@ function bottom(path){return '<nav class="r-tabs" aria-label="Разделы с�
 function flour(){return '<div class="r-ornament" aria-hidden="true"><i></i><b>❧</b><i></i></div>'}
 function leaf(){return '<svg viewBox="0 0 180 210" fill="none" class="r-leaf" aria-hidden="true"><path d="M13 199c44-48 85-87 156-175" stroke="currentColor" stroke-width="1.5"/><path d="M49 156C6 147 7 105 16 93c28 13 38 36 33 63Zm23-27C55 91 78 61 91 58c10 27 3 52-19 71Zm31-38C71 80 72 45 89 33c24 20 26 42 14 58Zm27-36C118 31 135 10 154 8c8 18-1 36-24 47Z" stroke="currentColor" fill="currentColor" fill-opacity=".13"/><path d="M50 158c-21-22-27-43-34-65m56 35 19-70m13 33L89 33m41 21 24-46" stroke="currentColor" stroke-width="1"/></svg>'}
 function heading(top,title,sub=''){return '<div class="r-heading"><span class="r-micro">'+top+'</span><h1>'+title+'</h1>'+(sub?'<p>'+sub+'</p>':'')+'</div>'}
-function footer(){return '<footer class="r-footer">Никита <em>&</em> Кристина<span>Марьино · предварительно</span><small class="r-photo-credit">Изображения пары и декора временные и иллюстративные. На них не Никита и Кристина. Фото усадьбы — материалы Марьино.</small></footer>'}
+function footer(){return '<footer class="r-footer">Никита <em>&</em> Кристина<span>Марьино · предварительно</span><small class="r-photo-credit">Фото пары, цветов и скульптур — временные иллюстрации Unsplash. На фото не Никита и Кристина. Фотографии Марьино предоставлены сайтом усадьбы; для постоянного использования потребуется разрешение правообладателя.</small></footer>'}
 function shell(path,body,cls=''){return '<div class="r-app '+cls+'"><div class="r-site">'+body+footer()+'</div>'+bottom(path)+'</div>'}
 function home(){
  return shell('/',
@@ -64,7 +64,7 @@ function guests(){
  'r-guests-page');
 }
 function profile(){return shell('/guests','<section class="r-profile-page">'+heading('КАРТОЧКА ГОСТЯ','Наш гость','Это пример будущей страницы, без персональных данных.')+'<div class="r-guest-avatar">'+ic('heart')+'</div><p>Город · Знакомство с парой · Воспоминания · Личные фотографии</p><a href="#/guests" class="r-pill">← Все гости</a></section>','r-profile')}
-const photos=[['couple','Влюблённые'],['estate','Усадьба'],['table','Детали'],['ceremony','Праздник'],['couple2','Моменты'],['garden','Марьино'],['lake','Природа'],['columns','Колонны']];
+const photos=[['couple','Влюблённые'],['estate','Усадьба'],['table','Детали'],['ceremony','Праздник'],['couple2','Моменты'],['garden','Марьино'],['bridge','Природа'],['columns','Колонны']];
 function gallery(){
  return shell('/gallery','<section class="r-gallery-page"><div class="r-gallery-leaf">'+leaf()+'</div>'+heading('НАШИ ФОТОГРАФИИ','История<br>в кадрах')+
  '<div class="r-photo-filters" role="group" aria-label="Фильтр фотогалереи"><button class="active" data-filter="all">Все</button><button data-filter="couple">Мы</button><button data-filter="estate">Усадьба</button><button data-filter="inspo">Вдохновение</button></div>'+
