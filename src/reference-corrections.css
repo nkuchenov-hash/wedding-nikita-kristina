@@ -179,3 +179,12 @@
 @media(min-width:800px){
  .r-home .r-hero--board .r-cover-photo{height:min(100cqw,540px);top:5%}
 }
+
+/* No empty dark header stripe: use photographic continuation behind portrait. */
+.r-home .r-hero--board:before{
+ inset:0;transform:none;
+ background:url("../public/board/01-home/portrait-clean.webp") center top / 100% auto no-repeat;
+ filter:blur(9px) brightness(.86) saturate(.98);
+}
+.r-home .r-hero--board .r-cover-photo{top:3.5%}
+.r-home .r-hero--board .r-top-label{top:5.8%;text-shadow:0 1px 7px rgba(15,35,22,.65)}

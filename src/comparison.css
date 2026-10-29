@@ -52,3 +52,9 @@
  #reference-mobile-tabs{top:auto;bottom:calc(76px + env(safe-area-inset-bottom));left:auto;right:10px;transform:none}
  .ref-mobile-original #reference-mobile-tabs{top:10px;bottom:auto;right:12px}
 }
+
+@media(max-width:767px){
+ #reference-mobile-tabs{padding:3px;gap:1px;right:7px}
+ #reference-mobile-tabs button{font-size:10px;padding:7px 9px}
+ .ref-mobile-original #reference-mobile-tabs button{font-size:12px;padding:8px 14px}
+}
