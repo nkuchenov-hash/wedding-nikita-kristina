@@ -18,8 +18,8 @@
 }
 /* Real transparent hanging greenery + blurred cast shadow on stone-white. */
 .v3-hanging-leaves{
-  position:absolute;z-index:4;top:35.8%;left:1.6%;
-  width:33.15%;height:auto;aspect-ratio:286/217;
+  position:absolute;z-index:4;top:38.7%;left:0;
+  width:35.48%;height:auto;aspect-ratio:286/217;
   pointer-events:none;overflow:visible;
 }
 .v3-hanging-leaves:before{
