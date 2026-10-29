@@ -47,7 +47,11 @@ jobs:
             esac
             echo "Photo ${name}: $(du -h "_site/public/photos/${name}.jpg")"
           }
-          fetch_photo couple 'https://images.unsplash.com/photo-1768508659931-c28da83dad13?fit=crop&w=1400&q=85&fm=jpg'
+          # Replace the cold-toned placeholder with a warm neoclassical portrait.
+          # Source: Arda Öztürk, Pexels free-use image #31888286.
+          if ! fetch_photo couple 'https://images.pexels.com/photos/31888286/pexels-photo-31888286.jpeg?auto=compress&cs=tinysrgb&w=1500'; then
+            fetch_photo couple 'https://images.unsplash.com/photo-1768508659931-c28da83dad13?fit=crop&w=1400&q=85&fm=jpg'
+          fi
           fetch_photo couple2 'https://upload.wikimedia.org/wikipedia/commons/2/20/Groom_follows_behind_bride_%28Unsplash%29.jpg'
           fetch_photo ceremony 'https://images.unsplash.com/photo-1769812344099-8e52466aea8e?fit=crop&w=1200&q=85&fm=jpg'
           fetch_photo table 'https://images.unsplash.com/photo-1769812343362-39484bff6db4?fit=crop&w=1100&q=85&fm=jpg'
