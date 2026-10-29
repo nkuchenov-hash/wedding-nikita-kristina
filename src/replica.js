@@ -1,6 +1,9 @@
 
 import {wedding} from './data.js';
 const PHOTO={
+ dressjacket:'./public/photos/dressjacket.jpg',
+ dressgown:'./public/photos/dressgown.jpg',
+ dresstux:'./public/photos/dresstux.jpg',
  'gardenRef':'./public/reference/venue-left-hi.jpg',
  'cherubRef':'./public/reference/venue-right-hi.jpg',
  'mariynoRef':'./public/reference/venue-hero-hi.jpg',
@@ -104,7 +107,7 @@ function dress(){
  '<div class="r-dress-content">'+heading('ДРЕСС-КОД','Вдохновение<br>в деталях','Мы будем рады, если в своих образах вы поддержите эстетику нашего дня.')+
  '<div class="r-color-dots" aria-label="Палитра сайта"><i style="background:#214D31"></i><i style="background:#4C8C46"></i><i style="background:#83B96B"></i><i style="background:#E2E4E1"></i><i style="background:#C1A46C"></i></div>'+
  '<p>Природные оттенки, элегантные образы, лёгкие ткани.</p><small>Это пока цветовые ориентиры оформления сайта, а не обязательный дресс-код для гостей.</small>'+
- '<div class="r-dress-collage"><figure>'+img('couple2','','Элегантный свадебный образ')+'</figure><figure>'+img('garden','','Природные зелёные оттенки')+'</figure><figure>'+img('table','','Белые цветы и золотые детали')+'</figure></div></div></section>';
+ '<div class="r-dress-collage"><figure>'+img('dressjacket','','Тёмный костюм для торжественного приёма')+'</figure><figure>'+img('dressgown','','Платье насыщенного зелёного оттенка')+'</figure><figure>'+img('dresstux','','Элегантный костюм с бутоньеркой')+'</figure></div></div></section>';
 }
 function rsvp(){
  return '<section class="r-rsvp" id="rsvp">'+heading('ПОДТВЕРЖДЕНИЕ','Будем рады<br>вашему ответу','Анкета приглашения — пока демонстрация без сохранения данных.')+
