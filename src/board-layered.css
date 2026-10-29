@@ -285,3 +285,14 @@
 @media(prefers-reduced-motion:reduce){
  .r-home .r-hero-bouquet,.r-invitation img,.r-dress img{transition:none!important}
 }
+
+
+/* QA: leaves must frame the dress-code content, never cross body copy. */
+.r-info .r-dress .r-dress-leaves{
+  top:56%;left:-18%;width:49%;height:19%;z-index:2;
+  pointer-events:none;
+}
+.r-info .r-dress .r-dress-leaves img{object-position:left center}
+.r-info .r-dress .r-dress-content{z-index:6}
+.r-info .r-dress .r-dress-content>p,
+.r-info .r-dress .r-heading p{position:relative;z-index:6}
