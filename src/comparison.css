@@ -45,3 +45,10 @@
  .ref-canvas img{max-height:100%;border-radius:14px}
 }
 @media(prefers-reduced-motion:reduce){.ref-canvas,.ref-toolbar{scroll-behavior:auto}}
+
+/* Keep the comparison switch away from the reference's centered headings.
+   On the original-image view it moves to the empty area above the screenshot. */
+@media(max-width:767px){
+ #reference-mobile-tabs{top:auto;bottom:calc(76px + env(safe-area-inset-bottom));left:auto;right:10px;transform:none}
+ .ref-mobile-original #reference-mobile-tabs{top:10px;bottom:auto;right:12px}
+}

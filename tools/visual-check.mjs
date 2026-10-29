@@ -18,7 +18,7 @@ try {
   const scenarios=[
     ['01-home','#/','.r-hero'],
     ['02-invitation','#/','.r-invitation'],
-    ['03-timeline','#/schedule','.r-program'],
+    ['03-timeline','#/schedule','.r-schedule-head'],
     ['04-venue','#/info','.v2-venue'],
     ['05-dress','#/info','.r-dress'],
     ['06-rsvp','#/info','.r-rsvp'],

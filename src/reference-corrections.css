@@ -166,3 +166,16 @@
  .r-info .r-dress .r-dress-content>small{font-size:13px}
 }
 /* Respect the user's original screen 04: no overrides of .v2-venue. */
+
+/* Browser screenshot correction (390×844): reduce the portrait source zoom.
+   Show the complete clean square instead of stretching it to a tall 65% slot. */
+.r-home .r-hero--board .r-cover-photo{
+ top:7%;left:0;width:100%;height:min(100cqw,520px);
+ object-fit:contain;object-position:center top;
+ -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 76%,rgba(0,0,0,.86) 88%,transparent 100%);
+ mask-image:linear-gradient(180deg,#000 0%,#000 76%,rgba(0,0,0,.86) 88%,transparent 100%);
+}
+.r-info .r-dress .r-dress-statue{left:-10%;width:67%;height:51%}
+@media(min-width:800px){
+ .r-home .r-hero--board .r-cover-photo{height:min(100cqw,540px);top:5%}
+}
