@@ -1,0 +1,19 @@
+
+/* Reference-matched Mariyno scene, proportions measured from the approved 863 x 1822 composition.
+   Do not substitute the old r-venue layout. Independent HTML elements remain clickable/selectable. */
+.r-app{container-type:inline-size}
+.v2-venue{container-type:inline-size;position:relative;width:100%;height:max(100svh,calc(100cqw * 2.111));min-height:760px;overflow:hidden;background:#F8F8F5;isolation:isolate}
+.v2-venue-photo{position:absolute;top:0;left:0;width:100%;height:46%;overflow:hidden}
+.v2-venue-photo img{display:block;width:100%;height:100%;object-fit:fill}
+.v2-venue-copy{position:absolute;z-index:2;top:44.4%;left:0;right:0;text-align:center;display:flex;flex-direction:column;align-items:center;padding:0 3%}
+.v2-venue-label{font-family:'Manrope',sans-serif;font-size:2.45cqw;font-weight:700;letter-spacing:.23em;color:#BD9254;margin:0 0 2.3cqw}
+.v2-venue-copy h1{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:12.6cqw;line-height:.85;letter-spacing:-.065em;margin:0 0 3.3cqw;color:#0F2619;text-align:center}
+.v2-venue-copy p{font-family:'Manrope',Arial,sans-serif;color:#606761;font-weight:500;font-size:3.25cqw;line-height:1.42;margin:0;max-width:76cqw}
+.v2-venue-directions{display:flex;align-items:center;justify-content:center;gap:5.5cqw;border:1px solid #BD9254;border-radius:100px;width:58cqw;height:9.25cqw;margin-top:3.1cqw;background:transparent;color:#1A3124;font-family:'Manrope',sans-serif;font-size:2.75cqw;letter-spacing:.14em;font-weight:700;text-decoration:none;white-space:nowrap}
+.v2-venue-directions svg{width:3.25cqw;height:3.25cqw;color:#BD9254}
+.v2-venue-thumbnails{position:absolute;z-index:2;top:73.4%;left:4.05%;right:4.05%;height:16.2%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2.4%}
+.v2-venue-thumbnails img{height:100%;width:100%;object-fit:cover;border-radius:1.8cqw;display:block}
+.r-info>.r-tabs{height:calc(20.5cqw + env(safe-area-inset-bottom));min-height:65px;max-height:94px;background:rgba(250,251,247,.98);border-radius:5cqw 5cqw 0 0;padding:1cqw .7cqw calc(.6cqw + env(safe-area-inset-bottom));box-shadow:0 -6px 25px rgba(49,68,49,.06)}
+.r-info>.r-tabs a{gap:.8cqw;font-size:2.55cqw}
+.r-info>.r-tabs svg{width:5.1cqw;height:5.1cqw}
+@media(max-width:420px){.v2-venue{min-height:0}.r-info>.r-tabs{min-height:64px}.r-info>.r-tabs a{font-size:2.5cqw;gap:4px}}
