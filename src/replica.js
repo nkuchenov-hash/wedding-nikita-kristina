@@ -72,9 +72,15 @@ function gallery(){
  '<p class="r-draft-note">Это иллюстративные снимки для оформления. Гости смогут загружать настоящие фотографии после подключения приватного хранилища.</p></section>',
  'r-gallery-page-outer');
 }
-function venue(){return '<section class="r-venue"><div class="r-photo-head r-venue-photo">'+img('columns','','Колонны усадьбы в парке',true)+'</div><div class="r-curve-content r-venue-text">'+heading('МЕСТО','Усадьба<br>Марьино','Живописный парк, историческая архитектура и особая атмосфера — идеальное место для нашего праздника.')+
- '<a href="https://yandex.ru/maps/?text=%D1%83%D1%81%D0%B0%D0%B4%D1%8C%D0%B1%D0%B0%20%D0%9C%D0%B0%D1%80%D1%8C%D0%B8%D0%BD%D0%BE%20%D0%90%D0%BD%D0%B4%D1%80%D0%B8%D0%B0%D0%BD%D0%BE%D0%B2%D0%BE" target="_blank" rel="noopener noreferrer" class="r-pill">КАК ДОБРАТЬСЯ <span>→</span></a>'+
- '<div class="r-venue-tiles"><figure>'+img('garden','','Парк усадьбы Марьино')+'</figure><figure>'+img('statue','','Декоративная садовая скульптура')+'</figure></div><p class="r-draft-note">Площадка и дата предварительные. Фотографии отражают будущую атмосферу и локацию.</p></div></section>'}
+function venue(){
+ const asset=(name,alt,fallback)=>'<img src="./public/reference/'+name+'.jpg" alt="'+esc(alt)+'" data-fallback="'+fallback+'" onerror="this.dataset.fallbackApplied=\'true\';this.onerror=null;this.src=this.dataset.fallback" loading="eager" decoding="async">';
+ return '<section class="v2-venue" aria-label="Усадьба Марьино">'+
+  '<div class="v2-venue-photo">'+asset('venue-photo','Белосерые колонны с белыми розами и зеленью — визуализация','./public/photos/columns.jpg')+'</div>'+
+  '<div class="v2-venue-copy"><div class="v2-venue-label">МЕСТО</div><h1>Усадьба<br>Марьино</h1><p>Живописный парк, историческая<br class="v2-wide-break"> архитектура и особая атмосфера —<br class="v2-wide-break"> идеальное место для особого праздника.</p>'+
+  '<a class="v2-venue-directions" href="https://yandex.ru/maps/?text=%D1%83%D1%81%D0%B0%D0%B4%D1%8C%D0%B1%D0%B0%20%D0%9C%D0%B0%D1%80%D1%8C%D0%B8%D0%BD%D0%BE%20%D0%90%D0%BD%D0%B4%D1%80%D0%B8%D0%B0%D0%BD%D0%BE%D0%B2%D0%BE" target="_blank" rel="noopener noreferrer"><span>КАК ДОБРАТЬСЯ</span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></a></div>'+
+  '<div class="v2-venue-thumbnails">'+asset('venue-balustrade','Балюстрада со статуей и розами','./public/photos/garden.jpg')+asset('venue-cherub','Белая садовая статуя среди зелени','./public/photos/statue.jpg')+'</div>'+
+  '</section>';
+}
 function dress(){return '<section class="r-dress">'+img('statue','r-dress-bg','Садовая статуя и зелень')+'<div class="r-dress-content">'+heading('ДРЕСС-КОД','Вдохновение<br>в деталях','Мы будем рады, если в своих образах вы поддержите эстетику нашего дня.')+
  '<div class="r-color-dots"><i style="background:#214D31"></i><i style="background:#4C8C46"></i><i style="background:#83B96B"></i><i style="background:#E2E4E1"></i><i style="background:#C1A46C"></i></div>'+
  '<p>Природные оттенки, элегантные образы, лёгкие ткани. Без кричащих и неоновых цветов.</p><small>Цвета пока служат стилистическим ориентиром сайта, а не утверждённым обязательным дресс-кодом.</small>'+
