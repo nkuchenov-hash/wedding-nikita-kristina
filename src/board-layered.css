@@ -129,3 +129,159 @@
 .r-day-card h3{font:500 32px/1.15 'Cormorant Garamond',serif;margin:9px 0}
 .r-day-card p{font-size:16px!important;line-height:1.55!important;color:#385540}
 .r-day-card--main{background:#E7EFE6;border-left:4px solid #214D31;border-radius:0 12px 12px 0}
+
+
+
+/* 2026-10-29 / PRODUCTION ART PASS.
+   Seven genuine high-resolution alpha-transparent PNGs, each separately
+   positioned in the actual responsive HTML. No screenshot-image replacements.
+   Approved /info venue scene is deliberately untouched. */
+.r-home .r-hero--board .r-hero-bouquet{
+  position:absolute;z-index:3;left:-19%;bottom:24%;width:65%;height:37%;
+  object-fit:contain;object-position:left bottom;pointer-events:none;
+  filter:drop-shadow(7px 13px 12px rgba(4,26,11,.4));
+  opacity:.9;
+}
+.r-home .r-hero--board .r-hero-title{z-index:5}
+.r-home .r-hero--board .r-hero-title h1{
+  text-shadow:0 3px 17px rgba(4,19,11,.52);
+}
+
+/* Invitation: independent cutout foliage on left, carved cherub on right,
+   separate flower frames below. All backgrounds are real transparent pixels. */
+.r-home .r-invitation{
+  position:relative;isolation:isolate;overflow:hidden;
+  height:880px;min-height:880px;background:#F2F4F3;
+}
+.r-home .r-invitation > .r-invite-greens{
+  position:absolute;top:-5%;left:-9%;width:58%;height:28%;z-index:6;
+  pointer-events:none;overflow:visible;
+}
+.r-home .r-invitation > .r-invite-greens img{
+  width:100%;height:100%;object-fit:contain;object-position:left top;
+  filter:drop-shadow(4px 8px 7px rgba(30,62,35,.21));
+}
+.r-home .r-invitation > .r-invite-statue{
+  position:absolute;top:-2%;right:-8%;width:67%;height:34%;z-index:3;
+  object-fit:contain;object-position:right top;opacity:1;
+  filter:drop-shadow(-5px 12px 8px rgba(38,49,33,.13));
+  mask-image:none;
+}
+.r-home .r-invitation .r-invite-head{
+  position:absolute;z-index:7;top:26%;left:5%;right:5%;
+  padding:0;text-align:center;
+}
+.r-home .r-invitation .r-invite-head h2{
+  font-size:clamp(58px,14.5cqw,80px);line-height:.9;
+  margin:10px 0 16px;
+}
+.r-home .r-invitation .r-invite-head p{
+  font-size:17px;line-height:1.52;font-weight:500;
+  max-width:355px;margin-inline:auto;color:#293d30;
+}
+.r-home .r-invitation .r-invite-picture{
+  position:absolute;z-index:2;left:0;right:0;bottom:0;
+  height:39%;overflow:visible;margin:0;
+}
+.r-home .r-invitation .r-invite-picture:before{
+  position:absolute;z-index:2;inset:-2px 0 0;
+  background:linear-gradient(180deg,#F2F4F3 0%,rgba(242,244,243,.83) 10%,transparent 29%,transparent 75%,rgba(13,39,22,.16) 100%);
+  pointer-events:none;
+}
+.r-home .r-invitation .r-invite-picture > img:not(.board-estate-leaf){
+  width:100%;height:100%;object-fit:cover;object-position:center 53%;
+}
+.r-home .r-invitation .r-invite-picture .board-estate-leaf{
+  position:absolute;z-index:8;pointer-events:none;left:-12%;top:-16%;
+  width:52%;height:112%;object-fit:contain;object-position:left bottom;
+  opacity:1;transform:none;
+  filter:drop-shadow(7px 9px 7px rgba(15,53,27,.24));
+}
+.r-home .r-invitation .r-invite-picture .board-estate-leaf--right{
+  left:auto;right:-14%;top:-18%;width:52%;height:114%;
+  object-position:right center;transform:scaleX(-1);
+  filter:drop-shadow(-7px 9px 8px rgba(16,43,23,.27));
+}
+.r-home .r-invitation .r-invite-picture span{
+  position:absolute;z-index:10;left:0;right:0;bottom:13%;
+  font-size:29px;text-shadow:0 2px 10px rgba(5,34,13,.45);
+}
+
+/* Dress code: full-length white marble muse, bottom flowering foliage. */
+.r-info .r-dress{
+  position:relative;isolation:isolate;overflow:hidden;
+  height:955px;min-height:955px;background:#F2F4F3;
+}
+.r-info .r-dress .r-dress-statue{
+  position:absolute;top:-3%;left:-14%;width:73%;height:44%;
+  z-index:2;overflow:visible;background:none;
+}
+.r-info .r-dress .r-dress-statue img{
+  display:block;width:100%;height:100%;object-fit:contain;
+  object-position:left top;filter:drop-shadow(5px 7px 9px rgba(25,48,26,.15));
+}
+.r-info .r-dress .r-dress-statue:after{background:none}
+.r-info .r-dress .r-dress-leaves{
+  position:absolute;top:39%;left:-19%;width:62%;height:26%;
+  overflow:visible;z-index:4;pointer-events:none;
+}
+.r-info .r-dress .r-dress-leaves img{
+  width:100%;height:100%;object-fit:contain;object-position:left bottom;
+  filter:drop-shadow(8px 7px 9px rgba(30,63,26,.23));
+}
+.r-info .r-dress .r-dress-content{
+  position:absolute;top:29%;left:6%;right:6%;z-index:5;
+  text-align:center;padding:0;
+}
+.r-info .r-dress .r-dress-content .r-heading h1{
+  font-size:clamp(50px,12.5cqw,67px);margin:3cqw 0;
+}
+.r-info .r-dress .r-dress-content .r-heading p,
+.r-info .r-dress .r-dress-content>p{
+  font-size:17px;line-height:1.45;
+}
+.r-info .r-dress .r-dress-content>small{
+  font-size:13px;line-height:1.5;max-width:330px;
+}
+.r-info .r-dress .r-color-dots{
+  margin:20px auto 13px;position:relative;z-index:5;
+}
+.r-info .r-dress .r-dress-collage{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px;height:210px;margin-top:19px;z-index:7;position:relative;
+}
+.r-info .r-dress .r-dress-collage figure{
+  height:100%;min-width:0;overflow:hidden;border-radius:14px;
+  box-shadow:0 6px 15px rgba(27,49,30,.10);
+}
+.r-info .r-dress .r-dress-collage img{
+  width:100%;height:100%;object-fit:cover;
+}
+
+/* Galley/guest leaves are photographic PNG with alpha and soft cast shadow. */
+.r-gallery-page .r-gallery-leaf{
+  position:absolute;top:-17px;left:-18px;
+  width:168px;height:185px;overflow:visible;z-index:3;
+}
+.r-gallery-page .r-gallery-leaf img{
+  width:100%;height:100%;object-fit:contain;object-position:left top;
+  filter:drop-shadow(5px 7px 6px rgba(34,64,29,.18));
+}
+.r-guests .r-guests-foliage{
+  top:-15px;left:-22px;width:150px;height:180px;
+  filter:drop-shadow(4px 8px 6px rgba(23,50,26,.18));
+}
+.r-home .r-invitation p,.r-info .r-dress p,.r-program .r-program-note,
+.r-gallery-page .r-gallery-note,.r-details>p{font-size:16px}
+
+/* On narrow phones, preserve imagery and readable copy rather than shrinking. */
+@media(max-width:380px){
+ .r-home .r-invitation{height:920px;min-height:920px}
+ .r-home .r-invitation .r-invite-head{top:25%}
+ .r-home .r-invitation .r-invite-head p{font-size:16px}
+ .r-info .r-dress{height:1010px;min-height:1010px}
+ .r-info .r-dress .r-dress-content{top:29%}
+}
+@media(prefers-reduced-motion:reduce){
+ .r-home .r-hero-bouquet,.r-invitation img,.r-dress img{transition:none!important}
+}
