@@ -74,6 +74,22 @@ jobs:
             cp _site/public/photos/couple.jpg _site/public/photos/couple-ref.jpg
           fi
 
+          # Dress-code cards: editorial formalwear portraits, no generic venue substitutions.
+          fetch_optional_photo() {
+            local name="$1" photo_id="$2" backup="$3"
+            if ! curl --fail --location --silent --show-error --retry 2 --max-time 25 \
+              --output "_site/public/photos/${name}.jpg" \
+              "https://images.pexels.com/photos/${photo_id}/pexels-photo-${photo_id}.jpeg?auto=compress&cs=tinysrgb&w=700"; then
+              cp "_site/public/photos/${backup}.jpg" "_site/public/photos/${name}.jpg"
+            fi
+            if [ "$(stat -c%s "_site/public/photos/${name}.jpg")" -lt 10000 ]; then
+              cp "_site/public/photos/${backup}.jpg" "_site/public/photos/${name}.jpg"
+            fi
+          }
+          fetch_optional_photo dressjacket 33815164 couple
+          fetch_optional_photo dressgown 7273705 couple2
+          fetch_optional_photo dresstux 17717574 couple
+
           test "$(find _site/public/photos -type f | wc -l)" -ge 11
       - name: Render and verify the nine reference screens
         run: |
