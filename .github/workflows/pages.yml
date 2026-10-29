@@ -74,7 +74,7 @@ jobs:
             cp _site/public/photos/couple.jpg _site/public/photos/couple-ref.jpg
           fi
 
-          test "$(find _site/public/photos -type f | wc -l)" -eq 10
+          test "$(find _site/public/photos -type f | wc -l)" -ge 11
       - name: Render and verify the nine reference screens
         run: |
           npm install --no-save --no-package-lock puppeteer-core@24
