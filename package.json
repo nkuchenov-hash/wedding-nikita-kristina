@@ -6,6 +6,6 @@
   "scripts": {
     "dev": "node tools/dev-server.mjs",
     "test": "node --test",
-    "check": "node --check src/app.js && node --check src/data.js && npm test"
+    "check": "node --check src/app.js && node --check src/data.js && node --check src/comparison.js && npm test"
   }
 }

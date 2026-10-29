@@ -24,10 +24,11 @@ jobs:
         run: |
           mkdir -p _site/src _site/public
           cp index.html _site/
-          cp src/app.js src/data.js src/styles.css src/editorial.js src/editorial.css src/replica.js src/replica.css src/venue-exact.css src/wedding-polish.css src/reference-grade.css src/board-layered.css _site/src/
+          cp src/app.js src/data.js src/styles.css src/editorial.js src/editorial.css src/replica.js src/replica.css src/venue-exact.css src/wedding-polish.css src/reference-grade.css src/board-layered.css src/reference-corrections.css src/comparison.js src/comparison.css _site/src/
           cp public/mark.svg _site/public/
           cp -R public/reference _site/public/reference
           cp -R public/board _site/public/board
+          cp -R public/approved-reference _site/public/approved-reference
           cp -R public/production _site/public/production
           touch _site/.nojekyll
       - name: Validate real transparent design assets

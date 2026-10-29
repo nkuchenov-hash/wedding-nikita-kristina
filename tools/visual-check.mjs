@@ -46,6 +46,16 @@ try {
     outcomes.push({screen:name,brokenImages:broken.length});
   }
 
+  // Original reference images must really exist in the served website.
+  await page.goto('http://127.0.0.1:4173/#/',{waitUntil:'networkidle2'});
+  await page.waitForSelector('#reference-mobile-tabs');
+  await page.click('#reference-mobile-tabs [data-mobile="original"]');
+  await page.waitForFunction(()=>document.querySelector('#reference-screen-image')?.naturalWidth>0);
+  assert.equal(await page.$eval('#reference-comparison',el=>getComputedStyle(el).display),'flex','Mobile original comparison must be visible');
+  await page.screenshot({path:output+'/11-original-mobile.png',fullPage:false,animations:'disabled'});
+  await page.click('#reference-mobile-tabs [data-mobile="site"]');
+  assert.equal(await page.$eval('#app',el=>getComputedStyle(el).visibility),'visible','Mobile site must restore after comparison');
+
   // Interactive smoke: gallery filters, image viewer and preview-only RSVP.
   await page.goto('http://127.0.0.1:4173/#/gallery',{waitUntil:'networkidle2'});
   await page.waitForSelector('.r-photo-filters');
@@ -70,7 +80,17 @@ try {
   console.log('INTERACTIONS OK: gallery filters, lightbox, preview-only RSVP');
   await page.setViewport({width:1280,height:900,deviceScaleFactor:1});
   await page.goto('http://127.0.0.1:4173/#/',{waitUntil:'networkidle2'});
+  await page.waitForSelector('#reference-comparison');
+  await page.waitForFunction(()=>document.querySelector('#reference-screen-image')?.naturalWidth>0);
+  const split=await page.evaluate(()=>({
+    pane:Math.round(document.querySelector('#reference-comparison').getBoundingClientRect().width),
+    app:Math.round(document.querySelector('#app').getBoundingClientRect().width),
+    original:getComputedStyle(document.querySelector('#reference-comparison')).display
+  }));
+  assert.equal(split.original,'flex','Original reference must show beside site on desktop');
+  assert.ok(Math.abs(split.app-split.pane)<5,'Both comparison halves should be equal width');
   await page.screenshot({path:output+'/10-desktop.png',fullPage:false,animations:'disabled'});
+  console.log('REFERENCE COMPARISON OK:',JSON.stringify(split));
   console.log('VISUAL CHECK OK:',JSON.stringify(outcomes));
   console.log('Screenshots: /previews/01-home.png ... /previews/10-desktop.png');
 } finally {
