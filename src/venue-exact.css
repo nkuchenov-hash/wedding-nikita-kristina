@@ -17,3 +17,10 @@
 .r-info>.r-tabs a{gap:.8cqw;font-size:2.55cqw}
 .r-info>.r-tabs svg{width:5.1cqw;height:5.1cqw}
 @media(max-width:420px){.v2-venue{min-height:0}.r-info>.r-tabs{min-height:64px}.r-info>.r-tabs a{font-size:2.5cqw;gap:4px}}
+
+
+/* Exact source-image crop: remove the photographed button border that
+   appeared above the two independent thumbnail frames. */
+.v2-venue-thumbnails figure{position:relative;margin:0;overflow:hidden;border-radius:1.8cqw;width:100%;height:100%}
+.v2-venue-thumbnails figure img{position:absolute;top:-15%;left:0;width:100%;height:116%;object-fit:cover;object-position:center bottom;border-radius:0}
+.v2-venue-photo{clip-path:polygon(0 0,100% 0,100% 100%,0 91%)}
