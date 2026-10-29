@@ -24,9 +24,10 @@ jobs:
         run: |
           mkdir -p _site/src _site/public
           cp index.html _site/
-          cp src/app.js src/data.js src/styles.css src/editorial.js src/editorial.css src/replica.js src/replica.css src/venue-exact.css src/wedding-polish.css src/reference-grade.css _site/src/
+          cp src/app.js src/data.js src/styles.css src/editorial.js src/editorial.css src/replica.js src/replica.css src/venue-exact.css src/wedding-polish.css src/reference-grade.css src/board-layered.css _site/src/
           cp public/mark.svg _site/public/
           cp -R public/reference _site/public/reference
+          cp -R public/board _site/public/board
           touch _site/.nojekyll
       - name: Build local photographic assets from individual references
         shell: bash
