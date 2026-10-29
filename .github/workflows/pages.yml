@@ -26,6 +26,7 @@ jobs:
           cp index.html _site/
           cp src/app.js src/data.js src/styles.css src/editorial.js src/editorial.css src/replica.js src/replica.css src/venue-exact.css _site/src/
           cp public/mark.svg _site/public/
+          cp -R public/reference _site/public/reference
           touch _site/.nojekyll
       - name: Build local photographic assets from individual references
         shell: bash
