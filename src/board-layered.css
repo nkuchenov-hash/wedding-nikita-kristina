@@ -107,3 +107,10 @@
 .r-dress .r-dress-collage{height:190px;margin-top:14px}
 .r-dress .r-dress-leaves{top:42%;left:-10%;height:23%;width:37%}
 .r-gallery-page .r-gallery-leaf{top:-12px;left:-23px;width:135px;height:152px}
+
+
+/* The image is explicitly a visual mockup, not a falsely precise map; route
+   access remains a separate real link. */
+.r-details .r-map--illustration{height:220px;position:relative;overflow:hidden;border-radius:14px;background:#E0E8DE}
+.r-details .r-map--illustration img{width:100%;height:100%;display:block;object-fit:cover;object-position:center;filter:saturate(.85)}
+.r-details .r-map-real-link{display:block;font-size:16px;text-align:center;margin:16px auto 8px;padding:12px 16px;border:1px solid #C1A46C;border-radius:40px;max-width:310px;text-decoration:none;color:#193A24;background:#fff}
