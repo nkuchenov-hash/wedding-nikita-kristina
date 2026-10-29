@@ -10,7 +10,10 @@ const PHOTO={
  garden:'./public/photos/garden.jpg',
  lake:'./public/photos/lake.jpg',
  statue:'./public/photos/statue.jpg',
- bridge:'./public/photos/bridge.jpg'
+ bridge:'./public/photos/bridge.jpg',
+ venueHero:'./public/reference/venue-hero-hi.jpg',
+ venueStatue:'./public/reference/venue-right-hi.jpg',
+ venueGarden:'./public/reference/venue-left-hi.jpg'
 };
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 const img=(name,cls='',alt='',priority=false)=>'<img class="'+cls+'" src="'+PHOTO[name]+'" alt="'+esc(alt)+'" loading="'+(priority?'eager':'lazy')+'" decoding="async" referrerpolicy="no-referrer">';
@@ -42,17 +45,24 @@ function footer(){return '<footer class="r-footer">Никита <em>&</em> Кр�
 function shell(path,body,cls=''){return '<div class="r-app '+cls+'"><div class="r-site">'+body+footer()+'</div>'+bottom(path)+'</div>'}
 function home(){
  return shell('/',
- '<section class="r-hero">'+img('couple','r-cover-photo','Временная иллюстративная свадебная фотография пары',true)+'<div class="r-hero-dim"></div><div class="r-top-label">УСАДЬБА МАРЬИНО</div><div class="r-hero-title"><span>Приглашаем на нашу свадьбу</span><h1>Никита<br><em>&</em><br>Кристина</h1>'+flour()+'<p>17 ИЮНЯ 2027</p><small>Дата и место предварительные</small></div></section>'+
- '<section class="r-invitation">'+leaf()+img('statue','r-invite-statue','Классическая садовая скульптура')+'<div class="r-invite-head"><span class="r-micro">МЫ ЖЕНИМСЯ!</span><h2>Никита<br><em>&</em><br>Кристина</h2><p>И хотим разделить этот особенный день с самыми близкими людьми. Будем счастливы видеть вас на нашей свадьбе в усадьбе Марьино.</p>'+flour()+'</div><div class="r-invite-picture">'+img('estate','','Исторический фасад усадьбы Марьино')+'<span>С любовью, Никита и Кристина</span></div></section>'+
+ '<section class="r-hero r-hero--editorial">'+img('couple','r-cover-photo','Иллюстративное свадебное фото: пока не Никита и Кристина',true)+'<div class="r-hero-dim"></div><div class="r-top-label">УСАДЬБА МАРЬИНО</div><div class="r-hero-title"><span>Мы приглашаем вас на нашу свадьбу</span><h1>Никита<br><em>&</em><br>Кристина</h1>'+flour()+'<p>17 ИЮНЯ 2027</p><small>Дата и место предварительные</small></div><a class="r-scroll-indicator" href="#welcome" aria-label="Листайте к приглашению"><span>⌄</span></a></section>'+
+ '<section class="r-invitation" id="welcome"><div class="r-invite-greens" aria-hidden="true">'+leaf()+'</div>'+img('venueStatue','r-invite-statue','Белая садовая скульптура на фоне зелени')+'<div class="r-invite-head"><span class="r-micro">МЫ ЖЕНИМСЯ!</span><h2>Никита<br><em>&</em><br>Кристина</h2><p>И хотим разделить этот особенный день с самыми близкими людьми. Будем счастливы видеть вас на нашей свадьбе в усадьбе Марьино.</p>'+flour()+'</div><div class="r-invite-picture">'+img('estate','','Фасад усадьбы Марьино в окружении парка')+'<span>С любовью, Никита и Кристина</span></div></section>'+
  '<section class="r-home-links">'+heading('НАШ ПРАЗДНИК','Всё, что нужно знать')+'<a href="#/schedule">'+ic('schedule')+'Программа дня <b>↗</b></a><a href="#/info">'+ic('pin')+'Усадьба Марьино <b>↗</b></a><a href="#/guests">'+ic('guests')+'Наши близкие <b>↗</b></a><a href="#/gallery">'+ic('gallery')+'Фотографии <b>↗</b></a></section>',
  'r-home');
 }
-const items=[['15:00','Сбор гостей','Встреча и общение','glass'],['16:00','Церемония','Самый важный момент нашего дня','rings'],['17:00','Банкет','Ужин, тосты, музыка и танцы','dish'],['22:00','Продолжение','Вечер в кругу самых близких','music']];
+const items=[
+ ['—','Сбор гостей','Время начала уточняется','glass'],
+ ['14:00','Регистрация','Предварительное время церемонии','rings'],
+ ['—','Праздничный ужин','Ужин и общение с близкими','dish'],
+ ['—','Вечерняя программа','Музыка, танцы и тёплые моменты','music']
+];
 function schedule(){
  return shell('/schedule',
- '<section class="r-photo-head r-schedule-head">'+img('ceremony','','Свадебный стол под деревьями в саду',true)+'</section>'+
- '<section class="r-curve-content r-program">'+heading('ПРОГРАММА ДНЯ','Как всё<br>будет')+
- '<div class="r-timeline">'+items.map((item,i)=>'<div class="r-time-item"><div class="r-time-icon">'+ic(item[3])+'</div><div class="r-time-line"><i></i></div><div class="r-time-description"><b>'+item[0]+'</b><h3>'+item[1]+'</h3><p>'+item[2]+'</p></div></div>').join('')+'</div><p class="r-draft-note">Программа и время приведены как пример оформления. Подтверждён только предварительный ориентир регистрации — 14:00; итоговый тайминг будет опубликован позже.</p></section>',
+ '<section class="r-photo-head r-schedule-head r-cinematic-photo">'+img('ceremony','','Праздничный стол с цветами и свечами в зелёном саду',true)+'</section>'+
+ '<section class="r-curve-content r-program"><svg class="r-section-wave" viewBox="0 0 500 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 4 C160 12 323 37 500 55 L500 60 H0Z" fill="currentColor"/></svg>'+
+ heading('ПРОГРАММА ДНЯ','Как всё<br>будет')+
+ '<div class="r-timeline">'+items.map(item=>'<div class="r-time-item"><div class="r-time-icon">'+ic(item[3])+'</div><div class="r-time-line"><i></i></div><div class="r-time-description"><b>'+item[0]+'</b><h3>'+item[1]+'</h3><p>'+item[2]+'</p></div></div>').join('')+'</div>'+
+ '<p class="r-draft-note">Расписание ещё согласовывается. 14:00 — предварительный ориентир регистрации; остальные часы появятся после утверждения программы.</p></section>',
  'r-schedule');
 }
 function guests(){
@@ -64,12 +74,19 @@ function guests(){
  'r-guests-page');
 }
 function profile(){return shell('/guests','<section class="r-profile-page">'+heading('КАРТОЧКА ГОСТЯ','Наш гость','Это пример будущей страницы, без персональных данных.')+'<div class="r-guest-avatar">'+ic('heart')+'</div><p>Город · Знакомство с парой · Воспоминания · Личные фотографии</p><a href="#/guests" class="r-pill">← Все гости</a></section>','r-profile')}
-const photos=[['couple','Влюблённые'],['estate','Усадьба'],['table','Детали'],['ceremony','Праздник'],['couple2','Моменты'],['garden','Марьино'],['bridge','Природа'],['columns','Колонны']];
+const photos=[
+ ['couple','Мы','couple'],['estate','Усадьба','estate'],['table','Цветы','inspo'],
+ ['ceremony','Праздник','inspo'],['couple2','Моменты','couple'],['venueGarden','Парк','estate'],
+ ['venueStatue','Детали','estate'],['garden','Марьино','estate']
+];
 function gallery(){
- return shell('/gallery','<section class="r-gallery-page"><div class="r-gallery-leaf">'+leaf()+'</div>'+heading('НАШИ ФОТОГРАФИИ','История<br>в кадрах')+
- '<div class="r-photo-filters" role="group" aria-label="Фильтр фотогалереи"><button class="active" data-filter="all">Все</button><button data-filter="couple">Мы</button><button data-filter="estate">Усадьба</button><button data-filter="inspo">Вдохновение</button></div>'+
- '<div class="r-masonry">'+photos.map(([key,title],i)=>'<figure class="r-gallery-tile" data-category="'+(['couple','estate','inspo','inspo','couple','estate','estate','estate'][i])+'">'+img(key,'',title)+'<figcaption>'+title+'</figcaption></figure>').join('')+'</div>'+
- '<p class="r-draft-note">Это иллюстративные снимки для оформления. Гости смогут загружать настоящие фотографии после подключения приватного хранилища.</p></section>',
+ return shell('/gallery',
+ '<section class="r-gallery-page"><div class="r-gallery-leaf" aria-hidden="true">'+leaf()+'</div>'+
+ heading('НАШИ ФОТОГРАФИИ','История<br>в кадрах')+
+ '<div class="r-photo-filters" role="group" aria-label="Фильтр фотогалереи"><button class="active" aria-pressed="true" data-filter="all">Все</button><button aria-pressed="false" data-filter="couple">Мы</button><button aria-pressed="false" data-filter="estate">Усадьба</button><button aria-pressed="false" data-filter="inspo">Вдохновение</button></div>'+
+ '<div class="r-masonry">'+photos.map(([key,title,cat])=>'<figure class="r-gallery-tile" data-category="'+cat+'"><button class="r-photo-open" type="button" aria-label="Открыть изображение: '+title+'">'+img(key,'',title)+'<span class="r-image-caption">'+title+'</span></button></figure>').join('')+'</div>'+
+ '<p class="r-draft-note">Это временные иллюстративные кадры. Общие фотографии гостей появятся после подключения защищённого хранилища.</p>'+
+ '<dialog class="r-lightbox" aria-label="Просмотр фотографии"><button type="button" class="r-lightbox-close" aria-label="Закрыть фотографию">×</button><img alt=""><p></p></dialog></section>',
  'r-gallery-page-outer');
 }
 function venue(){
@@ -83,14 +100,21 @@ function venue(){
   '<div class="v2-venue-thumbnails"><figure>'+venueAsset('venue-left-hi.jpg','Самостоятельная фотоплитка: балюстрада и скульптура в зелёном саду')+'</figure><figure>'+venueAsset('venue-right-hi.jpg','Самостоятельная фотоплитка: белая скульптура среди деревьев')+'</figure></div>'+
   '</section>';
 }
-function dress(){return '<section class="r-dress">'+img('statue','r-dress-bg','Садовая статуя и зелень')+'<div class="r-dress-content">'+heading('ДРЕСС-КОД','Вдохновение<br>в деталях','Мы будем рады, если в своих образах вы поддержите эстетику нашего дня.')+
- '<div class="r-color-dots"><i style="background:#214D31"></i><i style="background:#4C8C46"></i><i style="background:#83B96B"></i><i style="background:#E2E4E1"></i><i style="background:#C1A46C"></i></div>'+
- '<p>Природные оттенки, элегантные образы, лёгкие ткани. Без кричащих и неоновых цветов.</p><small>Цвета пока служат стилистическим ориентиром сайта, а не утверждённым обязательным дресс-кодом.</small>'+
- '<div class="r-dress-collage"><figure>'+img('couple2','','Свадебный образ')+'</figure><figure>'+img('ceremony','','Цветочное оформление')+'</figure><figure>'+img('table','','Цветы и детали')+'</figure></div></div></section>'}
-function rsvp(){return '<section class="r-rsvp" id="rsvp">'+heading('ПОДТВЕРЖДЕНИЕ','Будем рады<br>вашему ответу','Пожалуйста, подтвердите своё присутствие, когда откроется регистрация.')+
+function dress(){
+ return '<section class="r-dress"><div class="r-dress-statue">'+img('venueStatue','r-dress-bg','Классическая белая садовая скульптура')+'</div><div class="r-dress-leaves" aria-hidden="true">'+leaf()+'</div>'+
+ '<div class="r-dress-content">'+heading('ДРЕСС-КОД','Вдохновение<br>в деталях','Мы будем рады, если в своих образах вы поддержите эстетику нашего дня.')+
+ '<div class="r-color-dots" aria-label="Палитра сайта"><i style="background:#214D31"></i><i style="background:#4C8C46"></i><i style="background:#83B96B"></i><i style="background:#E2E4E1"></i><i style="background:#C1A46C"></i></div>'+
+ '<p>Природные оттенки, элегантные образы, лёгкие ткани.</p><small>Это пока цветовые ориентиры оформления сайта, а не обязательный дресс-код для гостей.</small>'+
+ '<div class="r-dress-collage"><figure>'+img('couple2','','Элегантный свадебный образ')+'</figure><figure>'+img('garden','','Природные зелёные оттенки')+'</figure><figure>'+img('table','','Белые цветы и золотые детали')+'</figure></div></div></section>';
+}
+function rsvp(){
+ return '<section class="r-rsvp" id="rsvp">'+heading('ПОДТВЕРЖДЕНИЕ','Будем рады<br>вашему ответу','Анкета приглашения — пока демонстрация без сохранения данных.')+
  '<form data-rsvp><div class="r-rsvp-options"><label><input type="radio" name="yesno" value="yes" checked>'+ic('check')+' Я буду</label><label><input type="radio" name="yesno" value="no">'+ic('check')+' К сожалению, не смогу</label></div>'+
- '<label class="r-form-label">Имена гостей<input name="name" placeholder="Например: Анна и Сергей" disabled></label><label class="r-form-label">Особые пожелания<textarea placeholder="Например: аллергии, пожелания по рассадке" disabled></textarea></label>'+
- '<button type="submit" class="r-rsvp-submit">ПОСМОТРЕТЬ ДЕМО</button><output aria-live="polite"></output><p class="r-draft-note">Анкета демонстрационная: персональные данные пока не собираем и не сохраняем.</p></form></section>'}
+ '<label class="r-form-label">Имена гостей<input name="name" maxlength="100" autocomplete="off" placeholder="Например: Анна и Сергей"></label>'+
+ '<label class="r-form-label">Особые пожелания<textarea maxlength="500" placeholder="Например: аллергии, пожелания по рассадке"></textarea></label>'+
+ '<button type="submit" class="r-rsvp-submit">ПОСМОТРЕТЬ ОТВЕТ</button><output role="status" aria-live="polite"></output>'+
+ '<p class="r-draft-note">Тестовая анкета: ничего не отправляется и не сохраняется. Реальная регистрация будет доступна приглашённым позже.</p></form></section>';
+}
 function details(){return '<section class="r-details">'+heading('КОНТАКТЫ И ВАЖНОЕ','Полезная<br>информация')+
  '<div class="r-map r-map--real"><iframe title="Карта — усадьба Марьино, Андрианово" loading="lazy" referrerpolicy="no-referrer" src="https://www.openstreetmap.org/export/embed.html?bbox=30.895%2C59.414%2C30.914%2C59.423&layer=mapnik&marker=59.41806%2C30.90278"></iframe></div>'+
  '<p>Ленинградская область,<br>Тосненский район, д. Андрианово</p>'+
@@ -119,9 +143,21 @@ export function activateGuest(root){
    });
  });
  const form=root.querySelector('[data-rsvp]');
- if(form)form.addEventListener('submit',e=>{e.preventDefault();form.querySelector('output').textContent='Это пока демонстрация. Ваш ответ не сохранён.';});
+ if(form)form.addEventListener('submit',e=>{e.preventDefault();const yes=form.querySelector('[name=yesno]:checked')?.value==='yes';form.querySelector('output').textContent=(yes?'Выбрано «Я буду».':'Выбрано «Не смогу».')+' Это демонстрация: ответ не сохранён.';});
  root.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{
-  const filter=button.dataset.filter;root.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('active',b===button));
+  const filter=button.dataset.filter;root.querySelectorAll('[data-filter]').forEach(b=>{b.classList.toggle('active',b===button);b.setAttribute('aria-pressed',String(b===button));});
   root.querySelectorAll('[data-category]').forEach(el=>{el.hidden=filter!=='all'&&el.dataset.category!==filter});
  }));
+ const lightbox=root.querySelector('.r-lightbox');
+ if(lightbox){
+   root.querySelectorAll('.r-photo-open').forEach(button=>button.addEventListener('click',()=>{
+     const img=button.querySelector('img'),cap=button.querySelector('.r-image-caption');
+     lightbox.querySelector('img').src=img.src;
+     lightbox.querySelector('img').alt=img.alt;
+     lightbox.querySelector('p').textContent=cap?.textContent||'';
+     if(typeof lightbox.showModal==='function')lightbox.showModal();
+   }));
+   lightbox.querySelector('.r-lightbox-close')?.addEventListener('click',()=>lightbox.close());
+   lightbox.addEventListener('click',e=>{if(e.target===lightbox)lightbox.close()});
+ }
 }
