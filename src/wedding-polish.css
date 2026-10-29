@@ -175,3 +175,17 @@ body:not(.admin-body){background:#e4ece3!important}
 .r-gallery-leaf .r-leaf{display:none}
 .r-dress-leaves{top:465px;left:-51px;width:146px;height:160px;background:url('../public/reference/venue-foliage.png') center/contain no-repeat;transform:rotate(-18deg);opacity:.7;filter:drop-shadow(6px 9px 5px rgba(21,50,24,.2))}
 .r-dress-leaves .r-leaf{display:none}
+
+
+/* Visual inspection corrections: no hard edge of the sculpture photograph and
+   foliage never obscures captions. */
+.r-invitation .r-invite-statue{
+  right:-34px;top:-8px;width:213px;height:277px;
+  object-fit:cover;object-position:59% 19%;
+  filter:saturate(.42) brightness(1.39) contrast(.91);
+  mix-blend-mode:multiply;
+  -webkit-mask-image:radial-gradient(ellipse at 67% 33%,#000 0%,#000 36%,rgba(0,0,0,.79) 55%,transparent 82%);
+  mask-image:radial-gradient(ellipse at 67% 33%,#000 0%,#000 36%,rgba(0,0,0,.79) 55%,transparent 82%);
+}
+.r-gallery-leaf{left:-54px;top:-38px;width:143px;height:139px;opacity:.88}
+.r-dress-leaves{top:503px;left:-82px;width:125px;height:143px;opacity:.65}
