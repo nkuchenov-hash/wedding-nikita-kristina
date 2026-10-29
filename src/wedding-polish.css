@@ -165,3 +165,13 @@ body:not(.admin-body){background:#e4ece3!important}
  .r-photo-open img{transition:none}
  .r-rsvp-options label{transition:none}
 }
+
+
+/* Real high-resolution isolated botanical layer — same treatment as Mariyno venue,
+   rather than the former flat line-drawing placeholder. */
+.r-invite-greens{top:-14px;left:-16px;width:174px;height:172px;background:url('../public/reference/venue-foliage.png') center/contain no-repeat;transform:rotate(159deg);filter:drop-shadow(6px 8px 5px rgba(17,51,23,.22));opacity:.97}
+.r-invite-greens .r-leaf{display:none}
+.r-gallery-leaf{top:-24px;left:-15px;width:163px;height:154px;background:url('../public/reference/venue-foliage.png') center/contain no-repeat;transform:rotate(165deg);filter:drop-shadow(4px 8px 5px rgba(17,51,23,.21));opacity:.96}
+.r-gallery-leaf .r-leaf{display:none}
+.r-dress-leaves{top:465px;left:-51px;width:146px;height:160px;background:url('../public/reference/venue-foliage.png') center/contain no-repeat;transform:rotate(-18deg);opacity:.7;filter:drop-shadow(6px 9px 5px rgba(21,50,24,.2))}
+.r-dress-leaves .r-leaf{display:none}
