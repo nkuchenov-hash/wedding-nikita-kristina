@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir -p _site/src _site/public
           cp index.html _site/
-          cp src/app.js src/data.js src/styles.css src/editorial.js src/editorial.css src/replica.js src/replica.css src/venue-exact.css src/wedding-polish.css _site/src/
+          cp src/app.js src/data.js src/styles.css src/editorial.js src/editorial.css src/replica.js src/replica.css src/venue-exact.css src/wedding-polish.css src/reference-grade.css _site/src/
           cp public/mark.svg _site/public/
           cp -R public/reference _site/public/reference
           touch _site/.nojekyll
@@ -61,6 +61,19 @@ jobs:
           fetch_photo garden 'https://usadbamaryino.ru/sites/default/files/styles/photogal/public/images/photogallery/01_5.jpg?itok=u-XnOLTm'
           fetch_photo lake 'https://media.kudago.com/images/place/0f/6d/0f6dca476493446d87b197f827991971.jpg'
           cp _site/public/photos/lake.jpg _site/public/photos/bridge.jpg
+
+          # Warm free-use wedding portrait selected to resemble the photographed
+          # editorial reference. The fallback remains local to the site.
+          if ! curl --fail --location --silent --show-error --retry 2 --max-time 25 \
+            --user-agent 'Mozilla/5.0' \
+            --output _site/public/photos/couple-ref.jpg \
+            'https://images.pexels.com/photos/18004204/pexels-photo-18004204.jpeg?auto=compress&cs=tinysrgb&w=1400'; then
+            cp _site/public/photos/couple.jpg _site/public/photos/couple-ref.jpg
+          fi
+          if [ "$(stat -c%s _site/public/photos/couple-ref.jpg)" -lt 10000 ]; then
+            cp _site/public/photos/couple.jpg _site/public/photos/couple-ref.jpg
+          fi
+
           test "$(find _site/public/photos -type f | wc -l)" -eq 10
       - name: Render and verify the nine reference screens
         run: |
