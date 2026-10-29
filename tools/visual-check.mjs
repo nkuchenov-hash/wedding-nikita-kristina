@@ -19,7 +19,7 @@ try {
     ['01-home','#/','.r-hero'],
     ['02-invitation','#/','.r-invitation'],
     ['03-timeline','#/schedule','.r-program'],
-    ['04-venue','#/info','.r-venue'],
+    ['04-venue','#/info','.v2-venue'],
     ['05-dress','#/info','.r-dress'],
     ['06-rsvp','#/info','.r-rsvp'],
     ['07-gallery','#/gallery','.r-gallery-page'],
