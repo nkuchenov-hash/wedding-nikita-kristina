@@ -3,9 +3,9 @@ import {wedding} from './data.js';
 const PHOTO={
  boardPortrait:'./public/board/01-home/portrait-clean.webp',
  boardEstate:'./public/board/02-invitation/estate-sunny-clean.webp',
- boardCherub:'./public/board/02-invitation/cherub-head-clean.png',
+ boardCherub:'./public/production/invitation-cherub.png',
  boardTable:'./public/board/03-program/banquet-clean.webp',
- boardStatue:'./public/board/05-dress-code/sculpture-no-text.png',
+ boardStatue:'./public/production/dress-statue.png',
  boardOutfit1:'./public/board/05-dress-code/outfit-clean-1.webp',
  boardOutfit2:'./public/board/05-dress-code/outfit-clean-2.webp',
  boardOutfit3:'./public/board/05-dress-code/outfit-clean-3.webp',
@@ -67,7 +67,7 @@ function shell(path,body,cls=''){return '<div class="r-app '+cls+'"><div class="
 function home(){
  return shell('/',
  '<section class="r-hero r-hero--editorial r-hero--board">'+img('boardPortrait','r-cover-photo','Иллюстративное свадебное фото: пока не Никита и Кристина',true)+'<div class="r-hero-dim"></div><div class="r-top-label">УСАДЬБА МАРЬИНО</div><div class="r-hero-title"><span>Мы приглашаем вас на нашу свадьбу</span><h1>Никита<br><em>&</em><br>Кристина</h1>'+flour()+'<p>17 ИЮНЯ 2027</p><small>Дата и место предварительные</small></div><a class="r-scroll-indicator" href="#welcome" aria-label="Листайте к приглашению"><span>⌄</span></a></section>'+
- '<section class="r-invitation" id="welcome"><div class="r-invite-greens" aria-hidden="true"><img src="./public/reference/venue-foliage.png" alt=""></div>'+img('boardCherub','r-invite-statue','Белая садовая скульптура на фоне зелени')+'<div class="r-invite-head"><span class="r-micro">МЫ ЖЕНИМСЯ!</span><h2>Никита<br><em>&</em><br>Кристина</h2><p>И хотим разделить этот особенный день с самыми близкими людьми. Будем счастливы видеть вас на нашей свадьбе в усадьбе Марьино.</p>'+flour()+'</div><div class="r-invite-picture"><img class="board-estate-leaf board-estate-leaf--left" src="./public/reference/venue-foliage.png" alt="" aria-hidden="true"><img class="board-estate-leaf board-estate-leaf--right" src="./public/reference/venue-foliage.png" alt="" aria-hidden="true">'+img('boardEstate','','Фасад усадьбы Марьино в окружении парка')+'<span>С любовью, Никита и Кристина</span></div></section>'+
+ '<section class="r-invitation" id="welcome"><div class="r-invite-greens" aria-hidden="true"><img src="./public/production/invitation-leaves-top.png" alt=""></div>'+img('boardCherub','r-invite-statue','Белая садовая скульптура на фоне зелени')+'<div class="r-invite-head"><span class="r-micro">МЫ ЖЕНИМСЯ!</span><h2>Никита<br><em>&</em><br>Кристина</h2><p>И хотим разделить этот особенный день с самыми близкими людьми. Будем счастливы видеть вас на нашей свадьбе в усадьбе Марьино.</p>'+flour()+'</div><div class="r-invite-picture"><img class="board-estate-leaf board-estate-leaf--left" src="./public/production/invitation-flowers-left.png" alt="" aria-hidden="true"><img class="board-estate-leaf board-estate-leaf--right" src="./public/production/invitation-flowers-right.png" alt="" aria-hidden="true">'+img('boardEstate','','Фасад усадьбы Марьино в окружении парка')+'<span>С любовью, Никита и Кристина</span></div></section>'+
  '<section class="r-home-links">'+heading('НАШ ПРАЗДНИК','Всё, что нужно знать')+'<a href="#/schedule">'+ic('schedule')+'Программа дня <b>↗</b></a><a href="#/info">'+ic('pin')+'Усадьба Марьино <b>↗</b></a><a href="#/guests">'+ic('guests')+'Наши близкие <b>↗</b></a><a href="#/gallery">'+ic('gallery')+'Фотографии <b>↗</b></a></section>',
  'r-home');
 }
@@ -89,7 +89,7 @@ function schedule(){
 function guests(){
  return shell('/guests',
  '<section class="r-photo-head r-guests-image">'+img('gardenRef','','Зелёный парк Марьино',true)+'</section>'+
- '<section class="r-curve-content r-guests"><img src="./public/reference/venue-foliage.png" class="r-photo-foliage r-guests-foliage" alt="" aria-hidden="true">'+heading('НАШИ БЛИЗКИЕ','Люди нашей<br>истории','Скоро здесь появятся персональные страницы приглашённых.')+
+ '<section class="r-curve-content r-guests"><img src="./public/production/invitation-leaves-top.png" class="r-photo-foliage r-guests-foliage" alt="" aria-hidden="true">'+heading('НАШИ БЛИЗКИЕ','Люди нашей<br>истории','Скоро здесь появятся персональные страницы приглашённых.')+
  '<div class="r-guest-card"><div class="r-guest-avatar">'+ic('heart')+'</div><div><span class="r-micro">ПРИМЕР ПРОФИЛЯ</span><h2>Наш гость</h2><p>Откуда мы знакомы, любимые воспоминания и фотографии с парой.</p><a href="#/guests/primer" class="r-pill">Посмотреть карточку →</a></div></div>'+
  '<p class="r-draft-note">Настоящие имена гостей не публикуются до получения согласия и подключения защищённой части сайта.</p></section>',
  'r-guests-page');
@@ -101,7 +101,7 @@ const photos=[
 ];
 function gallery(){
  return shell('/gallery',
- '<section class="r-gallery-page"><div class="r-gallery-leaf" aria-hidden="true"><img src="./public/reference/venue-foliage.png" alt=""></div>'+
+ '<section class="r-gallery-page"><div class="r-gallery-leaf" aria-hidden="true"><img src="./public/production/gallery-leaves.png" alt=""></div>'+
  heading('НАШИ ФОТОГРАФИИ','История<br>в кадрах')+
  '<div class="r-photo-filters" role="group" aria-label="Фильтр фотогалереи"><button class="active" aria-pressed="true" data-filter="all">Все</button><button aria-pressed="false" data-filter="couple">Мы</button><button aria-pressed="false" data-filter="estate">Усадьба</button><button aria-pressed="false" data-filter="inspo">Вдохновение</button></div>'+
  '<div class="r-masonry">'+photos.map(([key,title,cat])=>'<figure class="r-gallery-tile" data-category="'+cat+'"><button class="r-photo-open" type="button" aria-label="Открыть изображение: '+title+'">'+img(key,'',title)+'<span class="r-image-caption">'+title+'</span></button></figure>').join('')+'</div>'+
@@ -121,7 +121,7 @@ function venue(){
   '</section>';
 }
 function dress(){
- return '<section class="r-dress"><div class="r-dress-statue">'+img('boardStatue','r-dress-bg','Классическая белая садовая скульптура')+'</div><div class="r-dress-leaves" aria-hidden="true"><img src="./public/reference/venue-foliage.png" alt=""></div>'+
+ return '<section class="r-dress"><div class="r-dress-statue">'+img('boardStatue','r-dress-bg','Классическая белая садовая скульптура')+'</div><div class="r-dress-leaves" aria-hidden="true"><img src="./public/production/dress-flowers.png" alt=""></div>'+
  '<div class="r-dress-content">'+heading('ДРЕСС-КОД','Вдохновение<br>в деталях','Мы будем рады, если в своих образах вы поддержите эстетику нашего дня.')+
  '<div class="r-color-dots" aria-label="Палитра сайта"><i style="background:#214D31"></i><i style="background:#4C8C46"></i><i style="background:#83B96B"></i><i style="background:#E2E4E1"></i><i style="background:#C1A46C"></i></div>'+
  '<p>Природные оттенки, элегантные образы, лёгкие ткани.</p><small>Это пока цветовые ориентиры оформления сайта, а не обязательный дресс-код для гостей.</small>'+
