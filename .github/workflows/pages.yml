@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir -p _site/src _site/public
           cp index.html _site/
-          cp src/app.js src/data.js src/styles.css src/editorial.js src/editorial.css src/replica.js src/replica.css _site/src/
+          cp src/app.js src/data.js src/styles.css src/editorial.js src/editorial.css src/replica.js src/replica.css src/venue-exact.css _site/src/
           cp public/mark.svg _site/public/
           touch _site/.nojekyll
       - name: Build local photographic assets from individual references
