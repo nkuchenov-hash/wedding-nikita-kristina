@@ -28,7 +28,23 @@ jobs:
           cp public/mark.svg _site/public/
           cp -R public/reference _site/public/reference
           cp -R public/board _site/public/board
+          cp -R public/production _site/public/production
           touch _site/.nojekyll
+      - name: Validate real transparent design assets
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import struct,zlib
+          from pathlib import Path
+          names = ["invitation-leaves-top.png","invitation-cherub.png","invitation-flowers-left.png","invitation-flowers-right.png","dress-statue.png","dress-flowers.png","gallery-leaves.png"]
+          for name in names:
+              p=Path("_site/public/production")/name
+              data=p.read_bytes()
+              assert data[:8] == b'\x89PNG\r\n\x1a\n', name
+              width,height,depth,color=struct.unpack(">IIBB",data[16:26])
+              assert color==6 and width>=1000 and height>=1000,(name,width,height,color)
+              print(f"Valid alpha-PNG {name}: {width}x{height}")
+          PY
       - name: Build local photographic assets from individual references
         shell: bash
         run: |
