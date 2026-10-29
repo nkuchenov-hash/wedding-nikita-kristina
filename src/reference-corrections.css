@@ -188,3 +188,14 @@
 }
 .r-home .r-hero--board .r-cover-photo{top:3.5%}
 .r-home .r-hero--board .r-top-label{top:5.8%;text-shadow:0 1px 7px rgba(15,35,22,.65)}
+
+/* Use the approved full-length composition as a heavily blurred, text-unreadable
+   photographic underlay, instead of a flat green void beneath the clean portrait.
+   All live headings and links remain separate HTML layers. */
+.r-home .r-hero--board:before{
+ inset:-3%;
+ background:url("../public/approved-reference/01-home.png") center top/cover no-repeat;
+ filter:blur(17px) brightness(.74) saturate(1.03);
+ -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 84%,transparent 100%);
+ mask-image:linear-gradient(180deg,#000 0%,#000 84%,transparent 100%);
+}
