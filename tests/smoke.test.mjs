@@ -17,5 +17,5 @@ test('every guest view renders through editorial route, admin stays separate',as
 test('published site includes visual assets and editorial frontend',async()=>{const workflow=await read('../.github/workflows/pages.yml');assert.match(workflow,/src\/editorial\.js/);assert.match(workflow,/src\/editorial\.css/);});
 
 test('app references the screenshot-matched guest UI',async()=>{const app=await read('../src/app.js');assert.match(app,/from '.\/replica\.js'/);});
-test('all screenshot sections have real, separate HTML',async()=>{const ui=await read('../src/replica.js');for(const key of ['r-hero','r-invitation','r-timeline','r-venue-tiles','r-dress-collage','r-rsvp-options','r-masonry','r-map','r-tabs'])assert.ok(ui.includes(key),key);});
+test('all screenshot sections have real, separate HTML',async()=>{const ui=await read('../src/replica.js');for(const key of ['r-hero','r-invitation','r-timeline','v2-venue-thumbnails','r-dress-collage','r-rsvp-options','r-masonry','r-map','r-tabs'])assert.ok(ui.includes(key),key);});
 test('replica stylesheet is loaded and published',async()=>{const html=await read('../index.html'),yaml=await read('../.github/workflows/pages.yml');assert.match(html,/src\/replica\.css/);assert.match(yaml,/src\/replica\.js src\/replica\.css/);});
