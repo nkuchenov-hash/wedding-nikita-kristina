@@ -1,0 +1,178 @@
+
+/* Wedding photographic editorial — 8 approved screen compositions.
+   The exact Mariyno venue styling (venue-exact.css) remains unchanged. */
+:root{--ed-stone:#F3F5F2;--ed-deep:#173922;--ed-gold:#C1A46C;--ed-grass:#4C8C46}
+.r-app{container-type:inline-size;background:var(--ed-stone)}
+.r-site{background:var(--ed-stone)}
+.r-app .r-heading h1{font-weight:500;letter-spacing:-.047em;color:#183522}
+.r-app .r-micro{color:#A98952;font-weight:700;letter-spacing:.17em}
+.r-photo-foliage{display:block;position:absolute;z-index:5;pointer-events:none;object-fit:contain;filter:drop-shadow(4px 9px 9px rgba(29,51,25,.2))}
+.r-footer{padding-top:45px;background:#214D31}
+.r-scroll-indicator{position:absolute;z-index:4;bottom:9.8%;left:50%;transform:translateX(-50%);border-radius:50%;width:30px;height:30px;display:grid;place-items:center;color:#fff;font-size:24px;text-decoration:none}
+.r-scroll-indicator:hover{color:#C1A46C}
+
+/* 01 — Photo-first invitation, large cinematic wedding portrait. */
+.r-hero--editorial{position:relative;isolation:isolate;height:100svh;min-height:660px;max-height:none;background:#203C28}
+.r-hero--editorial .r-cover-photo{width:100%;height:100%;object-fit:cover;object-position:52% 36%;filter:sepia(.11) saturate(1.08) contrast(1.06) brightness(1.04)}
+.r-hero--editorial .r-hero-dim{background:linear-gradient(180deg,rgba(9,28,16,.23) 0%,rgba(8,26,12,.02) 25%,rgba(9,24,14,.1) 44%,rgba(9,28,16,.42) 71%,rgba(9,27,17,.72) 100%)}
+.r-hero--editorial .r-top-label{top:10%;color:#fff;letter-spacing:.26em;font-size:2.6cqw;text-align:center;text-shadow:0 2px 12px rgba(0,0,0,.36)}
+.r-hero--editorial .r-hero-title{bottom:16%;left:3%;right:3%;display:flex;flex-direction:column;align-items:center;text-align:center}
+.r-hero--editorial .r-hero-title>span{display:none}
+.r-hero--editorial .r-hero-title h1{
+  font:italic 500 18.2cqw/.84 'Cormorant Garamond',Georgia,serif;
+  letter-spacing:-.052em;color:#fff;margin:0 0 1.9cqw;
+  text-shadow:0 2px 22px rgba(0,0,0,.46);
+}
+.r-hero--editorial .r-hero-title h1 em{display:inline-block;font-style:italic;font-size:.77em;color:#fff;line-height:.87;margin:2px 0}
+.r-hero--editorial .r-ornament{margin:4.3cqw auto 4cqw;color:#C1A46C}
+.r-hero--editorial .r-ornament i{width:17cqw}
+.r-hero--editorial .r-hero-title p{font:600 3.1cqw 'Manrope',Arial,sans-serif;letter-spacing:.18em;color:#fff}
+.r-hero--editorial .r-hero-title small{margin-top:2.8cqw;color:#F0F1E9;font-size:2.1cqw}
+.r-hero--editorial .r-scroll-indicator{bottom:9.2%}
+
+/* 02 — Invitation: real hanging greenery, off-white stone, statue, estate photo. */
+.r-invitation{
+  background:#F3F5F2;position:relative;
+  min-height:0;height:245cqw;overflow:hidden;padding:0;text-align:center;
+  isolation:isolate;
+}
+.r-invitation>.r-invite-greens{position:absolute;inset:auto;top:0;left:0;z-index:4;width:42%;height:26%;transform:none}
+.r-invitation>.r-invite-greens svg{display:none}
+.r-invitation>.r-invite-greens:before{
+ content:"";position:absolute;inset:-10% -5%;
+ background:url("../public/reference/venue-foliage.png") left top/contain no-repeat;
+ filter:drop-shadow(5px 9px 8px rgba(36,58,33,.22));transform:rotate(7deg);
+}
+.r-invitation>.r-invite-statue{
+ position:absolute;top:-1%;right:-9%;width:60%;height:38%;z-index:2;
+ object-fit:cover;object-position:48% 37%;
+ mask-image:linear-gradient(90deg,transparent 0%,black 38%),linear-gradient(180deg,black 65%,transparent 100%);
+ mask-composite:intersect;
+ filter:saturate(.68) contrast(.96) brightness(1.14);
+ border-radius:0;
+}
+.r-invite-head{position:absolute;top:26%;left:7%;right:7%;z-index:4;padding:0}
+.r-invite-head .r-micro{font-size:2.55cqw}
+.r-invite-head h2{font:italic 500 13.9cqw/.82 'Cormorant Garamond',serif;color:#183922;margin:3cqw 0 5cqw}
+.r-invite-head h2 em{font-size:.77em;line-height:.9;color:#C1A46C}
+.r-invite-head p{font-size:3.04cqw;line-height:1.72;max-width:75cqw;color:#314137;margin:0 auto}
+.r-invite-head .r-ornament{margin:4cqw auto}
+.r-invite-head .r-ornament i{width:15cqw}
+.r-invite-picture{position:absolute;inset:auto 0 0;z-index:2;height:39%;margin:0;overflow:hidden}
+.r-invite-picture img{height:100%;width:100%;object-fit:cover;object-position:50% 64%}
+.r-invite-picture:before{background:linear-gradient(to bottom,#F3F5F2 0%,rgba(243,245,242,.86) 11%,transparent 47%,rgba(10,35,17,.38) 100%)}
+.r-invite-picture span{bottom:9.5%;font-size:6.3cqw;text-shadow:0 3px 15px rgba(0,0,0,.4)}
+.r-home-links{padding:17cqw 7% 24cqw;background:#fff}
+.r-home-links .r-heading h1{font-size:12cqw}
+.r-home-links>a{min-height:65px;font-size:3.15cqw}
+.r-home-links>a svg{color:#265B35}
+
+/* 03 — Programme: full photography with curved paper and fine gold timeline. */
+.r-schedule .r-site{background:#F4F6F3}
+.r-schedule-head{height:82cqw;min-height:0;max-height:none;overflow:hidden}
+.r-schedule-head img{width:100%;height:100%;object-fit:cover;object-position:50% 55%;filter:saturate(1.12) contrast(1.02)}
+.r-program{
+  margin-top:-5cqw;z-index:3;min-height:145cqw;padding:10cqw 7% 20cqw;
+  background:#F4F6F3;border-radius:0;text-align:center;position:relative;isolation:isolate;
+}
+.r-program .r-section-wave{
+ display:block;position:absolute;z-index:-1;top:-9cqw;left:0;width:100%;height:10cqw;
+ color:#F4F6F3;pointer-events:none;
+}
+.r-program .r-heading{position:relative;z-index:2;margin-bottom:10cqw}
+.r-program .r-heading h1{font:500 15cqw/.89 'Cormorant Garamond',serif;margin:2cqw 0;color:#183522}
+.r-program .r-heading .r-micro{font-size:2.55cqw}
+.r-program .r-timeline{width:95%;margin:auto;text-align:left;padding:0 0 0 2%}
+.r-program .r-time-item{grid-template-columns:11cqw 2cqw minmax(0,1fr);gap:3.4cqw;min-height:28cqw}
+.r-program .r-time-icon{padding-top:2.9cqw}
+.r-program .r-time-icon svg{width:7cqw;height:7cqw;color:#B79A66}
+.r-program .r-time-line{margin-left:1cqw;background:#BDA477}
+.r-program .r-time-description{padding:2cqw 0 5cqw}
+.r-program .r-time-description b{display:block;color:#233C2A;font-size:2.9cqw}
+.r-program .r-time-description h3{font:500 5.5cqw/.98 'Cormorant Garamond',Georgia,serif;margin:1.6cqw 0}
+.r-program .r-time-description p{color:#586758;font-size:2.6cqw;line-height:1.48}
+.r-program .r-draft-note{max-width:81cqw;font-size:2.5cqw!important}
+
+/* 04 guests: original bespoke editorial family card, not generic SaaS tiles */
+.r-guests-image{height:68cqw;min-height:0}
+.r-guests-image img{width:100%;height:100%;object-fit:cover}
+.r-guests{position:relative;padding:13cqw 6% 24cqw;background:#F3F5F2;border-radius:36px 36px 0 0}
+.r-guests .r-heading h1{font-size:14cqw;margin:4cqw 0}
+.r-guests-foliage{position:absolute;top:-9cqw;left:-4cqw;width:30cqw;filter:drop-shadow(3px 7px 5px rgba(26,55,27,.19))}
+.r-guest-card{position:relative;overflow:hidden;background:#fff;border:1px solid #D6E3D6;border-radius:24px;padding:11cqw 6cqw}
+.r-guest-card:after{content:"";position:absolute;right:-10%;bottom:-9%;height:35cqw;width:32cqw;background:url("../public/reference/venue-foliage.png") center/contain no-repeat;opacity:.16}
+.r-guest-card h2{font-size:11cqw;color:#183922}
+.r-guest-avatar{border:1px solid #C1A46C;background:#EDF3EB}
+.r-guest-card .r-pill{border:1px solid #C1A46C;background:#fff}
+
+/* 05 — Dress code: full-height sculpture, shade palette and cropped fashion tiles. */
+.r-dress{height:247cqw;min-height:0;padding:0;background:#F3F5F2;position:relative;isolation:isolate;overflow:hidden}
+.r-dress-statue{position:absolute;top:0;left:0;z-index:1;width:59%;height:45%;overflow:hidden;border-radius:0 0 60% 0}
+.r-dress-statue img{height:100%;width:100%;object-fit:cover;object-position:48% 20%;filter:saturate(.7) brightness(1.12)}
+.r-dress-statue:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 57%,#F3F5F2 100%)}
+.r-dress-leaves{position:absolute;top:21%;left:-8%;width:40%;height:22%;z-index:3}
+.r-dress-leaves svg{display:none}
+.r-dress-leaves:after{content:"";position:absolute;inset:0;background:url("../public/reference/venue-foliage.png") center/contain no-repeat;filter:drop-shadow(5px 7px 8px rgba(27,55,31,.2))}
+.r-dress-content{position:absolute;z-index:4;top:32%;left:5.5%;right:5.5%;padding:0;text-align:center}
+.r-dress-content .r-heading h1{font:500 14.5cqw/.91 'Cormorant Garamond',serif;margin:4cqw 0}
+.r-dress-content .r-heading .r-micro{font-size:2.6cqw}
+.r-dress-content .r-heading p{font-size:3cqw;line-height:1.65;max-width:74cqw;margin:auto}
+.r-color-dots{margin:4cqw 0 3cqw;gap:2.1cqw}
+.r-color-dots i{width:10cqw;height:10cqw;border-radius:50%;box-shadow:0 1px 4px rgba(24,48,24,.08)}
+.r-dress-content>p{font-size:2.9cqw;line-height:1.7;margin:0 auto;max-width:78cqw}
+.r-dress-content>small{display:block;max-width:75cqw;margin:2cqw auto 4cqw;line-height:1.45;font-size:2.2cqw}
+.r-dress-collage{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2cqw;height:52cqw;margin-top:3cqw}
+.r-dress-collage figure{overflow:hidden;border-radius:3cqw;height:100%;margin:0;position:relative}
+.r-dress-collage img{height:100%;width:100%;object-fit:cover;object-position:50% 25%}
+
+/* 06 — RSVP: spare and elegant as in the reference, real buttons and inputs. */
+.r-rsvp{min-height:0;padding:16cqw 7% 18cqw;background:linear-gradient(#F7F8F6,#F2F4F1);color:#183522}
+.r-rsvp .r-heading h1{font:500 14.5cqw/.97 'Cormorant Garamond',Georgia,serif;margin:3.7cqw 0 5cqw}
+.r-rsvp .r-heading .r-micro{font-size:2.5cqw}
+.r-rsvp .r-heading p{font-size:3.0cqw;line-height:1.6}
+.r-rsvp-form{margin-top:8cqw}
+.r-rsvp-options{gap:2.4cqw;margin-bottom:8cqw}
+.r-rsvp-options label{min-height:11cqw;border-radius:2.2cqw;font-size:2.95cqw;background:#F6F8F5}
+.r-rsvp-options label:has(input:checked){background:#214D31;color:white}
+.r-rsvp .r-form-label{font-size:2.9cqw;margin-bottom:6.3cqw}
+.r-rsvp .r-form-label input,.r-rsvp .r-form-label textarea{
+ margin-top:2.3cqw;border-radius:2cqw;background:#F7F8F6;
+ border-color:#C8CECA;font-size:2.9cqw;
+}
+.r-rsvp .r-form-label textarea{min-height:23cqw}
+.r-rsvp-submit{margin-top:4cqw;min-height:12.5cqw;background:#C1A46C;border-radius:2.4cqw;font-size:2.85cqw;letter-spacing:.16em}
+.r-rsvp-form output{font-size:2.7cqw;line-height:1.5}
+.r-rsvp .r-draft-note{font-size:2.4cqw!important}
+
+/* 07 — Gallery: image-led collage, botanical photo overlay, thin filters. */
+.r-gallery-page{background:#F3F5F2;padding:19cqw 4.5% 19cqw;position:relative;min-height:0}
+.r-gallery-page .r-gallery-leaf{position:absolute;left:-5cqw;top:-1cqw;height:35cqw;width:35cqw;opacity:1;transform:none;pointer-events:none}
+.r-gallery-leaf svg{display:none}
+.r-gallery-leaf:before{content:"";position:absolute;inset:0;background:url("../public/reference/venue-foliage.png") center/contain no-repeat;filter:drop-shadow(4px 8px 9px rgba(35,63,31,.22))}
+.r-gallery-page .r-heading{position:relative;z-index:2}
+.r-gallery-page .r-heading h1{font:500 14.8cqw/.93 'Cormorant Garamond',serif;margin:4cqw 0 6cqw}
+.r-photo-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.4cqw;margin:0 0 3cqw}
+.r-photo-filters button{padding:2.6cqw 1cqw;font-size:2.35cqw;white-space:nowrap;border-radius:100px;min-width:0}
+.r-photo-filters button.active{background:#214D31}
+.r-masonry{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2cqw}
+.r-gallery-tile{position:relative;overflow:hidden;border-radius:3cqw;height:47cqw;box-shadow:0 2px 10px rgba(33,58,36,.07)}
+.r-gallery-tile:nth-child(3n+1){height:50cqw}
+.r-gallery-tile:nth-child(3n){height:44cqw}
+.r-gallery-tile img{width:100%;height:100%;object-fit:cover}
+.r-gallery-tile figcaption,.r-image-caption{font-size:2.5cqw}
+.r-gallery-page .r-draft-note{font-size:2.4cqw!important}
+
+/* 08 — Info: map and architectural details, no decorative fake map. */
+.r-details{padding:18cqw 5% 0;background:#F3F5F2;min-height:0}
+.r-details .r-heading h1{font:500 14cqw/.96 'Cormorant Garamond',serif;margin:4cqw 0 7cqw}
+.r-map--real{height:47cqw;border:1px solid #D6E0D7;border-radius:4cqw;overflow:hidden;background:#E1EAE0;box-shadow:0 3px 9px rgba(18,54,24,.07)}
+.r-details>p{font-size:3cqw;line-height:1.7;margin:4cqw 0 5cqw}
+.r-accordion details{border-bottom:1px solid #C7D7C8}
+.r-accordion summary{min-height:15cqw;font-size:3.2cqw}
+.r-accordion summary svg{width:5.2cqw;height:5.2cqw}
+.r-accordion details p{font-size:2.8cqw;line-height:1.6}
+.r-details-bottom{height:64cqw;margin:9cqw -5.55% 0;position:relative;overflow:hidden}
+.r-details-bottom:before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,#F3F5F2 0%,transparent 18%)}
+.r-details-bottom img{width:100%;height:100%;object-fit:cover}
+.r-tabs{background:rgba(251,253,250,.98);border-color:#DCE6DC}
+@media(max-width:360px){.r-program .r-time-item{min-height:30cqw}.r-invite-head p{font-size:3.15cqw}}
