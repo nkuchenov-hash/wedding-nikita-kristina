@@ -77,8 +77,13 @@ function schedule(){
  '<section class="r-photo-head r-schedule-head r-cinematic-photo">'+img('boardTable','','Праздничный стол с цветами и свечами в зелёном саду',true)+'</section>'+
  '<section class="r-curve-content r-program"><svg class="r-section-wave" viewBox="0 0 500 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 4 C160 12 323 37 500 55 L500 60 H0Z" fill="currentColor"/></svg>'+
  heading('ПРОГРАММА ДНЯ','Как всё<br>будет')+
- '<div class="r-timeline">'+items.map(item=>'<div class="r-time-item"><div class="r-time-icon">'+ic(item[3])+'</div><div class="r-time-line"><i></i></div><div class="r-time-description"><b>'+item[0]+'</b><h3>'+item[1]+'</h3><p>'+item[2]+'</p></div></div>').join('')+'</div>'+
- '<p class="r-draft-note">Расписание ещё согласовывается. 14:00 — время регистрации. Остальные часы появятся после утверждения программы.</p></section>',
+ '<div class="r-program-modes" role="group" aria-label="Вариант свадебной программы"><button type="button" data-program-mode="one" aria-pressed="true">Один день</button><button type="button" data-program-mode="three" aria-pressed="false">Три дня</button></div>'+
+ '<div class="r-program-one"><div class="r-timeline">'+items.map(item=>'<div class="r-time-item"><div class="r-time-icon">'+ic(item[3])+'</div><div class="r-time-line"><i></i></div><div class="r-time-description"><b>'+item[0]+'</b><h3>'+item[1]+'</h3><p>'+item[2]+'</p></div></div>').join('')+'</div></div>'+
+ '<div class="r-program-three" hidden><p class="r-program-note">Альтернативный вариант на три дня. Программа не утверждена.</p>'+
+ '<div class="r-day-card"><span>ЧЕТВЕРГ · 17 ИЮНЯ</span><h3>День 1 — встреча</h3><p>Приезд и неформальное знакомство с близкими. Время уточняется.</p></div>'+
+ '<div class="r-day-card"><span>ПЯТНИЦА · 18 ИЮНЯ</span><h3>День 2 — накануне</h3><p>Прогулки, свободное время и вечерняя встреча. Детали уточняются.</p></div>'+
+ '<div class="r-day-card r-day-card--main"><span>СУББОТА · 19 ИЮНЯ</span><h3>День 3 — торжество</h3><p><strong>14:00</strong> — церемония, затем ужин и праздничная вечеринка.</p></div></div>'+
+ '<p class="r-draft-note">Показаны варианты оформления программы. Один день и три дня пока не утверждены окончательно.</p></section>',
  'r-schedule');
 }
 function guests(){
@@ -157,6 +162,13 @@ export function activateGuest(root){
      el.src=el.src===PHOTO.garden?PHOTO.estate:PHOTO.garden;
    });
  });
+ root.querySelectorAll('[data-program-mode]').forEach(btn=>btn.addEventListener('click',()=>{
+   const three=btn.dataset.programMode==='three';
+   root.querySelectorAll('[data-program-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
+   const one=root.querySelector('.r-program-one'),extra=root.querySelector('.r-program-three');
+   if(one)one.hidden=three;
+   if(extra)extra.hidden=!three;
+ }));
  const form=root.querySelector('[data-rsvp]');
  if(form)form.addEventListener('submit',e=>{e.preventDefault();const yes=form.querySelector('[name=yesno]:checked')?.value==='yes';form.querySelector('output').textContent=(yes?'Выбрано «Я буду».':'Выбрано «Не смогу».')+' Это демонстрация: ответ не сохранён.';});
  root.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{
