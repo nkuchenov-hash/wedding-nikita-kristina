@@ -1,0 +1,168 @@
+
+/* Visual-alignment pass, 30 Oct 2026.
+ * Reference: public/approved-reference/01-home.png ... 08-info.png.
+ * Keep HTML copy, selectable controls and all photography editable.
+ * IMPORTANT: the approved 04-Mariyno venue composition is not modified here. */
+:root{--ref-paper:#F5F7F3;--ref-ink:#1C3224;--ref-gold:#C1A46C;--ref-forest:#214D31}
+.r-home,.r-schedule,.r-info,.r-gallery-page-outer{background:var(--ref-paper)}
+.r-home .r-hero--board{height:100svh;min-height:620px;max-height:none;isolation:isolate;overflow:hidden;background:#233d2b}
+.r-home .r-hero--board:before{content:"";position:absolute;z-index:0;inset:-8%;background:url("../public/board/01-home/portrait-clean.webp") 50% 30%/cover no-repeat;filter:blur(26px) brightness(.55) saturate(.93);transform:scale(1.06)}
+/* A square source crop cannot fill a portrait screen without destructive zoom.
+   Preserve its framing, then fade naturally into the dark photographic backdrop. */
+.r-home .r-hero--board .r-cover-photo{
+ position:absolute;z-index:1;display:block;left:0;top:0;width:100%;height:65%;
+ object-fit:cover;object-position:50% 23%;
+ filter:saturate(1.03) contrast(1.015);transform:none!important;
+ -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 69%,rgba(0,0,0,.76) 82%,transparent 100%);
+ mask-image:linear-gradient(180deg,#000 0%,#000 69%,rgba(0,0,0,.76) 82%,transparent 100%);
+}
+.r-home .r-hero--board .r-hero-dim{z-index:2;inset:0;background:linear-gradient(180deg,rgba(10,27,16,.14) 0%,transparent 26%,rgba(11,27,16,.08) 42%,rgba(9,31,18,.3) 61%,rgba(6,26,15,.74) 90%,rgba(7,23,13,.85) 100%)}
+.r-home .r-hero--board .r-top-label{z-index:5;top:6.5%;left:0;right:0;text-align:center;font:600 clamp(10px,2.6cqw,13px)/1.4 Manrope,Arial,sans-serif;letter-spacing:.27em;color:white}
+.r-home .r-hero--board .r-hero-title{z-index:8;left:3%;right:3%;bottom:calc(11% + env(safe-area-inset-bottom));display:flex;align-items:center;text-align:center}
+.r-home .r-hero--board .r-hero-title h1{
+ font:italic 500 clamp(64px,18.2cqw,93px)/.82 'Cormorant Garamond',Georgia,serif;
+ letter-spacing:-.048em;text-align:center;color:#fff;margin:0 auto 5px;max-width:100%;
+ text-shadow:0 3px 14px rgba(0,0,0,.36);
+}
+.r-home .r-hero--board .r-hero-title h1 em{display:inline-block;margin:0;font-size:.75em;line-height:.79;color:#fff}
+.r-home .r-hero--board .r-hero-title .r-ornament{align-self:center;margin:18px auto 14px;gap:8px}
+.r-home .r-hero--board .r-hero-title .r-ornament i{width:clamp(44px,12cqw,70px);height:1px}
+.r-home .r-hero--board .r-hero-title p{margin:0 auto;font-size:clamp(12px,3cqw,15px);letter-spacing:.15em;line-height:1.5}
+.r-home .r-hero--board .r-hero-title small{margin:8px auto 0;font-size:11px;letter-spacing:.01em;text-align:center}
+.r-home .r-hero--board .r-hero-bouquet{
+ z-index:4;left:-4%;bottom:27%;width:52%;height:34%;
+ object-fit:contain;object-position:left bottom;opacity:.94;
+ filter:drop-shadow(6px 13px 10px rgba(5,28,15,.28));
+}
+.r-home .r-hero--board .r-scroll-indicator{z-index:9;bottom:calc(8.4% + env(safe-area-inset-bottom));font-size:23px;color:white}
+.r-home .r-hero--board:after{z-index:3;pointer-events:none}
+
+/* Invitation: exact editorial order — leafy upper corners, whole cherub, centered
+   title, framed estate photograph. No clip masks on the transparent sculpture. */
+.r-home .r-invitation{
+ height:max(710px,calc(100svh - 66px));min-height:710px;
+ overflow:hidden;isolation:isolate;
+ background:radial-gradient(circle at 48% 34%,#fff 0%,#F7F8F5 44%,#EDF2EB 100%);
+}
+.r-home .r-invitation:before{content:"";position:absolute;inset:7px;z-index:1;pointer-events:none;border:1px solid rgba(193,164,108,.19);border-bottom:0}
+.r-home .r-invitation>.r-invite-greens{top:-2%;left:-2%;width:42%;height:23%;z-index:5}
+.r-home .r-invitation>.r-invite-greens img{width:100%;height:100%;object-fit:contain;object-position:top left}
+.r-home .r-invitation>.r-invite-statue{
+ top:-1.5%;right:0;width:47%;height:36%;
+ object-fit:contain;object-position:right top;overflow:visible;
+ mask-image:none!important;-webkit-mask-image:none!important;
+ filter:drop-shadow(-3px 5px 6px rgba(37,43,30,.13));z-index:4;
+}
+.r-home .r-invitation .r-invite-head{top:15.8%;left:7.5%;right:7.5%;padding:0;text-align:center;z-index:6}
+.r-home .r-invitation .r-invite-head .r-micro{font-size:clamp(10px,2.6cqw,12px);letter-spacing:.17em;color:#BD9256}
+.r-home .r-invitation .r-invite-head h2{
+ font:italic 500 clamp(58px,15.7cqw,83px)/.86 'Cormorant Garamond',Georgia,serif;
+ letter-spacing:-.05em;color:#163322;margin:10px auto 12px;
+}
+.r-home .r-invitation .r-invite-head h2 em{font-size:.83em;color:#B89159}
+.r-home .r-invitation .r-invite-head p{
+ font:500 clamp(13px,3.4cqw,16px)/1.48 Manrope,Arial,sans-serif;
+ color:#354239;max-width:325px;margin:0 auto;
+}
+.r-home .r-invitation .r-invite-head .r-ornament{margin:16px auto 5px}
+.r-home .r-invitation .r-invite-picture{height:43%;bottom:0;left:0;right:0;overflow:hidden;z-index:2;background:#446f45}
+.r-home .r-invitation .r-invite-picture>img:not(.board-estate-leaf){object-fit:cover;object-position:50% 48%;height:100%;filter:saturate(1.02) contrast(1.02)}
+.r-home .r-invitation .r-invite-picture:before{background:linear-gradient(180deg,#F4F7F2,rgba(244,247,242,.8) 5%,transparent 24%,transparent 77%,rgba(9,40,18,.17) 100%)}
+.r-home .r-invitation .r-invite-picture .board-estate-leaf{left:-2%;top:-2%;width:29%;height:91%;object-fit:contain;opacity:.9;transform:none}
+.r-home .r-invitation .r-invite-picture .board-estate-leaf--right{left:auto;right:-3%;width:32%;top:0;height:89%;transform:scaleX(-1)}
+.r-home .r-invitation .r-invite-picture span{bottom:7%;font-size:25px;z-index:9;text-shadow:0 1px 8px rgba(12,29,13,.6)}
+
+/* Programme: no disproportionate zoom of the banquet; one aligned gold spine. */
+.r-schedule-head{height:clamp(250px,70cqw,340px);min-height:0;overflow:hidden;background:#456642}
+.r-schedule-head img{width:100%;height:100%;object-fit:cover;object-position:center 45%;filter:saturate(1.02)}
+.r-schedule .r-program{background:var(--ref-paper);padding:35px 8% 86px}
+.r-schedule .r-program .r-heading{margin:0 auto 22px;max-width:370px}
+.r-schedule .r-program .r-heading h1{font-size:clamp(56px,14cqw,77px);line-height:.96;margin:10px auto 12px;letter-spacing:-.045em}
+.r-schedule .r-timeline{max-width:460px;margin:0 auto}
+.r-schedule .r-time-item{min-height:128px;grid-template-columns:40px 14px minmax(0,1fr);gap:14px}
+.r-schedule .r-time-description{padding:7px 0 17px;text-align:left}
+.r-schedule .r-time-description b{font-size:14px}
+.r-schedule .r-time-description h3{font-size:27px;line-height:1.07;margin:5px 0}
+.r-schedule .r-time-description p{font-size:14px!important;line-height:1.5!important}
+.r-schedule .r-program-modes{margin:15px auto 22px;gap:7px}
+.r-schedule .r-program-modes button{font-size:13px;padding:9px 14px}
+
+/* Dress code: preserve silhouette and natural-leaf cutouts; move decorative
+   elements behind text instead of masking or cutting the sculptural subject. */
+.r-info .r-dress{
+ height:max(810px,calc(100svh - 66px));min-height:810px;
+ background:radial-gradient(circle at 65% 40%,#fff 0%,#F7F8F4 40%,#EFF2EA 100%);
+ overflow:hidden;isolation:isolate;
+}
+.r-info .r-dress:before{content:"";position:absolute;inset:8px;border:1px solid rgba(193,164,108,.18);pointer-events:none;z-index:1}
+.r-info .r-dress .r-dress-statue{
+ top:0;left:-1%;width:58%;height:49%;
+ overflow:visible;mask-image:none!important;-webkit-mask-image:none!important;z-index:2;
+}
+.r-info .r-dress .r-dress-statue:after{display:none}
+.r-info .r-dress .r-dress-statue img{
+ width:100%;height:100%;object-fit:contain;object-position:left top;
+ mask-image:none!important;-webkit-mask-image:none!important;
+ filter:drop-shadow(4px 7px 8px rgba(37,51,33,.13));
+}
+.r-info .r-dress .r-dress-leaves{top:59%;left:-4%;width:38%;height:25%;z-index:2;opacity:.95;overflow:visible;transform:none}
+.r-info .r-dress .r-dress-leaves img{object-fit:contain;object-position:left center}
+.r-info .r-dress .r-dress-content{top:23%;left:6%;right:6%;padding:0;text-align:center;z-index:5}
+.r-info .r-dress .r-dress-content .r-heading h1{font-size:clamp(51px,12.5cqw,69px);margin:9px auto 13px;line-height:.94}
+.r-info .r-dress .r-dress-content .r-heading p{font-size:clamp(13px,3.4cqw,16px);line-height:1.43;max-width:325px}
+.r-info .r-dress .r-color-dots{margin:17px auto 12px;gap:9px}
+.r-info .r-dress .r-color-dots i{width:clamp(32px,8.5cqw,44px);height:clamp(32px,8.5cqw,44px);margin:0}
+.r-info .r-dress .r-dress-content>p{font-size:clamp(13px,3.4cqw,16px);line-height:1.43;max-width:310px}
+.r-info .r-dress .r-dress-content>small{font-size:11px;line-height:1.45;max-width:310px;margin:9px auto 13px}
+.r-info .r-dress .r-dress-collage{height:clamp(153px,42cqw,207px);margin-top:12px;gap:6px}
+.r-info .r-dress .r-dress-collage figure{border-radius:11px;box-shadow:0 5px 14px rgba(16,32,19,.09);border:1px solid rgba(255,255,255,.8)}
+.r-info .r-dress .r-dress-collage img{width:100%;height:100%;object-fit:cover;object-position:50% 22%}
+
+/* RSVP and gallery: restrained fine-line framing and photographic, not flat,
+   green/white backgrounds. Interactive fields and gallery filtering untouched. */
+.r-info .r-rsvp,.r-gallery-page{
+ background:radial-gradient(ellipse at 82% 12%,rgba(181,208,177,.16),transparent 38%),linear-gradient(160deg,#fff 0%,#F8F8F4 52%,#EEF2EB 100%);
+}
+.r-info .r-rsvp{padding:72px 7% 96px}
+.r-info .r-rsvp .r-heading h1{font-size:clamp(51px,12.5cqw,70px);margin:11px auto 18px;line-height:.94}
+.r-info .r-rsvp .r-heading p{font-size:15px;line-height:1.48;max-width:330px}
+.r-info .r-rsvp form{max-width:450px;margin:28px auto 0}
+.r-info .r-rsvp-options{margin-bottom:25px}
+.r-info .r-rsvp-options label{min-height:46px}
+.r-info .r-form-label{margin-bottom:18px}
+.r-info .r-form-label input,.r-info .r-form-label textarea{margin-top:8px}
+.r-gallery-page{padding:84px 5% 96px}
+.r-gallery-page .r-heading h1{font-size:clamp(53px,13.5cqw,76px);line-height:.93;letter-spacing:-.04em;margin:12px 0 22px}
+.r-gallery-page .r-gallery-leaf{left:0;top:0;width:34%;height:21%;opacity:.93}
+.r-gallery-page .r-photo-filters{gap:5px;margin-bottom:16px}
+.r-gallery-page .r-photo-filters button{font-size:clamp(10px,2.9cqw,13px);padding:10px 2px}
+.r-gallery-page .r-masonry{gap:6px}
+.r-gallery-page .r-gallery-tile{border-radius:10px;background:#D9E4D3}
+.r-gallery-page .r-gallery-tile img{object-position:center 27%;filter:saturate(1.04)}
+.r-gallery-page .r-masonry .r-gallery-tile:nth-child(1) img,.r-gallery-page .r-masonry .r-gallery-tile:nth-child(5) img{object-position:center top}
+.r-gallery-page .r-draft-note{line-height:1.45}
+.r-info .r-details{background:linear-gradient(165deg,#fff,#F2F5EF);padding:79px 6% 0}
+.r-info .r-details .r-heading h1{font-size:clamp(51px,13cqw,74px);line-height:.95;letter-spacing:-.043em}
+.r-info .r-details .r-map--illustration{margin-top:25px;border:1px solid #DCE3D9;box-shadow:0 10px 23px rgba(43,74,52,.07)}
+.r-info .r-details .r-map--illustration img{object-fit:contain;background:#E1EBDC}
+.r-info .r-details .r-accordion{margin-top:23px}
+.r-info .r-details .r-accordion summary{font-size:14px}
+.r-ornament b{font-weight:400;color:var(--ref-gold)}
+.r-app a:focus-visible,.r-app button:focus-visible{outline:3px solid #C1A46C;outline-offset:2px}
+
+/* Smaller screens: keep each complete cutout visible and copy unconstrained. */
+@media(max-width:360px){
+ .r-home .r-hero--board .r-hero-title h1{font-size:62px}
+ .r-home .r-invitation{height:760px;min-height:760px}
+ .r-home .r-invitation .r-invite-head{top:17%;left:4%;right:4%}
+ .r-home .r-invitation .r-invite-head p{font-size:13px}
+ .r-info .r-dress{height:920px;min-height:920px}
+ .r-info .r-dress .r-dress-content{top:25%}
+ .r-info .r-dress .r-dress-collage{height:146px}
+}
+@media(min-width:800px){
+ .r-home .r-hero--board .r-cover-photo{height:70%}
+ .r-home .r-invitation .r-invite-head p{font-size:16px}
+ .r-info .r-dress .r-dress-content>small{font-size:13px}
+}
+/* Respect the user's original screen 04: no overrides of .v2-venue. */
