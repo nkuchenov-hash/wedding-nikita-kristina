@@ -1,0 +1,85 @@
+/* 2026-10-29 — assembly from individual artwork extracted from the *approved* 8-screen board.
+   Photos have not been replaced with full-page screenshots. UI remains selectable HTML.
+   04-Mariyno retains its own approved venue-exact.css without overrides. */
+:root{--board-paper:#F2F4F3;--board-dark:#183824;--board-gold:#C1A46C}
+.r-home .r-hero--board{background:linear-gradient(180deg,#567354,#1F3E2C 60%,#172D1F 100%)}
+.r-hero--board .r-cover-photo{
+ width:100%;height:78%;position:absolute;inset:0 0 auto;
+ object-fit:cover;object-position:center 36%;
+ filter:saturate(1.04) contrast(1.03);
+ -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 57%,rgba(0,0,0,.9) 75%,transparent 100%);
+ mask-image:linear-gradient(180deg,#000 0%,#000 57%,rgba(0,0,0,.9) 75%,transparent 100%);
+}
+.r-hero--board .r-hero-dim{background:linear-gradient(180deg,rgba(13,35,23,.12),transparent 23%,rgba(13,35,23,.16) 45%,rgba(8,28,17,.38) 64%,rgba(8,30,17,.78) 100%)}
+.r-hero--board .r-hero-title{bottom:14%;z-index:4}
+.r-hero--board .r-hero-title h1{font-size:clamp(68px,17cqw,94px);line-height:.86}
+.r-hero--board .r-hero-title p{font-size:16px}
+.r-hero--board .r-hero-title small{font-size:12px}
+.r-hero--board .r-top-label{font-size:12px}
+
+/* 02 · A constructed scene: transparent leaves and column statue in independent layers. */
+.r-invitation{height:auto;min-height:max(1050px,262cqw);background:var(--board-paper)}
+.r-invitation>.r-invite-greens{position:absolute;top:-2%;left:-7%;width:52%;height:24%;z-index:5;overflow:visible}
+.r-invitation>.r-invite-greens:before{display:none}
+.r-invitation>.r-invite-greens img{width:100%;height:100%;object-fit:contain;object-position:left top;filter:drop-shadow(5px 8px 6px rgba(22,60,31,.17))}
+.r-invitation>.r-invite-statue{position:absolute;top:-1%;right:-17%;width:67%;height:40%;object-fit:contain;object-position:center top;
+ filter:drop-shadow(-4px 8px 10px rgba(52,64,44,.08));mask-image:linear-gradient(to bottom,#000 70%,transparent 100%);opacity:.98}
+.r-invitation .r-invite-head{top:27.5%;left:5.5%;right:5.5%;z-index:5}
+.r-invitation .r-invite-head h2{font-size:clamp(66px,15cqw,85px);margin:12px 0 23px}
+.r-invitation .r-invite-head p{font-size:16px;line-height:1.57;max-width:325px;color:#223C2B}
+.r-invitation .r-invite-head .r-micro{font-size:12px}
+.r-invitation .r-invite-picture{height:37%;bottom:0;z-index:3;overflow:hidden}
+.r-invitation .r-invite-picture:before{background:linear-gradient(to bottom,var(--board-paper) 0%,rgba(242,244,243,.84) 7%,rgba(242,244,243,0) 28%,rgba(11,37,18,0) 84%,rgba(10,36,19,.17) 100%)}
+.r-invitation .r-invite-picture img:not(.board-estate-leaf){height:100%;width:100%;object-fit:cover;object-position:center 53%}
+.r-invitation .r-invite-picture .board-estate-leaf{position:absolute;z-index:6;pointer-events:none;width:30%;height:78%;top:8%;left:-5%;object-fit:contain;object-position:left center;border:0;filter:drop-shadow(4px 7px 6px rgba(29,62,24,.22))}
+.r-invitation .r-invite-picture .board-estate-leaf--right{left:auto;right:-11%;width:38%;height:90%;top:4%;transform:scaleX(-1)}
+.r-invitation .r-invite-picture span{font-size:29px;bottom:9%;text-shadow:0 3px 12px rgba(0,0,0,.34)}
+
+/* 03 · Candlelit banquet photo above native, interactive timeline. */
+.r-schedule-head{height:73cqw;min-height:265px}
+.r-schedule-head img{height:100%;width:100%;object-fit:cover;object-position:center 44%;filter:saturate(1.12) contrast(1.07)}
+.r-program{margin-top:-3cqw;padding:36px 8% 85px;min-height:0;background:var(--board-paper)}
+.r-program .r-section-wave{top:-9cqw;height:10cqw;color:var(--board-paper)}
+.r-program .r-heading h1{font-size:clamp(62px,14cqw,78px)}
+.r-program .r-time-description b{font-size:16px}
+.r-program .r-time-description h3{font-size:29px}
+.r-program .r-time-description p,.r-program .r-draft-note{font-size:16px!important;line-height:1.48!important}
+.r-program .r-time-item{min-height:175px}
+.r-program .r-time-icon svg{width:26px;height:26px}
+
+/* 05 · Sculptural block and three *different* cropped outfit photos. */
+.r-dress{height:auto;min-height:max(1080px,278cqw);background:var(--board-paper)}
+.r-dress .r-dress-statue{top:0;left:-7%;width:71%;height:42%;overflow:visible;border-radius:0}
+.r-dress .r-dress-statue img{width:100%;height:100%;object-fit:contain;object-position:left top;filter:drop-shadow(5px 7px 12px rgba(29,52,27,.12))}
+.r-dress .r-dress-statue:after{background:linear-gradient(180deg,transparent 72%,var(--board-paper) 100%)}
+.r-dress .r-dress-leaves{top:43%;left:-4%;width:35%;height:20%;z-index:6}
+.r-dress .r-dress-leaves:after{display:none}
+.r-dress .r-dress-leaves img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(5px 8px 8px rgba(35,65,25,.22))}
+.r-dress .r-dress-content{top:35%;left:6%;right:6%;z-index:4}
+.r-dress .r-dress-content .r-heading h1{font-size:clamp(55px,13.8cqw,75px)}
+.r-dress .r-dress-content .r-heading p,.r-dress .r-dress-content>p{font-size:16px;line-height:1.52;max-width:335px}
+.r-dress .r-dress-content>small{font-size:12px;line-height:1.45;max-width:320px}
+.r-dress .r-dress-collage{position:relative;z-index:3;height:230px;gap:8px;margin-top:20px}
+.r-dress .r-dress-collage figure{border-radius:13px;overflow:hidden}
+.r-dress .r-dress-collage figure img{height:100%;width:100%;object-fit:cover;object-position:center 24%}
+
+/* 06 · True form controls, not a picture of a form. */
+.r-rsvp{padding:70px 6% 95px;background:var(--board-paper)}
+.r-rsvp .r-heading h1{font-size:clamp(57px,13.7cqw,77px)}
+.r-rsvp .r-heading p,.r-rsvp .r-form-label,.r-rsvp .r-form-label input,.r-rsvp .r-form-label textarea{font-size:16px;line-height:1.55}
+.r-rsvp .r-rsvp-options label{font-size:16px;min-height:56px}
+.r-rsvp .r-rsvp-submit{font-size:15px;min-height:52px}
+.r-rsvp .r-draft-note{font-size:13px!important}
+
+/* 07 · Exact visual sequence of six independent photographs, original corners and greens. */
+.r-gallery-page{background:var(--board-paper)}
+.r-gallery-page .r-gallery-leaf{top:-8px;left:-12px;width:130px;height:145px;overflow:visible;z-index:3}
+.r-gallery-page .r-gallery-leaf:before{display:none}
+.r-gallery-page .r-gallery-leaf img{display:block;height:100%;width:100%;object-fit:contain;filter:drop-shadow(4px 5px 8px rgba(16,45,19,.13))}
+.r-gallery-page .r-masonry{gap:9px}
+.r-gallery-page .r-gallery-tile{border-radius:13px}
+.r-gallery-page .r-photo-filters button{font-size:13px;min-height:39px}
+.r-gallery-page .r-draft-note{font-size:13px!important}
+
+@media(min-width:780px){.r-invitation .r-invite-head p{font-size:18px}.r-dress .r-dress-content .r-heading p{font-size:18px}}
+@media(max-width:390px){.r-invitation{min-height:1050px}.r-dress{min-height:1050px}.r-hero--board .r-hero-title h1{font-size:66px}}
