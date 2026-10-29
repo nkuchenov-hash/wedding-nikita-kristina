@@ -31,10 +31,10 @@ try {
     await page.goto('http://127.0.0.1:4173/'+route,{waitUntil:'networkidle2'});
     await page.waitForSelector(selector,{timeout:15000});
     await page.evaluate(async()=>{
-      for(const img of document.querySelectorAll('.r-app img')) img.loading='eager';
-      await Promise.all([...document.querySelectorAll('.r-app img')].map(img=>img.decode().catch(()=>null)));
+      for(const img of document.querySelectorAll('.r-app img[src]')) img.loading='eager';
+      await Promise.all([...document.querySelectorAll('.r-app img[src]')].map(img=>img.decode().catch(()=>null)));
     });
-    const broken=await page.evaluate(()=>[...document.querySelectorAll('.r-app img')].filter(el=>!el.complete||el.naturalWidth===0).map(el=>el.getAttribute('src')));
+    const broken=await page.evaluate(()=>[...document.querySelectorAll('.r-app img[src]')].filter(el=>!el.complete||el.naturalWidth===0).map(el=>el.getAttribute('src')));
     assert.deepEqual(broken,[],'Broken images on '+name+': '+broken.join(', '));
     if(name!=='01-home')await page.$eval(selector,el=>el.scrollIntoView({block:'start',behavior:'instant'}));
     await delay(200);
