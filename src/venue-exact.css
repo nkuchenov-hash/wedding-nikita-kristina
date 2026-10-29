@@ -1,26 +1,97 @@
 
-/* Reference-matched Mariyno scene, proportions measured from the approved 863 x 1822 composition.
-   Do not substitute the old r-venue layout. Independent HTML elements remain clickable/selectable. */
+/* Mariyno venue screen — production HTML layers matched against 863 × 1822
+   reference. Photographs supplied locally at their full original resolution. */
 .r-app{container-type:inline-size}
-.v2-venue{container-type:inline-size;position:relative;width:100%;height:max(100svh,calc(100cqw * 2.111));min-height:760px;overflow:hidden;background:#F8F8F5;isolation:isolate}
-.v2-venue-photo{position:absolute;top:0;left:0;width:100%;height:46%;overflow:hidden}
+.v2-venue{
+  position:relative;isolation:isolate;container-type:inline-size;
+  height:max(100svh,211.1cqw);width:100%;min-height:0;
+  background:#F8FAF8;overflow:hidden;color:#12291B;
+}
+.v2-venue-photo{position:absolute;z-index:0;inset:0 0 auto;height:47%;overflow:hidden}
 .v2-venue-photo img{display:block;width:100%;height:100%;object-fit:fill}
-.v2-venue-copy{position:absolute;z-index:2;top:44.4%;left:0;right:0;text-align:center;display:flex;flex-direction:column;align-items:center;padding:0 3%}
-.v2-venue-label{font-family:'Manrope',sans-serif;font-size:2.45cqw;font-weight:700;letter-spacing:.23em;color:#BD9254;margin:0 0 2.3cqw}
-.v2-venue-copy h1{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:12.6cqw;line-height:.85;letter-spacing:-.065em;margin:0 0 3.3cqw;color:#0F2619;text-align:center}
-.v2-venue-copy p{font-family:'Manrope',Arial,sans-serif;color:#606761;font-weight:500;font-size:3.25cqw;line-height:1.42;margin:0;max-width:76cqw}
-.v2-venue-directions{display:flex;align-items:center;justify-content:center;gap:5.5cqw;border:1px solid #BD9254;border-radius:100px;width:58cqw;height:9.25cqw;margin-top:3.1cqw;background:transparent;color:#1A3124;font-family:'Manrope',sans-serif;font-size:2.75cqw;letter-spacing:.14em;font-weight:700;text-decoration:none;white-space:nowrap}
-.v2-venue-directions svg{width:3.25cqw;height:3.25cqw;color:#BD9254}
-.v2-venue-thumbnails{position:absolute;z-index:2;top:73.4%;left:4.05%;right:4.05%;height:16.2%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2.4%}
-.v2-venue-thumbnails img{height:100%;width:100%;object-fit:cover;border-radius:1.8cqw;display:block}
-.r-info>.r-tabs{height:calc(20.5cqw + env(safe-area-inset-bottom));min-height:65px;max-height:94px;background:rgba(250,251,247,.98);border-radius:5cqw 5cqw 0 0;padding:1cqw .7cqw calc(.6cqw + env(safe-area-inset-bottom));box-shadow:0 -6px 25px rgba(49,68,49,.06)}
+/* Rounded Bezier sweep rather than the flat polygon edge. The SVG is a
+   separate editable overlay; its curved edge follows the reference. */
+.v3-photo-curve{
+  position:absolute;z-index:2;top:39.7%;left:0;
+  width:100%;height:7.4%;display:block;color:#F8FAF8;
+  overflow:visible;pointer-events:none;
+}
+/* Real transparent hanging greenery + blurred cast shadow on stone-white. */
+.v3-hanging-leaves{
+  position:absolute;z-index:4;top:35.8%;left:1.6%;
+  width:33.15%;height:auto;aspect-ratio:286/217;
+  pointer-events:none;overflow:visible;
+}
+.v3-hanging-leaves:before{
+  content:"";position:absolute;inset:0;
+  background:url("../public/reference/venue-foliage.png") center/contain no-repeat;
+  filter:blur(7px) brightness(0);opacity:.22;
+  transform:translate(8px,11px);pointer-events:none;
+}
+.v3-hanging-leaves img{
+  width:100%;height:100%;object-fit:contain;display:block;
+  filter:drop-shadow(3px 5px 3px rgba(21,43,24,.28));
+}
+.v2-venue-copy{
+  position:absolute;z-index:5;top:44.25%;left:0;right:0;
+  padding:0 3.1%;display:flex;flex-direction:column;
+  align-items:center;text-align:center;
+}
+.v2-venue-label{
+  color:#BC9255;font:700 2.42cqw/1.4 'Manrope',Arial,sans-serif;
+  letter-spacing:.23em;margin-bottom:2.55cqw;
+}
+.v2-venue-copy h1{
+  color:#10291C;font:500 12.7cqw/.88 'Cormorant Garamond',Georgia,serif;
+  letter-spacing:-.065em;text-align:center;margin:0 0 3.25cqw;
+}
+.v2-venue-copy p{
+  max-width:81cqw;color:#5F6762;
+  font:500 3.22cqw/1.43 'Manrope',Arial,sans-serif;
+  margin:0;text-align:center;
+}
+.v2-venue-directions{
+  margin-top:3.2cqw;width:60cqw;height:9.25cqw;
+  background:rgba(255,255,255,.32);
+  display:flex;align-items:center;justify-content:center;
+  border:1.35px solid #BE965B;border-radius:999px;
+  color:#1C3425;text-decoration:none;
+  font:700 2.77cqw/1.1 'Manrope',Arial,sans-serif;
+  letter-spacing:.115em;gap:5cqw;white-space:nowrap;
+  box-shadow:0 3px 10px rgba(113,93,65,.035);
+  transition:background .17s ease,border-color .17s ease;
+}
+.v2-venue-directions:hover{background:#FFFFFF;border-color:#98713B}
+.v2-venue-directions:focus-visible{outline:3px solid #C1A46C;outline-offset:3px}
+.v2-venue-directions svg{width:3.7cqw;height:3.7cqw;stroke:#BE965B;stroke-width:2;flex:none}
+.v2-venue-thumbnails{
+  position:absolute;z-index:3;top:73.4%;left:4.1%;right:4.1%;
+  height:16.2%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:2.4%;align-items:stretch;
+}
+.v2-venue-thumbnails figure{
+  margin:0;position:relative;overflow:hidden;min-width:0;height:100%;
+  border-radius:2cqw;background:#DDE7DD;
+  box-shadow:0 1px 3px rgba(18,41,27,.09);
+}
+.v2-venue-thumbnails figure img{
+  display:block;width:100%;height:100%;object-fit:cover;object-position:center center;
+  border-radius:inherit;
+}
+.r-info>.r-tabs{
+  height:calc(20.5cqw + env(safe-area-inset-bottom));
+  min-height:65px;max-height:94px;
+  background:rgba(250,252,250,.97);
+  border-radius:5cqw 5cqw 0 0;
+  padding:1cqw .7cqw calc(.6cqw + env(safe-area-inset-bottom));
+  box-shadow:0 -5px 25px rgba(32,68,43,.085);
+}
 .r-info>.r-tabs a{gap:.8cqw;font-size:2.55cqw}
 .r-info>.r-tabs svg{width:5.1cqw;height:5.1cqw}
-@media(max-width:420px){.v2-venue{min-height:0}.r-info>.r-tabs{min-height:64px}.r-info>.r-tabs a{font-size:2.5cqw;gap:4px}}
-
-
-/* Exact source-image crop: remove the photographed button border that
-   appeared above the two independent thumbnail frames. */
-.v2-venue-thumbnails figure{position:relative;margin:0;overflow:hidden;border-radius:1.8cqw;width:100%;height:100%}
-.v2-venue-thumbnails figure img{position:absolute;top:-15%;left:0;width:100%;height:116%;object-fit:cover;object-position:center bottom;border-radius:0}
-.v2-venue-photo{clip-path:polygon(0 0,100% 0,100% 100%,0 91%)}
+@media(max-width:420px){
+ .r-info>.r-tabs{min-height:64px}
+ .r-info>.r-tabs a{font-size:2.5cqw;gap:4px}
+}
+@media(prefers-reduced-motion:reduce){
+ .v2-venue-directions{transition:none}
+}
