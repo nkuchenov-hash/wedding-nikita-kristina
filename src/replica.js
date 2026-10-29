@@ -1,6 +1,10 @@
 
 import {wedding} from './data.js';
 const PHOTO={
+ 'gardenRef':'./public/reference/venue-left-hi.jpg',
+ 'cherubRef':'./public/reference/venue-right-hi.jpg',
+ 'mariynoRef':'./public/reference/venue-hero-hi.jpg',
+ 'heroRef':'./public/photos/couple-ref.jpg',
  couple:'./public/photos/couple.jpg',
  couple2:'./public/photos/couple2.jpg',
  ceremony:'./public/photos/ceremony.jpg',
@@ -45,17 +49,12 @@ function footer(){return '<footer class="r-footer">Никита <em>&</em> Кр�
 function shell(path,body,cls=''){return '<div class="r-app '+cls+'"><div class="r-site">'+body+footer()+'</div>'+bottom(path)+'</div>'}
 function home(){
  return shell('/',
- '<section class="r-hero r-hero--editorial">'+img('couple','r-cover-photo','Иллюстративное свадебное фото: пока не Никита и Кристина',true)+'<div class="r-hero-dim"></div><div class="r-top-label">УСАДЬБА МАРЬИНО</div><div class="r-hero-title"><span>Мы приглашаем вас на нашу свадьбу</span><h1>Никита<br><em>&</em><br>Кристина</h1>'+flour()+'<p>17 ИЮНЯ 2027</p><small>Дата и место предварительные</small></div><a class="r-scroll-indicator" href="#welcome" aria-label="Листайте к приглашению"><span>⌄</span></a></section>'+
+ '<section class="r-hero r-hero--editorial">'+img('heroRef','r-cover-photo','Иллюстративное свадебное фото: пока не Никита и Кристина',true)+'<div class="r-hero-dim"></div><div class="r-top-label">УСАДЬБА МАРЬИНО</div><div class="r-hero-title"><span>Мы приглашаем вас на нашу свадьбу</span><h1>Никита<br><em>&</em><br>Кристина</h1>'+flour()+'<p>17 ИЮНЯ 2027</p><small>Дата и место предварительные</small></div><a class="r-scroll-indicator" href="#welcome" aria-label="Листайте к приглашению"><span>⌄</span></a></section>'+
  '<section class="r-invitation" id="welcome"><div class="r-invite-greens" aria-hidden="true">'+leaf()+'</div>'+img('venueStatue','r-invite-statue','Белая садовая скульптура на фоне зелени')+'<div class="r-invite-head"><span class="r-micro">МЫ ЖЕНИМСЯ!</span><h2>Никита<br><em>&</em><br>Кристина</h2><p>И хотим разделить этот особенный день с самыми близкими людьми. Будем счастливы видеть вас на нашей свадьбе в усадьбе Марьино.</p>'+flour()+'</div><div class="r-invite-picture">'+img('estate','','Фасад усадьбы Марьино в окружении парка')+'<span>С любовью, Никита и Кристина</span></div></section>'+
  '<section class="r-home-links">'+heading('НАШ ПРАЗДНИК','Всё, что нужно знать')+'<a href="#/schedule">'+ic('schedule')+'Программа дня <b>↗</b></a><a href="#/info">'+ic('pin')+'Усадьба Марьино <b>↗</b></a><a href="#/guests">'+ic('guests')+'Наши близкие <b>↗</b></a><a href="#/gallery">'+ic('gallery')+'Фотографии <b>↗</b></a></section>',
  'r-home');
 }
-const items=[
- ['—','Сбор гостей','Время начала уточняется','glass'],
- ['14:00','Регистрация','Предварительное время церемонии','rings'],
- ['—','Праздничный ужин','Ужин и общение с близкими','dish'],
- ['—','Вечерняя программа','Музыка, танцы и тёплые моменты','music']
-];
+const items=[['Уточняется','Сбор гостей','Встреча и общение в усадьбе','glass'],['14:00 · предварительно','Регистрация','Самый важный момент нашего дня','rings'],['Уточняется','Праздничный ужин','Ужин, тосты, музыка и танцы','dish'],['Уточняется','Вечер','Продолжение праздника с близкими','music']];
 function schedule(){
  return shell('/schedule',
  '<section class="r-photo-head r-schedule-head r-cinematic-photo">'+img('ceremony','','Праздничный стол с цветами и свечами в зелёном саду',true)+'</section>'+
@@ -67,8 +66,8 @@ function schedule(){
 }
 function guests(){
  return shell('/guests',
- '<section class="r-photo-head r-guests-image">'+img('garden','','Зелёный парк Марьино',true)+'</section>'+
- '<section class="r-curve-content r-guests">'+heading('НАШИ БЛИЗКИЕ','Люди нашей<br>истории','Скоро здесь появятся персональные страницы приглашённых.')+
+ '<section class="r-photo-head r-guests-image">'+img('gardenRef','','Зелёный парк Марьино',true)+'</section>'+
+ '<section class="r-curve-content r-guests"><img src="./public/reference/venue-foliage.png" class="r-photo-foliage r-guests-foliage" alt="" aria-hidden="true">'+heading('НАШИ БЛИЗКИЕ','Люди нашей<br>истории','Скоро здесь появятся персональные страницы приглашённых.')+
  '<div class="r-guest-card"><div class="r-guest-avatar">'+ic('heart')+'</div><div><span class="r-micro">ПРИМЕР ПРОФИЛЯ</span><h2>Наш гость</h2><p>Откуда мы знакомы, любимые воспоминания и фотографии с парой.</p><a href="#/guests/primer" class="r-pill">Посмотреть карточку →</a></div></div>'+
  '<p class="r-draft-note">Настоящие имена гостей не публикуются до получения согласия и подключения защищённой части сайта.</p></section>',
  'r-guests-page');
