@@ -73,12 +73,14 @@ function gallery(){
  'r-gallery-page-outer');
 }
 function venue(){
- const asset=(name,alt,fallback)=>'<img src="./public/reference/'+name+'.jpg" alt="'+esc(alt)+'" data-fallback="'+fallback+'" onerror="this.dataset.fallbackApplied=\'true\';this.onerror=null;this.src=this.dataset.fallback" loading="eager" decoding="async">';
+ const venueAsset=(name,alt)=>'<img src="./public/reference/'+name+'" alt="'+esc(alt)+'" loading="eager" decoding="async">';
  return '<section class="v2-venue" aria-label="Усадьба Марьино">'+
-  '<div class="v2-venue-photo">'+asset('venue-photo','Белосерые колонны с белыми розами и зеленью — визуализация','./public/photos/columns.jpg')+'</div>'+
+  '<div class="v2-venue-photo">'+venueAsset('venue-hero-hi.jpg','Цветущая белая колоннада среди деревьев, художественная визуализация')+'</div>'+
+  '<svg class="v3-photo-curve" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 5 C190 8 391 30 574 49 C760 69 900 92 1000 114 L1000 120 L0 120 Z" fill="currentColor"/></svg>'+
+  '<div class="v3-hanging-leaves" aria-hidden="true">'+venueAsset('venue-foliage.png','')+'</div>'+
   '<div class="v2-venue-copy"><div class="v2-venue-label">МЕСТО</div><h1>Усадьба<br>Марьино</h1><p>Живописный парк, историческая<br class="v2-wide-break"> архитектура и особая атмосфера —<br class="v2-wide-break"> идеальное место для особого праздника.</p>'+
   '<a class="v2-venue-directions" href="https://yandex.ru/maps/?text=%D1%83%D1%81%D0%B0%D0%B4%D1%8C%D0%B1%D0%B0%20%D0%9C%D0%B0%D1%80%D1%8C%D0%B8%D0%BD%D0%BE%20%D0%90%D0%BD%D0%B4%D1%80%D0%B8%D0%B0%D0%BD%D0%BE%D0%B2%D0%BE" target="_blank" rel="noopener noreferrer"><span>КАК ДОБРАТЬСЯ</span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></a></div>'+
-  '<div class="v2-venue-thumbnails"><figure>'+asset('venue-balustrade','Балюстрада со статуей и розами','./public/photos/garden.jpg')+'</figure><figure>'+asset('venue-cherub','Белая садовая статуя среди зелени','./public/photos/statue.jpg')+'</figure></div>'+
+  '<div class="v2-venue-thumbnails"><figure>'+venueAsset('venue-left-hi.jpg','Самостоятельная фотоплитка: балюстрада и скульптура в зелёном саду')+'</figure><figure>'+venueAsset('venue-right-hi.jpg','Самостоятельная фотоплитка: белая скульптура среди деревьев')+'</figure></div>'+
   '</section>';
 }
 function dress(){return '<section class="r-dress">'+img('statue','r-dress-bg','Садовая статуя и зелень')+'<div class="r-dress-content">'+heading('ДРЕСС-КОД','Вдохновение<br>в деталях','Мы будем рады, если в своих образах вы поддержите эстетику нашего дня.')+
