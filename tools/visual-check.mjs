@@ -45,6 +45,29 @@ try {
     }
     outcomes.push({screen:name,brokenImages:broken.length});
   }
+
+  // Interactive smoke: gallery filters, image viewer and preview-only RSVP.
+  await page.goto('http://127.0.0.1:4173/#/gallery',{waitUntil:'networkidle2'});
+  await page.waitForSelector('.r-photo-filters');
+  await page.click('[data-filter="estate"]');
+  const gallery=await page.evaluate(()=>({
+    selected:document.querySelector('[data-filter="estate"]')?.getAttribute('aria-pressed'),
+    visible:[...document.querySelectorAll('.r-gallery-tile')].filter(x=>!x.hidden).length,
+    wrong:[...document.querySelectorAll('.r-gallery-tile')].filter(x=>!x.hidden&&x.dataset.category!=='estate').length
+  }));
+  assert.equal(gallery.selected,'true');
+  assert.ok(gallery.visible>0&&gallery.wrong===0,'Gallery filter must affect tiles');
+  await page.click('.r-gallery-tile:not([hidden]) .r-photo-open');
+  assert.equal(await page.$eval('.r-lightbox',d=>d.open),true,'Gallery photo dialog must open');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.$eval('.r-lightbox',d=>d.open),false,'Escape must close dialog');
+  await page.goto('http://127.0.0.1:4173/#/info',{waitUntil:'networkidle2'});
+  await page.waitForSelector('[data-rsvp]');
+  await page.$eval('[data-rsvp] input[name="name"]',el=>el.value='Тест');
+  await page.click('.r-rsvp-submit');
+  const preview=await page.$eval('[data-rsvp] output',el=>el.textContent);
+  assert.match(preview,/не сохранён/,'RSVP must clearly stay a demo');
+  console.log('INTERACTIONS OK: gallery filters, lightbox, preview-only RSVP');
   await page.setViewport({width:1280,height:900,deviceScaleFactor:1});
   await page.goto('http://127.0.0.1:4173/#/',{waitUntil:'networkidle2'});
   await page.screenshot({path:output+'/10-desktop.png',fullPage:false,animations:'disabled'});
