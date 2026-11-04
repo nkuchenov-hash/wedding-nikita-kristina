@@ -36,6 +36,14 @@ const photo=panel.querySelector('#reference-screen-image');
 const loading=panel.querySelector('.ref-screen-loading');
 let current='01-home', visible=true, mobileMode='site', pending=false;
 function isAdmin(){return path().startsWith('/admin');}
+/* Synchronize the actual live phone stage to the displayed original's top
+   coordinate. Both use the same image width and (content + dock) aspect. */
+function alignReferencePreview(){
+ if(!document.body.classList.contains('ref-focus-invitation'))return;
+ const rect=photo.getBoundingClientRect();
+ if(rect.height>0)document.documentElement.style.setProperty('--ref-live-top',rect.top+'px');
+}
+photo.addEventListener('load',()=>requestAnimationFrame(alignReferencePreview));
 function nearestScreen(){
  const candidates=screens.filter(s=>s.path===path());
  if(!candidates.length)return screens[0];
@@ -59,6 +67,9 @@ function setReference(id){
    loading.textContent='';
  }
  select.value=s.id;
+ const focus=visible&&!isAdmin()&&s.id==='02-invitation'&&window.matchMedia('(min-width:768px)').matches;
+ document.body.classList.toggle('ref-focus-invitation',focus);
+ requestAnimationFrame(alignReferencePreview);
 }
 function sync(){
  const admin=isAdmin();
@@ -74,7 +85,15 @@ function navigate(id){
  if(!s)return;
  setReference(s.id);
  if(path()!==s.path)location.hash='#'+s.path;
- const go=()=>document.querySelector(s.selector)?.scrollIntoView({behavior:'smooth',block:'start'});
+ const go=()=>{
+   // A centered preview has no document scroll position. All other screens
+   // jump directly to their top, without a half-visible previous section.
+   if(document.body.classList.contains('ref-focus-invitation')) {
+     alignReferencePreview();
+     return;
+   }
+   document.querySelector(s.selector)?.scrollIntoView({behavior:'instant',block:'start'});
+ };
  requestAnimationFrame(()=>requestAnimationFrame(go));
  if(window.matchMedia('(max-width: 767px)').matches){mobileMode='site';sync();}
 }
@@ -95,7 +114,7 @@ window.addEventListener('scroll',()=>{
  if(pending)return;
  pending=true;requestAnimationFrame(()=>{pending=false;if(!isAdmin())setReference(nearestScreen().id);});
 },{passive:true});
-window.addEventListener('resize',sync,{passive:true});
+window.addEventListener('resize',()=>{sync();requestAnimationFrame(alignReferencePreview);},{passive:true});
 window.addEventListener('keydown',e=>{
  if(e.key==='Escape' && mobileMode==='original'){mobileMode='site';sync();}
 });
