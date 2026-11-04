@@ -199,47 +199,65 @@
   }
 }
 
-/* Only the far-left and far-right photographic foliage is extracted from
-   the client's approved illustration. All copy, statue, venue, and controls
-   remain separately rendered and independently editable. Soft elliptical
-   alpha prevents any rectangular stock image/photo seams. */
-.r-home .inv-v2-side-flora {
-  position:absolute;top:0;width:21%;height:100%;z-index:3;
-  background-image:url("../public/approved-reference/02-invitation.png");
-  background-repeat:no-repeat;
-  background-size:100cqw 243.27cqw;
-  pointer-events:none;
-  filter:saturate(1.02);
-}
-.r-home .inv-v2-side-flora--left {
-  left:0;
-  background-position:left top;
-  -webkit-mask-image:radial-gradient(ellipse 95% 29% at 7% 68%, #000 0%,rgba(0,0,0,.98) 63%,transparent 100%);
-  mask-image:radial-gradient(ellipse 95% 29% at 7% 68%, #000 0%,rgba(0,0,0,.98) 63%,transparent 100%);
-}
-.r-home .inv-v2-side-flora--right {
-  right:0;
-  background-position:right top;
-  -webkit-mask-image:radial-gradient(ellipse 95% 29% at 93% 68%, #000 0%,rgba(0,0,0,.98) 63%,transparent 100%);
-  mask-image:radial-gradient(ellipse 95% 29% at 93% 68%, #000 0%,rgba(0,0,0,.98) 63%,transparent 100%);
-}
 
-/* Recover ONLY the stone column hidden below the clean transparent cherub.
-   The asset's left region contains text and is fully masked out. The clean
-   angel above remains a separate transparent PNG. */
+/* Crisp photographic composition pass: no cutouts from the low-resolution
+   approved screenshot, no blurred CSS masks, no burned-in text. */
+.r-home .inv-v2-estate {
+  height:41% !important;
+  background:#e9eeeb !important;
+}
+.r-home .inv-v2-estate .inv-v2-estate-image{
+  filter:none !important;
+  object-fit:cover !important;
+  object-position:center 42% !important;
+  image-rendering:auto;
+}
+.r-home .inv-v2-skyfade {
+  inset:52% 0 0 !important;
+  background:linear-gradient(to bottom,
+    #f2eee6 0%,rgba(242,238,230,.99) 17%,
+    rgba(242,238,230,.91) 28%,rgba(242,238,230,.56) 37%,
+    rgba(242,238,230,.13) 46%,transparent 53%) !important;
+}
+.r-home .inv-v2-cherub {
+  top:2.3% !important;right:-25% !important;
+  width:104% !important;height:auto !important;
+  max-height:none !important;
+  -webkit-mask-image:none !important;mask-image:none !important;
+  object-fit:contain !important;
+  filter:none !important;
+}
+/* A real antialiased RGBA PNG created from the original full marble-column
+   photo by tools/build-invitation-art.py. Long shaft remains in front of the
+   sky and garden, behind selectable HTML type. */
 .r-home .inv-v2-cherub-column {
-  position:absolute;
-  top:0;right:-23%;
-  width:70%;height:63%;
-  z-index:3;
-  pointer-events:none;
-  background:url("../public/production/invitation-cherub-full-column.png") top right/100% auto no-repeat;
-  -webkit-mask-image:
-    linear-gradient(to right,transparent 0%,transparent 48%,rgba(0,0,0,.8) 68%,#000 86%),
-    linear-gradient(to bottom,transparent 0%,transparent 36%,#000 56%,#000 78%,transparent 100%);
-  -webkit-mask-composite:source-in;
-  mask-image:
-    linear-gradient(to right,transparent 0%,transparent 48%,rgba(0,0,0,.8) 68%,#000 86%),
-    linear-gradient(to bottom,transparent 0%,transparent 36%,#000 56%,#000 78%,transparent 100%);
-  mask-composite:intersect;
+  position:absolute;z-index:4;pointer-events:none;display:block;
+  top:30.8% !important;right:-9% !important;left:auto !important;
+  width:auto !important;height:69% !important;
+  max-width:none !important;max-height:none !important;
+  object-fit:contain !important;object-position:right top !important;
+  background:none !important;
+  -webkit-mask-image:none !important;mask-image:none !important;
+  filter:none !important;
+}
+/* Reuse the source artwork's 1k+-pixel alpha flowers instead of
+   upscaling the 275px screenshot and feathering it into a haze. */
+.r-home .inv-v2-flora {
+  display:block !important;position:absolute !important;
+  top:auto !important;bottom:-4% !important;
+  width:58% !important;height:37% !important;
+  z-index:5 !important;pointer-events:none !important;
+  object-fit:contain !important;
+  filter:none !important;
+  -webkit-mask-image:none !important;mask-image:none !important;
+}
+.r-home .inv-v2-flora-left {
+  left:-22% !important;right:auto !important;
+  object-position:left bottom !important;
+  transform:none !important;
+}
+.r-home .inv-v2-flora-right {
+  left:auto !important;right:-27% !important;
+  object-position:left bottom !important;
+  transform:scaleX(-1) !important;
 }
