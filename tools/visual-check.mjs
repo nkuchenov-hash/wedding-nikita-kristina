@@ -111,6 +111,31 @@ try {
     'Do not obscure the independent estate photograph with duplicated flora');
   console.log('INVITATION FIDELITY OK:',JSON.stringify(invitationFidelity));
   await page.screenshot({path:output+'/10-desktop.png',fullPage:false,animations:'disabled'});
+  // Render the actual comparison link. No preceding hero, no missing dock,
+  // no scaling mismatch or intermediate smooth-scroll frame is acceptable.
+  await page.goto('http://127.0.0.1:4173/?screen=02-invitation#/',{waitUntil:'networkidle2'});
+  await page.waitForFunction(()=>document.body.classList.contains('ref-focus-invitation'));
+  await page.waitForFunction(()=>document.querySelector('#reference-screen-image')?.complete &&
+    document.querySelector('#reference-screen-image')?.naturalWidth>0);
+  await page.waitForFunction(()=>{
+    const a=document.querySelector('.r-app').getBoundingClientRect();
+    const b=document.querySelector('#reference-screen-image').getBoundingClientRect();
+    return Math.abs(a.top-b.top)<3 && Math.abs(a.bottom-b.bottom)<4;
+  },{timeout:10000});
+  const focused=await page.evaluate(()=>{
+    const box=s=>{const {top,bottom,width,height}=document.querySelector(s).getBoundingClientRect();
+      return {top:+top.toFixed(1),bottom:+bottom.toFixed(1),width:+width.toFixed(1),height:+height.toFixed(1)}};
+    return {site:box('.r-app'),reference:box('#reference-screen-image'),
+      invitation:box('.r-invitation'),dock:box('.r-tabs'),
+      heroVisible:getComputedStyle(document.querySelector('.r-hero')).display};
+  });
+  assert.equal(focused.heroVisible,'none','Previous hero must not appear in focused comparison');
+  assert.ok(focused.dock.top>=focused.invitation.bottom-2 && focused.dock.bottom<=focused.site.bottom+2,
+    'Functional dock must align directly under the invitation inside the reference frame');
+  await page.screenshot({path:output+'/12-invitation-side-by-side.png',fullPage:false,animations:'disabled'});
+  const focusedJpeg=await page.screenshot({type:'jpeg',quality:55,fullPage:false,animations:'disabled'});
+  console.log('FOCUSED_INVITATION_JPEG='+Buffer.from(focusedJpeg).toString('base64'));
+  console.log('FOCUSED INVITATION MATCH:',JSON.stringify(focused));
   console.log('REFERENCE COMPARISON OK:',JSON.stringify(split));
   console.log('VISUAL CHECK OK:',JSON.stringify(outcomes));
   console.log('Screenshots: /previews/01-home.png ... /previews/10-desktop.png');
