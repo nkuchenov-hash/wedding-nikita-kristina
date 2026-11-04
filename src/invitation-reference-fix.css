@@ -2,8 +2,8 @@
    Keep all typography selectable HTML; use no screenshots or baked-text image layers.
    Layout is based on the approved 02-invitation reference (275x669, 625px artwork + tabs). */
 .r-home section.r-invitation.inv-v2 {
-  height:max(800px, 227cqw) !important;
-  min-height:800px !important;
+  height:227cqw !important;
+  min-height:0 !important;
   max-height:none !important;
   background:#f2eee6 !important;
   color:#182c21;
@@ -49,8 +49,8 @@
 /* The source is the CLEAN alpha PNG, NOT invitation-cherub-full-column.png
    (which includes burned-in lettering, garden, and the wrong huge column). */
 .r-home .inv-v2-cherub {
-  top:1.8% !important;right:-21% !important;left:auto !important;
-  width:91% !important;height:auto !important;max-height:none !important;
+  top:2% !important;right:-29% !important;left:auto !important;
+  width:120% !important;height:auto !important;max-height:none !important;
   object-fit:contain !important;object-position:right top !important;
   transform:none !important;z-index:4 !important;
   -webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.5) 38%,#000 57%) !important;
@@ -67,9 +67,10 @@
   font:600 clamp(11px,3.2cqw,13px)/1.3 'Manrope',Arial,sans-serif !important;
   letter-spacing:.21em;
   color:#b4874a;
+  position:relative;transform:translate(-6.5cqw,1.3cqw);
 }
 .r-home .inv-v2-copy h2 {
-  font:italic 500 clamp(83px,22.5cqw,100px)/.79 'Cormorant Garamond',Georgia,serif !important;
+  font:italic 500 clamp(66px,22.5cqw,100px)/.79 'Cormorant Garamond',Georgia,serif !important;
   letter-spacing:-.052em !important;
   margin:0 0 6px !important;
   color:#182e21 !important;
@@ -82,7 +83,7 @@
 }
 .r-home .inv-v2-copy p {
   margin:0 auto !important;max-width:90% !important;
-  font:400 clamp(16px,4.75cqw,20px)/1.37 'Manrope',Arial,sans-serif !important;
+  font:400 clamp(14px,4.75cqw,20px)/1.37 'Manrope',Arial,sans-serif !important;
   color:#37453d !important;letter-spacing:-.02em;
   text-wrap:initial !important;position:relative;isolation:auto;
 }
@@ -92,9 +93,9 @@
 }
 .r-home .inv-v2-divider {
   margin:21px auto 0 !important;
-  gap:6px;width:145px;height:20px;
+  gap:6px;width:36cqw;height:20px;
 }
-.r-home .inv-v2-divider i {width:52px;}
+.r-home .inv-v2-divider i {width:12cqw;}
 .r-home .inv-v2-divider span {font-size:21px;}
 /* The supplied photo already contains flowers and the front-of-palace sculpture.
    Do not paste duplicated flower cutouts across the garden and approach. */
