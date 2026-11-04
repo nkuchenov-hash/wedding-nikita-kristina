@@ -76,7 +76,7 @@ function schedule(){
  return shell('/schedule',
  '<section class="r-photo-head r-schedule-head r-cinematic-photo">'+img('boardTable','','Праздничный стол с цветами и свечами в зелёном саду',true)+'</section>'+
  '<section class="r-curve-content r-program"><svg class="r-section-wave" viewBox="0 0 500 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 4 C160 12 323 37 500 55 L500 60 H0Z" fill="currentColor"/></svg>'+
- heading('ПРОГРАММА ДНЯ','Как всё<br>будет')+
+ heading('ПРОГРАММА ДНЯ','Как всё будет')+
  '<div class="r-program-modes" role="group" aria-label="Вариант свадебной программы"><button type="button" data-program-mode="one" aria-pressed="true">Один день</button><button type="button" data-program-mode="three" aria-pressed="false">Три дня</button></div>'+
  '<div class="r-program-one"><div class="r-timeline">'+items.map(item=>'<div class="r-time-item"><div class="r-time-icon">'+ic(item[3])+'</div><div class="r-time-line"><i></i></div><div class="r-time-description"><b>'+item[0]+'</b><h3>'+item[1]+'</h3><p>'+item[2]+'</p></div></div>').join('')+'</div></div>'+
  '<div class="r-program-three" hidden><p class="r-program-note">Альтернативный вариант на три дня. Программа не утверждена.</p>'+
