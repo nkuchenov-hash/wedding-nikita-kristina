@@ -74,7 +74,7 @@ function home(){
  '<img class="inv-v2-leaves" src="./public/production/invitation-leaves-top.png" alt="" aria-hidden="true" loading="eager">'+
  '<img class="inv-v2-cherub" src="./public/production/invitation-cherub.png" alt="" aria-hidden="true" loading="eager">'+
  '<div class="inv-v2-copy"><span class="inv-v2-eyebrow">МЫ ЖЕНИМСЯ!</span><h2>Никита<span>&</span>Кристина</h2>'+
- '<p><span class="inv-v2-line">И хотим разделить этот</span><span class="inv-v2-line">особенный день с самыми</span><span class="inv-v2-line">близкими людьми.</span><span class="inv-v2-line">Будем счастливы видеть вас</span><span class="inv-v2-line">на нашей свадьбе</span><span class="inv-v2-line">в усадьбе Марьино.</span></p>'+
+ '<p><span class="inv-v2-line">И хотим разделить этот</span> <span class="inv-v2-line">особенный день с самыми</span> <span class="inv-v2-line">близкими людьми.</span> <span class="inv-v2-line">Будем счастливы видеть вас</span> <span class="inv-v2-line">на нашей свадьбе</span> <span class="inv-v2-line">в усадьбе Марьино.</span></p>'+
  '<div class="inv-v2-divider" aria-hidden="true"><i></i><span>✣</span><i></i></div></div>'+
  '<img class="inv-v2-flora inv-v2-flora-left" src="./public/production/invitation-flowers-left.png" alt="" aria-hidden="true" loading="eager">'+
  '<img class="inv-v2-flora inv-v2-flora-right" src="./public/production/invitation-flowers-left.png" alt="" aria-hidden="true" loading="eager">'+
