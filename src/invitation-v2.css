@@ -120,3 +120,25 @@
  .r-home .inv-v2-copy h2{font-size:61px!important}
  .r-home .inv-v2-copy p{line-height:1.17!important}
 }
+
+
+/* Final invitation screenshot correction: visible edge flora and clear, sunlit
+   architecture below the soft sky-to-stone fade. */
+.r-home .inv-v2-skyfade{
+ inset:45% 0 0;
+ background:linear-gradient(180deg,
+ #F3F5F2 0%,#F3F5F2 16%,rgba(243,245,242,.94) 23%,
+ rgba(243,245,242,.72) 30%,rgba(243,245,242,.25) 39%,
+ transparent 48%);
+}
+.r-home .inv-v2-flora-left{
+ left:-25%;right:auto;top:49%;bottom:auto;
+ width:74%;height:54%;object-position:left top;
+}
+.r-home .inv-v2-flora-right{
+ left:auto;right:-13%;top:49%;bottom:auto;
+ width:72%;height:54%;object-position:left top;
+ transform:scaleX(-1);
+ -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.45) 9%,#000 20%);
+ mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.45) 9%,#000 20%);
+}
