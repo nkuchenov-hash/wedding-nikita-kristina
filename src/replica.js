@@ -71,6 +71,8 @@ function home(){
  '<div class="inv-v2-stone" aria-hidden="true"></div>'+
  '<div class="inv-v2-estate">'+img('boardEstate','inv-v2-estate-image','Солнечная усадьба среди деревьев и цветов')+'</div>'+
  '<div class="inv-v2-skyfade" aria-hidden="true"></div>'+
+ '<div class="inv-v2-side-flora inv-v2-side-flora--left" aria-hidden="true"></div>'+
+ '<div class="inv-v2-side-flora inv-v2-side-flora--right" aria-hidden="true"></div>'+
  '<img class="inv-v2-leaves" src="./public/production/invitation-leaves-top.png" alt="" aria-hidden="true" loading="eager">'+
  '<img class="inv-v2-cherub" src="./public/production/invitation-cherub.png" alt="" aria-hidden="true" loading="eager">'+
  '<div class="inv-v2-copy"><span class="inv-v2-eyebrow">МЫ ЖЕНИМСЯ!</span><h2>Никита<span>&</span>Кристина</h2>'+
