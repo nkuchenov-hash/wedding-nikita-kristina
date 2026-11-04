@@ -142,3 +142,15 @@
  -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.45) 9%,#000 20%);
  mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.45) 9%,#000 20%);
 }
+
+
+/* Complete marble column with cherub: transparent isolated artwork.
+   The entire decorative column is kept inside the mobile canvas. */
+.r-home .inv-v2-cherub{
+  top:0!important;right:0!important;left:auto!important;
+  height:91%!important;width:auto!important;max-width:none!important;
+  object-fit:contain!important;object-position:right top!important;
+  z-index:4!important;transform:none!important;
+  mask-image:none!important;-webkit-mask-image:none!important;
+  filter:drop-shadow(-3px 4px 5px rgba(39,51,35,.11))!important;
+}
