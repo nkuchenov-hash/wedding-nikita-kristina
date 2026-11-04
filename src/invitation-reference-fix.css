@@ -223,3 +223,23 @@
   -webkit-mask-image:radial-gradient(ellipse 95% 29% at 93% 68%, #000 0%,rgba(0,0,0,.98) 63%,transparent 100%);
   mask-image:radial-gradient(ellipse 95% 29% at 93% 68%, #000 0%,rgba(0,0,0,.98) 63%,transparent 100%);
 }
+
+/* Recover ONLY the stone column hidden below the clean transparent cherub.
+   The asset's left region contains text and is fully masked out. The clean
+   angel above remains a separate transparent PNG. */
+.r-home .inv-v2-cherub-column {
+  position:absolute;
+  top:0;right:-23%;
+  width:70%;height:63%;
+  z-index:3;
+  pointer-events:none;
+  background:url("../public/production/invitation-cherub-full-column.png") top right/100% auto no-repeat;
+  -webkit-mask-image:
+    linear-gradient(to right,transparent 0%,transparent 48%,rgba(0,0,0,.8) 68%,#000 86%),
+    linear-gradient(to bottom,transparent 0%,transparent 36%,#000 56%,#000 78%,transparent 100%);
+  -webkit-mask-composite:source-in;
+  mask-image:
+    linear-gradient(to right,transparent 0%,transparent 48%,rgba(0,0,0,.8) 68%,#000 86%),
+    linear-gradient(to bottom,transparent 0%,transparent 36%,#000 56%,#000 78%,transparent 100%);
+  mask-composite:intersect;
+}
