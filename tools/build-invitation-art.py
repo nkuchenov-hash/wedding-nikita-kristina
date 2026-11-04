@@ -28,6 +28,6 @@ if estate.exists():
     house=Image.open(estate).convert('RGB')
     house=ImageEnhance.Contrast(house).enhance(1.035)
     house=house.filter(ImageFilter.UnsharpMask(radius=1.2,percent=110,threshold=4))
-    output=ROOT/'production/invitation-estate-clarified.webp'
+    output=estate
     house.save(output,'WEBP',quality=96,method=6)
     print('ESTATE PHOTO',house.size,output.stat().st_size)
