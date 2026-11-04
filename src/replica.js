@@ -77,7 +77,7 @@ function home(){
  '<p>И хотим разделить этот особенный день с самыми близкими людьми. Будем счастливы видеть вас на нашей свадьбе в усадьбе Марьино.</p>'+
  '<div class="inv-v2-divider" aria-hidden="true"><i></i><span>✣</span><i></i></div></div>'+
  '<img class="inv-v2-flora inv-v2-flora-left" src="./public/production/invitation-flowers-left.png" alt="" aria-hidden="true" loading="eager">'+
- '<img class="inv-v2-flora inv-v2-flora-right" src="./public/production/invitation-flowers-right.png" alt="" aria-hidden="true" loading="eager">'+
+ '<img class="inv-v2-flora inv-v2-flora-right" src="./public/production/invitation-flowers-left.png" alt="" aria-hidden="true" loading="eager">'+
  '</section>'+
  '<section class="r-home-links">'+heading('НАШ ПРАЗДНИК','Всё, что нужно знать')+'<a href="#/schedule">'+ic('schedule')+'Программа дня <b>↗</b></a><a href="#/info">'+ic('pin')+'Усадьба Марьино <b>↗</b></a><a href="#/guests">'+ic('guests')+'Наши близкие <b>↗</b></a><a href="#/gallery">'+ic('gallery')+'Фотографии <b>↗</b></a></section>',
  'r-home');
