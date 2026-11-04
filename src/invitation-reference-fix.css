@@ -1,0 +1,125 @@
+/* Invitation v3 — rebuild from clean, independent artwork.
+   Keep all typography selectable HTML; use no screenshots or baked-text image layers.
+   Layout is based on the approved 02-invitation reference (275x669, 625px artwork + tabs). */
+.r-home section.r-invitation.inv-v2 {
+  height:max(800px, 227cqw) !important;
+  min-height:800px !important;
+  max-height:none !important;
+  background:#f2eee6 !important;
+  color:#182c21;
+  isolation:isolate;
+  overflow:hidden;
+}
+.r-home .inv-v2-stone {
+  inset:0;z-index:0;
+  background:radial-gradient(ellipse 83% 42% at 46% 30%,#faf7ef 0%,#f1eee5 100%);
+}
+.r-home .inv-v2-stone::before {
+  content:"";position:absolute;inset:0;
+  opacity:.10;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+  pointer-events:none;
+}
+.r-home .inv-v2-estate {
+  z-index:1;
+  inset:auto 0 0 0 !important;
+  height:53% !important;
+  overflow:hidden;
+  background:#dce7d8;
+}
+.r-home .inv-v2-estate .inv-v2-estate-image {
+  width:100%;height:100%;
+  object-fit:cover !important;
+  object-position:50% 51% !important;
+  filter:saturate(1.03) brightness(1.06) contrast(1.02) !important;
+}
+.r-home .inv-v2-skyfade {
+  inset:42% 0 0 !important;z-index:2;
+  background:linear-gradient(to bottom,
+    #f2eee6 0%,#f2eee6 17%,
+    rgba(242,238,230,.98) 23%,rgba(242,238,230,.76) 29%,
+    rgba(242,238,230,.28) 40%,transparent 53%) !important;
+}
+.r-home .inv-v2-leaves {
+  top:-1.3% !important;left:-4% !important;
+  width:45% !important;height:20% !important;
+  object-fit:contain !important;object-position:top left !important;
+  z-index:5;filter:drop-shadow(2px 4px 4px rgba(29,66,31,.12));
+}
+/* The source is the CLEAN alpha PNG, NOT invitation-cherub-full-column.png
+   (which includes burned-in lettering, garden, and the wrong huge column). */
+.r-home .inv-v2-cherub {
+  top:1.8% !important;right:-2% !important;left:auto !important;
+  width:91% !important;height:auto !important;max-height:none !important;
+  object-fit:contain !important;object-position:right top !important;
+  transform:none !important;z-index:4 !important;
+  -webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.5) 38%,#000 57%) !important;
+  mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.5) 38%,#000 57%) !important;
+  filter:drop-shadow(-3px 5px 5px rgba(32,39,28,.1)) !important;
+}
+.r-home .inv-v2-copy {
+  top:19.3% !important;
+  left:3% !important;right:3% !important;
+  align-items:center;text-align:center;z-index:6;
+}
+.r-home .inv-v2-eyebrow {
+  margin:0 0 12px !important;
+  font:600 clamp(11px,3.2cqw,13px)/1.3 'Manrope',Arial,sans-serif !important;
+  letter-spacing:.21em;
+  color:#b4874a;
+}
+.r-home .inv-v2-copy h2 {
+  font:italic 500 clamp(83px,22.5cqw,100px)/.79 'Cormorant Garamond',Georgia,serif !important;
+  letter-spacing:-.052em !important;
+  margin:0 0 15px !important;
+  color:#182e21 !important;
+  text-shadow:none !important;
+  max-width:100%;
+}
+.r-home .inv-v2-copy h2>span {
+  font:italic 400 .68em/1 'Cormorant Garamond',Georgia,serif !important;
+  margin:0 0 3px !important;color:#c39a61;
+}
+.r-home .inv-v2-copy p {
+  margin:0 auto !important;max-width:90% !important;
+  font:400 clamp(16px,4.75cqw,20px)/1.37 'Manrope',Arial,sans-serif !important;
+  color:#37453d !important;letter-spacing:-.02em;
+  text-wrap:initial !important;position:relative;isolation:auto;
+}
+.r-home .inv-v2-copy p::before {content:none !important;display:none !important;}
+.r-home .inv-v2-copy p .inv-v2-line {
+  display:block;white-space:nowrap;
+}
+.r-home .inv-v2-divider {
+  margin:21px auto 0 !important;
+  gap:6px;width:145px;height:20px;
+}
+.r-home .inv-v2-divider i {width:52px;}
+.r-home .inv-v2-divider span {font-size:21px;}
+/* The supplied photo already contains flowers and the front-of-palace sculpture.
+   Do not paste duplicated flower cutouts across the garden and approach. */
+.r-home .inv-v2-flora {display:none !important;}
+@media(max-width:355px) {
+  .r-home .inv-v2-copy {top:19.6% !important;}
+  .r-home .inv-v2-copy h2 {font-size:clamp(72px,22.5cqw,83px) !important;}
+  .r-home .inv-v2-copy p {font-size:15px !important;line-height:1.4 !important;}
+  .r-home .inv-v2-eyebrow {font-size:11px !important;}
+  .r-home .inv-v2-divider {margin-top:17px !important;}
+}
+/* Put both panels at the SAME rendered phone width, not a 430px live phone
+   beside a 275px reference. Reference retains native image proportions. */
+@media(min-width:768px) {
+  .ref-compare-on:not(.ref-compare-admin) #app .r-app {
+    width:min(100%, 430px, calc((100dvh - 160px)*.410)) !important;
+  }
+  #reference-comparison .ref-canvas>img {
+    width:min(430px, calc((100dvh - 160px)*.410)) !important;
+    height:auto !important;
+    max-width:100% !important;max-height:none !important;
+    object-fit:contain !important;
+    border-radius:0 !important;
+  }
+  .ref-compare-on:not(.ref-compare-admin) .r-tabs {
+    width:min(430px, calc((100dvh - 160px)*.410)) !important;
+  }
+}
