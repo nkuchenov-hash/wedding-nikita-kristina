@@ -219,3 +219,35 @@
 .r-info .r-details>.r-details-bottom{order:6;}
 .r-info .r-accordion summary{font-size:16px;min-height:57px;}
 .r-info .r-accordion details p{font-size:16px;}
+
+
+/* Second screenshot review: keep the entire couple rather than zooming the
+   square crop until both heads fill the viewport. */
+.r-home .r-hero--board .r-cover-photo{
+  top:6%;height:79%;width:100%;object-fit:fill;object-position:50% 50%;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 82%,rgba(0,0,0,.87) 92%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 82%,rgba(0,0,0,.87) 92%,transparent 100%);
+}
+.r-home .r-hero--board .r-hero-title{bottom:calc(18% + env(safe-area-inset-bottom));}
+.r-home .r-hero--board .r-scroll-indicator{bottom:calc(11% + env(safe-area-inset-bottom));}
+.r-home .r-hero--board .r-hero-bouquet{width:41%;height:24%;bottom:30%;left:-6%;}
+
+/* Original photo has sky between words and the estate. Strengthen that sky
+   blend so the roof cannot be seen through the invitation copy. */
+.r-home .r-invitation .r-invite-picture:before{
+  background:linear-gradient(180deg,
+    #F5F7F3 0%,#F5F7F3 23%,rgba(245,247,243,.90) 34%,
+    rgba(245,247,243,.42) 46%,transparent 61%,transparent 100%);
+}
+
+/* Replace unsuitable visible palace buildings behind the dress-code statue
+   with natural garden greenery from the wedding reference photography. */
+.r-info .r-dress:after{
+  background-image:linear-gradient(180deg,rgba(20,47,23,.02) 0%,rgba(244,248,241,.07) 29%,#F5F7F4 96%),url("../public/board/07-gallery/gallery-clean-6.webp");
+  background-size:cover;background-position:50% 38%;
+}
+.r-schedule .r-program .r-heading h1{
+  font-size:clamp(43px,11cqw,58px);
+  white-space:nowrap;letter-spacing:-.05em;line-height:1.05;
+}
+.r-schedule .r-program .r-heading{margin-bottom:24px;}
