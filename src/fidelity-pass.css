@@ -273,3 +273,39 @@
   mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.52) 40%,#000 100%);
   opacity:.42;
 }
+
+
+/* Nov 4 screenshot correction: NEVER distort a square photograph into an
+   844px-tall portrait. Preserve human proportions; photo fades into a
+   restrained forest backdrop below its real image boundary. */
+.r-home .r-hero--board .r-cover-photo{
+  top:0;left:0;width:100%;height:64%;
+  object-fit:cover!important;object-position:center 40%;
+  transform:none!important;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 69%,rgba(0,0,0,.85) 82%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 69%,rgba(0,0,0,.85) 82%,transparent 100%);
+}
+.r-home .r-hero--board .r-hero-bouquet{display:none!important}
+.r-home .r-hero--board .r-hero-title{
+  bottom:calc(21.5% + env(safe-area-inset-bottom));
+}
+.r-home .r-hero--board .r-hero-title h1{
+  font-size:clamp(69px,19.2cqw,88px);
+  line-height:.85;letter-spacing:-.051em;
+}
+.r-home .r-hero--board .r-hero-title .r-ornament{margin:15px auto 18px}
+.r-home .r-hero--board .r-hero-title .r-ornament:after{display:none}
+.r-home .r-hero--board .r-hero-title p{font-size:16px;letter-spacing:.15em}
+.r-home .r-hero--board .r-scroll-indicator{bottom:calc(9.3% + env(safe-area-inset-bottom))}
+/* Show the reference at the same vertical scale as the live phone mockup.
+   The reference is a taller, narrower original image: preserve its ratio. */
+@media(min-width:768px){
+ #reference-comparison .ref-canvas>img{
+   width:auto!important;
+   height:min(calc(100dvh - 144px),840px)!important;
+   max-height:none!important;
+   max-width:95%!important;
+   object-fit:contain!important;
+ }
+ #reference-comparison .ref-canvas{overflow-y:auto!important}
+}
