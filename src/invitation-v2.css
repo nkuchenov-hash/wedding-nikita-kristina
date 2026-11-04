@@ -154,3 +154,17 @@
   mask-image:none!important;-webkit-mask-image:none!important;
   filter:drop-shadow(-3px 4px 5px rgba(39,51,35,.11))!important;
 }
+
+
+/* Keep full column visible while preserving readable live body copy.
+   A feathered stone-colored light pool, rather than a solid text box, is
+   placed between the column and the copy. */
+.r-home .inv-v2-copy p{
+  position:relative;isolation:isolate;
+}
+.r-home .inv-v2-copy p::before{
+  content:"";position:absolute;pointer-events:none;z-index:-1;
+  inset:-9px -10px -10px -10px;
+  background:radial-gradient(ellipse 67% 90% at 83% 50%,
+    rgba(243,245,242,.95) 0%,rgba(243,245,242,.69) 63%,transparent 100%);
+}
