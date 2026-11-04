@@ -93,3 +93,30 @@
 @media(prefers-reduced-motion:reduce){
  .r-home .inv-v2 *{animation:none!important;transition:none!important}
 }
+
+
+/* Screenshot pass 02: keep the editorial heading while the 16pt invitation
+   copy ends above the roofline, and prevent rectangular botanical cutoffs. */
+.r-home .inv-v2-copy{top:19.3%;}
+.r-home .inv-v2-copy h2{
+  font-size:clamp(62px,16.6cqw,72px)!important;
+  line-height:.79!important;margin-bottom:11px!important;
+}
+.r-home .inv-v2-copy p{font-size:16pt!important;line-height:1.21!important;max-width:354px;}
+.r-home .inv-v2-divider{margin:13px auto 0;}
+.r-home .inv-v2-estate{height:48%;}
+.r-home .inv-v2-skyfade{
+  inset:45% 0 0;
+  background:linear-gradient(180deg,#F3F5F2 0%,#F3F5F2 16%,rgba(243,245,242,.99) 25%,rgba(243,245,242,.89) 36%,rgba(243,245,242,.55) 46%,rgba(243,245,242,.12) 57%,transparent 69%);
+}
+.r-home .inv-v2-flora-left{left:-26%;bottom:-8%;width:71%;height:41%;}
+.r-home .inv-v2-flora-right{
+ right:-29%;bottom:-10%;width:73%;height:42%;transform:scaleX(-1);
+ -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 20%,#000 100%);
+ mask-image:linear-gradient(90deg,transparent 0%,#000 20%,#000 100%);
+}
+@media(max-width:360px){
+ .r-home .inv-v2-copy{top:18%}
+ .r-home .inv-v2-copy h2{font-size:61px!important}
+ .r-home .inv-v2-copy p{line-height:1.17!important}
+}
