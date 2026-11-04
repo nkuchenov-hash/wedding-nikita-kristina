@@ -251,3 +251,25 @@
   white-space:nowrap;letter-spacing:-.05em;line-height:1.05;
 }
 .r-schedule .r-program .r-heading{margin-bottom:24px;}
+
+
+/* Final screenshot defect fixes: no blank top bar and no table edge in the
+   photographic garden crop behind the marble statue. */
+.r-home .r-hero--board .r-cover-photo{
+  top:0;height:85%;object-fit:fill;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 77%,rgba(0,0,0,.83) 90%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 77%,rgba(0,0,0,.83) 90%,transparent 100%);
+}
+.r-info .r-dress:after{
+  background-size:cover,140% auto;
+  background-position:center center,50% 60%;
+}
+.r-info .r-dress:before{
+  content:"";display:block;z-index:1;position:absolute;left:0;right:0;bottom:0;top:auto;height:18%;
+  border:0;pointer-events:none;
+  background:linear-gradient(to bottom,transparent,rgba(242,246,237,.18) 32%,rgba(242,246,237,.06) 100%),
+             url("../public/board/07-gallery/gallery-clean-6.webp") center 85%/cover no-repeat;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.52) 40%,#000 100%);
+  mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.52) 40%,#000 100%);
+  opacity:.42;
+}
