@@ -1,7 +1,7 @@
 
 import {wedding} from './data.js';
 const PHOTO={
- boardPortrait:'./public/board/01-home/portrait-clean.webp',
+ boardPortrait:'./public/production/portrait-extended-background.webp',
  boardEstate:'./public/board/02-invitation/estate-sunny-clean.webp',
  boardCherub:'./public/production/invitation-cherub.png',
  boardTable:'./public/board/03-program/banquet-clean.webp',
