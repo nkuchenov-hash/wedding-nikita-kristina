@@ -198,3 +198,28 @@
     height:4.7cqw !important;width:4.7cqw !important;
   }
 }
+
+/* Only the far-left and far-right photographic foliage is extracted from
+   the client's approved illustration. All copy, statue, venue, and controls
+   remain separately rendered and independently editable. Soft elliptical
+   alpha prevents any rectangular stock image/photo seams. */
+.r-home .inv-v2-side-flora {
+  position:absolute;top:0;width:21%;height:100%;z-index:3;
+  background-image:url("../public/approved-reference/02-invitation.png");
+  background-repeat:no-repeat;
+  background-size:100cqw 243.27cqw;
+  pointer-events:none;
+  filter:saturate(1.02);
+}
+.r-home .inv-v2-side-flora--left {
+  left:0;
+  background-position:left top;
+  -webkit-mask-image:radial-gradient(ellipse 95% 29% at 7% 68%, #000 0%,rgba(0,0,0,.98) 63%,transparent 100%);
+  mask-image:radial-gradient(ellipse 95% 29% at 7% 68%, #000 0%,rgba(0,0,0,.98) 63%,transparent 100%);
+}
+.r-home .inv-v2-side-flora--right {
+  right:0;
+  background-position:right top;
+  -webkit-mask-image:radial-gradient(ellipse 95% 29% at 93% 68%, #000 0%,rgba(0,0,0,.98) 63%,transparent 100%);
+  mask-image:radial-gradient(ellipse 95% 29% at 93% 68%, #000 0%,rgba(0,0,0,.98) 63%,transparent 100%);
+}
