@@ -1,0 +1,221 @@
+/* Screenshot-driven fidelity pass, 2026-11-04.
+   Scope is intentionally limited to the six unfinished screens.
+   The accepted .v2-venue / .v3-* Mariyno screen is untouched. */
+
+/* Compare the *same-sized* phone screens; the right original must not shrink
+   to a thumbnail because its parent has a constrained viewport height. */
+@media(min-width:768px) {
+  #reference-comparison { padding:18px 22px 18px; }
+  #reference-comparison .ref-canvas {
+    display:block; flex:1 1 auto; min-height:0; overflow-y:auto;
+    overflow-x:hidden; text-align:center; padding:0 10px 22px;
+    scrollbar-gutter:stable;
+  }
+  #reference-comparison .ref-canvas > img {
+    display:block; width:min(100%,390px); height:auto; max-height:none;
+    max-width:100%; margin:0 auto; object-fit:initial; border-radius:18px;
+  }
+  #reference-comparison .ref-heading,
+  #reference-comparison .ref-toolbar,
+  #reference-comparison .ref-caption {max-width:440px;}
+  #reference-comparison .ref-caption {font-size:13px;line-height:1.45;}
+}
+
+/* 01. Hero: remove the dark blurred square-photo extension altogether.
+   Use the actual photo and an optical darkening that follows its bottom edge.
+   All names, date, and controls remain live HTML. */
+.r-home .r-hero--board {background:#273e2b;isolation:isolate;}
+.r-home .r-hero--board:before {
+  inset:0; transform:none;filter:none!important;
+  background:linear-gradient(180deg,#5c604b 0%,#324a38 51%,#192c1e 100%);
+  opacity:1;
+}
+.r-home .r-hero--board .r-cover-photo {
+  height:78%;left:0;top:0;width:100%;
+  object-fit:cover; object-position:48% 44%;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 70%,rgba(0,0,0,.85) 83%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 70%,rgba(0,0,0,.85) 83%,transparent 100%);
+  filter:saturate(1.04) contrast(1.01);
+}
+.r-home .r-hero--board .r-hero-dim{
+  background:linear-gradient(180deg,rgba(14,31,17,.1) 0%,transparent 35%,rgba(17,39,23,.04) 53%,rgba(20,40,24,.29) 72%,rgba(16,35,22,.48) 100%);
+}
+.r-home .r-hero--board .r-hero-bouquet {
+  width:43%;height:25%;left:-5%;bottom:28%;
+  filter:drop-shadow(1px 8px 7px rgba(11,34,15,.15));
+  opacity:.89;
+}
+.r-home .r-hero--board .r-hero-title {
+  bottom:calc(12.5% + env(safe-area-inset-bottom));left:6%;right:6%;
+}
+.r-home .r-hero--board .r-hero-title h1 {
+  font-size:clamp(61px,16.8cqw,88px);
+  line-height:.86;letter-spacing:-.048em;
+  text-shadow:0 2px 11px rgba(0,0,0,.24);
+}
+.r-home .r-hero--board .r-hero-title .r-ornament{
+  position:relative; margin:20px auto 24px;
+}
+.r-home .r-hero--board .r-hero-title .r-ornament:after {
+  content:"";position:absolute;height:1px;width:100%;max-width:120px;
+  background:#C1A46C;opacity:.75;bottom:-13px;left:50%;transform:translateX(-50%);
+}
+.r-home .r-hero--board .r-hero-title p {font-size:clamp(14px,3.5cqw,16px);letter-spacing:.16em;}
+.r-home .r-hero--board .r-scroll-indicator {bottom:calc(8.3% + env(safe-area-inset-bottom));}
+
+/* 02. Invitation: estate starts within the text composition. Its real sky
+   fades into stone-white; all greenery hangs above the photo as PNG layers. */
+.r-home .r-invitation{
+  height:calc(100svh - 66px);min-height:700px;
+  background:#F5F7F3;overflow:hidden;
+}
+.r-home .r-invitation:before {border:none;}
+.r-home .r-invitation > .r-invite-greens{
+  top:-5%;left:-13%;width:55%;height:32%;
+}
+.r-home .r-invitation > .r-invite-greens img{
+  object-fit:contain;filter:drop-shadow(5px 7px 4px rgba(30,58,28,.1));
+}
+.r-home .r-invitation > .r-invite-statue{
+  right:-7%;top:1%;width:55%;height:34%;
+  object-position:right top;object-fit:contain;
+}
+.r-home .r-invitation .r-invite-head{
+  top:22%;left:8%;right:8%;
+}
+.r-home .r-invitation .r-invite-head h2 {
+  font-size:clamp(54px,14.2cqw,74px);
+  line-height:.81;margin:9px auto 15px;
+}
+.r-home .r-invitation .r-invite-head p{
+  font-size:16px;line-height:1.44;max-width:290px;
+}
+.r-home .r-invitation .r-invite-head .r-ornament{margin:15px auto 0;}
+.r-home .r-invitation .r-invite-picture{
+  height:55%;bottom:0;left:0;right:0;
+  background:#DCE7D7;z-index:2;
+}
+.r-home .r-invitation .r-invite-picture>img:not(.board-estate-leaf){
+  object-fit:cover;object-position:50% 55%;
+  filter:saturate(1.18) brightness(1.08);
+}
+.r-home .r-invitation .r-invite-picture:before{
+  background:linear-gradient(180deg,
+    #F5F7F3 0%,rgba(245,247,243,.98) 9%,rgba(245,247,243,.73) 22%,
+    rgba(245,247,243,.14) 36%, transparent 47%,transparent 100%);
+  z-index:3;
+}
+.r-home .r-invitation .r-invite-picture .board-estate-leaf{
+  z-index:6;left:-11%;top:8%;width:37%;height:87%;
+  object-fit:contain;transform:none;opacity:.96;
+  filter:drop-shadow(3px 5px 4px rgba(26,57,22,.16));
+}
+.r-home .r-invitation .r-invite-picture .board-estate-leaf--right{
+  left:auto;right:-13%;top:-2%;width:39%;height:90%;
+  transform:scaleX(-1);
+}
+
+/* 03. Programme: bring the live timeline closer to the illustration.
+   Keep both one/three-day variants but place controls AFTER the first plan. */
+.r-schedule-head{height:clamp(260px,69cqw,330px);}
+.r-schedule-head img{object-position:center 49%;}
+.r-schedule .r-program{
+  display:flex;flex-direction:column;
+  margin-top:-32px;border-radius:0;padding:35px 8% 78px;
+}
+.r-schedule .r-program>.r-section-wave{top:-22px;height:32px;}
+.r-schedule .r-program .r-heading{order:1;margin-bottom:18px;}
+.r-schedule .r-program .r-heading h1{
+  font-size:clamp(52px,13cqw,66px);line-height:.96;
+}
+.r-schedule .r-program .r-program-one {order:2;}
+.r-schedule .r-program .r-program-three{order:3;}
+.r-schedule .r-program .r-program-modes{order:4;margin:12px auto 16px;}
+.r-schedule .r-program .r-draft-note{order:5;}
+.r-schedule .r-time-item{min-height:114px;gap:12px;}
+.r-schedule .r-time-description h3{font-size:27px;line-height:1.05;}
+.r-schedule .r-time-description p{font-size:16px!important;line-height:1.36!important;}
+.r-schedule .r-time-description b{font-size:16px;}
+.r-schedule .r-program-modes button{font-size:15px;min-height:42px;}
+.r-schedule .r-program .r-program-three .r-day-card p{font-size:16px!important;}
+
+/* 05. Dress-code: restore a real garden behind the statue, not a white void.
+   The bottom transition is foliage plus real photographed imagery. */
+.r-info .r-dress{
+  height:calc(100svh - 66px);min-height:755px;
+  background:linear-gradient(180deg,#F5F7F4 0%,#F9FAF7 60%,#F1F5ED 100%);
+}
+.r-info .r-dress:before{border:none;}
+.r-info .r-dress:after{
+  content:"";pointer-events:none;z-index:0;position:absolute;left:0;right:0;top:0;height:42%;
+  background-image:linear-gradient(180deg,rgba(24,55,29,.09),rgba(245,247,244,.2) 35%,#F5F7F4 97%),url("../public/photos/garden.jpg");
+  background-size:cover;background-position:50% 20%;
+}
+.r-info .r-dress .r-dress-statue{
+  top:2%;left:-9%;width:53%;height:43%;
+  z-index:2;overflow:visible;
+}
+.r-info .r-dress .r-dress-statue img{
+  object-fit:contain;object-position:left top;
+  filter:drop-shadow(3px 5px 8px rgba(30,44,30,.15));
+}
+.r-info .r-dress .r-dress-content{
+  z-index:5;top:22%;left:7%;right:7%;
+}
+.r-info .r-dress .r-dress-content .r-heading h1{
+  font-size:clamp(48px,12cqw,62px);
+  line-height:.94;letter-spacing:-.038em;margin:8px auto 13px;
+}
+.r-info .r-dress .r-dress-content .r-heading p{
+  font-size:16px;line-height:1.42;max-width:310px;
+}
+.r-info .r-dress .r-color-dots{margin:14px auto 10px;}
+.r-info .r-dress .r-color-dots i {width:clamp(36px,8.4cqw,43px);height:clamp(36px,8.4cqw,43px);}
+.r-info .r-dress .r-dress-content > p {font-size:16px;line-height:1.35;}
+.r-info .r-dress .r-dress-content > small {font-size:13px;line-height:1.35;margin:7px auto 11px;}
+.r-info .r-dress .r-dress-collage{
+  height:clamp(162px,42cqw,191px);margin-top:10px;
+}
+.r-info .r-dress .r-dress-leaves{
+  top:auto;bottom:0;left:-5%;width:54%;height:28%;z-index:4;
+}
+.r-info .r-dress .r-dress-leaves img{
+  width:100%;height:100%;object-fit:contain;object-position:left bottom;
+  filter:drop-shadow(4px 7px 6px rgba(19,50,18,.2));
+}
+
+/* 06. RSVP and 07 Gallery: keep readable body copy and remove editorial
+   boxes/overlays not present in the approved screens. */
+.r-rsvp{padding:58px 8% 80px;}
+.r-rsvp .r-heading h1{font-size:clamp(49px,11.5cqw,63px);line-height:.97;}
+.r-rsvp .r-heading p{font-size:16px;line-height:1.45;}
+.r-rsvp .r-rsvp-form{margin-top:22px;}
+.r-rsvp .r-rsvp-options label{font-size:16px;min-height:53px;}
+.r-rsvp .r-form-label{font-size:16px;}
+.r-rsvp .r-form-label input,.r-rsvp .r-form-label textarea{font-size:16px;}
+.r-gallery-page {padding-top:53px;}
+.r-gallery-page .r-heading h1{font-size:clamp(50px,13cqw,66px);line-height:.9;}
+.r-gallery-page .r-gallery-leaf{top:-24px;left:-34px;width:154px;height:172px;opacity:.88;}
+.r-gallery-page .r-photo-filters{gap:5px;margin:15px 0 13px;}
+.r-gallery-page .r-photo-filters button{font-size:13px;min-height:39px;padding:7px 3px;}
+.r-gallery-page .r-masonry{gap:6px;grid-auto-flow:row;}
+.r-gallery-page .r-gallery-tile{border-radius:7px;height:clamp(146px,41cqw,178px)!important;box-shadow:none;}
+.r-gallery-page .r-gallery-tile .r-image-caption{display:none;}
+.r-gallery-page .r-gallery-tile img{object-fit:cover;}
+.r-gallery-page .r-draft-note{font-size:13px!important;line-height:1.45!important;}
+
+/* 08. Real map route remains accessible, but no large gold pill interrupting
+   the reference's simple map → address → accordion composition. */
+.r-info .r-details{display:flex;flex-direction:column;align-items:stretch;padding:64px 7% 0;}
+.r-info .r-details>.r-heading{order:1;}
+.r-info .r-details>.r-map{order:2;margin:22px auto 0;width:100%;height:184px;}
+.r-info .r-details>p{order:3;margin:17px auto 21px;font-size:16px;}
+.r-info .r-details>.r-accordion{order:4;margin:0;}
+.r-info .r-details>.r-map-real-link{
+  order:5;display:block;background:transparent;border:0;border-bottom:1px solid #c1a46c;
+  border-radius:0;box-shadow:none;font-size:14px;text-align:center;
+  margin:21px auto;padding:5px 4px;color:#214d31;max-width:320px;
+}
+.r-info .r-details>.r-details-bottom{order:6;}
+.r-info .r-accordion summary{font-size:16px;min-height:57px;}
+.r-info .r-accordion details p{font-size:16px;}
