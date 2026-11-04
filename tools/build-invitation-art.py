@@ -18,7 +18,31 @@ mask = Image.new('L',im.size,0)
 ImageDraw.Draw(mask).polygon([(round(x*w),round(y*h)) for x,y in points],fill=255)
 # Only subpixel antialiasing; no fuzzy gradient masking.
 mask = mask.filter(ImageFilter.GaussianBlur(0.55))
-im.putalpha(ImageChops.multiply(im.getchannel('A'),mask))
+# True background removal (not just an opaque crop): sample the neutral
+# paper-colored background from the source's upper left, and keep stone /
+# ivy colors. A core region keeps the pale interior of the marble opaque.
+from statistics import median
+samples=[im.getpixel((round(w*x),round(h*y)))[:3] for x,y in
+         ((.08,.05),(.13,.12),(.18,.18),(.11,.20))]
+paper=tuple(round(median(c[i] for c in samples)) for i in range(3))
+print('Source matte paper tone',paper)
+px=im.load()
+alpha=Image.new('L',(w,h),0)
+ap=alpha.load()
+geo=mask.load()
+for yy in range(h):
+    for xx in range(w):
+        if not geo[xx,yy]:
+            continue
+        rgb=px[xx,yy][:3]
+        difference=max(abs(rgb[k]-paper[k]) for k in range(3))
+        cut=min(255,max(0,int((difference-8)*255/23)))
+        # The shaft's interior is intact even at bright marble highlights.
+        if .57*w < xx < .77*w and .40*h < yy < .86*h:
+            cut=255
+        ap[xx,yy]=(cut*geo[xx,yy])//255
+alpha=alpha.filter(ImageFilter.GaussianBlur(.35))
+im.putalpha(ImageChops.multiply(im.getchannel('A'),alpha))
 im = im.crop((int(.28*w),int(.27*h),w,h))
 im.save(out,optimize=True)
 print('CLEAN COLUMN PNG',out,im.size,out.stat().st_size)
