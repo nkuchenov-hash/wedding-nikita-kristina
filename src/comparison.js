@@ -100,3 +100,9 @@ window.addEventListener('keydown',e=>{
  if(e.key==='Escape' && mobileMode==='original'){mobileMode='site';sync();}
 });
 sync();
+// Deep-link directly to one approved screen without requiring manual scrolling.
+// Example: ?screen=02-invitation#/
+const requested=new URLSearchParams(location.search).get('screen');
+if(requested && screens.some(item=>item.id===requested)){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>navigate(requested)));
+}
