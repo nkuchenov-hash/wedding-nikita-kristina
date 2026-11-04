@@ -67,7 +67,18 @@ function shell(path,body,cls=''){return '<div class="r-app '+cls+'"><div class="
 function home(){
  return shell('/',
  '<section class="r-hero r-hero--editorial r-hero--board">'+img('boardPortrait','r-cover-photo','Иллюстративное свадебное фото: пока не Никита и Кристина',true)+'<div class="r-hero-dim"></div><img class="r-hero-bouquet" src="./public/production/invitation-flowers-left.png" alt="" aria-hidden="true" loading="eager"><div class="r-top-label">УСАДЬБА МАРЬИНО</div><div class="r-hero-title"><span>Мы приглашаем вас на нашу свадьбу</span><h1>Никита<br><em>&</em><br>Кристина</h1>'+flour()+'<p>17 ИЮНЯ 2027</p></div><button type="button" class="r-scroll-indicator" data-scroll-welcome aria-label="Прокрутить к приглашению"><span>⌄</span></button></section>'+
- '<section class="r-invitation" id="welcome"><div class="r-invite-greens" aria-hidden="true"><img src="./public/production/invitation-leaves-top.png" alt=""></div>'+img('boardCherub','r-invite-statue','Белая садовая скульптура на фоне зелени')+'<div class="r-invite-head"><span class="r-micro">МЫ ЖЕНИМСЯ!</span><h2>Никита<br><em>&</em><br>Кристина</h2><p>И хотим разделить этот особенный день с самыми близкими людьми. Будем счастливы видеть вас на нашей свадьбе в усадьбе Марьино.</p>'+flour()+'</div><div class="r-invite-picture"><img class="board-estate-leaf board-estate-leaf--left" src="./public/production/invitation-flowers-left.png" alt="" aria-hidden="true"><img class="board-estate-leaf board-estate-leaf--right" src="./public/production/invitation-flowers-right.png" alt="" aria-hidden="true">'+img('boardEstate','','Фасад усадьбы Марьино в окружении парка')+'</div></section>'+
+ '<section class="r-invitation inv-v2" id="welcome" aria-label="Приглашение на свадьбу">'+
+ '<div class="inv-v2-stone" aria-hidden="true"></div>'+
+ '<div class="inv-v2-estate">'+img('boardEstate','inv-v2-estate-image','Солнечная усадьба среди деревьев и цветов')+'</div>'+
+ '<div class="inv-v2-skyfade" aria-hidden="true"></div>'+
+ '<img class="inv-v2-leaves" src="./public/production/invitation-leaves-top.png" alt="" aria-hidden="true" loading="eager">'+
+ '<img class="inv-v2-cherub" src="./public/production/invitation-cherub.png" alt="" aria-hidden="true" loading="eager">'+
+ '<div class="inv-v2-copy"><span class="inv-v2-eyebrow">МЫ ЖЕНИМСЯ!</span><h2>Никита<span>&</span>Кристина</h2>'+
+ '<p>И хотим разделить этот особенный день с самыми близкими людьми. Будем счастливы видеть вас на нашей свадьбе в усадьбе Марьино.</p>'+
+ '<div class="inv-v2-divider" aria-hidden="true"><i></i><span>✣</span><i></i></div></div>'+
+ '<img class="inv-v2-flora inv-v2-flora-left" src="./public/production/invitation-flowers-left.png" alt="" aria-hidden="true" loading="eager">'+
+ '<img class="inv-v2-flora inv-v2-flora-right" src="./public/production/invitation-flowers-right.png" alt="" aria-hidden="true" loading="eager">'+
+ '</section>'+
  '<section class="r-home-links">'+heading('НАШ ПРАЗДНИК','Всё, что нужно знать')+'<a href="#/schedule">'+ic('schedule')+'Программа дня <b>↗</b></a><a href="#/info">'+ic('pin')+'Усадьба Марьино <b>↗</b></a><a href="#/guests">'+ic('guests')+'Наши близкие <b>↗</b></a><a href="#/gallery">'+ic('gallery')+'Фотографии <b>↗</b></a></section>',
  'r-home');
 }
