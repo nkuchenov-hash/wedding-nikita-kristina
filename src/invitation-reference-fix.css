@@ -23,7 +23,7 @@
 .r-home .inv-v2-estate {
   z-index:1;
   inset:auto 0 0 0 !important;
-  height:53% !important;
+  height:39% !important;
   overflow:hidden;
   background:#dce7d8;
 }
@@ -36,9 +36,9 @@
 .r-home .inv-v2-skyfade {
   inset:42% 0 0 !important;z-index:2;
   background:linear-gradient(to bottom,
-    #f2eee6 0%,#f2eee6 17%,
-    rgba(242,238,230,.98) 23%,rgba(242,238,230,.76) 29%,
-    rgba(242,238,230,.28) 40%,transparent 53%) !important;
+    #f2eee6 0%,#f2eee6 21%,
+    rgba(242,238,230,.98) 32%,rgba(242,238,230,.64) 42%,
+    rgba(242,238,230,.14) 52%,transparent 65%) !important;
 }
 .r-home .inv-v2-leaves {
   top:-1.3% !important;left:-4% !important;
@@ -49,7 +49,7 @@
 /* The source is the CLEAN alpha PNG, NOT invitation-cherub-full-column.png
    (which includes burned-in lettering, garden, and the wrong huge column). */
 .r-home .inv-v2-cherub {
-  top:1.8% !important;right:-2% !important;left:auto !important;
+  top:1.8% !important;right:-21% !important;left:auto !important;
   width:91% !important;height:auto !important;max-height:none !important;
   object-fit:contain !important;object-position:right top !important;
   transform:none !important;z-index:4 !important;
@@ -71,14 +71,14 @@
 .r-home .inv-v2-copy h2 {
   font:italic 500 clamp(83px,22.5cqw,100px)/.79 'Cormorant Garamond',Georgia,serif !important;
   letter-spacing:-.052em !important;
-  margin:0 0 15px !important;
+  margin:0 0 6px !important;
   color:#182e21 !important;
   text-shadow:none !important;
   max-width:100%;
 }
 .r-home .inv-v2-copy h2>span {
-  font:italic 400 .68em/1 'Cormorant Garamond',Georgia,serif !important;
-  margin:0 0 3px !important;color:#c39a61;
+  font:italic 400 .54em/1 'Cormorant Garamond',Georgia,serif !important;
+  margin:-3px 0 -1px !important;color:#c39a61;
 }
 .r-home .inv-v2-copy p {
   margin:0 auto !important;max-width:90% !important;
