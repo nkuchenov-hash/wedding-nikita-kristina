@@ -89,6 +89,27 @@ try {
   }));
   assert.equal(split.original,'flex','Original reference must show beside site on desktop');
   assert.ok(Math.abs(split.app-split.pane)<5,'Both comparison halves should be equal width');
+  // These regressions produced a visually misleading comparison: a 430px
+  // live screen next to a 275px reference, plus baked-text cherub artwork.
+  const invitationFidelity=await page.evaluate(()=>({
+    liveWidth:document.querySelector('.r-app')?.getBoundingClientRect().width,
+    originalWidth:document.querySelector('#reference-screen-image')?.getBoundingClientRect().width,
+    cherub:document.querySelector('.inv-v2-cherub')?.getAttribute('src'),
+    estate:document.querySelector('.inv-v2-estate-image')?.getAttribute('src'),
+    invitationLines:document.querySelectorAll('.inv-v2-copy .inv-v2-line').length,
+    pastedFlowers:getComputedStyle(document.querySelector('.inv-v2-flora')).display
+  }));
+  assert.ok(Math.abs(invitationFidelity.liveWidth-invitationFidelity.originalWidth)<4,
+    'The approved screenshot and live phone must use the same displayed width');
+  assert.ok(invitationFidelity.cherub?.endsWith('/invitation-cherub.png'),
+    'Never use full-column art with baked-in original text');
+  assert.ok(invitationFidelity.estate?.endsWith('/estate-sunny-clean.webp'),
+    'Use the standalone centered Mariyino photograph');
+  assert.equal(invitationFidelity.invitationLines,6,
+    'Invitation text must follow the six approved copy lines');
+  assert.equal(invitationFidelity.pastedFlowers,'none',
+    'Do not obscure the independent estate photograph with duplicated flora');
+  console.log('INVITATION FIDELITY OK:',JSON.stringify(invitationFidelity));
   await page.screenshot({path:output+'/10-desktop.png',fullPage:false,animations:'disabled'});
   console.log('REFERENCE COMPARISON OK:',JSON.stringify(split));
   console.log('VISUAL CHECK OK:',JSON.stringify(outcomes));
