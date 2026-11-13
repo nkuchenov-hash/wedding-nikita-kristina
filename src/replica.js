@@ -2,7 +2,7 @@
 import {wedding} from './data.js';
 const PHOTO={
  boardPortrait:'./public/production/portrait-extended-background.webp',
- boardEstate:'./public/board/02-invitation/estate-sunny-clean.webp',
+ boardEstate:'./public/production/invitation-estate-clear.png',
  boardCherub:'./public/production/invitation-cherub.png',
  boardTable:'./public/board/03-program/banquet-clean.webp',
  boardStatue:'./public/production/dress-statue.png',
