@@ -261,3 +261,74 @@
   object-position:left bottom !important;
   transform:scaleX(-1) !important;
 }
+
+/* 2026-11-13 · 02 INVITATION: final clear-photo + composition correction.
+   Keep the architecture and leaf silhouettes crisp. Only the original
+   photograph's sky pixels are made transparent by build-invitation-art.py. */
+.r-home .inv-v2-copy {
+  left:0 !important;right:0 !important;
+  width:100% !important;
+  margin:0 !important;
+  padding:0 5% !important;
+  transform:none !important;
+  align-items:center !important;
+  text-align:center !important;
+}
+.r-home .inv-v2-eyebrow {
+  position:static !important;
+  transform:none !important;
+  align-self:center !important;
+  text-align:center !important;
+  width:100% !important;
+  margin:0 0 8px !important;
+}
+.r-home .inv-v2-copy h2,
+.r-home .inv-v2-copy p,
+.r-home .inv-v2-divider {
+  align-self:center !important;
+  text-align:center !important;
+  transform:none !important;
+}
+/* Scale down the angel to the reference and keep its head inside the
+   rightmost quarter rather than looming over the titles. */
+.r-home .inv-v2-cherub {
+  top:3.8% !important;
+  right:-13% !important;
+  width:77% !important;
+  height:auto !important;
+  z-index:5 !important;
+  object-fit:contain !important;
+  filter:none !important;
+}
+/* Separate long column, much farther right: visible as a slender vertical
+   edge ornament instead of a wide wall over the manor. */
+.r-home .inv-v2-cherub-column {
+  top:28% !important;
+  right:-29% !important;
+  height:67% !important;
+  width:auto !important;
+  object-fit:contain !important;
+  object-position:right top !important;
+  z-index:4 !important;
+}
+/* Actual estate pixels, no blur, no fog, no semiopaque veil over treetops.
+   The upper sky remains visible via natural alpha transparency. */
+.r-home .inv-v2-estate {
+  height:42% !important;
+  background:linear-gradient(180deg,#f2eee6 0%,#e5ebec 15%,#c9dce5 51%,#f0eee3 100%) !important;
+}
+.r-home .inv-v2-estate .inv-v2-estate-image {
+  display:block !important;
+  width:100% !important;height:100% !important;
+  object-fit:cover !important;
+  object-position:59% 46% !important;
+  filter:none !important;
+  opacity:1 !important;
+  -webkit-mask-image:none !important;
+  mask-image:none !important;
+}
+.r-home .inv-v2-skyfade,
+.r-home .inv-v2-flora,
+.r-home .inv-v2-side-flora {
+  display:none !important;
+}
