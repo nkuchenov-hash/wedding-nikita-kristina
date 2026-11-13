@@ -97,18 +97,33 @@ try {
     cherub:document.querySelector('.inv-v2-cherub')?.getAttribute('src'),
     estate:document.querySelector('.inv-v2-estate-image')?.getAttribute('src'),
     invitationLines:document.querySelectorAll('.inv-v2-copy .inv-v2-line').length,
-    pastedFlowers:getComputedStyle(document.querySelector('.inv-v2-flora')).display
+    pastedFlowers:getComputedStyle(document.querySelector('.inv-v2-flora')).display,
+    skyfade:getComputedStyle(document.querySelector('.inv-v2-skyfade')).display,
+    photoFilter:getComputedStyle(document.querySelector('.inv-v2-estate-image')).filter,
+    liveCenter:document.querySelector('.r-invitation').getBoundingClientRect().left+
+      document.querySelector('.r-invitation').getBoundingClientRect().width/2,
+    eyebrowCenter:document.querySelector('.inv-v2-eyebrow').getBoundingClientRect().left+
+      document.querySelector('.inv-v2-eyebrow').getBoundingClientRect().width/2,
+    cherubWidth:document.querySelector('.inv-v2-cherub').getBoundingClientRect().width
   }));
   assert.ok(Math.abs(invitationFidelity.liveWidth-invitationFidelity.originalWidth)<4,
     'The approved screenshot and live phone must use the same displayed width');
   assert.ok(invitationFidelity.cherub?.endsWith('/invitation-cherub.png'),
     'Never use full-column art with baked-in original text');
-  assert.ok(invitationFidelity.estate?.endsWith('/estate-sunny-clean.webp'),
-    'Use the standalone centered Mariyino photograph');
+  assert.ok(invitationFidelity.estate?.endsWith('/invitation-estate-clear.png'),
+    'Use the original high-resolution architecture photo with alpha-matted sky');
   assert.equal(invitationFidelity.invitationLines,6,
     'Invitation text must follow the six approved copy lines');
-  assert.notEqual(invitationFidelity.pastedFlowers,'none',
-    'The updated layout uses independent high-resolution transparent botanical elements');
+  assert.equal(invitationFidelity.pastedFlowers,'none',
+    'Duplicated flowers obscure the sharp manor photograph');
+  assert.equal(invitationFidelity.skyfade,'none',
+    'The photo must not be washed out by a fog/gradient overlay');
+  assert.equal(invitationFidelity.photoFilter,'none',
+    'Tree contours must not be softened by a CSS image filter');
+  assert.ok(Math.abs(invitationFidelity.liveCenter-invitationFidelity.eyebrowCenter)<2,
+    'The invitation label must be precisely centered on the phone');
+  assert.ok(invitationFidelity.cherubWidth<=invitationFidelity.liveWidth*.8,
+    'The cherub must not be oversized relative to approved reference');
   console.log('INVITATION FIDELITY OK:',JSON.stringify(invitationFidelity));
   await page.screenshot({path:output+'/10-desktop.png',fullPage:false,animations:'disabled'});
   // Render the actual comparison link. No preceding hero, no missing dock,
