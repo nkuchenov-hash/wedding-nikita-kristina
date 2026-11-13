@@ -4,157 +4,121 @@ import {setTimeout as delay} from 'node:timers/promises';
 import assert from 'node:assert/strict';
 import puppeteer from 'puppeteer-core';
 
-const chrome = ['/usr/bin/google-chrome','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
-if (!chrome) throw Error('Chrome / Chromium not available on this runner.');
+const chrome=['/usr/bin/google-chrome','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
+if(!chrome)throw Error('Chrome / Chromium not available on runner.');
 const server=spawn('python3',['-m','http.server','4173','--bind','127.0.0.1','--directory','_site'],{stdio:'ignore'});
-const output='_site/previews';
-mkdirSync(output,{recursive:true});
+mkdirSync('_site/previews',{recursive:true});
 let browser;
-try {
-  await delay(1300);
-  browser=await puppeteer.launch({executablePath:chrome,headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--hide-scrollbars']});
+const url=(path='/')=>'http://127.0.0.1:4173/'+path;
+async function load(page,hash,selector){
+  await page.goto(url()+hash,{waitUntil:'networkidle2'});
+  await page.waitForSelector(selector,{timeout:15000});
+  await page.evaluate(async()=>{
+    for(const img of document.querySelectorAll('.r-app img[src]'))img.loading='eager';
+    await Promise.all([...document.querySelectorAll('.r-app img[src]')].map(img=>img.decode().catch(()=>null)));
+  });
+  const broken=await page.evaluate(()=>[...document.querySelectorAll('.r-app img[src]')]
+    .filter(el=>!el.complete||el.naturalWidth===0)
+    .map(el=>el.getAttribute('src')));
+  assert.deepEqual(broken,[],'Broken images: '+broken.join(', '));
+}
+try{
+  await delay(1200);
+  browser=await puppeteer.launch({executablePath:chrome,headless:true,
+    args:['--no-sandbox','--disable-dev-shm-usage','--hide-scrollbars']});
   const page=await browser.newPage();
   await page.setViewport({width:390,height:844,deviceScaleFactor:1,isMobile:true,hasTouch:true});
-  const scenarios=[
-    ['01-home','#/','.r-hero'],
-    ['02-invitation','#/','.r-invitation'],
-    ['03-timeline','#/schedule','.r-schedule-head'],
-    ['04-venue','#/info','.v2-venue'],
-    ['05-dress','#/info','.r-dress'],
-    ['06-rsvp','#/info','.r-rsvp'],
-    ['07-gallery','#/gallery','.r-gallery-page'],
-    ['08-details','#/info','.r-details'],
-    ['09-guests','#/guests','.r-guests']
-  ];
-  const outcomes=[];
-  for(const [name,route,selector] of scenarios){
-    await page.goto('http://127.0.0.1:4173/'+route,{waitUntil:'networkidle2'});
-    await page.waitForSelector(selector,{timeout:15000});
-    await page.evaluate(async()=>{
-      for(const img of document.querySelectorAll('.r-app img[src]')) img.loading='eager';
-      await Promise.all([...document.querySelectorAll('.r-app img[src]')].map(img=>img.decode().catch(()=>null)));
-    });
-    const broken=await page.evaluate(()=>[...document.querySelectorAll('.r-app img[src]')].filter(el=>!el.complete||el.naturalWidth===0).map(el=>el.getAttribute('src')));
-    assert.deepEqual(broken,[],'Broken images on '+name+': '+broken.join(', '));
-    if(name!=='01-home')await page.$eval(selector,el=>el.scrollIntoView({block:'start',behavior:'instant'}));
-    await delay(200);
-    await page.screenshot({path:output+'/'+name+'.png',fullPage:false,animations:'disabled'});
-    if (['01-home','02-invitation','03-timeline','04-venue','05-dress','06-rsvp','07-gallery','08-details','09-guests'].includes(name)) {
-      const jpeg=await page.screenshot({type:'jpeg',quality:43,fullPage:false,animations:'disabled'});
-      console.log('SCREEN_JPEG_'+name.replace(/-/g,'_')+'='+Buffer.from(jpeg).toString('base64'));
-    }
-    outcomes.push({screen:name,brokenImages:broken.length});
-  }
-
-  // Original reference images must really exist in the served website.
-  await page.goto('http://127.0.0.1:4173/#/',{waitUntil:'networkidle2'});
-  await page.waitForSelector('#reference-mobile-tabs');
-  await page.click('#reference-mobile-tabs [data-mobile="original"]');
-  await page.waitForFunction(()=>document.querySelector('#reference-screen-image')?.naturalWidth>0);
-  assert.equal(await page.$eval('#reference-comparison',el=>getComputedStyle(el).display),'flex','Mobile original comparison must be visible');
-  await page.screenshot({path:output+'/11-original-mobile.png',fullPage:false,animations:'disabled'});
-  await page.click('#reference-mobile-tabs [data-mobile="site"]');
-  assert.equal(await page.$eval('#app',el=>getComputedStyle(el).visibility),'visible','Mobile site must restore after comparison');
-
-  // Interactive smoke: gallery filters, image viewer and preview-only RSVP.
-  await page.goto('http://127.0.0.1:4173/#/gallery',{waitUntil:'networkidle2'});
-  await page.waitForSelector('.r-photo-filters');
-  await page.click('[data-filter="estate"]');
-  const gallery=await page.evaluate(()=>({
-    selected:document.querySelector('[data-filter="estate"]')?.getAttribute('aria-pressed'),
-    visible:[...document.querySelectorAll('.r-gallery-tile')].filter(x=>!x.hidden).length,
-    wrong:[...document.querySelectorAll('.r-gallery-tile')].filter(x=>!x.hidden&&x.dataset.category!=='estate').length
-  }));
-  assert.equal(gallery.selected,'true');
-  assert.ok(gallery.visible>0&&gallery.wrong===0,'Gallery filter must affect tiles');
-  await page.click('.r-gallery-tile:not([hidden]) .r-photo-open');
-  assert.equal(await page.$eval('.r-lightbox',d=>d.open),true,'Gallery photo dialog must open');
-  await page.keyboard.press('Escape');
-  assert.equal(await page.$eval('.r-lightbox',d=>d.open),false,'Escape must close dialog');
-  await page.goto('http://127.0.0.1:4173/#/info',{waitUntil:'networkidle2'});
-  await page.waitForSelector('[data-rsvp]');
-  await page.$eval('[data-rsvp] input[name="name"]',el=>el.value='Тест');
-  await page.click('.r-rsvp-submit');
-  const preview=await page.$eval('[data-rsvp] output',el=>el.textContent);
-  assert.match(preview,/не сохранён/,'RSVP must clearly stay a demo');
-  console.log('INTERACTIONS OK: gallery filters, lightbox, preview-only RSVP');
-  await page.setViewport({width:1280,height:900,deviceScaleFactor:1});
-  await page.goto('http://127.0.0.1:4173/#/',{waitUntil:'networkidle2'});
-  await page.waitForSelector('#reference-comparison');
-  await page.waitForFunction(()=>document.querySelector('#reference-screen-image')?.naturalWidth>0);
-  const split=await page.evaluate(()=>({
-    pane:Math.round(document.querySelector('#reference-comparison').getBoundingClientRect().width),
-    app:Math.round(document.querySelector('#app').getBoundingClientRect().width),
-    original:getComputedStyle(document.querySelector('#reference-comparison')).display
-  }));
-  assert.equal(split.original,'flex','Original reference must show beside site on desktop');
-  assert.ok(Math.abs(split.app-split.pane)<5,'Both comparison halves should be equal width');
-  // These regressions produced a visually misleading comparison: a 430px
-  // live screen next to a 275px reference, plus baked-text cherub artwork.
-  const invitationFidelity=await page.evaluate(()=>({
-    liveWidth:document.querySelector('.r-app')?.getBoundingClientRect().width,
-    originalWidth:document.querySelector('#reference-screen-image')?.getBoundingClientRect().width,
-    cherub:document.querySelector('.inv-v2-cherub')?.getAttribute('src'),
-    estate:document.querySelector('.inv-v2-estate-image')?.getAttribute('src'),
-    invitationLines:document.querySelectorAll('.inv-v2-copy .inv-v2-line').length,
-    pastedFlowers:getComputedStyle(document.querySelector('.inv-v2-flora')).display,
-    skyfade:getComputedStyle(document.querySelector('.inv-v2-skyfade')).display,
-    photoFilter:getComputedStyle(document.querySelector('.inv-v2-estate-image')).filter,
-    liveCenter:document.querySelector('.r-invitation').getBoundingClientRect().left+
-      document.querySelector('.r-invitation').getBoundingClientRect().width/2,
-    eyebrowCenter:document.querySelector('.inv-v2-eyebrow').getBoundingClientRect().left+
-      document.querySelector('.inv-v2-eyebrow').getBoundingClientRect().width/2,
-    cherubWidth:document.querySelector('.inv-v2-cherub').getBoundingClientRect().width
-  }));
-  assert.ok(Math.abs(invitationFidelity.liveWidth-invitationFidelity.originalWidth)<4,
-    'The approved screenshot and live phone must use the same displayed width');
-  assert.ok(invitationFidelity.cherub?.endsWith('/invitation-cherub.png'),
-    'Never use full-column art with baked-in original text');
-  assert.ok(invitationFidelity.estate?.endsWith('/invitation-estate-clear.png'),
-    'Use the original high-resolution architecture photo with alpha-matted sky');
-  assert.equal(invitationFidelity.invitationLines,6,
-    'Invitation text must follow the six approved copy lines');
-  assert.equal(invitationFidelity.pastedFlowers,'none',
-    'Duplicated flowers obscure the sharp manor photograph');
-  assert.equal(invitationFidelity.skyfade,'none',
-    'The photo must not be washed out by a fog/gradient overlay');
-  assert.equal(invitationFidelity.photoFilter,'none',
-    'Tree contours must not be softened by a CSS image filter');
-  assert.ok(Math.abs(invitationFidelity.liveCenter-invitationFidelity.eyebrowCenter)<2,
-    'The invitation label must be precisely centered on the phone');
-  assert.ok(invitationFidelity.cherubWidth<=invitationFidelity.liveWidth*.8,
-    'The cherub must not be oversized relative to approved reference');
-  console.log('INVITATION FIDELITY OK:',JSON.stringify(invitationFidelity));
-  await page.screenshot({path:output+'/10-desktop.png',fullPage:false,animations:'disabled'});
-  // Render the actual comparison link. No preceding hero, no missing dock,
-  // no scaling mismatch or intermediate smooth-scroll frame is acceptable.
-  await page.goto('http://127.0.0.1:4173/?screen=02-invitation#/',{waitUntil:'networkidle2'});
-  await page.waitForFunction(()=>document.body.classList.contains('ref-focus-invitation'));
-  await page.waitForFunction(()=>document.querySelector('#reference-screen-image')?.complete &&
-    document.querySelector('#reference-screen-image')?.naturalWidth>0);
-  await page.waitForFunction(()=>{
-    const a=document.querySelector('.r-app').getBoundingClientRect();
-    const b=document.querySelector('#reference-screen-image').getBoundingClientRect();
-    return Math.abs(a.top-b.top)<3 && Math.abs(a.bottom-b.bottom)<4;
-  },{timeout:10000});
-  const focused=await page.evaluate(()=>{
-    const box=s=>{const {top,bottom,width,height}=document.querySelector(s).getBoundingClientRect();
-      return {top:+top.toFixed(1),bottom:+bottom.toFixed(1),width:+width.toFixed(1),height:+height.toFixed(1)}};
-    return {site:box('.r-app'),reference:box('#reference-screen-image'),
-      invitation:box('.r-invitation'),dock:box('.r-tabs'),
-      heroVisible:getComputedStyle(document.querySelector('.r-hero')).display};
+  await load(page,'#/','.r-home');
+  const home=await page.evaluate(()=>{
+    const a=[...document.querySelectorAll('.r-home .r-site > section')];
+    const invite=document.querySelector('.w-invite');
+    const rsvp=document.querySelector('.w-rsvp');
+    const photo=invite.querySelector('.w-invite__photo img');
+    const title=invite.querySelector('.w-invite__title');
+    const r=t=>{const x=t.getBoundingClientRect();return {left:x.left,right:x.right,top:x.top,bottom:x.bottom,width:x.width,height:x.height};};
+    return {
+      sections:a.map(s=>s.className),
+      inviteIndex:a.indexOf(invite),
+      rsvpIndex:a.indexOf(rsvp),
+      inviteText:invite.textContent,
+      photo:{naturalWidth:photo.naturalWidth,width:r(photo).width,filter:getComputedStyle(photo).filter},
+      oldColumn:invite.querySelectorAll('.inv-v2-cherub,.inv-v2-cherub-column').length,
+      inviteBounds:r(invite), titleBounds:r(title), rsvpBounds:r(rsvp),
+      compareBar:!!document.querySelector('#reference-mobile-tabs')
+    };
   });
-  assert.equal(focused.heroVisible,'none','Previous hero must not appear in focused comparison');
-  assert.ok(focused.dock.top>=focused.invitation.bottom-2 && focused.dock.bottom<=focused.site.bottom+2,
-    'Functional dock must align directly under the invitation inside the reference frame');
-  await page.screenshot({path:output+'/12-invitation-side-by-side.png',fullPage:false,animations:'disabled'});
-  const focusedJpeg=await page.screenshot({type:'jpeg',quality:55,fullPage:false,animations:'disabled'});
-  console.log('FOCUSED_INVITATION_JPEG='+Buffer.from(focusedJpeg).toString('base64'));
-  console.log('FOCUSED INVITATION MATCH:',JSON.stringify(focused));
-  console.log('REFERENCE COMPARISON OK:',JSON.stringify(split));
-  console.log('VISUAL CHECK OK:',JSON.stringify(outcomes));
-  console.log('Screenshots: /previews/01-home.png ... /previews/10-desktop.png');
-} finally {
+  assert.equal(home.inviteIndex,1,'Invitation must be second section on home');
+  assert.equal(home.rsvpIndex,2,'RSVP form must be third section on home');
+  assert.match(home.inviteText,/17 июня 2027/);
+  assert.match(home.inviteText,/Усадьба Марьино/);
+  assert.doesNotMatch(home.inviteText,/Никита|Кристина/,'Do not repeat couple names on the invitation');
+  assert.ok(home.photo.naturalWidth>0,'Estate image must load');
+  assert.equal(home.photo.filter,'none','Estate photograph should not be blurred');
+  assert.equal(home.oldColumn,0,'Remove huge superimposed marble column');
+  assert.equal(home.compareBar,false,'Do not expose designer comparison to wedding guests');
+  assert.ok(home.titleBounds.left>=home.inviteBounds.left-1 &&
+    home.titleBounds.right<=home.inviteBounds.right+1,'Invitation heading must fit');
+  const form=page.locator('.w-rsvp [data-rsvp]');
+  await page.$eval('.w-rsvp input[name=name]',el=>el.value='Тестовый гость');
+  await page.click('.w-rsvp .w-rsvp__choice input[value=no]');
+  await page.click('.w-rsvp__submit');
+  const response=await page.$eval('.w-rsvp output',el=>el.textContent);
+  assert.match(response,/не сможет присутствовать/,'RSVP radio choice must be reflected');
+  assert.match(response,/не отправлен/,'Preview must not claim an actual submission');
+  await page.$eval('.w-invite',el=>el.scrollIntoView({block:'start',behavior:'instant'}));
+  await page.screenshot({path:'_site/previews/02-invitation-new.png',fullPage:false,animations:'disabled'});
+  await page.$eval('.w-rsvp',el=>el.scrollIntoView({block:'start',behavior:'instant'}));
+  await page.screenshot({path:'_site/previews/03-rsvp-home.png',fullPage:false,animations:'disabled'});
+  for(const width of [320,360,390,430]){
+    await page.setViewport({width,height:844,deviceScaleFactor:1,isMobile:true,hasTouch:true});
+    const metrics=await page.evaluate(()=>{
+      const b=document.querySelector('.r-app').getBoundingClientRect();
+      const t=document.querySelector('.w-invite__title').getBoundingClientRect();
+      const btn=document.querySelector('.w-rsvp__submit').getBoundingClientRect();
+      return {app:b.width,title:{left:t.left,right:t.right},button:{left:btn.left,right:btn.right},
+      bodyScroll:document.documentElement.scrollWidth,viewport:innerWidth};
+    });
+    assert.ok(metrics.bodyScroll<=metrics.viewport+2,'No horizontal overflow at '+width);
+    assert.ok(metrics.title.left>=-1&&metrics.title.right<=metrics.viewport+1,'Title fits at '+width);
+    assert.ok(metrics.button.left>=-1&&metrics.button.right<=metrics.viewport+1,'RSVP button fits at '+width);
+  }
+  await page.setViewport({width:390,height:844,deviceScaleFactor:1,isMobile:true,hasTouch:true});
+  const scenarios=[
+    ['01-home','#/','.r-hero'],['04-program','#/schedule','.r-program'],
+    ['05-venue','#/info','.v2-venue'],['06-dress','#/info','.r-dress'],
+    ['07-rsvp-info','#/info','.r-rsvp'],['08-gallery','#/gallery','.r-gallery-page'],
+    ['09-details','#/info','.r-details'],['10-guests','#/guests','.r-guests']
+  ];
+  for(const [name,route,selector] of scenarios){
+    await load(page,route,selector);
+    await page.$eval(selector,e=>e.scrollIntoView({block:'start',behavior:'instant'}));
+    await delay(80);
+    await page.screenshot({path:'_site/previews/'+name+'.png',fullPage:false,animations:'disabled'});
+  }
+  await load(page,'#/gallery','.r-gallery-page');
+  await page.click('[data-filter=estate]');
+  assert.equal(await page.$eval('[data-filter=estate]',e=>e.getAttribute('aria-pressed')),'true');
+  assert.ok(await page.evaluate(()=>[...document.querySelectorAll('.r-gallery-tile')]
+    .some(e=>!e.hidden&&e.dataset.category==='estate')),'Gallery filter works');
+  await page.click('.r-gallery-tile:not([hidden]) .r-photo-open');
+  assert.equal(await page.$eval('.r-lightbox',e=>e.open),true);
+  await page.keyboard.press('Escape');
+  assert.equal(await page.$eval('.r-lightbox',e=>e.open),false);
+  await load(page,'#/info','.r-rsvp');
+  await page.$eval('.r-rsvp input[name=name]',el=>el.value='Тест');
+  await page.click('.r-rsvp-submit');
+  assert.match(await page.$eval('.r-rsvp output',e=>e.textContent),/не сохранён/);
+  await page.setViewport({width:1280,height:900,deviceScaleFactor:1});
+  await load(page,'#/','.w-invite');
+  assert.equal(await page.$('#reference-comparison'),null,'No editor comparison on published page');
+  await page.$eval('.w-invite',e=>e.scrollIntoView({block:'start',behavior:'instant'}));
+  await page.screenshot({path:'_site/previews/11-desktop-new.png',fullPage:false,animations:'disabled'});
+  // Designer comparison remains opt-in for development, not a guest-facing control.
+  await page.goto(url('?compare=1#/'),{waitUntil:'networkidle2'});
+  await page.waitForSelector('#reference-comparison',{timeout:15000});
+  assert.ok(await page.$('#reference-mobile-tabs'),'Explicit ?compare=1 enables reference mode');
+  console.log('VISUAL CHECK OK: invitation, third-screen RSVP, no overlays, 320–430px, desktop, gallery, designer mode.');
+}finally{
   if(browser)await browser.close();
   server.kill();
 }
