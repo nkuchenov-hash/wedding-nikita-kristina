@@ -1,0 +1,320 @@
+/* Home invitation and RSVP · 2026-11-14
+   The old transparent-column collage is intentionally replaced with a
+   readable editorial layout and an uncropped estate photograph. */
+.r-home section.r-invitation.w-invite {
+  display:flex !important;
+  flex-direction:column !important;
+  position:relative !important;
+  isolation:isolate;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  padding:0 !important;
+  margin:0 !important;
+  overflow:hidden !important;
+  background:#f5f4ee !important;
+  color:#173a28 !important;
+  text-align:center;
+}
+.r-home section.r-invitation.w-invite::before,
+.r-home section.r-invitation.w-invite::after {
+  display:none !important;
+  content:none !important;
+}
+.r-home .w-invite__content {
+  position:relative;
+  width:100%;
+  padding:clamp(62px,15cqw,85px) 7% 47px;
+  background:linear-gradient(180deg,#f8f8f3 0%,#eef2eb 100%);
+  overflow:hidden;
+}
+.r-home .w-invite__botanical {
+  display:block;
+  position:absolute;
+  width:clamp(120px,38cqw,194px);
+  top:-13px;
+  right:-17px;
+  opacity:.29;
+  color:#628467;
+  pointer-events:none;
+}
+.r-home .w-invite__eyebrow {
+  position:relative;
+  display:block;
+  margin:0 0 27px;
+  font:700 clamp(10px,2.6cqw,13px)/1.5 'Manrope',Arial,sans-serif;
+  letter-spacing:.23em;
+  color:#937244;
+}
+.r-home .w-invite__title {
+  position:relative;
+  max-width:100%;
+  margin:0 auto 23px !important;
+  font:500 clamp(48px,11.8cqw,66px)/.99 'Cormorant Garamond',Georgia,serif !important;
+  letter-spacing:-.045em !important;
+  text-wrap:balance;
+  color:#1a3b2a !important;
+}
+.r-home .w-invite__title em {
+  display:inline-block;
+  margin-top:4px;
+  color:#2c5a3b;
+  font-weight:400;
+  font-size:.88em;
+}
+.r-home .w-invite__message {
+  position:relative;
+  max-width:410px;
+  margin:0 auto !important;
+  font:400 clamp(15px,3.7cqw,17px)/1.65 'Manrope',Arial,sans-serif !important;
+  letter-spacing:-.015em;
+  color:#3a4c3e;
+  text-wrap:pretty;
+}
+.r-home .w-invite__rule {
+  display:flex;
+  gap:13px;
+  align-items:center;
+  justify-content:center;
+  width:min(220px,67%);
+  margin:30px auto 30px;
+  color:#b29868;
+}
+.r-home .w-invite__rule i {
+  display:block;
+  width:73px;
+  height:1px;
+  background:#cbbd9c;
+}
+.r-home .w-invite__rule span {font-size:17px;line-height:1;}
+.r-home .w-invite__details {
+  position:relative;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0;
+  width:100%;
+  max-width:450px;
+  margin:0 auto;
+  padding:23px 0 21px;
+  border-top:1px solid #cdd8c9;
+  border-bottom:1px solid #cdd8c9;
+}
+.r-home .w-invite__details>div {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  min-width:0;
+  padding:0 12px;
+}
+.r-home .w-invite__details>div+div {border-left:1px solid #cdd8c9;}
+.r-home .w-invite__details span {
+  display:block;
+  font:700 10px/1.5 'Manrope',Arial,sans-serif;
+  letter-spacing:.19em;
+  color:#8b7655;
+  margin-bottom:10px;
+}
+.r-home .w-invite__details strong {
+  display:block;
+  font:500 clamp(20px,5.2cqw,28px)/1.12 'Cormorant Garamond',Georgia,serif;
+  letter-spacing:-.025em;
+  color:#183e29;
+}
+.r-home .w-invite__details small {
+  font:400 clamp(10px,2.6cqw,12px)/1.5 'Manrope',Arial,sans-serif;
+  color:#5f7162;
+  margin-top:8px;
+}
+.r-home .w-invite__tentative {
+  margin:19px auto 0 !important;
+  max-width:95%;
+  font:400 clamp(11px,2.7cqw,12px)/1.5 'Manrope',Arial,sans-serif !important;
+  color:#738073;
+}
+.r-home .w-invite__photo {
+  position:relative;
+  display:block;
+  margin:0 !important;
+  padding:0;
+  background:#dee7df;
+}
+.r-home .w-invite__photo img {
+  display:block;
+  width:100%;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  object-fit:contain !important;
+  object-position:center !important;
+  filter:none !important;
+  transform:none !important;
+  border:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  -webkit-mask-image:none !important;
+  mask-image:none !important;
+}
+.r-home .w-invite__photo figcaption {
+  display:block;
+  padding:14px 10px 19px;
+  background:#e8eee8;
+  color:#6a7b6b;
+  font:600 10px/1.4 'Manrope',Arial,sans-serif;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+}
+/* RSVP is the third screen on the home page, not a link to another route. */
+.r-home section.w-rsvp {
+  position:relative;
+  padding:clamp(62px,15cqw,84px) 7% clamp(76px,17cqw,106px);
+  background:#e8efe8;
+  text-align:center;
+  color:#1c3b2a;
+}
+.r-home .w-rsvp__eyebrow {
+  display:block;
+  font:700 11px/1.4 'Manrope',Arial,sans-serif;
+  letter-spacing:.22em;
+  color:#96794d;
+  margin-bottom:22px;
+}
+.r-home .w-rsvp__intro h2 {
+  margin:0 0 15px !important;
+  font:500 clamp(52px,13.2cqw,72px)/.94 'Cormorant Garamond',Georgia,serif !important;
+  letter-spacing:-.042em !important;
+  color:#173b28;
+}
+.r-home .w-rsvp__intro h2 em {color:#477650;}
+.r-home .w-rsvp__intro p {
+  max-width:350px;
+  margin:0 auto !important;
+  font:400 clamp(15px,3.7cqw,17px)/1.6 'Manrope',Arial,sans-serif !important;
+  color:#4e6251;
+}
+.r-home .w-rsvp__form {
+  display:block;
+  margin:35px auto 0;
+  padding:0;
+  max-width:410px;
+  text-align:left;
+}
+.r-home .w-rsvp__choices {
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  padding:0;
+  margin:0 0 24px;
+  border:0;
+  min-width:0;
+}
+.r-home .w-rsvp__choices legend,
+.r-home .w-rsvp__name {
+  display:block;
+  margin-bottom:11px;
+  font:600 13px/1.5 'Manrope',Arial,sans-serif;
+  color:#36513e;
+}
+.r-home .w-rsvp__choice {
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+  min-height:65px;
+  padding:14px 19px;
+  border:1px solid #c2d0c0;
+  border-radius:13px;
+  background:#f9faf5;
+  color:#2f4b38;
+  font:600 clamp(14px,3.5cqw,16px)/1.35 'Manrope',Arial,sans-serif;
+  cursor:pointer;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.r-home .w-rsvp__choice input {
+  position:absolute;
+  width:100%;
+  height:100%;
+  inset:0;
+  opacity:0;
+  cursor:pointer;
+}
+.r-home .w-rsvp__choice:focus-within {outline:2px solid #416c48;outline-offset:3px;}
+.r-home .w-rsvp__choice:has(input:checked) {
+  background:#234f34;
+  border-color:#234f34;
+  color:white;
+}
+.r-home .w-rsvp__check {
+  width:26px;
+  height:26px;
+  display:grid;
+  place-items:center;
+  flex-shrink:0;
+  border:1.5px solid #aebfac;
+  border-radius:50%;
+  color:transparent;
+}
+.r-home .w-rsvp__choice:has(input:checked) .w-rsvp__check {
+  color:#234f34;
+  background:#f3f6ee;
+  border-color:#f3f6ee;
+}
+.r-home .w-rsvp__name {
+  margin:0 0 20px;
+}
+.r-home .w-rsvp__name input {
+  display:block;
+  width:100%;
+  min-height:57px;
+  margin-top:9px;
+  padding:15px 16px;
+  font:400 16px/1.35 'Manrope',Arial,sans-serif;
+  background:#fbfcf9;
+  color:#1b3828;
+  border:1px solid #c0d0be;
+  border-radius:11px;
+}
+.r-home .w-rsvp__name input::placeholder {color:#819084;}
+.r-home .w-rsvp__submit {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  width:100%;
+  min-height:58px;
+  border:0;
+  border-radius:12px;
+  background:#254f34;
+  color:white;
+  font:700 12px/1.3 'Manrope',Arial,sans-serif;
+  letter-spacing:.12em;
+  cursor:pointer;
+}
+.r-home .w-rsvp__submit span {font-size:20px;line-height:1;}
+.r-home .w-rsvp__form output {
+  display:block;
+  min-height:0;
+  margin:15px auto 0;
+  color:#214a30;
+  font:600 13px/1.55 'Manrope',Arial,sans-serif;
+  text-align:center;
+}
+.r-home .w-rsvp__form output:empty {display:none;}
+.r-home .w-rsvp__notice {
+  margin:20px 0 0 !important;
+  font:400 11px/1.6 'Manrope',Arial,sans-serif !important;
+  color:#667b69;
+  text-align:center;
+}
+@media(max-width:365px) {
+  .r-home .w-invite__content {padding:56px 6% 40px;}
+  .r-home .w-invite__eyebrow {margin-bottom:21px;}
+  .r-home .w-invite__title {font-size:47px !important;}
+  .r-home .w-invite__details>div {padding:0 6px;}
+  .r-home .w-invite__details strong {font-size:19px;}
+  .r-home section.w-rsvp {padding-left:6%;padding-right:6%;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .r-home .w-rsvp__choice {transition:none;}
+}
