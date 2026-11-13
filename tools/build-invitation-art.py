@@ -47,11 +47,28 @@ im = im.crop((int(.28*w),int(.27*h),w,h))
 im.save(out,optimize=True)
 print('CLEAN COLUMN PNG',out,im.size,out.stat().st_size)
 
+# Keep the original architectural photograph completely sharp. The previous
+# composite overlaid a semi-opaque fade across the treetops and obscured sky.
+# This RGBA version removes only bright, neutral-colored SKY from the upper
+# part of the photo, retaining true, hard-edged foliage and marble silhouettes.
 estate=ROOT/'board/02-invitation/estate-sunny-clean.webp'
-if estate.exists():
-    house=Image.open(estate).convert('RGB')
-    house=ImageEnhance.Contrast(house).enhance(1.035)
-    house=house.filter(ImageFilter.UnsharpMask(radius=1.2,percent=110,threshold=4))
-    output=estate
-    house.save(output,'WEBP',quality=96,method=6)
-    print('ESTATE PHOTO',house.size,output.stat().st_size)
+if estate.is_file():
+    photo=Image.open(estate).convert('RGBA')
+    pw,ph=photo.size
+    pixels=photo.load()
+    for y in range(min(ph,round(ph*.28))):
+        for x in range(pw):
+            red,green,blue,old=pixels[x,y]
+            spread=max(red,green,blue)-min(red,green,blue)
+            luminance=(red*3+green*6+blue)/10
+            # Remove pale sky but never erase colored tree canopy or roof.
+            sky=(luminance-176)/26
+            neutral=(53-spread)/20
+            amount=max(0,min(1,sky))*max(0,min(1,neutral))
+            if y>ph*.17:
+                amount*=max(0,1-(y-ph*.17)/(ph*.11))
+            alpha=round(255*(1-amount))
+            pixels[x,y]=(red,green,blue,alpha)
+    output=ROOT/'production/invitation-estate-clear.png'
+    photo.save(output,format='PNG',optimize=True)
+    print('SHARP ESTATE + SKY PNG',photo.size,output.stat().st_size)
