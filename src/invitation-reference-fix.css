@@ -332,3 +332,31 @@
 .r-home .inv-v2-side-flora {
   display:none !important;
 }
+
+/* 2026-11-13 · Second visual pass after actual Chrome screenshots:
+   place the dome lower, leave visible sky and expose the long shaft. */
+.r-home .inv-v2-estate {
+  height:34% !important;
+  overflow:visible !important;
+  background:#dce8e9 !important;
+}
+.r-home .inv-v2-estate::before {
+  content:"";display:block;position:absolute;
+  left:0;right:0;bottom:100%;
+  height:22cqw;
+  background:linear-gradient(to bottom,
+    #f2eee6 0%,#f2eee6 14%,#eef0ed 43%,#dce8eb 85%,#d7e5e9 100%);
+  pointer-events:none;z-index:0;
+}
+.r-home .inv-v2-estate .inv-v2-estate-image {
+  position:relative !important;
+  z-index:1 !important;
+  object-fit:cover !important;
+  object-position:54% 50% !important;
+}
+.r-home .inv-v2-cherub-column {
+  top:26.5% !important;
+  height:64% !important;
+  right:-18% !important;
+  z-index:4 !important;
+}
