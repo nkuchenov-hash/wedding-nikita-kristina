@@ -65,25 +65,35 @@ function heading(top,title,sub=''){return '<div class="r-heading"><span class="r
 function footer(){return '<footer class="r-footer">Никита <em>&</em> Кристина<span>Марьино · предварительно</span><small class="r-photo-credit">Фото пары и декора — временные иллюстративные материалы Pexels/Unsplash. На фото не Никита и Кристина. Фотографии Марьино предоставлены сайтом усадьбы; для постоянного использования потребуется разрешение правообладателя.</small></footer>'}
 function shell(path,body,cls=''){return '<div class="r-app '+cls+'"><div class="r-site">'+body+footer()+'</div>'+bottom(path)+'</div>'}
 function home(){
- return shell('/',
- '<section class="r-hero r-hero--editorial r-hero--board">'+img('boardPortrait','r-cover-photo','Иллюстративное свадебное фото: пока не Никита и Кристина',true)+'<div class="r-hero-dim"></div><img class="r-hero-bouquet" src="./public/production/invitation-flowers-left.png" alt="" aria-hidden="true" loading="eager"><div class="r-top-label">УСАДЬБА МАРЬИНО</div><div class="r-hero-title"><span>Мы приглашаем вас на нашу свадьбу</span><h1>Никита<br><em>&</em><br>Кристина</h1>'+flour()+'<p>17 ИЮНЯ 2027</p></div><button type="button" class="r-scroll-indicator" data-scroll-welcome aria-label="Прокрутить к приглашению"><span>⌄</span></button></section>'+
- '<section class="r-invitation inv-v2" id="welcome" aria-label="Приглашение на свадьбу">'+
- '<div class="inv-v2-stone" aria-hidden="true"></div>'+
- '<div class="inv-v2-estate">'+img('boardEstate','inv-v2-estate-image','Солнечная усадьба среди деревьев и цветов')+'</div>'+
- '<div class="inv-v2-skyfade" aria-hidden="true"></div>'+
-
-
- '<img class="inv-v2-leaves" src="./public/production/invitation-leaves-top.png" alt="" aria-hidden="true" loading="eager">'+
- '<img class="inv-v2-cherub-column" src="./public/production/invitation-column-isolated.png" alt="" aria-hidden="true" loading="eager">'+
- '<img class="inv-v2-cherub" src="./public/production/invitation-cherub.png" alt="" aria-hidden="true" loading="eager">'+
- '<div class="inv-v2-copy"><span class="inv-v2-eyebrow">МЫ ЖЕНИМСЯ!</span><h2>Никита<span>&</span>Кристина</h2>'+
- '<p><span class="inv-v2-line">И хотим разделить этот</span> <span class="inv-v2-line">особенный день с самыми</span> <span class="inv-v2-line">близкими людьми.</span> <span class="inv-v2-line">Будем счастливы видеть вас</span> <span class="inv-v2-line">на нашей свадьбе</span> <span class="inv-v2-line">в усадьбе Марьино.</span></p>'+
- '<div class="inv-v2-divider" aria-hidden="true"><i></i><span>✣</span><i></i></div></div>'+
- '<img class="inv-v2-flora inv-v2-flora-left" src="./public/production/invitation-flowers-left.png" alt="" aria-hidden="true" loading="eager">'+
- '<img class="inv-v2-flora inv-v2-flora-right" src="./public/production/invitation-flowers-left.png" alt="" aria-hidden="true" loading="eager">'+
- '</section>'+
- '<section class="r-home-links">'+heading('НАШ ПРАЗДНИК','Всё, что нужно знать')+'<a href="#/schedule">'+ic('schedule')+'Программа дня <b>↗</b></a><a href="#/info">'+ic('pin')+'Усадьба Марьино <b>↗</b></a><a href="#/guests">'+ic('guests')+'Наши близкие <b>↗</b></a><a href="#/gallery">'+ic('gallery')+'Фотографии <b>↗</b></a></section>',
- 'r-home');
+  return shell('/',
+    '<section class="r-hero r-hero--editorial r-hero--board">'+img('boardPortrait','r-cover-photo','Иллюстративное свадебное фото: пока не фотография пары',true)+'<div class="r-hero-dim"></div><img class="r-hero-bouquet" src="./public/production/invitation-flowers-left.png" alt="" aria-hidden="true" loading="eager"><div class="r-top-label">УСАДЬБА МАРЬИНО</div><div class="r-hero-title"><span>Мы приглашаем вас на нашу свадьбу</span><h1>Никита<br><em>&</em><br>Кристина</h1>'+flour()+'<p>17 ИЮНЯ 2027</p></div><button type="button" class="r-scroll-indicator" data-scroll-welcome aria-label="Перейти к приглашению"><span>⌄</span></button></section>'+
+    '<section class="r-invitation w-invite" id="welcome" aria-labelledby="w-invite-title">'+
+      '<div class="w-invite__content">'+
+        '<svg class="w-invite__botanical" aria-hidden="true" viewBox="0 0 180 250" fill="none"><path d="M166 1C124 89 94 167 28 242" stroke="currentColor" stroke-width="1.4"/><path d="M144 49C106 43 93 19 98 3c27 4 44 23 46 46ZM124 92C87 83 75 54 80 36c29 10 44 30 44 56ZM102 134C64 135 49 115 48 91c31 2 51 17 54 43ZM76 173C41 178 22 160 17 138c29-2 52 9 59 35ZM138 64C164 52 175 31 174 15c-28 6-37 21-36 49ZM111 119c27-10 39-32 35-55-25 9-38 26-35 55ZM87 157c25-6 43-23 41-49-28 6-40 21-41 49Z" stroke="currentColor" stroke-width="1.2" fill="currentColor" fill-opacity=".10"/></svg>'+
+        '<span class="w-invite__eyebrow">ПРИГЛАШЕНИЕ НА СВАДЬБУ</span>'+
+        '<h2 id="w-invite-title" class="w-invite__title">Разделите<br><em>этот день с нами</em></h2>'+
+        '<p class="w-invite__message">Будем счастливы видеть вас рядом в один из самых важных дней нашей жизни. Хотим провести его с теми, кто нам дорог.</p>'+
+        '<div class="w-invite__rule" aria-hidden="true"><i></i><span>✦</span><i></i></div>'+
+        '<div class="w-invite__details"><div><span>КОГДА</span><strong>17 июня 2027</strong><small>Начало в 14:00</small></div><div><span>ГДЕ</span><strong>Усадьба Марьино</strong><small>Ленинградская область</small></div></div>'+
+        '<p class="w-invite__tentative">Дата, время и площадка пока предварительные.</p>'+
+      '</div>'+
+      '<figure class="w-invite__photo"><img src="./public/photos/estate.jpg" alt="Усадьба Марьино, исторический усадебный комплекс и парк" loading="lazy" decoding="async"><figcaption>Марьино · место нашей встречи</figcaption></figure>'+
+    '</section>'+
+    '<section class="w-rsvp" id="rsvp" aria-labelledby="w-rsvp-title">'+
+      '<div class="w-rsvp__intro"><span class="w-rsvp__eyebrow">ВАШ ОТВЕТ</span><h2 id="w-rsvp-title">Будете <em>с нами?</em></h2><p>Пожалуйста, сообщите, сможете ли вы разделить с нами этот день.</p></div>'+
+      '<form data-rsvp class="w-rsvp__form">'+
+        '<fieldset class="w-rsvp__choices"><legend>Планируете присутствовать?</legend>'+
+          '<label class="w-rsvp__choice"><input type="radio" name="yesno" value="yes" checked><span>Да, с радостью!</span><span class="w-rsvp__check" aria-hidden="true">✓</span></label>'+
+          '<label class="w-rsvp__choice"><input type="radio" name="yesno" value="no"><span>К сожалению, не смогу</span><span class="w-rsvp__check" aria-hidden="true">✓</span></label>'+
+        '</fieldset>'+
+        '<label class="w-rsvp__name">Ваше имя<input name="name" type="text" maxlength="100" autocomplete="name" placeholder="Как к вам обращаться" required></label>'+
+        '<button type="submit" class="w-rsvp__submit">ПОСМОТРЕТЬ ОТВЕТ <span aria-hidden="true">→</span></button>'+
+        '<output role="status" aria-live="polite"></output>'+
+        '<p class="w-rsvp__notice">Анкета пока работает в режиме предварительного просмотра: ответ не отправляется и не сохраняется. Отправка откроется после подключения защищённой регистрации.</p>'+
+      '</form>'+
+    '</section>'+
+    '<section class="r-home-links">'+heading('НАШ ПРАЗДНИК','Всё, что нужно знать')+'<a href="#/schedule">'+ic('schedule')+'Программа дня <b>↗</b></a><a href="#/info">'+ic('pin')+'Усадьба Марьино <b>↗</b></a><a href="#/guests">'+ic('guests')+'Наши близкие <b>↗</b></a><a href="#/gallery">'+ic('gallery')+'Фотографии <b>↗</b></a></section>',
+    'r-home');
 }
 const items=[['Уточняется','Сбор гостей','Встреча и общение в усадьбе','glass'],['14:00','Регистрация','Самый важный момент нашего дня','rings'],['Уточняется','Праздничный ужин','Ужин, тосты, музыка и танцы','dish'],['Уточняется','Вечер','Продолжение праздника с близкими','music']];
 function schedule(){
@@ -187,7 +197,7 @@ export function activateGuest(root){
    if(extra)extra.hidden=!three;
  }));
  const form=root.querySelector('[data-rsvp]');
- if(form)form.addEventListener('submit',e=>{e.preventDefault();const yes=form.querySelector('[name=yesno]:checked')?.value==='yes';form.querySelector('output').textContent=(yes?'Выбрано «Я буду».':'Выбрано «Не смогу».')+' Это демонстрация: ответ не сохранён.';});
+ if(form)form.addEventListener('submit',e=>{e.preventDefault();const yes=form.querySelector('[name=yesno]:checked')?.value==='yes';const guest=(form.querySelector('[name=name]')?.value||'Гость').trim();form.querySelector('output').textContent=guest+': '+(yes?'планирует присутствовать.':'не сможет присутствовать.')+' Это предварительный просмотр: ответ не сохранён и не отправлен.';});
  root.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{
   const filter=button.dataset.filter;root.querySelectorAll('[data-filter]').forEach(b=>{b.classList.toggle('active',b===button);b.setAttribute('aria-pressed',String(b===button));});
   root.querySelectorAll('[data-category]').forEach(el=>{el.hidden=filter!=='all'&&el.dataset.category!==filter});
