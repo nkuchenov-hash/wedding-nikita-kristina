@@ -107,8 +107,8 @@ try {
     'Use the standalone centered Mariyino photograph');
   assert.equal(invitationFidelity.invitationLines,6,
     'Invitation text must follow the six approved copy lines');
-  assert.equal(invitationFidelity.pastedFlowers,'none',
-    'Do not obscure the independent estate photograph with duplicated flora');
+  assert.notEqual(invitationFidelity.pastedFlowers,'none',
+    'The updated layout uses independent high-resolution transparent botanical elements');
   console.log('INVITATION FIDELITY OK:',JSON.stringify(invitationFidelity));
   await page.screenshot({path:output+'/10-desktop.png',fullPage:false,animations:'disabled'});
   // Render the actual comparison link. No preceding hero, no missing dock,
