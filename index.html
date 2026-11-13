@@ -19,10 +19,11 @@
   <link rel="stylesheet" href="./src/fidelity-pass.css" />
   <link rel="stylesheet" href="./src/invitation-v2.css" />
   <link rel="stylesheet" href="./src/invitation-reference-fix.css" />
+  <link rel="stylesheet" href="./src/welcome-redesign.css" />
 </head>
 <body>
   <div id="app"></div>
   <script type="module" src="./src/app.js"></script>
-  <script type="module" src="./src/comparison.js"></script>
+  <script type="module">if(new URLSearchParams(location.search).get('compare')==='1') import('./src/comparison.js');</script>
 </body>
 </html>
