@@ -49,6 +49,14 @@ test('Main covers use banquet halls or building facades; technical photos sort l
  assert.equal(getVenueCover(venue('maryino')),null,'Maryino lacks a suitable owned hall/facade photo');
  const named=['royal','vesenniy','alex-park','loft-roof','seasons','petr','vinity'];
  for(const id of named)assert.equal(getVenueCover(venue(id))?.section,'Залы',id+' must show banquet hall');
+ for(const id of ['royal','vesenniy','loft-roof','seasons','petr','alex-park']){
+  for(const mode of ['original','name','reverse','section']){
+   const photos=filteredVenuePhotos(venue(id),{photoSection:'all',photoSort:mode});
+   const lastMain=Math.max(...photos.map((x,i)=>x.section==='Залы'?i:-1));
+   const firstTechnical=photos.findIndex(x=>/техническ|оборудован|аппаратур|сануз|туалет|служеб/.test(String(x.name+' '+x.section).toLowerCase()));
+   if(firstTechnical!==-1)assert.ok(firstTechnical>lastMain,id+' '+mode+': technical photos must remain after the banquet halls');
+  }
+ }
  for(const id of allIds){
   const photos=getVenuePhotos(venue(id));
   const indexes=photos.map((x,i)=>({i,name:String(x.name||'').toLowerCase()})).filter(x=>/техническ|оборудован|аппаратур|пульт управления|вентиляци/.test(x.name));
