@@ -28,12 +28,8 @@ jobs:
             for p in php84 php83 php82 php81 php; do
               command -v "$p" >/dev/null 2>&1 || continue
               echo "== $p =="
-              "$p" -r '''
-                echo PHP_VERSION, PHP_EOL;
-                foreach (["pdo_sqlite","sqlite3","pdo_mysql","mysqli","fileinfo","gd","imagick","openssl","mbstring"] as $extension) {
-                  echo $extension,"=",extension_loaded($extension) ? "yes" : "no",PHP_EOL;
-                }
-              ''' || true
+              "$p" -v | head -1
+              "$p" -m | grep -Ei "sqlite|pdo|mysql|gd|fileinfo|imagick|openssl|mbstring" || true
             done
             if test -d ~/wedding-private; then echo "PRIVATE_DIR=yes"; else echo "PRIVATE_DIR=no"; fi
           '
