@@ -112,15 +112,14 @@ function status(v){
  return {available:'19 июня — подтверждено',unavailable:'19 июня — занято',pending:'19 июня — уточняется',unknown:'19 июня — неизвестно'}[status]||'19 июня — неизвестно';
 }
 function row(v){
- const score=weighted(v),cost=estimate(v);
- const selected=ui.compare.includes(v.id);
- return '<tr class="vw-row" data-id="'+h(v.id)+'"><td><button type="button" class="vw-name" data-detail="'+h(v.id)+'">'+h(v.name)+'</button><small>'+h(v.area)+' · '+(v.region==='country'?'За городом':'Город')+'</small></td>'+
- '<td><span class="vw-state '+(v.visited?'vw-seen':'')+'">'+(v.visited?'● Просмотрели':'○ Не отмечено')+'</span></td>'+
+ const score=weighted(v),cost=estimate(v),selected=ui.compare.includes(v.id),pic=v.gallery?.[0];
+ const image=pic?'<img loading="lazy" class="vw-row-thumb" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(pic.id)+'&sz=w240" alt="">':'<span class="vw-row-thumb vw-no-image"></span>';
+ return '<tr class="vw-row" data-id="'+h(v.id)+'"><td><div class="vw-venue-cell">'+image+'<div><button class="vw-name" data-detail="'+h(v.id)+'" type="button">'+h(v.name)+'</button><small>'+h(v.area)+' · '+(v.region==='country'?'За городом':'Город')+'</small></div></div></td>'+
  '<td><span class="vw-date '+(v.availability==='unavailable'?'vw-no':v.availability==='available'?'vw-yes':'')+'">'+h(status(v))+'</span></td>'+
- '<td>'+h(v.capacity||'—')+'</td>'+
- '<td class="vw-money">'+(cost.value===null?'—':(cost.partial?'от ':'')+rub(cost.value))+'<small>'+(cost.isQuote?('смета для '+state.guestCount+' гостей'+(cost.quoteDate?' · '+cost.quoteDate:'')+'; уточнить'):cost.partial?'неполный расчёт':'ориентир, проверить')+'</small></td>'+
- '<td class="vw-score">'+(score.value===null?'—':score.value+' / 100')+'<small>'+score.complete+'/6 оценок</small></td>'+
- '<td><div class="vw-actions"><button type="button" data-compare="'+h(v.id)+'" aria-pressed="'+selected+'">'+(selected?'Убрать':'Сравнить')+'</button><button type="button" data-detail="'+h(v.id)+'">Подробнее</button></div></td></tr>';
+ '<td><span class="vw-state '+(v.visited?'vw-seen':'')+'">'+(v.visited?'● Были лично':'○ Не подтверждено')+'</span></td>'+
+ '<td class="vw-money">'+(cost.value===null?'—':(cost.partial?'от ':'')+rub(cost.value))+'<small>'+(cost.isQuote?'По смете / условиям':cost.partial?'Расчётный минимум':'Ориентир')+(cost.value===null?'':' · '+Math.round(cost.value/state.guestCount).toLocaleString('ru-RU')+' ₽/гость')+'</small></td>'+
+ '<td>'+h(v.capacity??'—')+'</td><td class="vw-score">'+(score.blocked?'Не подходит':score.value===null?'Не оценено':score.value+' / 100')+'<small>'+score.complete+'/6 оценок</small></td>'+
+ '<td><div class="vw-actions"><button type="button" data-compare="'+h(v.id)+'" aria-pressed="'+selected+'">'+(selected?'✓ Выбрано':'Сравнить')+'</button><button type="button" data-detail="'+h(v.id)+'">Подробнее</button></div></td></tr>';
 }
 function detail(v){
  const e=estimate(v),s=weighted(v),tab=ui.detailTab||'overview';
@@ -152,23 +151,33 @@ export function renderVenueAdmin(){
  const all=PUBLIC_VENUES.map(get);
  const visited=all.filter(v=>v.visited).length;
  const full=all.filter(v=>weighted(v).value!==null).length;
- let list=all.filter(v=>(ui.kind==='all'||v.region===ui.kind)&&(!ui.onlyVisited||v.visited)&&(v.name+' '+v.area).toLowerCase().includes(ui.query.toLowerCase()));
+ let list=all.filter(v=>{const e=estimate(v);return (ui.kind==='all'||v.region===ui.kind)&&(ui.date==='all'||v.availability===ui.date)&&(ui.visit==='all'||(ui.visit==='yes')===!!v.visited)&&(ui.materials==='all'||ui.materials==='photos'&&v.gallery?.length||ui.materials==='quotes'&&v.quotes?.length)&&(ui.budget==='all'||e.value!==null&&e.value<=Number(ui.budget))&&(ui.capacity==='all'||v.capacity>=Number(ui.capacity))&&(v.name+' '+v.area).toLowerCase().includes(ui.query.toLowerCase())});
  if(ui.sort==='score')list.sort((a,b)=>(weighted(b).value??-1)-(weighted(a).value??-1)||a.name.localeCompare(b.name,'ru'));
  if(ui.sort==='price')list.sort((a,b)=>(estimate(a).value??Infinity)-(estimate(b).value??Infinity)||a.name.localeCompare(b.name,'ru'));
  if(ui.sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name,'ru'));
+ if(ui.sort==='date')list.sort((a,b)=>({available:0,pending:1,unknown:2,unavailable:3}[a.availability||'unknown']??2)-({available:0,pending:1,unknown:2,unavailable:3}[b.availability||'unknown']??2)||Number(b.visited)-Number(a.visited)||(estimate(a).value??Infinity)-(estimate(b).value??Infinity));
  const detailVenue=all.find(v=>v.id===ui.expanded);
  return '<div class="vw-page" data-venues-page><div class="dashboard-heading vw-head"><div><div class="eyebrow">ОРГАНИЗАЦИЯ / ВЫБОР МЕСТА</div><h1>Сравнение площадок</h1><p>Регистрация 17 июня · торжество желательно 19 июня 2027 · город и загород</p></div><div class="vw-count"><strong>'+all.length+'</strong><span>площадок</span></div></div>'+
- '<div class="vw-alert"><strong>Важная оговорка по доступу.</strong> Текущая админка на GitHub Pages публичная и пока без входа. Суммы смет Александровского парка и Vinity уже включены в каталог и видны на всех устройствах, а исходные документы остаются в Google Drive с отдельными правами доступа. Персональные заметки, введённые здесь вручную, сохраняются только в вашем браузере. Приватная синхронизация потребует серверной авторизации.</div>'+
+ '<div class="vw-alert"><strong>Приоритет — дата 19 июня:</strong> «Весенний» и «Сезоны в парке» сообщили, что дата занята. Для других площадок неизвестная доступность не означает свободную дату. В каталоге собраны сметы, фото осмотров и условия. GitHub Pages публичный: личные оценки сохраняются только в вашем браузере.</div>'+
  '<div class="vw-stats"><div><strong>'+all.length+'</strong><span>На рассмотрении</span></div><div><strong>'+visited+'</strong><span>Просмотрены</span></div><div><strong>'+full+'</strong><span>С полной оценкой</span></div><div><strong>'+all.filter(v=>v.availability==='available').length+'</strong><span>19 июня свободно (подтверждено)</span></div></div>'+
- '<div class="vw-toolbar"><div class="vw-filter"><label>Район <select data-ui="kind"><option value="all" '+(ui.kind==='all'?'selected':'')+'>Все</option><option value="city" '+(ui.kind==='city'?'selected':'')+'>В городе</option><option value="country" '+(ui.kind==='country'?'selected':'')+'>За городом</option></select></label><label>Гостей <select data-state="guestCount"><option value="60">60</option><option value="70">70</option><option value="80">80</option><option value="90">90</option><option value="100">100</option></select></label><label>Сортировать <select data-ui="sort"><option value="name">По названию</option><option value="price">По известной цене</option><option value="score">По вашей оценке</option></select></label><label class="vw-search">Поиск<input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Название / район"></label></div>'+
- '<div class="vw-filetools"><label class="vw-upload">Импорт JSON <input type="file" accept="application/json,.json" data-import hidden></label><button type="button" data-export>Экспорт данных</button><button type="button" data-ui-toggle="onlyVisited" aria-pressed="'+ui.onlyVisited+'">Только просмотренные</button></div></div>'+
- '<div class="vw-panel"><div class="vw-panel-title"><h2>Все площадки</h2><span>Предварительные оценки не выдаются за коммерческие предложения</span></div><div class="vw-scroll"><table class="vw-table"><thead><tr><th>Площадка</th><th>Посещение</th><th>19 июня 2027</th><th>Вместимость</th><th>Оценка бюджета</th><th>Ваш рейтинг</th><th>Действие</th></tr></thead><tbody>'+
+ '<div class="vw-toolbar"><div class="vw-filter">'+
+ '<label>Город или область<select data-ui="kind"><option value="all">Все</option><option value="city">Город</option><option value="country">За городом</option></select></label>'+
+ '<label>Доступность 19 июня<select data-ui="date"><option value="all">Все статусы</option><option value="available">Свободно</option><option value="unavailable">Занято</option><option value="pending">Уточняется</option><option value="unknown">Нет ответа</option></select></label>'+
+ '<label>Осмотр<select data-ui="visit"><option value="all">Все</option><option value="yes">Были лично</option><option value="no">Не подтверждено</option></select></label>'+
+ '<label>Материалы<select data-ui="materials"><option value="all">Все</option><option value="photos">Есть фото</option><option value="quotes">Есть сметы</option></select></label>'+
+ '<label>Бюджет<select data-ui="budget"><option value="all">Любой</option><option value="650000">До 650 000 ₽</option><option value="800000">До 800 000 ₽</option><option value="1000000">До 1 млн ₽</option><option value="1200000">До 1,2 млн ₽</option></select></label>'+
+ '<label>Вместимость<select data-ui="capacity"><option value="all">Любая</option><option value="80">От 80</option><option value="100">От 100</option></select></label>'+
+ '<label>Гостей<select data-state="guestCount">'+[60,70,80,90,100].map(x=>'<option value="'+x+'">'+x+'</option>').join('')+'</select></label>'+
+ '<label>Сортировать<select data-ui="sort"><option value="date">По доступности даты</option><option value="price">По бюджету</option><option value="score">По рейтингу</option><option value="name">По названию</option></select></label>'+
+ '<label class="vw-search">Поиск<input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Площадка / район"></label></div>'+
+ '<div class="vw-filetools"><span>'+list.length+' из '+all.length+' площадок</span><label class="vw-upload">Импорт личных оценок<input type="file" accept=".json" data-import hidden></label><button type="button" data-export>Экспорт личных оценок</button></div></div>'+
+ '<div class="vw-panel"><div class="vw-panel-title"><h2>Все площадки</h2><span>Предварительные оценки не выдаются за коммерческие предложения</span></div><div class="vw-scroll"><table class="vw-table"><thead><tr><th>Площадка</th><th>19 июня</th><th>Осмотр</th><th>Бюджет на гостей</th><th>Вместимость</th><th>Рейтинг</th><th>Действие</th></tr></thead><tbody>'+
  list.map(row).join('')+'</tbody></table></div>'+(list.length?'':'<p class="vw-empty">По выбранному фильтру площадки не найдены.</p>')+'</div>'+
  '<div class="vw-panel"><div class="vw-panel-title"><h2>Сравнить рядом</h2><span>До четырёх вариантов</span></div>'+selectedCompare(all)+'</div>'+
  '<div class="vw-panel"><div class="vw-panel-title"><h2>Вес критериев рейтинга</h2><span>Рейтинг доступен только при 6/6 оценках</span></div><div class="vw-weights">'+CRITERIA.map(([key,label])=>'<label><span>'+h(label)+'</span><input type="number" min="0" max="100" step="1" data-weight="'+key+'" value="'+h(state.weights[key])+'"><span>%</span></label>').join('')+'</div><p class="vw-muted">Весовые коэффициенты автоматически нормируются при расчёте. Цена и доступность сравниваются дополнительно и не подменяются субъективной оценкой.</p></div>'+
  (detailVenue?'<div class="vw-modal-wrap"><div class="vw-modal" role="dialog" aria-modal="true" aria-label="Карточка площадки">'+detail(detailVenue)+'</div></div>':'')+'</div>';
 }
-function redraw(root){const el=root.querySelector('[data-venues-page]');if(!el)return;el.outerHTML=renderVenueAdmin();const n=root.querySelector('[data-state="guestCount"]');if(n)n.value=String(state.guestCount);for(const [key,v] of [['kind',ui.kind],['sort',ui.sort]]){const x=root.querySelector('[data-ui="'+key+'"]');if(x)x.value=v;}for(const s of root.querySelectorAll('select[data-field="availability"]'))s.value=get(PUBLIC_VENUES.find(x=>x.id===s.dataset.venue)).availability||'unknown';}
+function redraw(root){const el=root.querySelector('[data-venues-page]');if(!el)return;el.outerHTML=renderVenueAdmin();const n=root.querySelector('[data-state="guestCount"]');if(n)n.value=String(state.guestCount);for(const [key,v] of [['kind',ui.kind],['sort',ui.sort],['date',ui.date],['visit',ui.visit],['materials',ui.materials],['budget',ui.budget],['capacity',ui.capacity]]){const x=root.querySelector('[data-ui="'+key+'"]');if(x)x.value=v;}for(const s of root.querySelectorAll('select[data-field="availability"]'))s.value=get(PUBLIC_VENUES.find(x=>x.id===s.dataset.venue)).availability||'unknown';}
 function upload(file,root){
  if(!file)return;
  const reader=new FileReader();
