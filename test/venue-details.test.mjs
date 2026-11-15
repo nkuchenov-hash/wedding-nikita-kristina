@@ -35,6 +35,8 @@ test('Photo archive includes all 304 indexed photographs in source room categori
  assert.equal(getVenuePhotos(venue('vinity')).length,24);
  assert.ok(getVenuePhotos(venue('royal')).some(f=>f.section==='Террасы и виды'));
  assert.ok(getVenuePhotos(venue('alex-park')).some(f=>f.section==='Санузлы'));
+ // A venue hero must never start with a restroom or utility-room photo.
+ for(const id of ['royal','vesenniy','alex-park','vinity'])assert.equal(getVenuePhotos(venue(id))[0].section,'Залы',id+' must open with the banquet hall');
 });
 test('Photo viewer supports room filtering, mini-grid, gallery, sort, full-screen navigation',()=>{
  const v=venue('vesenniy');
