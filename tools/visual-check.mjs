@@ -120,11 +120,11 @@ try{
   // Wedding venue admin smoke test: real gallery controls and the uniform cost sheet.
   await page.goto(url()+'#/admin/venues/royal/photos',{waitUntil:'domcontentloaded'});
   await page.waitForSelector('.vdp-photo-focus',{timeout:15000});
-  assert.ok(await page.$eval('.vdp-filmstrip .vdp-thumb',x=>x.length>=10),'Royal Beach: all phone photos should be indexed');
+  assert.ok(await page.$$eval('.vdp-filmstrip .vdp-thumb',x=>x.length>=10),'Royal Beach: all phone photos should be indexed');
   await page.click('[data-photo-view="grid"]');
   await page.waitForSelector('.vdp-photo-grid');
   await page.click('[data-photo-section="Залы"]');
-  assert.ok(await page.$eval('.vdp-photo-grid .vdp-thumb',a=>a.length>0),'Room filter must show indexed banquet hall photos');
+  assert.ok(await page.$$eval('.vdp-photo-grid .vdp-thumb',a=>a.length>0),'Room filter must show indexed banquet hall photos');
   await page.click('.vdp-photo-grid [data-photo-open="0"]');
   await page.waitForSelector('.vdp-lightbox');
   await page.keyboard.press('ArrowRight');
