@@ -184,7 +184,7 @@ export const VENUE_RECORDS = {
     "visited": true,
     "visitEvidence": "Фото осмотра и рукописный расчёт",
     "photos": "https://drive.google.com/drive/folders/1ugfw737EtDRm2wOepntv8e5cLBj-02yK",
-    "capacityNote": "Большое пространство; для свадебной рассадки 80–100 нужен план.",
+    "capacityNote": "Основной зал 465 м² до 300 гостей за банкетом, крытая терраса 80 м². Официальный сайт указывает 6 часов аренды в подарок и меню от 5 000 ₽/гость; индивидуальная смета для 80 гостей — от 5 500 ₽/гость и отдельные позиции.",
     "summary": "Личный осмотр, варианты на 18 и 20 июня. Разница в 1 100 ₽ между рукописным итогом и арифметикой читаемых строк; на 19 июня расчёта нет.",
     "quotes": [
       {
@@ -237,7 +237,7 @@ export const VENUE_RECORDS = {
     ],
     "questions": [
       "Уточнить расхождение 1 100 ₽ и точную базу сервисного сбора",
-      "Получить коммерческое предложение именно на 19.06"
+      "Сверить индивидуальную смету с опубликованным предложением WOW Events (6 часов аренды в подарок, базовое меню от 5 000 ₽/гость)"
     ],
     "gallery": [
       {
@@ -254,6 +254,40 @@ export const VENUE_RECORDS = {
         "id": "1WJuGKZQk4C5FDiU0xYQAM49l6EbYODAl",
         "label": "Санузлы",
         "folder": "1-SYp1KEpZ1YRXpSnrBOIrnOWjsihp0tV"
+      }
+    ],
+    "telegramLinks": [
+      {
+        "label": "WOW Events — Telegram",
+        "url": "https://t.me/woweventsspb"
+      },
+      {
+        "label": "WOW Events — ВКонтакте",
+        "url": "http://vk.com/woweventsspb"
+      },
+      {
+        "label": "Рестораны WOW Events",
+        "url": "https://wow-eve.ru/restorany/"
+      },
+      {
+        "label": "Александровский парк — официальный сайт",
+        "url": "https://wow-eve.ru/restorany/aleksandrovskij-park/"
+      },
+      {
+        "label": "WOW Events — Taplink",
+        "url": "https://taplink.cc/wowevents"
+      },
+      {
+        "label": "Видео свадеб и мероприятий",
+        "url": "http://www.youtube.com/playlist?list=PLaf31DwJzkQiGcuTfsP5lG-jiiEaeNU3i"
+      },
+      {
+        "label": "Альбом интерьеров Zeppfolio",
+        "url": "http://www.zeppfolio.ru/disk/01-07-2022-interier-aleksandrovskiy-park"
+      },
+      {
+        "label": "Альбом свадеб Zeppfolio",
+        "url": "http://www.zeppfolio.ru/disk/01-12-2022-ap-svadby"
       }
     ]
   },
@@ -513,10 +547,13 @@ export const VENUE_RECORDS = {
     "visitEvidence": "25 исходных фото IMG_20261114",
     "photos": "https://drive.google.com/drive/folders/17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
     "drive": "https://drive.google.com/drive/folders/12qTrMblCebgAvEotLogXCoyhTFpl0485",
-    "quoteSource": "https://docs.google.com/document/d/1PnhJnHe1J_z1Flo7aeQIqAPxisE_6H1Bfdf7_Mq5SW0/edit",
-    "summary": "В переписке фигурирует 20 июня; несколько сторонних кейтеринговых компаний и пока неразобранные дополнительные сборы.",
+    "quoteSource": "https://putilovevent.ru/",
+    "summary": "Особняк 1912 года на Крестовском острове, главный зал 208 м², до 120 гостей в формате банкета. В сохранённой переписке упоминается 20 июня и четыре партнёрских кейтеринга. На официальном сайте индивидуальные цены не опубликованы. Каталог-агрегатор указывает летнюю аренду от 190 000 ₽ и меню от 6 000 ₽/гость; это не персональное КП на июнь 2027.",
     "excluded": [
-      "Условия по кейтерингу и дополнительным сборам ещё не сверены"
+      "Звук/свет и технический подрядчик — стоимость неизвестна",
+      "Свой алкоголь: каталог указывает пробковый сбор 500 ₽/гость; для 80 гостей возможные +40 000 ₽",
+      "Территория у воды: отдельная аренда от 30 000 ₽ в каталоге; входит ли в нужный сценарий — уточнить",
+      "Собственный кейтеринг не подтверждён; официально работают аккредитованные партнёры"
     ],
     "gallery": [
       {
@@ -529,6 +566,49 @@ export const VENUE_RECORDS = {
         "label": "Детали зала",
         "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
       }
+    ],
+    "capacityNote": "Официально до 120 гостей за банкетом; главный зал 208 м², открытая территория 150 м², лаунж и гримёрка.",
+    "cost": {
+      "rent": 190000,
+      "menu": 6000,
+      "service": 10
+    },
+    "budgetItems": [
+      [
+        "Аренда май–сентябрь от (сторонний каталог; не подтверждено на июнь 2027)",
+        190000
+      ],
+      [
+        "Меню от 6 000 ₽ × 80 (сторонний каталог)",
+        480000
+      ],
+      [
+        "Обслуживание 10% с меню — расчётный ориентир",
+        48000
+      ]
+    ],
+    "included": [
+      "Банкет в главном зале до 120 гостей, балкон, лаунж, гримёрка, территория с причалом; состав аренды необходимо подтвердить"
+    ],
+    "questions": [
+      "Получить оригинальное индивидуальное КП на 18, 19 и 20 июня 2027: текущий архив Telegram содержит ссылку и неполную фразу «Аренда», но не сам прайс",
+      "Уточнить, сколько стоит обязательный технический пакет звука и света",
+      "Проверить, включена ли набережная в аренду и возможна ли регистрация",
+      "Согласовать условия четырёх кейтерингов и сервисные сборы"
+    ],
+    "telegramLinks": [
+      {
+        "label": "Ссылка из Telegram — прежний сайт",
+        "url": "http://putilovevent.tilda.ws/"
+      },
+      {
+        "label": "Действующий официальный сайт",
+        "url": "https://putilovevent.ru/"
+      },
+      {
+        "label": "Публичные тарифы (не персональное КП)",
+        "url": "https://www.avtobanket.ru/palaces/osobnyak-putilova"
+      }
     ]
   },
   "ermolinsky": {
@@ -536,8 +616,8 @@ export const VENUE_RECORDS = {
     "visitEvidence": "Фото залов, лестниц и санузлов",
     "photos": "https://drive.google.com/drive/folders/1WzghMVX0Qd91b7Q_gjoxppiwgjK49CEi",
     "drive": "https://drive.google.com/drive/folders/1vvBZpzaZXdUuXrDghgiWZ4BBgIr_mUWo",
-    "quoteSource": "https://docs.google.com/document/d/1_0OiEq9skmif1ghKbVE4BeE8W9lUHbP2XwGlYgWPCso/edit",
-    "summary": "В переписке обозначены даты 18/20 июня; условия по стоимости на 19-е не представлены.",
+    "quoteSource": "https://www.ermolinskievent.ru/kp",
+    "summary": "Особняк конца XIX века в центре города, главный зал 160 м², вместимость на банкет до 90 гостей. Из КП по ссылке из Telegram: сезонная аренда в мае–сентябре 2027 — 430 000 ₽ с НДС, ужин от 7 500 до 10 000 ₽/гость с обслуживанием; общий комплект света/звука от 170 000 ₽. В старой версии страницы виден тариф 390 000 ₽, поэтому итоговые цены необходимо письменно подтвердить.",
     "gallery": [
       {
         "id": "1ntBfIhlZq0FRN9mPoHiv6IuNtdzcZcjO",
@@ -548,6 +628,46 @@ export const VENUE_RECORDS = {
         "id": "1-Nfb7tI3VwITiE4JEkfbpZUIhapuLPz8",
         "label": "Санузлы",
         "folder": "1lohyFnJ2AnNsYhdESueUsMhVAzT3io4G"
+      }
+    ],
+    "capacityNote": "Банкет до 90 гостей; фуршет до 200. Основной зал 160 м², две лаунж/велком-комнаты по 58 м², двор 100 м².",
+    "cost": {
+      "rent": 430000,
+      "menu": 7500,
+      "technical": 170000,
+      "service": 0
+    },
+    "budgetItems": [
+      [
+        "Аренда на июнь 2027 по сезонному КП, с НДС",
+        430000
+      ],
+      [
+        "Меню от 7 500 ₽ × 80, обслуживание включено",
+        600000
+      ],
+      [
+        "Звук и свет от, единый комплект",
+        170000
+      ]
+    ],
+    "included": [
+      "Обслуживание включено в меню аккредитованного кейтеринга",
+      "Гримерные, welcome-комнаты, внутренний двор для регистрации; доступность этих зон в пакете — уточнить"
+    ],
+    "excluded": [
+      "Аккредитация своего кейтеринга — 100 000 ₽ дополнительно, только если выберем своего",
+      "Дополнительные услуги, декор и продление не рассчитаны"
+    ],
+    "questions": [
+      "Уточнить тариф на 18–20 июня: сезонная версия КП показывает 430 000 ₽, старый текст сайта — 390 000 ₽",
+      "Получить состав технического пакета от 170 000 ₽",
+      "Проверить свободные даты и условия бронирования"
+    ],
+    "telegramLinks": [
+      {
+        "label": "Коммерческое предложение из Telegram",
+        "url": "https://www.ermolinskievent.ru/kp"
       }
     ]
   },
@@ -688,7 +808,8 @@ export const VENUE_RECORDS = {
       "Декор, продление и welcome не рассчитаны"
     ],
     "questions": [
-      "Уточнить доступность 19 июня и цену напитков"
+      "Уточнить доступность 19 июня и цену напитков",
+      "Проверить доступ к меню-конструктору из ссылки Telegram и состав безалкогольных напитков"
     ],
     "gallery": [
       {
@@ -700,6 +821,16 @@ export const VENUE_RECORDS = {
         "id": "1dVFz1D9sKZDQgI-pW-qzUhWomSIRe3yn",
         "label": "Терраса",
         "folder": "1fVfrSjWndp7pGqMCYgvmIeOcc-M49AdM"
+      }
+    ],
+    "telegramLinks": [
+      {
+        "label": "Полный фотоальбом Яндекс Диск",
+        "url": "https://disk.yandex.ru/d/5efMEFDHsCyGcg"
+      },
+      {
+        "label": "Меню-конструктор Google Drive",
+        "url": "https://drive.google.com/file/d/1pbTv2ccr0rvG1Ot4g-VvaQ-pmNWrQDJH/view"
       }
     ]
   },
@@ -723,7 +854,26 @@ export const VENUE_RECORDS = {
       "Декор, торты и напитки по выбранному пакету оплачиваются отдельно"
     ],
     "questions": [
-      "Уточнить доступность 19 июня и полную смету для 80 гостей"
+      "Уточнить доступность 19 июня и полную смету для 80 гостей",
+      "Сверить дополнительный прайс 2027, список оборудования и презентацию шатра из вложений Telegram"
+    ],
+    "telegramLinks": [
+      {
+        "label": "Банкетный шатёр Летний — официальный сайт",
+        "url": "https://banket-ubiley.ru"
+      },
+      {
+        "label": "Шатёр Летний — ВКонтакте",
+        "url": "https://vk.com/shater.letniy"
+      },
+      {
+        "label": "Шатёр Летний — Instagram",
+        "url": "https://instagram.com/shater_letnyi"
+      },
+      {
+        "label": "Контакт декоратора из Telegram",
+        "url": "https://vk.com/decor9221692"
+      }
     ]
   },
   "maryino": {
