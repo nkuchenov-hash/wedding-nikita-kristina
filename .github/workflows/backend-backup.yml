@@ -1,5 +1,7 @@
 name: Daily wedding database integrity backup
 on:
+  push:
+    paths: ['.github/workflows/backend-backup.yml']
   schedule:
     - cron: '17 1 * * *'
   workflow_dispatch:
