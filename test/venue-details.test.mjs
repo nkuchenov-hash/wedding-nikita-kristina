@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {VENUE_RECORDS} from '../src/venues-data.js';
 import {VENUE_PRICING,VENUE_COST_LABELS} from '../src/venues-pricing.js';
-import {getVenuePhotos,filteredVenuePhotos,renderVenueNewPage} from '../src/venue-detail-ui.js';
+import {getVenuePhotos,getVenueCover,filteredVenuePhotos,renderVenueNewPage} from '../src/venue-detail-ui.js';
 
 const allIds=[
  'vesenniy','kraft','loft-roof','alex-park','seasons','k2','putilov','ermolinsky',
@@ -37,6 +37,24 @@ test('Photo archive includes all 304 indexed photographs in source room categori
  assert.ok(getVenuePhotos(venue('alex-park')).some(f=>f.section==='Санузлы'));
  // A venue hero must never start with a restroom or utility-room photo.
  for(const id of ['royal','vesenniy','alex-park','vinity'])assert.equal(getVenuePhotos(venue(id))[0].section,'Залы',id+' must open with the banquet hall');
+});
+test('Main covers use banquet halls or building facades; technical photos sort last',()=>{
+ const expected={
+  'putilov':'1Yo4j6ZhK_ycH38ZeHXKCGnaMmQfcHme4',
+  'repino-riviera':'1PCv5jMFTatJ21kuaUD2RaPx7JFXYsfPM',
+  'panorama':'1PwrAgzMU1kmK772YRhQWuQNGrfaU1d0X',
+  'harmony':'1giLTNx8i-okBCfyiZChmaC0I3MTVsaAe'
+ };
+ for(const [id,photoId] of Object.entries(expected))assert.equal(getVenueCover(venue(id)).id,photoId,id+' cover');
+ assert.equal(getVenueCover(venue('maryino')),null,'Maryino lacks a suitable owned hall/facade photo');
+ const named=['royal','vesenniy','alex-park','loft-roof','seasons','petr','vinity'];
+ for(const id of named)assert.equal(getVenueCover(venue(id))?.section,'Залы',id+' must show banquet hall');
+ for(const id of allIds){
+  const photos=getVenuePhotos(venue(id));
+  const indexes=photos.map((x,i)=>({i,name:String(x.name||'').toLowerCase()})).filter(x=>/техническ|оборудован|аппаратур|пульт управления|вентиляци/.test(x.name));
+  const banquet=photos.findIndex(x=>/банкет|общий вид.*зал|фасад/.test(String(x.name).toLowerCase()));
+  if(banquet>=0)for(const technical of indexes)assert.ok(technical.i>banquet,id+' technical image must follow banquet/facade');
+ }
 });
 test('Photo viewer supports room filtering, mini-grid, gallery, sort, full-screen navigation',()=>{
  const v=venue('vesenniy');
