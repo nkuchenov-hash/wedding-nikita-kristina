@@ -40,6 +40,7 @@ test('Photo archive includes all 304 indexed photographs in source room categori
 });
 test('Main covers use banquet halls or building facades; technical photos sort last',()=>{
  const expected={
+  'vesenniy':'1xrDBe6UYNcGcxGFadQ-Di8LCnHeM36Ux',
   'putilov':'1Yo4j6ZhK_ycH38ZeHXKCGnaMmQfcHme4',
   'repino-riviera':'1PCv5jMFTatJ21kuaUD2RaPx7JFXYsfPM',
   'panorama':'1PwrAgzMU1kmK772YRhQWuQNGrfaU1d0X',
