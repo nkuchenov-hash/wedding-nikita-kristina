@@ -41,6 +41,7 @@ const PUBLIC_VENUES = [
   {id:'palma',name:'Пальма',region:'city',area:'пер. Пирогова, 18'},
   {id:'repino-riviera',name:'Репинская Ривьера',region:'country',area:'Репино'},
   {id:'panorama',name:'Панорама — Репино',region:'country',area:'Приморское шоссе, 428Д'},
+  {id:'zhemchuzhny',name:'Event Hall Жемчужный',region:'city',area:'Приморский проспект, 50Ж',website:'https://xn--80aaaav9bebfeihcggq.xn--p1ai/prl',capacity:150},
   {id:'eva',name:'Шатёр Eva — Летний',region:'country',area:'Большая Купальная, 28'},
   {id:'maryino',name:'Усадьба Марьино — Белый зал',region:'country',area:'Андрианово, Тосненский район',website:'https://usadbamaryino.ru/rental/halls',capacity:80,
     publiclyAdvertised:{rent:250000,menu:6500,extension:35000},publicNote:'Белый зал предпочтителен. Вместимость до 80 по официальному сайту, в сторонних каталогах есть противоречия. Меню от 6 500 ₽/чел. — ориентир из каталога, не смета на июнь 2027.'},
