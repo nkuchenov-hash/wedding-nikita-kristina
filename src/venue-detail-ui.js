@@ -33,6 +33,21 @@ const photoPriority=x=>{
  if(/лаунж|фотозон|фойе|холл|гостиная/.test(name)||/лаунж|фотозон/.test(section))return 4;
  return 5; // Generic IMG files remain visible, but are not misrepresented as banquet halls.
 };
+// Reviewed phone-photo covers for albums where filenames are only IMG timestamps.
+const FEATURED_COVERS={
+ 'putilov':'1Yo4j6ZhK_ycH38ZeHXKCGnaMmQfcHme4',       // ceremonial grand hall
+ 'repino-riviera':'1PCv5jMFTatJ21kuaUD2RaPx7JFXYsfPM', // building and bay
+ 'panorama':'1PwrAgzMU1kmK772YRhQWuQNGrfaU1d0X',     // building from outside
+ 'harmony':'1giLTNx8i-okBCfyiZChmaC0I3MTVsaAe'       // wide main event hall
+};
+// In the current Maryino phone album there is no qualifying building or
+// banquet-hall photograph. A neutral hero is preferable to a painting/close-up.
+const NO_COVER_UNTIL_REVIEW=new Set(['maryino']);
+const KNOWN_TECHNICAL=new Set([
+ '1VBBVH6mF20BLN6X8BoEVxiE2AlOlibcC', // Putilov personal/auxiliary photo
+ '1CYyg_cZbFreCVrWC3ML8CzOqTNhSMyzo', // Repino-Riviera dark corridor
+ '1h7ssR49QTrOuJGft4e3qnFmI96ICBMcw'  // Panorama equipment close-up
+]);
 const imageRelevance=x=>{
  const name=String(x.name||'').toLowerCase();
  return (/общий вид|панорам|парадн|фасад|целиком/.test(name)?120:0)
@@ -43,12 +58,17 @@ const imageRelevance=x=>{
 };
 export function getVenuePhotos(v){
  const files=ALL_PHOTOS[v.id]?.length?ALL_PHOTOS[v.id]:(v.gallery||[]).map(x=>({id:x.id,name:x.label||'Фотография',section:x.label||'Общий альбом',folder:x.folder||null}));
- return [...files].sort((a,b)=>photoPriority(a)-photoPriority(b)||imageRelevance(b)-imageRelevance(a)||a.name.localeCompare(b.name,'ru',{numeric:true}));
+ return [...files].sort((a,b)=>{
+  const featured=FEATURED_COVERS[v.id];
+  const apr=featured===a.id?-20:KNOWN_TECHNICAL.has(a.id)?120:photoPriority(a);
+  const bpr=featured===b.id?-20:KNOWN_TECHNICAL.has(b.id)?120:photoPriority(b);
+  return apr-bpr||imageRelevance(b)-imageRelevance(a)||a.name.localeCompare(b.name,'ru',{numeric:true});
+ });
 }
 export function getVenueCover(v){
  const files=getVenuePhotos(v);
  // The ordered collection already puts banquet halls and ceremonial exteriors first.
- return files[0]||null;
+ return NO_COVER_UNTIL_REVIEW.has(v.id)?null:(files[0]||null);
 }
 export function filteredVenuePhotos(v,ui={}){
  const photos=getVenuePhotos(v).filter(x=>ui.photoSection==='all'||!ui.photoSection||x.section===ui.photoSection);
