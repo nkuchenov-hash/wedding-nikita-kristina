@@ -54,13 +54,13 @@ jobs:
             set -eu
             cd '$PRIVATE/backend'
             for phpfile in src/*.php bin/*.php public/*.php; do
-              php82 -l \"\$phpfile\" >/dev/null || exit 1
+              php -l \"\$phpfile\" >/dev/null || exit 1
             done
-            php82 bin/smoke.php
-            if test -f '$PRIVATE/wedding.sqlite3'; then php82 bin/backup.php; fi
-            php82 bin/migrate.php
-            php82 bin/smoke.php
+            php bin/smoke.php
+            if test -f '$PRIVATE/wedding.sqlite3'; then php bin/backup.php; fi
+            php bin/migrate.php
+            php bin/smoke.php
             test -f '$PRIVATE/wedding.sqlite3'
             test -f '$PRIVATE/wedding-config.json'
-            php82 -r '\$c=json_decode(file_get_contents("$PRIVATE/wedding-config.json"),true);if(!is_array(\$c)||!empty(\$c["enabled"]))exit(1);echo "BACKEND_STORED_PRIVATE_AND_DISABLED_UNTIL_TLS\\n";'
+            php bin/status.php
           "
