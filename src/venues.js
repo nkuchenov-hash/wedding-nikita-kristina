@@ -148,6 +148,8 @@ function selectedCompare(all){
  return '<div class="vw-scroll"><table class="vw-matrix"><thead><tr><th>Критерий</th>'+subset.map(v=>'<th>'+h(v.name)+'</th>').join('')+'</tr></thead><tbody>'+fields.map(([label,fn])=>'<tr><th>'+label+'</th>'+subset.map(v=>'<td>'+h(fn(v))+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
 }
 export function renderVenueAdmin(){
+ const match=(typeof location!=='undefined'?location.hash:'').match(/^#\/admin\/venues\/([^/?]+)(?:\/([^/?]+))?/);
+ if(match){ui.expanded=decodeURIComponent(match[1]);ui.detailTab=match[2]||'overview';}else{ui.expanded=null;}
  const all=PUBLIC_VENUES.map(get);
  const visited=all.filter(v=>v.visited).length;
  const full=all.filter(v=>weighted(v).value!==null).length;
@@ -157,6 +159,7 @@ export function renderVenueAdmin(){
  if(ui.sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name,'ru'));
  if(ui.sort==='date')list.sort((a,b)=>({available:0,pending:1,unknown:2,unavailable:3}[a.availability||'unknown']??2)-({available:0,pending:1,unknown:2,unavailable:3}[b.availability||'unknown']??2)||Number(b.visited)-Number(a.visited)||(estimate(a).value??Infinity)-(estimate(b).value??Infinity));
  const detailVenue=all.find(v=>v.id===ui.expanded);
+ if(match&&detailVenue)return '<div class="vw-page" data-venues-page><a class="vw-back" href="#/admin/venues">← Назад к сравнению</a><div class="vw-detail-single">'+detail(detailVenue)+'</div></div>';
  return '<div class="vw-page" data-venues-page><div class="dashboard-heading vw-head"><div><div class="eyebrow">ОРГАНИЗАЦИЯ / ВЫБОР МЕСТА</div><h1>Сравнение площадок</h1><p>Регистрация 17 июня · торжество желательно 19 июня 2027 · город и загород</p></div><div class="vw-count"><strong>'+all.length+'</strong><span>площадок</span></div></div>'+
  '<div class="vw-alert"><strong>Приоритет — дата 19 июня:</strong> «Весенний» и «Сезоны в парке» сообщили, что дата занята. Для других площадок неизвестная доступность не означает свободную дату. В каталоге собраны сметы, фото осмотров и условия. GitHub Pages публичный: личные оценки сохраняются только в вашем браузере.</div>'+
  '<div class="vw-stats"><div><strong>'+all.length+'</strong><span>На рассмотрении</span></div><div><strong>'+visited+'</strong><span>Просмотрены</span></div><div><strong>'+full+'</strong><span>С полной оценкой</span></div><div><strong>'+all.filter(v=>v.availability==='available').length+'</strong><span>19 июня свободно (подтверждено)</span></div></div>'+
@@ -175,7 +178,7 @@ export function renderVenueAdmin(){
  list.map(row).join('')+'</tbody></table></div>'+(list.length?'':'<p class="vw-empty">По выбранному фильтру площадки не найдены.</p>')+'</div>'+
  '<div class="vw-panel"><div class="vw-panel-title"><h2>Сравнить рядом</h2><span>До четырёх вариантов</span></div>'+selectedCompare(all)+'</div>'+
  '<div class="vw-panel"><div class="vw-panel-title"><h2>Вес критериев рейтинга</h2><span>Рейтинг доступен только при 6/6 оценках</span></div><div class="vw-weights">'+CRITERIA.map(([key,label])=>'<label><span>'+h(label)+'</span><input type="number" min="0" max="100" step="1" data-weight="'+key+'" value="'+h(state.weights[key])+'"><span>%</span></label>').join('')+'</div><p class="vw-muted">Весовые коэффициенты автоматически нормируются при расчёте. Цена и доступность сравниваются дополнительно и не подменяются субъективной оценкой.</p></div>'+
- (detailVenue?'<div class="vw-modal-wrap"><div class="vw-modal" role="dialog" aria-modal="true" aria-label="Карточка площадки">'+detail(detailVenue)+'</div></div>':'')+'</div>';
+ '</div>';
 }
 function redraw(root){const el=root.querySelector('[data-venues-page]');if(!el)return;el.outerHTML=renderVenueAdmin();const n=root.querySelector('[data-state="guestCount"]');if(n)n.value=String(state.guestCount);for(const [key,v] of [['kind',ui.kind],['sort',ui.sort],['date',ui.date],['visit',ui.visit],['materials',ui.materials],['budget',ui.budget],['capacity',ui.capacity]]){const x=root.querySelector('[data-ui="'+key+'"]');if(x)x.value=v;}for(const s of root.querySelectorAll('select[data-field="availability"]'))s.value=get(PUBLIC_VENUES.find(x=>x.id===s.dataset.venue)).availability||'unknown';}
 function upload(file,root){
@@ -211,8 +214,8 @@ export function activateVenueAdmin(root){
  redraw(root);
  root.addEventListener('click',event=>{
   const target=event.target.closest('[data-detail],[data-close],[data-compare],[data-export],[data-ui-toggle],[data-detail-tab]');if(!target)return;
-  if(target.dataset.detail){ui.expanded=target.dataset.detail;ui.detailTab='overview';redraw(root);}else if(target.dataset.detailTab){ui.detailTab=target.dataset.detailTab;redraw(root);}
-  else if(target.hasAttribute('data-close')){ui.expanded=null;redraw(root);}
+  if(target.dataset.detail){location.hash='#/admin/venues/'+encodeURIComponent(target.dataset.detail);}else if(target.dataset.detailTab){location.hash='#/admin/venues/'+encodeURIComponent(ui.expanded)+'/'+target.dataset.detailTab;}
+  else if(target.hasAttribute('data-close')){location.hash='#/admin/venues';}
   else if(target.dataset.compare){const id=target.dataset.compare;ui.compare=ui.compare.includes(id)?ui.compare.filter(x=>x!==id):ui.compare.length>=4?[...ui.compare.slice(1),id]:[...ui.compare,id];redraw(root);}
   else if(target.hasAttribute('data-export'))download();
   else if(target.dataset.uiToggle){ui.onlyVisited=!ui.onlyVisited;redraw(root);}
@@ -236,7 +239,7 @@ export function activateVenueAdmin(root){
  });
  // Search re-renders only when Enter is pressed or focus leaves input.
  root.addEventListener('keydown',event=>{
-  if(event.key==='Escape'&&ui.expanded){ui.expanded=null;redraw(root);}
+  if(event.key==='Escape'&&ui.expanded){location.hash='#/admin/venues';}
   if(event.key==='Enter'&&event.target.matches('[data-ui="query"]')){event.preventDefault();ui.query=event.target.value;redraw(root);}
  });
 }
