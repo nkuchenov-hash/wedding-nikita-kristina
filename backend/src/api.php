@@ -488,6 +488,9 @@ function uploadPhoto(PDO $db,string $guestId): never {
     throttle($db,'photos:'.$guestId,25,86400);
     $num=one($db,'SELECT COUNT(*) AS n FROM photos WHERE guest_id=?',[$guestId]);
     if((int)$num['n']>=100)fail(422,'quota','Достигнут лимит фотографий');
+    $used=one($db,'SELECT COALESCE(SUM(bytes),0) AS total FROM photos');
+    if((int)$used['total'] >= 8*1024*1024*1024)
+        fail(507,'storage_full','Хранилище фотографий заполнено');
     $file=$_FILES['photo']??null;
     if(!is_array($file)||($file['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK)
         fail(422,'photo','Не удалось загрузить фотографию');
@@ -526,6 +529,11 @@ function uploadPhoto(PDO $db,string $guestId): never {
     imagedestroy($out);chmod($destination,0600);
     $bytes=filesize($destination);
     $hash=hash_file('sha256',$destination);
+    $duplicate=one($db,'SELECT id FROM photos WHERE guest_id=? AND sha256=?',[$guestId,$hash]);
+    if($duplicate){
+        unlink($destination);
+        json(['ok'=>true,'id'=>$duplicate['id'],'duplicate'=>true],200);
+    }
     $caption=trim((string)($_POST['caption']??''));
     if(mb_strlen($caption)>500){unlink($destination);fail(422,'caption','Слишком длинная подпись');}
     try{
