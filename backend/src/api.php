@@ -95,6 +95,44 @@ function adminCollections(): array {
     ];
 }
 function adminRoute(PDO $db,string $actor,string $route,string $method,array $cfg): never {
+    if ($route==='admin/settings' && $method==='GET') {
+        $entries=all($db,'SELECT key,value_json,updated_at FROM event_settings ORDER BY key');
+        $settings=[];
+        foreach($entries as $item)$settings[$item['key']]=json_decode($item['value_json'],true);
+        json(['ok'=>true,'settings'=>$settings]);
+    }
+    if ($route==='admin/settings' && $method==='POST') {
+        $d=payload(16384);
+        $allowed=['event_date','event_time','event_venue','venue_address','rsvp_deadline',
+          'dress_code','transport_info','public_notes','menu_open','directory_open',
+          'photos_open','guest_rsvp_open','date_confirmed','place_confirmed'];
+        $key=choice($d,'key',$allowed,'');
+        if(!array_key_exists('value',$d) || (!is_scalar($d['value']) && $d['value']!==null))
+            fail(422,'field','Значение настройки недопустимо');
+        $value=$d['value'];
+        if(is_string($value)&&mb_strlen($value)>5000)fail(422,'field','Слишком длинное значение');
+        $encoded=json_encode($value,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
+        statement($db,"INSERT INTO event_settings(key,value_json) VALUES(?,?)
+          ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json,updated_at=datetime('now')",
+          [$key,$encoded]);
+        audit($db,'admin',$actor,'update','event_setting',$key);
+        json(['ok'=>true,'key'=>$key]);
+    }
+    if ($route==='admin/companions' && $method==='GET') {
+        $id=(string)($_GET['guest_id']??'');
+        if(!preg_match('/^[a-f0-9-]{36}$/',$id))fail(422,'guest_id','Не указан гость');
+        json(['ok'=>true,'companions'=>all($db,'SELECT * FROM guest_companions WHERE guest_id=? ORDER BY created_at',[$id])]);
+    }
+    if ($route==='admin/companions' && $method==='POST') {
+        $d=payload(4096);$guestId=strval($d,'guest_id',40,true);
+        if(!one($db,'SELECT id FROM guests WHERE id=?',[$guestId]))fail(404,'guest','Гость не найден');
+        $id=uuid();$name=strval($d,'display_name',255,true);
+        $age=choice($d,'age_group',['adult','child','infant'],'adult');
+        statement($db,'INSERT INTO guest_companions(id,guest_id,display_name,age_group) VALUES(?,?,?,?)',
+          [$id,$guestId,$name,$age]);
+        audit($db,'admin',$actor,'create','companion',$id,['guest_id'=>$guestId]);
+        json(['ok'=>true,'id'=>$id],201);
+    }
     if ($route==='admin/overview' && $method==='GET') {
         $guest=one($db,"SELECT COUNT(*) total,
              SUM(CASE WHEN status='registered' THEN 1 ELSE 0 END) registered FROM guests");
@@ -286,10 +324,55 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
     $isAdmin=isset($_SESSION['admin_id']);
     if ($route==='guest/me' && $method==='GET') {
         if($isAdmin)fail(403,'role','Только для гостей');
-        $guest=one($db,'SELECT id,first_name,last_name,display_name,city,side,about,profile_visible,consent_at,plus_one_allowed,children_count FROM guests WHERE id=?',[$actor]);
+        $guest=one($db,'SELECT id,first_name,last_name,display_name,city,side,about,email,phone,profile_visible,consent_at,plus_one_allowed,children_count FROM guests WHERE id=?',[$actor]);
         $rsvp=one($db,'SELECT * FROM rsvps WHERE guest_id=?',[$actor]);
         $choices=all($db,'SELECT category,option_id FROM menu_choices WHERE guest_id=?',[$actor]);
         json(['ok'=>true,'guest'=>$guest,'rsvp'=>$rsvp,'choices'=>$choices,'csrf'=>$_SESSION['csrf']]);
+    }
+    if ($route==='guest/event' && $method==='GET') {
+        $keys=['event_date','event_time','event_venue','venue_address','rsvp_deadline',
+               'dress_code','transport_info','public_notes','date_confirmed','place_confirmed'];
+        $rows=all($db,'SELECT key,value_json FROM event_settings WHERE key IN ('.
+          implode(',',array_fill(0,count($keys),'?')).')',$keys);
+        $public=[];
+        foreach($rows as $row)$public[$row['key']]=json_decode($row['value_json'],true);
+        $schedule=all($db,'SELECT title,start_at,end_at,place,notes FROM schedule_items WHERE is_public=1 ORDER BY sort_order,start_at');
+        json(['ok'=>true,'settings'=>$public,'schedule'=>$schedule]);
+    }
+    if ($route==='guest/companions' && $method==='GET') {
+        if($isAdmin)fail(403,'role','Только для гостей');
+        json(['ok'=>true,'companions'=>all($db,
+          'SELECT id,display_name,age_group,attendance FROM guest_companions WHERE guest_id=? ORDER BY created_at',[$actor])]);
+    }
+    if ($route==='guest/companions' && $method==='POST') {
+        if($isAdmin)fail(403,'role','Только для гостей');
+        $d=payload(10000);$items=$d['companions']??null;
+        if(!is_array($items)||!array_is_list($items)||count($items)>16)
+            fail(422,'companions','Некорректный список сопровождающих');
+        $g=one($db,'SELECT plus_one_allowed,children_count FROM guests WHERE id=?',[$actor]);
+        $maxAdults=(int)$g['plus_one_allowed'];$maxChildren=(int)$g['children_count'];
+        $adultCount=0;$childCount=0;$valid=[];
+        foreach($items as $item){
+            if(!is_array($item))fail(422,'companion','Неверная запись');
+            $name=strval($item,'display_name',120,true);
+            $age=choice($item,'age_group',['adult','child','infant'],'adult');
+            $attendance=choice($item,'attendance',['yes','no','maybe','unknown'],'unknown');
+            if($age==='adult')$adultCount++;else $childCount++;
+            $valid[]=[$name,$age,$attendance];
+        }
+        if($adultCount>$maxAdults||$childCount>$maxChildren)
+            fail(422,'companions','Число сопровождающих превышает количество в приглашении');
+        $db->beginTransaction();
+        try{
+            statement($db,'DELETE FROM guest_companions WHERE guest_id=?',[$actor]);
+            foreach($valid as [$name,$age,$attendance]){
+                statement($db,'INSERT INTO guest_companions(id,guest_id,display_name,age_group,attendance) VALUES(?,?,?,?,?)',
+                  [uuid(),$actor,$name,$age,$attendance]);
+            }
+            audit($db,'guest',$actor,'update','companions',$actor,['count'=>count($valid)]);
+            $db->commit();
+        }catch(Throwable $e){$db->rollBack();throw $e;}
+        json(['ok'=>true,'count'=>count($valid)]);
     }
     if ($route==='guest/directory' && $method==='GET') {
         $guests=all($db,"SELECT id,display_name,city,side,relationship,about FROM guests
@@ -305,14 +388,17 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
         $d=payload(8000);
         $city=strval($d,'city',255);
         $about=strval($d,'about',1200);
+        $email=strval($d,'email',320);
+        $phone=strval($d,'phone',64);
+        if($email!=='' && !filter_var($email,FILTER_VALIDATE_EMAIL))fail(422,'email','Некорректный email');
         $display=strval($d,'display_name',255,true);
         $visible=boolval($d,'profile_visible');
         $consent=boolval($d,'consent');
         if($visible && !$consent)fail(422,'consent_required','Нужно согласие на видимость карточки');
-        statement($db,"UPDATE guests SET city=?,about=?,display_name=?,profile_visible=?,
+        statement($db,"UPDATE guests SET city=?,about=?,display_name=?,email=?,phone=?,profile_visible=?,
           consent_at=CASE WHEN ?=1 THEN COALESCE(consent_at,datetime('now')) ELSE NULL END,
           updated_at=datetime('now') WHERE id=?",
-          [$city,$about,$display,$visible?1:0,$visible&&$consent?1:0,$actor]);
+          [$city,$about,$display,$email,$phone,$visible?1:0,$visible&&$consent?1:0,$actor]);
         audit($db,'guest',$actor,'update','profile',$actor,['visible'=>$visible]);
         json(['ok'=>true]);
     }
