@@ -1,0 +1,39 @@
+name: Probe REG.RU backend runtime
+on:
+  push:
+    paths: ['.github/workflows/backend-probe.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PHP SQLite MySQL image support and off-webroot storage
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.WEDDING_SFTP_HOST }}
+          SSH_USER: ${{ secrets.WEDDING_SFTP_USER }}
+          SSH_KEY: ${{ secrets.WEDDING_SFTP_SSH_KEY }}
+          SSH_HOST_KEYS: ${{ secrets.WEDDING_SFTP_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/wedding_deploy_key
+          printf '%s\n' "$SSH_HOST_KEYS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/wedding_deploy_key ~/.ssh/known_hosts
+          ssh -4 -o ConnectTimeout=15 -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -i ~/.ssh/wedding_deploy_key "$SSH_USER@$SSH_HOST" '
+            printf "HOME=%s\n" "$HOME"
+            for p in php84 php83 php82 php81 php; do
+              command -v "$p" >/dev/null 2>&1 || continue
+              echo "== $p =="
+              "$p" -r '''
+                echo PHP_VERSION, PHP_EOL;
+                foreach (["pdo_sqlite","sqlite3","pdo_mysql","mysqli","fileinfo","gd","imagick","openssl","mbstring"] as $extension) {
+                  echo $extension,"=",extension_loaded($extension) ? "yes" : "no",PHP_EOL;
+                }
+              ''' || true
+            done
+            if test -d ~/wedding-private; then echo "PRIVATE_DIR=yes"; else echo "PRIVATE_DIR=no"; fi
+          '
