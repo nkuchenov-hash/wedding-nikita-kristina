@@ -15,11 +15,40 @@ const original=id=>'https://drive.google.com/file/d/'+encodeURIComponent(id)+'/v
 const rowGroups=[['Основные расходы',['menu','rent','deposit','service']],['Техника',['sound','light','tech']],['Еда и дополнительные услуги',['welcome','drinks','cake','corkage','staff','extension']]];
 const labelMap=Object.fromEntries(VENUE_COST_LABELS.map(([key,title,unit])=>[key,{title,unit}]));
 
-const ROOM_ORDER={'Залы':0,'Террасы и виды':1,'Территория':2,'Лаунж и фотозоны':3,'Общий альбом':4,'Входы и переходы':5,'Служебные и гримёрки':6,'Санузлы':7};
-const imageRelevance=x=>{const name=String(x.name||'').toLowerCase();return (/общий вид|панорам/.test(name)?100:0)+(/банкетный зал|павильон|основной зал/.test(name)?45:0)+(/сцена|столы/.test(name)?10:0)-(/другой|дополнительный/.test(name)?15:0)-(/детал|аквариум|светильник|поручень|табличка|сервировка/.test(name)?70:0);};
+// Photo priority for BOTH the main table and every venue hero/gallery.
+// Never allow rooms with equipment, toilets, corridors or close-ups to outrank
+// a representative banquet hall, ceremonial interior or exterior facade.
+const photoPriority=x=>{
+ const section=String(x.section||'').toLowerCase();
+ const name=String(x.name||'').toLowerCase();
+ if(/техническ|техзон|пульт|оборудован|аппаратур|коммуникаци|монтаж|вентиляци|кабель|щитова/.test(name))return 100;
+ if(/сануз|туалет|унитаз|раковин|кабин|писсуар|wc/.test(name)||/сануз/.test(section))return 95;
+ if(/грим|служеб|подсоб|кухн|склад|персонал|гардероб/.test(name)||/служебн|грим/.test(section))return 90;
+ if(/коридор|проход|лестниц|перехо|лифт|двер|вешалк/.test(name)||/входы и переходы/.test(section))return 80;
+ if(/детал|аквариум|светильник|поручень|табличк|сервировк|крупный план|настил/.test(name))return 70;
+ if(/банкет|парадн.*зал|основн.*зал|торжественн.*зал|застеклённ.*галер/.test(name)||/залы/.test(section))return 0;
+ if(/фасад|здани|дворец|особняк|главный вход|архитектур/.test(name))return 1;
+ if(/вид|панорам|террас|балкон|крыша|залив/.test(name)||/террас|виды/.test(section))return 2;
+ if(/парк|сад|территор|двор|входная группа/.test(name)||/территор/.test(section))return 3;
+ if(/лаунж|фотозон|фойе|холл|гостиная/.test(name)||/лаунж|фотозон/.test(section))return 4;
+ return 5; // Generic IMG files remain visible, but are not misrepresented as banquet halls.
+};
+const imageRelevance=x=>{
+ const name=String(x.name||'').toLowerCase();
+ return (/общий вид|панорам|парадн|фасад|целиком/.test(name)?120:0)
+   +(/банкетный зал|павильон|главный зал|основной зал|здание|особняк/.test(name)?45:0)
+   +(/сцена|столы|вход/.test(name)?10:0)
+   -(/другой|дополнительный/.test(name)?15:0)
+   -(/детал|аквариум|светильник|поручень|табличка|сервировка/.test(name)?70:0);
+};
 export function getVenuePhotos(v){
  const files=ALL_PHOTOS[v.id]?.length?ALL_PHOTOS[v.id]:(v.gallery||[]).map(x=>({id:x.id,name:x.label||'Фотография',section:x.label||'Общий альбом',folder:x.folder||null}));
- return [...files].sort((a,b)=>(ROOM_ORDER[a.section]??4)-(ROOM_ORDER[b.section]??4)||imageRelevance(b)-imageRelevance(a)||a.name.localeCompare(b.name,'ru',{numeric:true}));
+ return [...files].sort((a,b)=>photoPriority(a)-photoPriority(b)||imageRelevance(b)-imageRelevance(a)||a.name.localeCompare(b.name,'ru',{numeric:true}));
+}
+export function getVenueCover(v){
+ const files=getVenuePhotos(v);
+ // The ordered collection already puts banquet halls and ceremonial exteriors first.
+ return files[0]||null;
 }
 export function filteredVenuePhotos(v,ui={}){
  const photos=getVenuePhotos(v).filter(x=>ui.photoSection==='all'||!ui.photoSection||x.section===ui.photoSection);
@@ -79,7 +108,7 @@ function priceLine(v){
  return (typeof menu?.value==='number'?'Меню '+money(menu.value)+' / гость':'Меню: уточнить')+' · '+(p.rent?typeof p.rent.value==='number'?'Аренда '+money(p.rent.value):String(p.rent.value||'условия уточняются'):'Аренда: уточнить');
 }
 function hero(v,ctx,photos){
- const pic=photos[0],budgeted=ctx.estimate(v),menu=getCost(v).menu;
+ const pic=getVenueCover(v),budgeted=ctx.estimate(v),menu=getCost(v).menu;
  return '<div class="vdp-hero">'+(pic?'<div class="vdp-hero-image" style="background-image:linear-gradient(90deg,rgba(14,36,28,.86),rgba(14,36,28,.27)),url(&quot;'+thumb(pic.id,1600)+'&quot;)"></div>':'<div class="vdp-hero-image vdp-no-image"></div>')+'<div class="vdp-hero-content"><span class="vdp-eyebrow">'+(v.region==='city'?'САНКТ-ПЕТЕРБУРГ':'ЗА ГОРОДОМ')+' · '+(v.visited?'ПОСМОТРЕЛИ':'ОСМОТР НЕ ПОДТВЕРЖДЁН')+'</span><h1>'+h(v.name)+'</h1><p>'+h(v.area||'')+'</p><div class="vdp-hero-bottom"><div><small>Банкет на гостя</small><strong>'+(typeof menu?.value==='number'?money(menu.value):'Нет данных')+'</strong></div><div><small>Известная стоимость на '+ctx.guests+' гостей</small><strong>'+money(budgeted.value)+'</strong><span>'+(budgeted.partial?'Ориентир, не полная смета':'По полученной смете')+'</span></div><div><small>Фотографии</small><strong>'+photos.length+'</strong><span>С осмотров в Wedding Drive</span></div></div></div></div>';
 }
 function scopeList(v){
