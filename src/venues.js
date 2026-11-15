@@ -22,6 +22,7 @@ const PUBLIC_VENUES = [
   {id:'putilov',name:'Особняк Путилова',region:'city',area:'Санкт-Петербург',website:'https://putilovevent.tilda.ws/'},
   {id:'ermolinsky',name:'Особняк Ермолинского',region:'city',area:'Санкт-Петербург',website:'https://www.ermolinskievent.ru/kp'},
   {id:'royal',name:'Royal Beach — Крестовский',region:'city',area:'Крестовский остров'},
+  {id:'zarenkov-gallery',name:'Zarenkov Gallery — Галерея Заренкова',region:'city',area:'ул. Социалистическая, 21 · 10 этаж',website:'https://zarenkov-gallery.com/rent/',capacity:100},
   {id:'vinity',name:'Vinity — Таврический сад',region:'city',area:'Потёмкинская, 4А',visited:true,
     drive:'https://drive.google.com/drive/folders/1SoO1HSmdw_e1TBo_LrQB5HcvBrU1WaqK',
     photos:'https://drive.google.com/drive/folders/1ufIQOjp0BiHqyvy0ew6C36od1z4ZX3ce',
