@@ -12,6 +12,8 @@ export const VENUE_RECORDS = {
     ]
   },
   "vesenniy": {
+    "dateAvailability": {"19":"unavailable"},
+    "dateNote": "19 июня занято; смета на 18-е — предложение, а не подтверждение бронирования.",
     "visited": true,
     "visitEvidence": "Фото посещения в папке площадки",
     "availability": "unavailable",
@@ -388,6 +390,8 @@ export const VENUE_RECORDS = {
     "summary": "Просмотр планировался вместе с Весенним и Лофтом на крыше 14 ноября. В доступной папке нет личных фотографий. Приложенный PDF описывает схему прохода и условия парковки, не полную смету."
   },
   "seasons": {
+    "dateAvailability": {"18":"available","19":"unavailable","20":"unavailable"},
+    "dateNote": "По сообщению менеджера от 14.11.2026 свободна только пятница 18.06.2027; актуальность подтвердить перед бронированием.",
     "visited": true,
     "visitEvidence": "Фото зала, сцены и территории",
     "availability": "unavailable",
