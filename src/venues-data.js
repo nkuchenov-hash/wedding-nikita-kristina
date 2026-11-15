@@ -827,6 +827,9 @@ export const VENUE_RECORDS = {
       "20": "available"
     },
     "dateNote": "Со слов заказчика 15.11.2026 все три даты — 18, 19 и 20 июня 2027 — свободны. Это не бронь.",
-    "availability": "available"
+    "availability": "available",
+    "drive": "https://drive.google.com/drive/folders/1BbOyVpRoF5OIKxiYb36luC2KppG3kMPT",
+    "photos": "https://drive.google.com/drive/folders/1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6",
+    "documentsFolder": "https://drive.google.com/drive/folders/1s3EQWVMBOPYzd-14K5CiPH_125Xb0-uc"
   }
 };
