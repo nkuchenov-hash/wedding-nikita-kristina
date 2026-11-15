@@ -137,7 +137,7 @@ jobs:
           path: _site/
           if-no-files-found: error
           retention-days: 14
-      - name: Deploy to purchased hosting through SFTP (optional)
+      - name: Deploy to REG.RU via SSH (backed up and verified)
         shell: bash
         env:
           HOST: ${{ secrets.WEDDING_SFTP_HOST }}
@@ -149,11 +149,11 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -z "$HOST" || -z "$USERNAME" || -z "$SSH_KEY" || -z "$HOST_KEYS" || -z "$DESTINATION" ]]; then
-            echo "SFTP not connected: hosting bundle created; GitHub Pages preview remains active."
-            exit 0
+            echo "::error::REG.RU deployment is not configured. Check WEDDING_SFTP_* Actions secrets."
+            exit 1
           fi
-          if [[ "$DESTINATION" == "/" || "$DESTINATION" == "." ]]; then
-            echo "Invalid remote destination."
+          if [[ "$DESTINATION" != /var/www/* || "$DESTINATION" == "/" || "$DESTINATION" == "." ]]; then
+            echo "::error::Invalid deployment destination."
             exit 1
           fi
           if [[ -z "$PORT" ]]; then PORT=22; fi
@@ -162,10 +162,22 @@ jobs:
           printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/wedding_deploy_key"
           printf '%s\n' "$HOST_KEYS" > "$HOME/.ssh/known_hosts"
           chmod 600 "$HOME/.ssh/wedding_deploy_key" "$HOME/.ssh/known_hosts"
-          # Never delete unrelated files from an existing hosting account.
+          SSH_OPTS="-i $HOME/.ssh/wedding_deploy_key -p $PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
+          # The hosting account already contains a landing page; keep a recoverable copy
+          # outside of the public document root before the very first replacement.
+          ssh $SSH_OPTS "$USERNAME@$HOST" \
+            "set -eu; test -d '$DESTINATION'; mkdir -p ~/wedding-backups; if test -f '$DESTINATION/index.html' && ! test -e ~/wedding-backups/index-before-github.html; then cp -p '$DESTINATION/index.html' ~/wedding-backups/index-before-github.html; fi"
+          # Never delete unrelated files or change their permissions.
           rsync --archive --verbose --no-perms --omit-dir-times \
-            --rsh "ssh -i $HOME/.ssh/wedding_deploy_key -p $PORT -o StrictHostKeyChecking=yes" \
+            --rsh "ssh $SSH_OPTS" \
             _site/ "$USERNAME@$HOST:$DESTINATION/"
+          local_sha=$(sha256sum _site/index.html | awk '{print $1}')
+          remote_sha=$(ssh $SSH_OPTS "$USERNAME@$HOST" "sha256sum '$DESTINATION/index.html'" | awk '{print $1}')
+          if [[ "$local_sha" != "$remote_sha" ]]; then
+            echo "::error::REG.RU index.html checksum mismatch after upload."
+            exit 1
+          fi
+          echo "REG.RU deployment confirmed by remote index.html SHA256."
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
