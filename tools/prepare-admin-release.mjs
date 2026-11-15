@@ -22,7 +22,7 @@ for(const name of required){
  if(!name.endsWith('.js'))continue;
  const file=join(assets,name);
  const original=readFileSync(file,'utf8');
- const patched=original.replace(/(from\\s*['"]|import\\s*['"]|import\\(\\s*['"])\\.\\/([a-zA-Z0-9-]+\\.js)(?:\\?v=[^'"]+)?(['"])/g,
+ const patched=original.replace(/(from\s*['"]|import\s*['"]|import\(\s*['"])\.\/([a-zA-Z0-9-]+\.js)(?:\?v=[^'"]+)?(['"])/g,
    (_all,prefix,n,close)=>prefix+'./index.php?asset=src/'+n+'&v='+sha+close);
  writeFileSync(file,patched);
 }
