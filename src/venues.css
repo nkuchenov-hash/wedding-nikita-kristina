@@ -139,3 +139,15 @@
 .vw-quote-options{padding:10px 15px;background:#f3f8f4;border-radius:10px}
 @media(max-width:850px){.vw-filter{grid-template-columns:repeat(2,minmax(0,1fr))}.vw-budget-boxes{grid-template-columns:1fr}.vw-modal{margin:0}.vw-tab-content>.vw-detail-grid{grid-template-columns:1fr}}
 @media(max-width:550px){.vw-filter{grid-template-columns:1fr}.vw-tab-content{padding:12px}.vw-detail-tabs{padding:8px 10px}.vw-detail-tabs button{padding:10px 12px}.vw-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.vw-input-grid{grid-template-columns:1fr}.vw-quickfacts>div{grid-template-columns:1fr}.vw-modal-wrap{padding:5px}.vw-quote-grid{grid-template-columns:1fr}}
+
+/* Dedicated venue pages (copyable routes, not pop-up modals) */
+.vw-back{display:inline-flex;align-items:center;margin:0 0 17px;padding:11px 16px;background:#fff;border:1px solid #d4e2d7;border-radius:9px;color:#23553c;text-decoration:none;font-size:13px;font-weight:700}
+.vw-back:hover{background:#f1f7f2}
+.vw-detail-single{border:1px solid #dbe6dc;border-radius:17px;background:white;overflow:hidden;max-width:1190px}
+.vw-detail-single .vw-detail-head{padding:28px 33px}
+.vw-detail-single .vw-detail-head h2{font-size:clamp(25px,3.4vw,38px)}
+.vw-detail-single .vw-tab-content{padding:24px}
+.vw-detail-single .vw-close{display:none}
+.vw-detail-single .vw-detail-tabs{top:0}
+.vw-detail-single .vw-detail-block{max-width:100%}
+@media(max-width:680px){.vw-detail-single .vw-tab-content{padding:12px}.vw-detail-single .vw-detail-head{padding:20px}.vw-detail-single .vw-budget-boxes{grid-template-columns:1fr}}
