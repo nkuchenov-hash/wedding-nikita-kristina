@@ -503,7 +503,10 @@ export const VENUE_RECORDS = {
     ],
     "questions": [
       "Уточнить стоимость банкета и комплект света/звука для 80–100 гостей"
-    ]
+    ],
+    "cost": {
+      "rent": 420000
+    }
   },
   "putilov": {
     "visited": true,
