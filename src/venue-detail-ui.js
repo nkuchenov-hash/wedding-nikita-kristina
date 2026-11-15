@@ -86,7 +86,12 @@ export function filteredVenuePhotos(v,ui={}){
  if(mode==='section')return [...photos].sort((a,b)=>tail(a)-tail(b)||photoPriority(a)-photoPriority(b)||a.name.localeCompare(b.name,'ru',{numeric:true}));
  return photos;
 }
-const sourceLinks=v=>[['Документы и предложение',v.quoteSource],['Фотографии в Google Drive',v.photos],['Папка площадки',v.drive],['Официальный сайт',v.website]].filter(([,u])=>escUrl(u)).map(([l,u])=>'<a href="'+h(escUrl(u))+'" target="_blank" rel="noopener noreferrer">'+h(l)+' ↗</a>').join('');
+const sourceLinks=v=>{
+ const all=[['Документы и предложение',v.quoteSource],['Папка документов',v.documentsFolder],['Фотографии в Google Drive',v.photos],['Папка площадки',v.drive],['Официальный сайт',v.website],...((v.telegramLinks||[]).map(x=>[x.label,x.url]))];
+ const seen=new Set();
+ return all.filter(([l,u])=>{const safe=escUrl(u);if(!safe||seen.has(safe))return false;seen.add(safe);return true;})
+  .map(([l,u])=>'<a href="'+h(escUrl(u))+'" target="_blank" rel="noopener noreferrer">'+h(l)+' ↗</a>').join('');
+};
 const getCost=v=>VENUE_PRICING[v.id]||{};
 function amountCell(entry,unit){
  if(!entry||entry.value===null||entry.value===undefined)return '<span class="vdp-unknown">Нет данных</span>';
