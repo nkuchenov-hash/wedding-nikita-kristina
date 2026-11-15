@@ -123,8 +123,80 @@ async function collection(host,type){
  showForm(section,keys,async row=>call('admin/records',{method:'POST',body:{collection:type,fields:row}}));
  host.append(section);
 }
+async function settings(host){
+ const data=await call('admin/settings');
+ title(host,'Настройки свадьбы','Гостевые функции изначально закрыты и включаются только организаторами.');
+ const cfg=[
+   ['event_date','Дата (ГГГГ-ММ-ДД)'],['event_time','Время'],['event_venue','Площадка'],
+   ['venue_address','Адрес'],['rsvp_deadline','Срок подтверждения'],
+   ['dress_code','Дресс-код'],['transport_info','Трансфер'],['public_notes','Информация гостям']
+ ];
+ const form=$('form','ad-live-form');
+ const inputs=[];
+ for(const [key,label]of cfg){
+   const wrap=fieldInput(key,label),input=wrap.querySelector('input');
+   input.value=data.settings?.[key]??'';inputs.push([key,input]);form.append(wrap);
+ }
+ const b=$('button','ad-live-button','Сохранить информацию');b.type='submit';
+ const status=$('p','ad-live-message');form.append(b,status);host.append(form);
+ form.addEventListener('submit',async e=>{e.preventDefault();b.disabled=true;
+   try{
+     for(const [key,input]of inputs)await call('admin/settings',{method:'POST',body:{key,value:input.value.trim()}});
+     status.textContent='Настройки сохранены';
+   }catch(err){status.textContent=errorText(err)}finally{b.disabled=false}
+ });
+ const flags=[
+  ['guest_rsvp_open','Открыть подтверждение участия'],
+  ['menu_open','Открыть выбор меню'],
+  ['directory_open','Показывать согласованные карточки гостей'],
+  ['photos_open','Разрешить загрузку фотографий'],
+  ['stories_open','Разрешить истории и пожелания']
+ ];
+ const section=$('section','ad-live-subsection');title(section,'Доступность гостевых функций','Все переключатели по умолчанию выключены.');
+ for(const [key,label]of flags){
+   const l=$('label','ad-live-setting');
+   const checkbox=$('input');checkbox.type='checkbox';checkbox.checked=data.settings?.[key]===true;
+   l.append(checkbox,$('span','',label));section.append(l);
+   checkbox.addEventListener('change',async()=>{
+      checkbox.disabled=true;
+      try{await call('admin/settings',{method:'POST',body:{key,value:checkbox.checked}})}
+      catch(err){checkbox.checked=!checkbox.checked;message(section,errorText(err),'error')}
+      finally{checkbox.disabled=false}
+   });
+ }
+ host.append(section);
+}
+async function moderation(host){
+ const data=await call('admin/moderation');
+ title(host,'Модерация фотографий и историй','Ничего не публикуется автоматически.');
+ const list=(items,type)=>{const group=$('section','ad-live-subsection');
+   title(group,type==='photos'?'Фотографии на проверке':'Истории на проверке');
+   if(!items.length)message(group,'Новых материалов нет');
+   for(const item of items){
+      const article=$('div','ad-live-review');
+      article.append($('strong','',item.display_name||'Гость'));
+      if(type==='photos'){
+        const link=$('a','ad-live-photo','Открыть фото');link.href='/api/index.php?r=media%2Fphoto&id='+encodeURIComponent(item.id);
+        link.target='_blank';link.rel='noopener noreferrer';article.append(link,$('p','',item.caption||'Без подписи'));
+      }else article.append($('p','',item.content||''));
+      for(const [status,label]of [['approved','Одобрить'],['rejected','Отклонить']]){
+        const b=button(label,async()=>{b.disabled=true;
+          try{await call('admin/review',{method:'POST',body:{type,id:item.id,status}});article.remove()}
+          catch(err){message(article,errorText(err),'error')}finally{b.disabled=false}
+        });
+        article.append(b);
+      }
+      group.append(article);
+   }
+   host.append(group);
+ };
+ list(data.photos||[],'photos');list(data.stories||[],'stories');
+}
 async function renderSection(host,section){
  if(section==='overview'){await overview(host);return}
+ if(section==='settings'){await settings(host);return}
+ if(section==='moderation'){await moderation(host);return}
+ if(section==='menu'){await collection(host,'menu_options');return}
  if(section==='guests'){await guests(host);return}
  if(section==='venues'){await collection(host,'venues');return}
  if(mapSection[section]){await collection(host,mapSection[section]);return}
@@ -145,7 +217,7 @@ function login(host,section){
 }
 export async function activateAdminData(root,section){
  const destination=root.querySelector('.admin-content');if(!destination)return;
- const supported=['overview','guests','venues','budget','vendors','tasks','schedule','catering'];
+ const supported=['overview','guests','venues','budget','vendors','tasks','schedule','catering','settings','moderation','menu'];
  if(!supported.includes(section))return;
  const host=$('section','ad-live-panel');host.setAttribute('aria-label','Данные свадебной базы');
  destination.prepend(host);
