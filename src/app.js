@@ -1,4 +1,5 @@
 import {renderGuest, activateGuest} from './replica.js';
+import {renderVenueAdmin, activateVenueAdmin} from './venues.js';
 import { wedding, sampleGuests, tentativeSchedule, adminModules } from './data.js';
 
 const app = document.querySelector('#app');
@@ -87,7 +88,7 @@ function adminOverview(){return `<div class="dashboard-heading"><div><div class=
 function adminCatering(){return `<div class="dashboard-heading"><div><div class="eyebrow">ОРГАНИЗАЦИЯ / ПИТАНИЕ</div><h1>Кейтеринг</h1><p>Сравнение компаний Санкт-Петербурга, Ленобласти и района Тосно.</p></div></div>
  <div class="admin-panel"><div class="panel-header"><h2>Каталог компаний</h2><span class="panel-meta">0 проверенных предложений</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Компания</th><th>Формат</th><th>₽ / гость</th><th>Цена на 100</th><th>Что включено</th><th>Источник</th></tr></thead><tbody><tr><td colspan="6" class="table-empty">Каталог пока пуст. Реальные цены будем добавлять только с источником, датой проверки и отметкой о включённых услугах.</td></tr></tbody></table></div></div>
  <div class="admin-panel admin-instruction"><h2>Как будет устроено сравнение</h2><p>Каждый поставщик: район обслуживания, контакты, опубликованные прайсы и полученные сметы; разбивка на питание, персонал, мебель, логистику, дополнительные сборы; цены для разных размеров заказа и подтверждённая скидка за объём. Неподтверждённые оценки не выдаём за коммерческие предложения.</p></div>`;}
-function adminGeneric(active){const m=adminModules.find(m=>m.id===active);if(!m)return adminOverview();if(active==='catering')return adminCatering();if(active==='overview')return adminOverview();return `<div class="dashboard-heading"><div><div class="eyebrow">ОРГАНИЗАЦИЯ</div><h1>${m.label}</h1><p>${m.text}</p></div></div><div class="admin-panel module-empty"><div class="module-symbol">${m.icon}</div><h2>Раздел подготовлен</h2><p>Структура раздела создана. Данные, сохранение, загрузка документов и права доступа будут подключены после настройки backend.</p>${active==='guests'?'<p><strong>Важно:</strong> настоящие имена, контакты и RSVP нельзя хранить в публичном GitHub-репозитории.</p>':''}</div>`;}
+function adminGeneric(active){const m=adminModules.find(m=>m.id===active);if(!m)return adminOverview();if(active==='catering')return adminCatering();if(active==='venues')return renderVenueAdmin();if(active==='overview')return adminOverview();return `<div class="dashboard-heading"><div><div class="eyebrow">ОРГАНИЗАЦИЯ</div><h1>${m.label}</h1><p>${m.text}</p></div></div><div class="admin-panel module-empty"><div class="module-symbol">${m.icon}</div><h2>Раздел подготовлен</h2><p>Структура раздела создана. Данные, сохранение, загрузка документов и права доступа будут подключены после настройки backend.</p>${active==='guests'?'<p><strong>Важно:</strong> настоящие имена, контакты и RSVP нельзя хранить в публичном GitHub-репозитории.</p>':''}</div>`;}
 function admin(active='overview'){return `<div class="admin-layout">${adminSidebar(active)}<main class="admin-main"><div class="admin-topbar"><span>Wedding Management</span><span class="demo-badge">ДЕМО · БЕЗ БАЗЫ ДАННЫХ</span></div><div class="admin-content">${adminGeneric(active)}</div><div class="admin-warning">Это открытый демонстрационный интерфейс без реальных данных. Перед вводом данных гостей нужна авторизация администраторов и правила доступа к базе.</div></main></div>`;}
 function notFound(){return `${header('')}<main class="inner-page">${pageHero('404','Страница не найдена','Возможно, адрес изменился.') }<div class="section-wrap">${link('/','Вернуться на главную','btn btn-primary')}</div></main>${footer()}${mobileNav('')}`;}
 function render(){ const p=route(); let view;
@@ -109,6 +110,7 @@ function render(){ const p=route(); let view;
   else if(p.startsWith('/admin/'))view=admin(p.split('/')[2]);
   else view=notFound();
   app.innerHTML=view;
+  if(p==='/admin/venues') activateVenueAdmin(app);
   app.querySelector('[data-scroll-welcome]')?.addEventListener('click', () => app.querySelector('#welcome')?.scrollIntoView({behavior:'smooth'}));
   const stage = app.querySelector('[data-depth-stage]');
   if (stage) {
