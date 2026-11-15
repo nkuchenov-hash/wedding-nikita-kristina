@@ -138,6 +138,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
       - name: Deploy to REG.RU via SSH (backed up and verified)
+        timeout-minutes: 5
         shell: bash
         env:
           HOST: ${{ secrets.WEDDING_SFTP_HOST }}
@@ -162,13 +163,13 @@ jobs:
           printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/wedding_deploy_key"
           printf '%s\n' "$HOST_KEYS" > "$HOME/.ssh/known_hosts"
           chmod 600 "$HOME/.ssh/wedding_deploy_key" "$HOME/.ssh/known_hosts"
-          SSH_OPTS="-i $HOME/.ssh/wedding_deploy_key -p $PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
+          SSH_OPTS="-4 -i $HOME/.ssh/wedding_deploy_key -p $PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -o ConnectionAttempts=2 -o ServerAliveInterval=20 -o ServerAliveCountMax=2"
           # The hosting account already contains a landing page; keep a recoverable copy
           # outside of the public document root before the very first replacement.
           ssh $SSH_OPTS "$USERNAME@$HOST" \
             "set -eu; test -d '$DESTINATION'; mkdir -p ~/wedding-backups; if test -f '$DESTINATION/index.html' && ! test -e ~/wedding-backups/index-before-github.html; then cp -p '$DESTINATION/index.html' ~/wedding-backups/index-before-github.html; fi"
           # Never delete unrelated files or change their permissions.
-          rsync --archive --verbose --no-perms --omit-dir-times \
+          rsync --archive --verbose --no-perms --omit-dir-times --timeout=120 \
             --rsh "ssh $SSH_OPTS" \
             _site/ "$USERNAME@$HOST:$DESTINATION/"
           local_sha=$(sha256sum _site/index.html | awk '{print $1}')
