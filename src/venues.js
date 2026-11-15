@@ -56,7 +56,7 @@ let ui={kind:'all',query:'',sort:'name',expanded:null,compare:[],onlyVisited:fal
 const h=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rub=(v)=>typeof v==='number'&&Number.isFinite(v)?Math.round(v).toLocaleString('ru-RU')+' ₽':'—';
 const safeUrl=(v)=>{try{const u=new URL(String(v));return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
-const get=(base)=>({...base,...(state.venues[base.id]||{}),cost:{...(state.venues[base.id]?.cost||{})},ratings:{...(state.venues[base.id]?.ratings||{})}});
+const get=(base)=>({...base,...(state.venues[base.id]||{}),cost:{...(base.publiclyAdvertised||{}),...(state.venues[base.id]?.cost||{})},ratings:{...(state.venues[base.id]?.ratings||{})}});
 const numbers=(v)=>Number.isFinite(Number(v))&&v!==''&&v!==null?Math.max(0,Number(v)):null;
 function save(){state.updated=new Date().toISOString();try{localStorage.setItem(STORE,JSON.stringify(state));}catch{}}
 function patch(id,key,value){
@@ -176,7 +176,7 @@ function download(){
  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='wedding-venues-private.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
 export function activateVenueAdmin(root){
- if(root.dataset.venuesReady==='yes')return;
+ if(root.dataset.venuesReady==='yes'){redraw(root);return;}
  root.dataset.venuesReady='yes';
  redraw(root);
  root.addEventListener('click',event=>{
