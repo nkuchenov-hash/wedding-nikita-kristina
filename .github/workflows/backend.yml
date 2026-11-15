@@ -1,0 +1,66 @@
+name: Install private wedding database backend
+on:
+  push:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: wedding-backend
+  cancel-in-progress: false
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check backend files and private entry point
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s backend/schema.sql
+          test -s backend/bin/migrate.php
+          test -s backend/src/core.php
+          test -s backend/src/api.php
+          test -s backend/public/index.php
+          test ! -f backend/wedding-config.json
+          test ! -f backend/wedding.sqlite3
+      - name: Install on REG.RU outside document root
+        timeout-minutes: 4
+        shell: bash
+        env:
+          HOST: ${{ secrets.WEDDING_SFTP_HOST }}
+          USERNAME: ${{ secrets.WEDDING_SFTP_USER }}
+          SSH_KEY: ${{ secrets.WEDDING_SFTP_SSH_KEY }}
+          HOST_KEYS: ${{ secrets.WEDDING_SFTP_KNOWN_HOSTS }}
+          PORT: ${{ secrets.WEDDING_SFTP_PORT }}
+        run: |
+          set -euo pipefail
+          test -n "$HOST" && test -n "$USERNAME" && test -n "$SSH_KEY" && test -n "$HOST_KEYS"
+          : "${PORT:=22}"
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/wedding_backend_key"
+          printf '%s\n' "$HOST_KEYS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/wedding_backend_key" "$HOME/.ssh/known_hosts"
+          SSH_OPTS="-4 -i $HOME/.ssh/wedding_backend_key -p $PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15"
+          PRIVATE="/var/www/u3728035/data/wedding-private"
+          ssh $SSH_OPTS "$USERNAME@$HOST" "umask 077; mkdir -p '$PRIVATE/backend'"
+          rsync --archive --delete --no-perms --omit-dir-times --timeout=90 \
+            --rsh "ssh $SSH_OPTS" \
+            backend/ "$USERNAME@$HOST:$PRIVATE/backend/"
+          ssh $SSH_OPTS "$USERNAME@$HOST" "
+            set -eu
+            cd '$PRIVATE/backend'
+            for phpfile in src/*.php bin/*.php public/*.php; do
+              php82 -l \"\$phpfile\" >/dev/null || exit 1
+            done
+            php82 bin/smoke.php
+            if test -f '$PRIVATE/wedding.sqlite3'; then php82 bin/backup.php; fi
+            php82 bin/migrate.php
+            php82 bin/smoke.php
+            test -f '$PRIVATE/wedding.sqlite3'
+            test -f '$PRIVATE/wedding-config.json'
+            php82 -r '\$c=json_decode(file_get_contents("$PRIVATE/wedding-config.json"),true);if(!is_array(\$c)||!empty(\$c["enabled"]))exit(1);echo "BACKEND_STORED_PRIVATE_AND_DISABLED_UNTIL_TLS\\n";'
+          "
