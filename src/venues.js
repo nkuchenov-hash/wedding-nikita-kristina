@@ -71,7 +71,7 @@ function read(){
  return INITIAL();
 }
 let state=read();
-let ui={kind:'all',query:'',sort:'date',expanded:null,detailTab:'overview',compare:[],onlyVisited:false,date:'all',chosenDay:'all',budget:'all',visit:'all',materials:'all',capacity:'all'};
+let ui={kind:'all',query:'',sort:'date',sortDir:'asc',expanded:null,detailTab:'overview',compare:[],onlyVisited:false,date:'all',chosenDay:'all',budget:'all',visit:'all',materials:'all',capacity:'all'};
 const h=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rub=(v)=>typeof v==='number'&&Number.isFinite(v)?Math.round(v).toLocaleString('ru-RU')+' ₽':'—';
 const safeUrl=(v)=>{try{const u=new URL(String(v));return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
@@ -156,6 +156,36 @@ function selectedCompare(all){
  const fields=[['Район',v=>v.area],['18 июня',v=>dayText(v,'18')],['19 июня',v=>dayText(v,'19')],['20 июня',v=>dayText(v,'20')],['Просмотр',v=>v.visited?'Да':'Не отмечено'],['Гостей',v=>v.capacity||'—'],['Бюджет',v=>{let q=estimate(v);return q.value===null?'—':(q.partial?'от ':'')+rub(q.value)+(q.isQuote&&q.quoteDate?' (смета '+q.quoteDate+')':'')}],['Рейтинг',v=>weighted(v).value===null?'Не заполнен':weighted(v).value+'/100'],['Плюсы',v=>v.pros||'—'],['Риски',v=>v.cons||'—']];
  return '<div class="vw-scroll"><table class="vw-matrix"><thead><tr><th>Критерий</th>'+subset.map(v=>'<th>'+h(v.name)+'</th>').join('')+'</tr></thead><tbody>'+fields.map(([label,fn])=>'<tr><th>'+label+'</th>'+subset.map(v=>'<td>'+h(fn(v))+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
 }
+const SORT_DEFAULTS={name:'asc',date:'asc',visit:'asc',price:'asc',capacity:'desc',score:'desc'};
+function sortVenues(rows){
+ const cmpName=(a,b)=>a.name.localeCompare(b.name,'ru');
+ const ordinal={available:0,pending:1,unknown:2,unavailable:3};
+ function key(v){
+  if(ui.sort==='name')return v.name;
+  if(ui.sort==='visit')return v.visited?0:1;
+  if(ui.sort==='price')return estimate(v).value;
+  if(ui.sort==='capacity')return numbers(v.capacity);
+  if(ui.sort==='score')return weighted(v).value;
+  if(ui.sort==='date')return ui.chosenDay==='all'?datePriority(v):(ordinal[dayStatus(v,ui.chosenDay)]??2);
+  return v.name;
+ }
+ rows.sort((a,b)=>{
+  const ak=key(a),bk=key(b);
+  // Unknown costs, capacities and ratings always go last, even in descending order.
+  if(ak===null||ak===undefined)return bk===null||bk===undefined?cmpName(a,b):1;
+  if(bk===null||bk===undefined)return -1;
+  const cmp=typeof ak==='string'?ak.localeCompare(bk,'ru'):ak-bk;
+  return (ui.sortDir==='desc'?-cmp:cmp)||cmpName(a,b);
+ });
+ return rows;
+}
+function columnHeading(key,label,filters=''){
+ const active=ui.sort===key,arrow=!active?'↕':ui.sortDir==='asc'?'↑':'↓';
+ return '<th scope="col" aria-sort="'+(active?(ui.sortDir==='asc'?'ascending':'descending'):'none')+'"><button type="button" class="vw-th-sort" data-sort-col="'+key+'" aria-label="Сортировать: '+h(label)+'; '+(active?(ui.sortDir==='asc'?'сейчас по возрастанию':'сейчас по убыванию'):'нажмите для сортировки')+'"><span>'+h(label)+'</span><span class="vw-sort-arrow'+(active?' active':'')+'" aria-hidden="true">'+arrow+'</span></button>'+filters+'</th>';
+}
+function headerSelect(id,aria,options){
+ return '<select class="vw-head-filter" aria-label="'+h(aria)+'" data-ui="'+h(id)+'">'+options.map(([value,label])=>'<option value="'+h(value)+'" '+(ui[id]===value?'selected':'')+'>'+h(label)+'</option>').join('')+'</select>';
+}
 export function renderVenueAdmin(){
  const match=(typeof location!=='undefined'?location.hash:'').match(/^#\/admin\/venues\/([^/?]+)(?:\/([^/?]+))?/);
  if(match){ui.expanded=decodeURIComponent(match[1]);ui.detailTab=match[2]||'overview';}else{ui.expanded=null;}
@@ -163,28 +193,21 @@ export function renderVenueAdmin(){
  const visited=all.filter(v=>v.visited).length;
  const full=all.filter(v=>weighted(v).value!==null).length;
  let list=all.filter(v=>{const e=estimate(v);return (ui.kind==='all'||v.region===ui.kind)&&(ui.date==='all'||(ui.chosenDay==='all'?DATE_CHOICES.some(([d])=>dayStatus(v,d)===ui.date):dayStatus(v,ui.chosenDay)===ui.date))&&(ui.visit==='all'||(ui.visit==='yes')===!!v.visited)&&(ui.materials==='all'||ui.materials==='photos'&&v.gallery?.length||ui.materials==='quotes'&&v.quotes?.length)&&(ui.budget==='all'||e.value!==null&&e.value<=Number(ui.budget))&&(ui.capacity==='all'||v.capacity>=Number(ui.capacity))&&(v.name+' '+v.area).toLowerCase().includes(ui.query.toLowerCase())});
- if(ui.sort==='score')list.sort((a,b)=>(weighted(b).value??-1)-(weighted(a).value??-1)||a.name.localeCompare(b.name,'ru'));
- if(ui.sort==='price')list.sort((a,b)=>(estimate(a).value??Infinity)-(estimate(b).value??Infinity)||a.name.localeCompare(b.name,'ru'));
- if(ui.sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name,'ru'));
- if(ui.sort==='date')list.sort((a,b)=>datePriority(a)-datePriority(b)||Number(b.visited)-Number(a.visited)||(estimate(a).value??Infinity)-(estimate(b).value??Infinity));
+ sortVenues(list);
  const detailVenue=all.find(v=>v.id===ui.expanded);
  if(match&&detailVenue)return '<div class="vw-page" data-venues-page><a class="vw-back" href="#/admin/venues">← Назад к сравнению</a><div class="vw-detail-single">'+detail(detailVenue)+'</div></div>';
  return '<div class="vw-page" data-venues-page><div class="dashboard-heading vw-head"><div><div class="eyebrow">ОРГАНИЗАЦИЯ / ВЫБОР МЕСТА</div><h1>Сравнение площадок</h1><p>Регистрация 17 июня · торжество желательно 19 июня 2027 · город и загород</p></div><div class="vw-count"><strong>'+all.length+'</strong><span>площадок</span></div></div>'+
  '<div class="vw-alert"><strong>Даты свадьбы:</strong> 19 июня — предпочтительно, но 18 и 20 июня также рассматриваем. Занятость 19-го не исключает площадку: проверяйте все три даты и условия каждого предложения. «Весенний» и «Сезоны в парке» сообщили, что 19-е занято. Неизвестный статус не означает свободную дату.</div>'+
  '<div class="vw-stats"><div><strong>'+all.length+'</strong><span>На рассмотрении</span></div><div><strong>'+visited+'</strong><span>Просмотрены</span></div><div><strong>'+full+'</strong><span>С полной оценкой</span></div><div><strong>'+all.filter(v=>DATE_CHOICES.some(([d])=>dayStatus(v,d)==='available')).length+'</strong><span>Подтверждённая дата (18/19/20)</span></div></div>'+
- '<div class="vw-toolbar"><div class="vw-filter">'+
- '<label>Город или область<select data-ui="kind"><option value="all">Все</option><option value="city">Город</option><option value="country">За городом</option></select></label>'+
- '<label>День праздника<select data-ui="chosenDay"><option value="all">18, 19 и 20 июня</option><option value="19">19 июня (приоритет)</option><option value="18">18 июня</option><option value="20">20 июня</option></select></label>'+ '<label>Доступность выбранной даты<select data-ui="date"><option value="all">Любой статус</option><option value="available">Свободно</option><option value="unavailable">Занято</option><option value="pending">Уточняется</option><option value="unknown">Нет ответа</option></select></label>'+
- '<label>Осмотр<select data-ui="visit"><option value="all">Все</option><option value="yes">Были лично</option><option value="no">Не подтверждено</option></select></label>'+
- '<label>Материалы<select data-ui="materials"><option value="all">Все</option><option value="photos">Есть фото</option><option value="quotes">Есть сметы</option></select></label>'+
- '<label>Бюджет<select data-ui="budget"><option value="all">Любой</option><option value="650000">До 650 000 ₽</option><option value="800000">До 800 000 ₽</option><option value="1000000">До 1 млн ₽</option><option value="1200000">До 1,2 млн ₽</option></select></label>'+
- '<label>Вместимость<select data-ui="capacity"><option value="all">Любая</option><option value="80">От 80</option><option value="100">От 100</option></select></label>'+
- '<label>Гостей<select data-state="guestCount">'+[60,70,80,90,100].map(x=>'<option value="'+x+'">'+x+'</option>').join('')+'</select></label>'+
- '<label>Сортировать<select data-ui="sort"><option value="date">По доступности даты</option><option value="price">По бюджету</option><option value="score">По рейтингу</option><option value="name">По названию</option></select></label>'+
- '<label class="vw-search">Поиск<input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Площадка / район"></label></div>'+
- '<div class="vw-filetools"><span>'+list.length+' из '+all.length+' площадок</span><label class="vw-upload">Импорт личных оценок<input type="file" accept=".json" data-import hidden></label><button type="button" data-export>Экспорт личных оценок</button></div></div>'+
- '<div class="vw-panel"><div class="vw-panel-title"><h2>Все площадки</h2><span>Предварительные оценки не выдаются за коммерческие предложения</span></div><div class="vw-scroll"><table class="vw-table"><thead><tr><th>Площадка</th><th>18 / 19 / 20 июня</th><th>Осмотр</th><th>Бюджет на гостей</th><th>Вместимость</th><th>Рейтинг</th><th>Действие</th></tr></thead><tbody>'+
- list.map(row).join('')+'</tbody></table></div>'+(list.length?'':'<p class="vw-empty">По выбранному фильтру площадки не найдены.</p>')+'</div>'+
+ '<div class="vw-panel"><div class="vw-panel-title vw-table-panel-title"><div><h2>Все площадки</h2><span>'+list.length+' из '+all.length+' · нажмите на заголовок столбца для сортировки</span></div><div class="vw-table-tools"><label class="vw-compact-control">Гостей <select data-state="guestCount">'+[60,70,80,90,100].map(n=>'<option value="'+n+'" '+(state.guestCount===n?'selected':'')+'>'+n+'</option>').join('')+'</select></label><input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Поиск по названию / району" aria-label="Поиск площадки (Enter)"><button type="button" data-clear-filters>Сбросить фильтры</button><details class="vw-table-extra"><summary>Данные</summary><div><label class="vw-upload">Импорт правок<input type="file" accept=".json" data-import hidden></label><button type="button" data-export>Экспорт правок</button></div></details></div></div><div class="vw-scroll"><table class="vw-table vw-table-sortable"><thead><tr>'+
+ columnHeading('name','Площадка','<div class="vw-head-filter-row">'+headerSelect('kind','Расположение',[['all','Все районы'],['city','Город'],['country','За городом']])+headerSelect('materials','Материалы',[['all','Все материалы'],['photos','С фото'],['quotes','Со сметой']])+'</div>')+
+ columnHeading('date','18 / 19 / 20 июня','<div class="vw-head-filter-row">'+headerSelect('chosenDay','День свадьбы',[['all','Все 3 даты'],['19','19 июня'],['18','18 июня'],['20','20 июня']])+headerSelect('date','Статус даты',[['all','Любой статус'],['available','Свободно'],['unavailable','Занято'],['pending','Уточняется'],['unknown','Нет ответа']])+'</div>')+
+ columnHeading('visit','Осмотр',headerSelect('visit','Фильтр по осмотру',[['all','Все'],['yes','Были лично'],['no','Не подтверждено']]))+
+ columnHeading('price','Бюджет',headerSelect('budget','Верхняя граница бюджета',[['all','Любой бюджет'],['650000','До 650 тыс.'],['800000','До 800 тыс.'],['1000000','До 1 млн'],['1200000','До 1,2 млн']]))+
+ columnHeading('capacity','Вместимость',headerSelect('capacity','Минимальная вместимость',[['all','Все'],['80','80+ гостей'],['100','100+ гостей']]))+
+ columnHeading('score','Рейтинг')+
+ '<th scope="col">Действие</th></tr></thead><tbody>'+
+ list.map(row).join('')+'</tbody></table></div>'+(list.length?'':'<p class="vw-empty">По выбранным фильтрам площадок нет. Измените условия или нажмите «Сбросить фильтры».</p>')+'</div>'+
  '<div class="vw-panel"><div class="vw-panel-title"><h2>Сравнить рядом</h2><span>До четырёх вариантов</span></div>'+selectedCompare(all)+'</div>'+
  '<div class="vw-panel"><div class="vw-panel-title"><h2>Вес критериев рейтинга</h2><span>Рейтинг доступен только при 6/6 оценках</span></div><div class="vw-weights">'+CRITERIA.map(([key,label])=>'<label><span>'+h(label)+'</span><input type="number" min="0" max="100" step="1" data-weight="'+key+'" value="'+h(state.weights[key])+'"><span>%</span></label>').join('')+'</div><p class="vw-muted">Весовые коэффициенты автоматически нормируются при расчёте. Цена и доступность сравниваются дополнительно и не подменяются субъективной оценкой.</p></div>'+
  '</div>';
@@ -223,8 +246,10 @@ export function activateVenueAdmin(root){
  root.dataset.venuesReady='yes';
  redraw(root);
  root.addEventListener('click',event=>{
-  const target=event.target.closest('[data-detail],[data-close],[data-compare],[data-export],[data-ui-toggle],[data-detail-tab]');if(!target)return;
-  if(target.dataset.detail){location.hash='#/admin/venues/'+encodeURIComponent(target.dataset.detail);}else if(target.dataset.detailTab){location.hash='#/admin/venues/'+encodeURIComponent(ui.expanded)+'/'+target.dataset.detailTab;}
+  const target=event.target.closest('[data-detail],[data-close],[data-compare],[data-export],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters]');if(!target)return;
+  if(target.dataset.sortCol){const key=target.dataset.sortCol;if(ui.sort===key)ui.sortDir=ui.sortDir==='asc'?'desc':'asc';else{ui.sort=key;ui.sortDir=SORT_DEFAULTS[key]||'asc';}redraw(root);}
+  else if(target.hasAttribute('data-clear-filters')){Object.assign(ui,{kind:'all',query:'',date:'all',chosenDay:'all',budget:'all',visit:'all',materials:'all',capacity:'all'});redraw(root);}
+  else if(target.dataset.detail){location.hash='#/admin/venues/'+encodeURIComponent(target.dataset.detail);}else if(target.dataset.detailTab){location.hash='#/admin/venues/'+encodeURIComponent(ui.expanded)+'/'+target.dataset.detailTab;}
   else if(target.hasAttribute('data-close')){location.hash='#/admin/venues';}
   else if(target.dataset.compare){const id=target.dataset.compare;ui.compare=ui.compare.includes(id)?ui.compare.filter(x=>x!==id):ui.compare.length>=4?[...ui.compare.slice(1),id]:[...ui.compare,id];redraw(root);}
   else if(target.hasAttribute('data-export'))download();
