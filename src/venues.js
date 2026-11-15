@@ -6,6 +6,7 @@
  * Backend authentication is REQUIRED before this can be called a private admin.
  */
 import {VENUE_RECORDS} from './venues-data.js';
+import {renderVenueNewPage,filteredVenuePhotos} from './venue-detail-ui.js';
 const PUBLIC_VENUES = [
   {id:'vesenniy',name:'Весенний',region:'city',area:'Обводный канал',website:''},
   {id:'kraft',name:'Крафт — лофт',region:'city',area:'Санкт-Петербург'},
@@ -72,7 +73,7 @@ function read(){
  return INITIAL();
 }
 let state=read();
-let ui={kind:'all',query:'',sort:'date',sortDir:'asc',expanded:null,detailTab:'overview',compare:[],onlyVisited:false,date:'all',chosenDay:'all',budget:'all',visit:'all',materials:'all',capacity:'all'};
+let ui={kind:'all',query:'',sort:'date',sortDir:'asc',expanded:null,detailTab:'overview',compare:[],onlyVisited:false,date:'all',chosenDay:'all',budget:'all',visit:'all',materials:'all',capacity:'all',photoSection:'all',photoView:'gallery',photoSort:'original',photoIndex:0,photoLightbox:false};
 const h=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rub=(v)=>typeof v==='number'&&Number.isFinite(v)?Math.round(v).toLocaleString('ru-RU')+' ₽':'—';
 const safeUrl=(v)=>{try{const u=new URL(String(v));return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
@@ -189,14 +190,14 @@ function headerSelect(id,aria,options){
 }
 export function renderVenueAdmin(){
  const match=(typeof location!=='undefined'?location.hash:'').match(/^#\/admin\/venues\/([^/?]+)(?:\/([^/?]+))?/);
- if(match){ui.expanded=decodeURIComponent(match[1]);ui.detailTab=match[2]||'overview';}else{ui.expanded=null;}
+ if(match){const next=decodeURIComponent(match[1]);if(ui.expanded!==next){ui.photoSection='all';ui.photoView='gallery';ui.photoIndex=0;ui.photoLightbox=false;}ui.expanded=next;ui.detailTab=match[2]||'overview';}else{ui.expanded=null;ui.photoLightbox=false;}
  const all=PUBLIC_VENUES.map(get);
  const visited=all.filter(v=>v.visited).length;
  const full=all.filter(v=>weighted(v).value!==null).length;
  let list=all.filter(v=>{const e=estimate(v);return (ui.kind==='all'||v.region===ui.kind)&&(ui.date==='all'||(ui.chosenDay==='all'?DATE_CHOICES.some(([d])=>dayStatus(v,d)===ui.date):dayStatus(v,ui.chosenDay)===ui.date))&&(ui.visit==='all'||(ui.visit==='yes')===!!v.visited)&&(ui.materials==='all'||ui.materials==='photos'&&v.gallery?.length||ui.materials==='quotes'&&v.quotes?.length)&&(ui.budget==='all'||e.value!==null&&e.value<=Number(ui.budget))&&(ui.capacity==='all'||v.capacity>=Number(ui.capacity))&&(v.name+' '+v.area).toLowerCase().includes(ui.query.toLowerCase())});
  sortVenues(list);
  const detailVenue=all.find(v=>v.id===ui.expanded);
- if(match&&detailVenue)return '<div class="vw-page" data-venues-page><a class="vw-back" href="#/admin/venues">← Назад к сравнению</a><div class="vw-detail-single">'+detail(detailVenue)+'</div></div>';
+ if(match&&detailVenue)return '<div class="vw-page" data-venues-page>'+renderVenueNewPage(detailVenue,{guests:state.guestCount,ui,estimate,extraTotal,dayStatus,dayText,weighted})+'</div>';
  return '<div class="vw-page" data-venues-page><div class="dashboard-heading vw-head"><div><div class="eyebrow">ОРГАНИЗАЦИЯ / ВЫБОР МЕСТА</div><h1>Сравнение площадок</h1><p>Регистрация 17 июня · торжество желательно 19 июня 2027 · город и загород</p></div><div class="vw-count"><strong>'+all.length+'</strong><span>площадок</span></div></div>'+
  '<div class="vw-alert"><strong>Даты свадьбы:</strong> 19 июня — предпочтительно, но 18 и 20 июня также рассматриваем. Занятость 19-го не исключает площадку: проверяйте все три даты и условия каждого предложения. «Весенний» и «Сезоны в парке» сообщили, что 19-е занято. Неизвестный статус не означает свободную дату.</div>'+
  '<div class="vw-stats"><div><strong>'+all.length+'</strong><span>На рассмотрении</span></div><div><strong>'+visited+'</strong><span>Просмотрены</span></div><div><strong>'+full+'</strong><span>С полной оценкой</span></div><div><strong>'+all.filter(v=>DATE_CHOICES.some(([d])=>dayStatus(v,d)==='available')).length+'</strong><span>Подтверждённая дата (18/19/20)</span></div></div>'+
@@ -247,8 +248,21 @@ export function activateVenueAdmin(root){
  root.dataset.venuesReady='yes';
  redraw(root);
  root.addEventListener('click',event=>{
-  const target=event.target.closest('[data-detail],[data-close],[data-compare],[data-export],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters]');if(!target)return;
-  if(target.dataset.sortCol){const key=target.dataset.sortCol;if(ui.sort===key)ui.sortDir=ui.sortDir==='asc'?'desc':'asc';else{ui.sort=key;ui.sortDir=SORT_DEFAULTS[key]||'asc';}redraw(root);}
+  const target=event.target.closest('[data-detail],[data-close],[data-compare],[data-export],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close]');if(!target)return;
+  if(target.hasAttribute('data-photo-close')){ui.photoLightbox=false;redraw(root);}
+  else if(target.dataset.photoSection!==undefined){ui.photoSection=target.dataset.photoSection;ui.photoIndex=0;ui.photoLightbox=false;redraw(root);}
+  else if(target.dataset.photoView!==undefined){ui.photoView=target.dataset.photoView;ui.photoIndex=0;ui.photoLightbox=false;redraw(root);}
+  else if(target.dataset.photoOpen!==undefined){
+    ui.photoIndex=Math.max(0,parseInt(target.dataset.photoOpen,10)||0);
+    if(!target.closest('.vdp-filmstrip')&&!target.closest('.vdp-lightbox-strip'))ui.photoLightbox=true;
+    redraw(root);
+  }
+  else if(target.dataset.photoStep!==undefined){
+    const venue=PUBLIC_VENUES.find(v=>v.id===ui.expanded);
+    const photos=venue?filteredVenuePhotos(get(venue),ui):[];
+    if(photos.length){ui.photoIndex=(ui.photoIndex+Number(target.dataset.photoStep)+photos.length)%photos.length;redraw(root);}
+  }
+  else if(target.dataset.sortCol){const key=target.dataset.sortCol;if(ui.sort===key)ui.sortDir=ui.sortDir==='asc'?'desc':'asc';else{ui.sort=key;ui.sortDir=SORT_DEFAULTS[key]||'asc';}redraw(root);}
   else if(target.hasAttribute('data-clear-filters')){Object.assign(ui,{kind:'all',query:'',date:'all',chosenDay:'all',budget:'all',visit:'all',materials:'all',capacity:'all'});redraw(root);}
   else if(target.dataset.detail){location.hash='#/admin/venues/'+encodeURIComponent(target.dataset.detail);}else if(target.dataset.detailTab){location.hash='#/admin/venues/'+encodeURIComponent(ui.expanded)+'/'+target.dataset.detailTab;}
   else if(target.hasAttribute('data-close')){location.hash='#/admin/venues';}
@@ -259,6 +273,7 @@ export function activateVenueAdmin(root){
  root.addEventListener('change',event=>{
   const t=event.target;
   if(t.matches('[data-import]')){upload(t.files?.[0],root);return;}
+  if(t.hasAttribute('data-photo-sort')){ui.photoSort=t.value;ui.photoIndex=0;redraw(root);return;}
   if(t.dataset.state==='guestCount'){state.guestCount=Math.max(1,Math.min(300,Number(t.value)||80));save();redraw(root);return;}
   if(t.dataset.ui){ui[t.dataset.ui]=t.value;redraw(root);return;}
   if(t.dataset.weight){state.weights[t.dataset.weight]=Math.max(0,Math.min(100,Number(t.value)||0));save();redraw(root);return;}
@@ -274,8 +289,25 @@ export function activateVenueAdmin(root){
     redraw(root);
   }
  });
+ let touchX=null;
+ root.addEventListener('touchstart',event=>{if(ui.photoLightbox&&event.target.closest('.vdp-lightbox'))touchX=event.changedTouches[0]?.clientX??null;},{passive:true});
+ root.addEventListener('touchend',event=>{
+   if(!ui.photoLightbox||touchX===null)return;
+   const endX=event.changedTouches[0]?.clientX??touchX,diff=endX-touchX;touchX=null;
+   if(Math.abs(diff)<60)return;
+   const venue=PUBLIC_VENUES.find(v=>v.id===ui.expanded),photos=venue?filteredVenuePhotos(get(venue),ui):[];
+   if(photos.length){ui.photoIndex=(ui.photoIndex+(diff<0?1:-1)+photos.length)%photos.length;redraw(root);}
+ },{passive:true});
  // Search re-renders only when Enter is pressed or focus leaves input.
  root.addEventListener('keydown',event=>{
+  if(ui.photoLightbox){
+    if(event.key==='Escape'){event.preventDefault();ui.photoLightbox=false;redraw(root);return;}
+    if(event.key==='ArrowRight'||event.key==='ArrowLeft'){
+      const venue=PUBLIC_VENUES.find(v=>v.id===ui.expanded),photos=venue?filteredVenuePhotos(get(venue),ui):[];
+      if(photos.length){event.preventDefault();ui.photoIndex=(ui.photoIndex+(event.key==='ArrowRight'?1:-1)+photos.length)%photos.length;redraw(root);}
+      return;
+    }
+  }
   if(event.key==='Escape'&&ui.expanded){location.hash='#/admin/venues';}
   if(event.key==='Enter'&&event.target.matches('[data-ui="query"]')){event.preventDefault();ui.query=event.target.value;redraw(root);}
  });
