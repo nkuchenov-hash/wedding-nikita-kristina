@@ -26,6 +26,19 @@ jobs:
               --output /tmp/admin-unauthorized.html \
               --write-out '%{http_code}' "$admin") || admin_status=ERR
             echo "Origin attempt $i: public root=$home_status, unauthenticated admin=$admin_status"
+            if [[ "$admin_status" == "200" ]]; then
+              echo "UNEXPECTED ADMIN 200 BODY PREVIEW:"
+              head -c 280 /tmp/admin-unauthorized.html | tr '\n' ' '
+              echo
+              curl --insecure --silent --show-error --max-time 15 \\
+                --resolve 'nikitakristina.ru:443:31.31.196.24' \\
+                --output /tmp/admin-direct.html \\
+                --write-out 'Direct PHP route status: %{http_code}; content type: %{content_type}\\n' \\
+                'https://nikitakristina.ru/admin/index.php'
+              head -c 220 /tmp/admin-direct.html | tr '\n' ' '
+              echo
+              exit 1
+            fi
             if [[ "$home_status" == 200 && "$admin_status" == 401 ]] && \
                grep -Fq 'Сайт готовится' /tmp/guest-maintenance.html; then
               echo 'PASS: guest invite held and admin requires a password. TLS trust is checked separately.'
