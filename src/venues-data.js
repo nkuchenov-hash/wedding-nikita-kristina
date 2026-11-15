@@ -323,6 +323,7 @@ export const VENUE_RECORDS = {
     ]
   },
   "loft-roof": {
+    "cost": {"menu":6000,"service":15,"rent":110000},
     "visited": true,
     "visitEvidence": "Фото залов, террасы и служебных помещений",
     "availability": "pending",
@@ -380,6 +381,11 @@ export const VENUE_RECORDS = {
         "folder": "1Rkqx4mfX1O9MW8zaQC5FLiQAot2Jas8X"
       }
     ]
+  },
+  "kraft": {
+    "drive": "https://drive.google.com/drive/folders/1a4vNr5YYcG9DCJdvlpjkm_OxUDeZKQGo",
+    "quoteSource": "https://docs.google.com/document/d/1HbV6WRrf-L80AUEF7uZPb7Tv0iO-ud1hQ1Ia99n4XAQ/edit",
+    "summary": "Просмотр планировался вместе с Весенним и Лофтом на крыше 14 ноября. В доступной папке нет личных фотографий. Приложенный PDF описывает схему прохода и условия парковки, не полную смету."
   },
   "seasons": {
     "visited": true,
@@ -518,6 +524,7 @@ export const VENUE_RECORDS = {
     ]
   },
   "petr": {
+    "cost": {"menu":4500,"service":10,"technical":35000,"rent":0},
     "visited": true,
     "visitEvidence": "Фото интерьеров и балкона",
     "capacity": 100,
@@ -613,6 +620,7 @@ export const VENUE_RECORDS = {
     ]
   },
   "panorama": {
+    "cost": {"rent":150000,"menu":7800,"service":10},
     "visited": true,
     "visitEvidence": "13 оригинальных фото с телефона",
     "photos": "https://drive.google.com/drive/folders/1fVfrSjWndp7pGqMCYgvmIeOcc-M49AdM",
@@ -652,13 +660,14 @@ export const VENUE_RECORDS = {
         "folder": "1fVfrSjWndp7pGqMCYgvmIeOcc-M49AdM"
       },
       {
-        "id": "1dVFz1D9sKZDQgI-p-qzUhWomSIRe3yn",
+        "id": "1dVFz1D9sKZDQgI-pW-qzUhWomSIRe3yn",
         "label": "Терраса",
         "folder": "1fVfrSjWndp7pGqMCYgvmIeOcc-M49AdM"
       }
     ]
   },
   "eva": {
+    "cost": {"menu":5000,"service":10,"rent":90000,"minSpend":350000},
     "drive": "https://drive.google.com/drive/folders/1A96wgKlQMhmxI-wI_DOHsZk-bo5zY8zp",
     "quoteSource": "https://docs.google.com/document/d/1ouH9sKXwSxjHRvP7iyryZmRop0eSvry7fUqoMc7KYls/edit",
     "summary": "Летний шатёр у залива: депозит для пятницы/субботы 350 000 ₽ плюс аренда 90 000 ₽; меню от 5 000 ₽/гость и 10% обслуживание.",
