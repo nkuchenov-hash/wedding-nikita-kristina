@@ -132,7 +132,7 @@ try{
   await page.waitForFunction(()=>!document.querySelector('.vdp-lightbox'));
   await page.goto(url()+'#/admin/venues/royal/budget',{waitUntil:'domcontentloaded'});
   await page.waitForSelector('.vdp-cost-row',{timeout:15000});
-  assert.equal(await page.$eval('.vdp-cost-row',a=>a.length),13,'Same 13 financial fields on every venue');
+  assert.equal(await page.$$eval('.vdp-cost-row',a=>a.length),13,'Same 13 financial fields on every venue');
   await page.screenshot({path:'_site/previews/12-royal-venue-budget.png',fullPage:false,animations:'disabled'});
   await page.goto(url()+'#/admin/venues/zarenkov-gallery/photos',{waitUntil:'domcontentloaded'});
   await page.waitForSelector('.vdp-emptyphotos',{timeout:15000});
