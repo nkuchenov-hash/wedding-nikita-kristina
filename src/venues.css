@@ -151,3 +151,15 @@
 .vw-detail-single .vw-detail-tabs{top:0}
 .vw-detail-single .vw-detail-block{max-width:100%}
 @media(max-width:680px){.vw-detail-single .vw-tab-content{padding:12px}.vw-detail-single .vw-detail-head{padding:20px}.vw-detail-single .vw-budget-boxes{grid-template-columns:1fr}}
+
+/* Three possible wedding dates: 19 June preferred, 18/20 valid alternatives */
+.vw-date-list{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+.vw-date-chip{display:inline-flex;align-items:center;gap:7px;padding:4px 9px;border:1px solid #e2e8e0;background:#f5f7f5;border-radius:7px;color:#53695a;font-size:11px;font-weight:600;white-space:nowrap}
+.vw-date-chip b{min-width:38px;color:#304a39}
+.vw-day-available{background:#e8f7e9;color:#196333;border-color:#b7dbc0}
+.vw-day-unavailable{background:#fbefef;color:#a14141;border-color:#f0d4d4}
+.vw-day-pending{background:#fff8e9;color:#805b20;border-color:#f0dfb7}
+.vw-quickfacts .vw-date-list{display:flex;gap:6px;align-items:flex-start}
+.vw-quickfacts strong.vw-date-list{font-weight:500}
+.vw-table td:nth-child(2){min-width:160px}
+.vw-table{min-width:1100px}
