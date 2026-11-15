@@ -16,9 +16,10 @@ const rowGroups=[['Основные расходы',['menu','rent','deposit','se
 const labelMap=Object.fromEntries(VENUE_COST_LABELS.map(([key,title,unit])=>[key,{title,unit}]));
 
 const ROOM_ORDER={'Залы':0,'Террасы и виды':1,'Территория':2,'Лаунж и фотозоны':3,'Общий альбом':4,'Входы и переходы':5,'Служебные и гримёрки':6,'Санузлы':7};
+const imageRelevance=x=>{const name=String(x.name||'').toLowerCase();return (/общий вид|панорам/.test(name)?100:0)+(/банкетный зал|павильон|основной зал/.test(name)?45:0)+(/сцена|столы/.test(name)?10:0)-(/другой|дополнительный/.test(name)?15:0)-(/детал|аквариум|светильник|поручень|табличка|сервировка/.test(name)?70:0);};
 export function getVenuePhotos(v){
  const files=ALL_PHOTOS[v.id]?.length?ALL_PHOTOS[v.id]:(v.gallery||[]).map(x=>({id:x.id,name:x.label||'Фотография',section:x.label||'Общий альбом',folder:x.folder||null}));
- return [...files].sort((a,b)=>(ROOM_ORDER[a.section]??4)-(ROOM_ORDER[b.section]??4)||a.name.localeCompare(b.name,'ru',{numeric:true}));
+ return [...files].sort((a,b)=>(ROOM_ORDER[a.section]??4)-(ROOM_ORDER[b.section]??4)||imageRelevance(b)-imageRelevance(a)||a.name.localeCompare(b.name,'ru',{numeric:true}));
 }
 export function filteredVenuePhotos(v,ui={}){
  const photos=getVenuePhotos(v).filter(x=>ui.photoSection==='all'||!ui.photoSection||x.section===ui.photoSection);
