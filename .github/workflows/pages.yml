@@ -188,8 +188,8 @@ jobs:
             "set -eu; test -d '$DESTINATION'; mkdir -p ~/wedding-backups; if test -f '$DESTINATION/index.html' && ! test -e ~/wedding-backups/index-before-github.html; then cp -p '$DESTINATION/index.html' ~/wedding-backups/index-before-github.html; fi"
           # First upload the private authenticated asset bundle outside public webroot.
           ssh $SSH_OPTS "$USERNAME@$HOST" 'mkdir -p /var/www/u3728035/data/wedding-private/admin-release'
-          rsync --archive --no-perms --omit-dir-times --timeout=120 \\
-            --rsh "ssh $SSH_OPTS" \\
+          rsync --archive --no-perms --omit-dir-times --timeout=120 \
+            --rsh "ssh $SSH_OPTS" \
             _admin-private/ "$USERNAME@$HOST:/var/www/u3728035/data/wedding-private/admin-release/"
           # Site originally contained only index.html and files deployed from this workflow.
           # Remove the guest bundle while preserving Let's Encrypt challenges and backup.
