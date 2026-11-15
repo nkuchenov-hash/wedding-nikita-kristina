@@ -31,6 +31,8 @@ jobs:
           cp -R public/approved-reference _site/public/approved-reference
           cp -R public/production _site/public/production
           touch _site/.nojekyll
+      - name: Version frontend assets by commit to avoid stale gallery photos
+        run: node tools/stamp-deployment.mjs
       - name: Extract clean marble column PNG and clarify estate image
         run: |
           python3 -m pip install --quiet Pillow
