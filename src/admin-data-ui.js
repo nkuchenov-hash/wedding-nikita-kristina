@@ -17,7 +17,9 @@ async function call(route,{method='GET',body,form=false}={}){
  const headers={'Accept':'application/json'};
  if(method!=='GET'&&state.csrf)headers['X-CSRF-Token']=state.csrf;
  if(body && !form)headers['Content-Type']='application/json';
- const response=await fetch(API+encodeURIComponent(route),{
+ const [endpoint,params='']=route.split('?');
+ const url=API+encodeURIComponent(endpoint)+(params?'&'+params:'');
+ const response=await fetch(url,{
    method,headers,credentials:'same-origin',
    body:form?body:(body?JSON.stringify(body):undefined),
    cache:'no-store'
