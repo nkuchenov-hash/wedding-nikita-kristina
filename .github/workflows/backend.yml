@@ -3,6 +3,9 @@ on:
   push:
     paths:
       - 'backend/**'
+      - 'tools/export-wedding-venues.mjs'
+      - 'src/venues.js'
+      - 'src/venues-data.js'
       - '.github/workflows/backend.yml'
   workflow_dispatch:
 permissions:
@@ -26,6 +29,11 @@ jobs:
           test -s backend/public/index.php
           test ! -f backend/wedding-config.json
           test ! -f backend/wedding.sqlite3
+      - name: Prepare verified venue catalog seed
+        shell: bash
+        run: |
+          node tools/export-wedding-venues.mjs
+          test -s backend/seed/venues.json
       - name: Install on REG.RU outside document root
         timeout-minutes: 4
         shell: bash
@@ -59,6 +67,7 @@ jobs:
             php bin/smoke.php
             if test -f '$PRIVATE/wedding.sqlite3'; then php bin/backup.php; fi
             php bin/migrate.php
+            php bin/seed-venues.php
             php bin/smoke.php
             test -f '$PRIVATE/wedding.sqlite3'
             test -f '$PRIVATE/wedding-config.json'
