@@ -117,7 +117,29 @@ try{
   await page.goto(url('?compare=1#/'),{waitUntil:'networkidle2'});
   await page.waitForSelector('#reference-comparison',{timeout:15000});
   assert.ok(await page.$('#reference-mobile-tabs'),'Explicit ?compare=1 enables reference mode');
-  console.log('VISUAL CHECK OK: invitation, third-screen RSVP, no overlays, 320–430px, desktop, gallery, designer mode.');
+  // Wedding venue admin smoke test: real gallery controls and the uniform cost sheet.
+  await page.goto(url()+'#/admin/venues/royal/photos',{waitUntil:'domcontentloaded'});
+  await page.waitForSelector('.vdp-photo-focus',{timeout:15000});
+  assert.ok(await page.$eval('.vdp-filmstrip .vdp-thumb',x=>x.length>=10),'Royal Beach: all phone photos should be indexed');
+  await page.click('[data-photo-view="grid"]');
+  await page.waitForSelector('.vdp-photo-grid');
+  await page.click('[data-photo-section="Залы"]');
+  assert.ok(await page.$eval('.vdp-photo-grid .vdp-thumb',a=>a.length>0),'Room filter must show indexed banquet hall photos');
+  await page.click('.vdp-photo-grid [data-photo-open="0"]');
+  await page.waitForSelector('.vdp-lightbox');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(()=>!document.querySelector('.vdp-lightbox'));
+  await page.goto(url()+'#/admin/venues/royal/budget',{waitUntil:'domcontentloaded'});
+  await page.waitForSelector('.vdp-cost-row',{timeout:15000});
+  assert.equal(await page.$eval('.vdp-cost-row',a=>a.length),13,'Same 13 financial fields on every venue');
+  await page.screenshot({path:'_site/previews/12-royal-venue-budget.png',fullPage:false,animations:'disabled'});
+  await page.goto(url()+'#/admin/venues/zarenkov-gallery/photos',{waitUntil:'domcontentloaded'});
+  await page.waitForSelector('.vdp-emptyphotos',{timeout:15000});
+  await page.goto(url()+'#/admin/venues/k2/budget',{waitUntil:'domcontentloaded'});
+  await page.waitForSelector('.vdp-cost-row',{timeout:15000});
+  assert.ok(await page.$eval('.vdp-budget-page',el=>el.textContent.includes('420')),'K2 verified rent must be present');
+  console.log('VISUAL CHECK OK: guest invite, gallery, venue photos, photo lightbox, 13-row cost card and K2 estimate.');
 }finally{
   if(browser)await browser.close();
   server.kill();
