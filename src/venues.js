@@ -6,7 +6,7 @@
  * Backend authentication is REQUIRED before this can be called a private admin.
  */
 import {VENUE_RECORDS} from './venues-data.js';
-import {renderVenueNewPage,filteredVenuePhotos} from './venue-detail-ui.js';
+import {renderVenueNewPage,filteredVenuePhotos,getVenueCover} from './venue-detail-ui.js';
 const PUBLIC_VENUES = [
   {id:'vesenniy',name:'Весенний',region:'city',area:'Обводный канал',website:''},
   {id:'kraft',name:'Крафт — лофт',region:'city',area:'Санкт-Петербург'},
@@ -123,8 +123,8 @@ function status(v){
  return {available:'19 июня — подтверждено',unavailable:'19 июня — занято',pending:'19 июня — уточняется',unknown:'19 июня — неизвестно'}[status]||'19 июня — неизвестно';
 }
 function row(v){
- const score=weighted(v),cost=estimate(v),selected=ui.compare.includes(v.id),pic=v.gallery?.[0];
- const image=pic?'<img loading="lazy" class="vw-row-thumb" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(pic.id)+'&sz=w240" alt="">':'<span class="vw-row-thumb vw-no-image"></span>';
+ const score=weighted(v),cost=estimate(v),selected=ui.compare.includes(v.id),pic=getVenueCover(v);
+ const image=pic?'<img loading="lazy" class="vw-row-thumb" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(pic.id)+'&sz=w240" alt="Фото площадки: '+h(v.name)+'">':'<span class="vw-row-thumb vw-no-image"></span>';
  return '<tr class="vw-row" data-id="'+h(v.id)+'"><td><div class="vw-venue-cell">'+image+'<div><button class="vw-name" data-detail="'+h(v.id)+'" type="button">'+h(v.name)+'</button><small>'+h(v.area)+' · '+(v.region==='country'?'За городом':'Город')+'</small></div></div></td>'+
  '<td><div class="vw-date-list">'+threeDates(v)+'</div></td>'+
  '<td><span class="vw-state '+(v.visited?'vw-seen':'')+'">'+(v.visited?'● Были лично':'○ Не подтверждено')+'</span></td>'+
