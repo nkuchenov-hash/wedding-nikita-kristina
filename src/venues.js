@@ -7,7 +7,7 @@
  */
 import {VENUE_RECORDS} from './venues-data.js';
 import {renderVenueNewPage,filteredVenuePhotos,getVenueCover} from './venue-detail-ui.js';
-const PUBLIC_VENUES = [
+export const PUBLIC_VENUES = [
   {id:'vesenniy',name:'Весенний',region:'city',area:'Обводный канал',website:''},
   {id:'kraft',name:'Крафт — лофт',region:'city',area:'Санкт-Петербург'},
   {id:'loft-roof',name:'Лофт на крыше',region:'city',area:'Санкт-Петербург'},
