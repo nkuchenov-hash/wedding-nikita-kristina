@@ -477,7 +477,7 @@ export const VENUE_RECORDS = {
     "drive": "https://drive.google.com/drive/folders/1_GyFm38YQGmZYrXCF2V-jIHl6Dx1_49M",
     "photos": "https://drive.google.com/drive/folders/1SrUC6BprEfilGpkX6Gd5ZA3k0m2lUcdz",
     "quoteSource": "https://drive.google.com/file/d/1wzKX_us2sa2mV3CXQQoEb7WoT0aofhmE/view",
-    "summary": "Есть фотографии и скриншот условий. Точную сумму со скриншота ещё требуется верифицировать; дата не подтверждена.",
+    "summary": "Резиденция К-2 на Каменном острове. В присланном скриншоте условий аренда на 10 часов, начиная с приезда первой технической службы, составляет 420 000 ₽ с НДС. Банкет и кейтеринг отдельно.",
     "gallery": [
       {
         "id": "1ZNt22ckX-U_hZ7XH80VwGRV3K-FHnT3W",
@@ -489,6 +489,20 @@ export const VENUE_RECORDS = {
         "label": "Вид с галереи",
         "folder": "1ferNsCmLy5zcT0sc90fjkrmqEB_rVD82"
       }
+    ],
+    "capacityNote": "Главный банкетный зал до 200 человек; есть отдельный зал у воды до 200–250 человек. Прямые цены на банкет не указаны.",
+    "budgetItems": [
+      [
+        "Аренда на 10 часов с НДС (скриншот)",
+        420000
+      ]
+    ],
+    "excluded": [
+      "Меню и кейтеринг, звук и свет, дополнительные часы — не рассчитаны",
+      "Дополнительный технический час монтаж/демонтаж до 14:00 — 21 000 ₽; гостевой час после 00:00 — 42 000 ₽"
+    ],
+    "questions": [
+      "Уточнить стоимость банкета и комплект света/звука для 80–100 гостей"
     ]
   },
   "putilov": {
