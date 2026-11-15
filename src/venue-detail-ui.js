@@ -73,9 +73,15 @@ export function getVenueCover(v){
 export function filteredVenuePhotos(v,ui={}){
  const photos=getVenuePhotos(v).filter(x=>ui.photoSection==='all'||!ui.photoSection||x.section===ui.photoSection);
  const mode=ui.photoSort||'original';
- if(mode==='name')return [...photos].sort((a,b)=>a.name.localeCompare(b.name,'ru',{numeric:true}));
- if(mode==='reverse')return [...photos].reverse();
- if(mode==='section')return [...photos].sort((a,b)=>a.section.localeCompare(b.section,'ru')||a.name.localeCompare(b.name,'ru',{numeric:true}));
+ // Sorting controls may rearrange main images, but never move technical
+ // rooms, toilets, corridors or equipment photos ahead of the main spaces.
+ const tail=x=>photoPriority(x)>=70?1:0;
+ if(mode==='name')return [...photos].sort((a,b)=>tail(a)-tail(b)||a.name.localeCompare(b.name,'ru',{numeric:true}));
+ if(mode==='reverse'){
+  const indexes=new Map(photos.map((x,i)=>[x,i]));
+  return [...photos].sort((a,b)=>tail(a)-tail(b)||indexes.get(b)-indexes.get(a));
+ }
+ if(mode==='section')return [...photos].sort((a,b)=>tail(a)-tail(b)||photoPriority(a)-photoPriority(b)||a.name.localeCompare(b.name,'ru',{numeric:true}));
  return photos;
 }
 const sourceLinks=v=>[['Документы и предложение',v.quoteSource],['Фотографии в Google Drive',v.photos],['Папка площадки',v.drive],['Официальный сайт',v.website]].filter(([,u])=>escUrl(u)).map(([l,u])=>'<a href="'+h(escUrl(u))+'" target="_blank" rel="noopener noreferrer">'+h(l)+' ↗</a>').join('');
