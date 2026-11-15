@@ -75,7 +75,7 @@ export function filteredVenuePhotos(v,ui={}){
  const mode=ui.photoSort||'original';
  // Sorting controls may rearrange main images, but never move technical
  // rooms, toilets, corridors or equipment photos ahead of the main spaces.
- const tail=x=>photoPriority(x)>=70?1:0;
+ const tail=x=>photoPriority(x)>=80?1:0;
  if(mode==='name')return [...photos].sort((a,b)=>tail(a)-tail(b)||a.name.localeCompare(b.name,'ru',{numeric:true}));
  if(mode==='reverse'){
   const indexes=new Map(photos.map((x,i)=>[x,i]));
