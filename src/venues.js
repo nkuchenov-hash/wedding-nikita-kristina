@@ -5,6 +5,7 @@
  * Original photographed documents remain in access-controlled Google Drive.
  * Backend authentication is REQUIRED before this can be called a private admin.
  */
+import {VENUE_RECORDS} from './venues-data.js';
 const PUBLIC_VENUES = [
   {id:'vesenniy',name:'Весенний',region:'city',area:'Обводный канал',website:''},
   {id:'kraft',name:'Крафт — лофт',region:'city',area:'Санкт-Петербург'},
@@ -45,13 +46,15 @@ const PUBLIC_VENUES = [
     publiclyAdvertised:{menu:4500},publicNote:'Конгресс-холл и ресторан имеют разные условия; аренда указана по-разному в каталогах. 4 500 ₽/чел. — рекламный ориентир, не предложение на июнь 2027.'}
 ];
 const CRITERIA=[
-  ['look','Атмосфера и красота',25],
-  ['total','Соотношение цены и качества',25],
+  ['look','Атмосфера и красота',15],
+  ['total','Соотношение цены и комплектации',20],
   ['comfort','Комфорт гостей / единый зал',15],
-  ['travel','Логистика и дорога',15],
-  ['food','Кухня и сервис',10],
-  ['freedom','Гибкость / подрядчики',10]
+  ['travel','Логистика и дорога',10],
+  ['food','Кухня и сервис',5],
+  ['freedom','Гибкость / подрядчики',5]
 ];
+const DATE_WEIGHT=30;
+const EXTRAS=[['alcohol','Алкоголь и пробковый сбор'],['decor','Декор'],['host','Ведущий и DJ'],['photoVideo','Фото и видео'],['transport','Трансфер'],['extension','Продление'],['other','Другие расходы']];
 const COSTS=[
  ['quoteTotal','Полная сумма полученной сметы, ₽'],['quoteGuests','Гостей в этой смете'],
  ['rent','Аренда зала, ₽'],['menu','Меню на гостя, ₽'],
@@ -66,11 +69,11 @@ function read(){
  return INITIAL();
 }
 let state=read();
-let ui={kind:'all',query:'',sort:'name',expanded:null,compare:[],onlyVisited:false};
+let ui={kind:'all',query:'',sort:'date',expanded:null,detailTab:'overview',compare:[],onlyVisited:false,date:'all',budget:'all',visit:'all',materials:'all',capacity:'all'};
 const h=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rub=(v)=>typeof v==='number'&&Number.isFinite(v)?Math.round(v).toLocaleString('ru-RU')+' ₽':'—';
 const safeUrl=(v)=>{try{const u=new URL(String(v));return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
-const get=(base)=>({...base,...(state.venues[base.id]||{}),cost:{...(base.publiclyAdvertised||{}),...(base.cost||{}),...(state.venues[base.id]?.cost||{})},ratings:{...(state.venues[base.id]?.ratings||{})}});
+const get=(base)=>{const d=VENUE_RECORDS[base.id]||{},edit=state.venues[base.id]||{};return {...base,...d,...edit,cost:{...(base.publiclyAdvertised||{}),...(base.cost||{}),...(d.cost||{}),...(edit.cost||{})},ratings:{...(edit.ratings||{})},extras:{...(edit.extras||{})},quotes:d.quotes||[],gallery:d.gallery||[]};};
 const numbers=(v)=>Number.isFinite(Number(v))&&v!==''&&v!==null?Math.max(0,Number(v)):null;
 function save(){state.updated=new Date().toISOString();try{localStorage.setItem(STORE,JSON.stringify(state));}catch{}}
 function patch(id,key,value){
@@ -78,23 +81,28 @@ function patch(id,key,value){
  state.venues[id]={...old,[key]:value};save();
 }
 function weighted(v){
- const xs=CRITERIA.filter(([k])=>v.ratings[k]!==null && v.ratings[k]!==undefined && v.ratings[k]!=='');
- if(xs.length!==CRITERIA.length)return {value:null,complete:xs.length};
- const denominator=CRITERIA.reduce((s,[k])=>s+(numbers(state.weights[k])??0),0)||1;
- const value=CRITERIA.reduce((s,[k])=>s+((numbers(v.ratings[k])??0)/5)*(numbers(state.weights[k])??0),0)/denominator*100;
- return {value:Math.round(value),complete:xs.length};
+ const xs=CRITERIA.filter(([k])=>v.ratings[k]!==null&&v.ratings[k]!==undefined&&v.ratings[k]!=='');
+ if(v.availability==='unavailable')return {value:null,complete:xs.length,blocked:true};
+ if(v.availability!=='available'||xs.length!==CRITERIA.length)return {value:null,complete:xs.length,blocked:false};
+ const den=DATE_WEIGHT+CRITERIA.reduce((s,[k])=>s+(numbers(state.weights[k])??0),0);
+ const points=DATE_WEIGHT+CRITERIA.reduce((s,[k])=>s+((numbers(v.ratings[k])??0)/5)*(numbers(state.weights[k])??0),0);
+ return {value:Math.round(points/(den||1)*100),complete:xs.length,blocked:false};
 }
 function estimate(v){
- const c=v.cost||{};
- const quoteTotal=numbers(c.quoteTotal),quoteGuests=numbers(c.quoteGuests);
- if(quoteTotal!==null&&quoteGuests===state.guestCount)return {value:Math.round(quoteTotal),partial:false,isQuote:true,quoteDate:v.quoteDate||null};
+ const q=(v.quotes||[]).find(q=>q.guests===state.guestCount&&q.kind!=='scenario');
+ if(q)return {value:Number(q.total),partial:q.kind==='estimate',isQuote:true,kind:q.kind,quoteDate:q.date||null};
+ const c=v.cost||{},total=numbers(c.quoteTotal),guests=numbers(c.quoteGuests);
+ if(total!==null&&guests===state.guestCount)return {value:total,partial:false,isQuote:true,kind:'quote',quoteDate:v.quoteDate||null};
  const menu=numbers(c.menu),rent=numbers(c.rent),tech=numbers(c.technical),extra=numbers(c.extra),service=numbers(c.service),min=numbers(c.minSpend);
  if(menu===null&&rent===null)return {value:null,partial:true};
- const meal=menu===null?0:(menu*state.guestCount);
- const spend=Math.max(meal,min??0);
- const val=(rent??0)+spend+(tech??0)+(extra??0)+spend*(service??0)/100;
- return {value:Math.round(val),partial:menu===null||rent===null||tech===null||extra===null||service===null};
+ const spend=Math.max(menu===null?0:menu*state.guestCount,min??0);
+ return {value:Math.round((rent??0)+spend+(tech??0)+(extra??0)+spend*(service??0)/100),partial:true,isQuote:false,kind:'minimum'};
 }
+function extraTotal(v){return EXTRAS.reduce((s,[k])=>s+(numbers(v.extras?.[k])??0),0)}
+function sourceThumb(g){if(!g)return '';const id=encodeURIComponent(g.id);return '<a href="https://drive.google.com/file/d/'+id+'/view" target="_blank" rel="noopener noreferrer" class="vw-photo"><img loading="lazy" src="https://drive.google.com/thumbnail?id='+id+'&sz=w800" alt="'+h(g.label)+'"><span>'+h(g.label)+'</span></a>'}
+function photoGallery(v){return v.gallery?.length?'<div class="vw-gallery">'+v.gallery.map(sourceThumb).join('')+'</div>':'<p class="vw-muted">Фотографий с телефона пока нет.</p>'}
+function budgetTotal(v){const e=estimate(v);return '<div class="vw-budget-boxes"><div><small>По смете / минимум</small><strong>'+rub(e.value)+'</strong></div><div><small>Добавленные доплаты</small><strong>'+rub(extraTotal(v))+'</strong></div><div><small>Суммарный известный бюджет</small><strong>'+rub(e.value===null?null:e.value+extraTotal(v))+'</strong></div></div><p class="vw-muted">Неизвестные позиции не считаются нулевыми. Не добавляйте депозит к уже оплаченному меню второй раз.</p>'}
+
 function external(v){
  return [['Документ со сметой',v.quoteSource],['Диск с файлами',v.drive],['Фотографии',v.photos],['Сайт',v.website]].filter(([,url])=>safeUrl(url))
  .map(([label,url])=>'<a href="'+h(safeUrl(url))+'" target="_blank" rel="noopener noreferrer">'+h(label)+' ↗</a>').join('');
