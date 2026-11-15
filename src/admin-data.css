@@ -1,0 +1,26 @@
+.ad-live-panel{margin:0 0 24px;padding:22px 26px;border:1px solid #d4e1d8;border-radius:20px;background:#fff;color:#1d362b;font-family:Manrope,Arial,sans-serif}
+.ad-live-panel h2{font-size:clamp(20px,2.5vw,26px);font-weight:650;line-height:1.35;margin:0 0 12px}
+.ad-live-muted{color:#73857a;font-size:13px;line-height:1.5;margin:0 0 17px}
+.ad-live-offline{border-left:3px solid #a7baa8;padding:13px 18px;font-size:14px;line-height:1.65;background:#f8faf7}
+.ad-live-message{font-size:13px;color:#64736b;padding:4px 0}
+.ad-live-message.error{color:#8b3636}
+.ad-live-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin:18px 0}
+.ad-live-metric{display:flex;flex-direction:column;gap:8px;padding:20px 14px;border:1px solid #dbe7dd;background:#f8fbf8;border-radius:14px}
+.ad-live-metric span{font-size:12px;color:#607568}.ad-live-metric strong{font-size:24px;line-height:1.25;color:#214531;font-weight:600;overflow-wrap:anywhere}
+.ad-live-table-scroll{overflow:auto;width:100%;border-radius:12px;border:1px solid #dde6de}
+.ad-live-table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
+.ad-live-table th{padding:12px;text-align:left;background:#edf4ee;color:#4b6356;white-space:nowrap}
+.ad-live-table td{padding:12px;border-top:1px solid #e6ebe6;vertical-align:middle;overflow-wrap:anywhere}
+.ad-live-subsection{margin-top:28px;padding-top:22px;border-top:1px solid #dde8df}
+.ad-live-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:13px;align-items:end}
+.ad-live-form .ad-live-message{grid-column:1/-1}
+.ad-live-field{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#486451}
+.ad-live-field input,.ad-live-import input{padding:11px 13px;border:1px solid #cddbcf;border-radius:9px;font:inherit;font-size:14px;min-width:0;max-width:100%;color:#254230;background:white}
+.ad-live-button{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:10px 17px;background:#27533b;color:white;border:none;border-radius:10px;cursor:pointer;font:600 13px Manrope,Arial,sans-serif}
+.ad-live-button:hover{background:#1a3d2b}.ad-live-button:disabled{opacity:.55;cursor:wait}
+.ad-live-import{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.ad-live-import .ad-live-message{flex-basis:100%}
+.ad-live-invite{border:1px solid #cfddd2;border-radius:12px;margin:15px 0;padding:15px;background:#f6faf5}
+.ad-live-invite p{font-size:12px;margin:0 0 6px}
+.ad-live-token{display:block;overflow-wrap:anywhere;padding:10px;font:11px ui-monospace,monospace}
+@media(max-width:540px){.ad-live-panel{padding:16px 14px}.ad-live-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
