@@ -133,14 +133,16 @@ jobs:
         run: |
           node --check src/admin-app.js
           node tools/prepare-admin-release.mjs
-          test -s _site/admin/.htaccess
+          test -s _site/admin/index.php
+          test -s _admin-private/index.html
+          test ! -e _site/admin/src
           test ! -e _site/src/app.js
           test ! -e _site/public/photos
       - name: Verify admin bundle and maintenance page
         run: |
-          grep -Fq 'admin-app.js' _site/admin/index.html
+          grep -Fq 'index.php?asset=src/admin-app.js' _admin-private/index.html
           grep -Fq 'Сайт готовится' _site/index.html
-          grep -Fq 'AuthType Basic' _site/admin/.htaccess
+          grep -Fq 'password_verify' _site/admin/index.php
       # Publish the exact verified static bundle to a separately configured hosting account.
       - name: Package website for purchased hosting
         uses: actions/upload-artifact@v4
@@ -183,6 +185,11 @@ jobs:
           # outside of the public document root before the very first replacement.
           ssh $SSH_OPTS "$USERNAME@$HOST" \
             "set -eu; test -d '$DESTINATION'; mkdir -p ~/wedding-backups; if test -f '$DESTINATION/index.html' && ! test -e ~/wedding-backups/index-before-github.html; then cp -p '$DESTINATION/index.html' ~/wedding-backups/index-before-github.html; fi"
+          # First upload the private authenticated asset bundle outside public webroot.
+          ssh $SSH_OPTS "$USERNAME@$HOST" 'mkdir -p /var/www/u3728035/data/wedding-private/admin-release'
+          rsync --archive --no-perms --omit-dir-times --timeout=120 \\
+            --rsh "ssh $SSH_OPTS" \\
+            _admin-private/ "$USERNAME@$HOST:/var/www/u3728035/data/wedding-private/admin-release/"
           # Site originally contained only index.html and files deployed from this workflow.
           # Remove the guest bundle while preserving Let's Encrypt challenges and backup.
           rsync --archive --verbose --delete --exclude='/.well-known/' --no-perms --omit-dir-times --timeout=120 \
@@ -194,10 +201,10 @@ jobs:
             echo "::error::REG.RU index.html checksum mismatch after upload."
             exit 1
           fi
-          admin_sha=$(sha256sum _site/admin/index.html | awk '{print $1}')
-          remote_admin_sha=$(ssh $SSH_OPTS "$USERNAME@$HOST" "sha256sum '$DESTINATION/admin/index.html'" | awk '{print $1}')
+          admin_sha=$(sha256sum _site/admin/index.php | awk '{print $1}')
+          remote_admin_sha=$(ssh $SSH_OPTS "$USERNAME@$HOST" "sha256sum '$DESTINATION/admin/index.php'" | awk '{print $1}')
           if [[ "$admin_sha" != "$remote_admin_sha" ]]; then
-            echo "::error::REG.RU admin/index.html checksum mismatch."
+            echo "::error::REG.RU admin/index.php checksum mismatch."
             exit 1
           fi
           echo "REG.RU admin-only deployment confirmed by remote checksums."

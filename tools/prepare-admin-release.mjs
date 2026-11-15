@@ -3,7 +3,8 @@ import {join} from 'node:path';
 const root='_site';
 const sha=(process.env.GITHUB_SHA||'local').slice(0,12);
 if(!/^[a-zA-Z0-9-]+$/.test(sha))throw new Error('Invalid revision');
-const admin=join(root,'admin'), assets=join(admin,'src');
+const admin=join(root,'admin'), privateDir='_admin-private', assets=join(privateDir,'src');
+mkdirSync(admin,{recursive:true});
 mkdirSync(assets,{recursive:true});
 const required=['admin-app.js','data.js','styles.css','venues.js','venues-data.js','venues.css','venue-detail-ui.js','venue-detail-ui.css','venues-pricing.js','venues-photos-1.js','venues-photos-2.js','venues-photos-3.js','venues-photos-4.js'];
 for(const name of required){
@@ -13,11 +14,18 @@ for(const name of required){
 }
 mkdirSync(join(admin,'public'),{recursive:true});
 cpSync(join(root,'public','mark.svg'),join(admin,'public','mark.svg'));
-const styles=['styles.css','venues.css','venue-detail-ui.css'].map(n=>'<link rel="stylesheet" href="./src/'+n+'?v='+sha+'">').join('\n');
-const adminHtml='<!doctype html>\n<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#17332d"><title>Панель организаторов — Никита и Кристина</title><link rel="icon" href="./public/mark.svg">\n'+styles+'\n</head><body class="admin-body"><div id="app"></div><script type="module" src="./src/admin-app.js?v='+sha+'"></script></body></html>\n';
-const auth='AuthType Basic\nAuthName "Wedding Admin"\nAuthUserFile /var/www/u3728035/data/wedding-private/.htpasswd\nRequire valid-user\n';
-writeFileSync(join(admin,'index.html'),adminHtml);
-writeFileSync(join(admin,'.htaccess'),auth);
+const styles=['styles.css','venues.css','venue-detail-ui.css'].map(n=>'<link rel="stylesheet" href="./index.php?asset=src/'+n+'&v='+sha+'">').join('\n');
+const adminHtml='<!doctype html>\n<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#17332d"><title>Панель организаторов — Никита и Кристина</title><link rel="icon" href="./public/mark.svg">\n'+styles+'\n</head><body class="admin-body"><div id="app"></div><script type="module" src="./index.php?asset=src/admin-app.js&v='+sha+'"></script></body></html>\n';
+writeFileSync(join(privateDir,'index.html'),adminHtml);
+cpSync('tools/admin-gateway.php',join(admin,'index.php'));
+for(const name of required){
+ if(!name.endsWith('.js'))continue;
+ const file=join(assets,name);
+ const original=readFileSync(file,'utf8');
+ const patched=original.replace(/(from\\s*['"]|import\\s*['"]|import\\(\\s*['"])\\.\\/([a-zA-Z0-9-]+\\.js)(?:\\?v=[^'"]+)?(['"])/g,
+   (_all,prefix,n,close)=>prefix+'./index.php?asset=src/'+n+'&v='+sha+close);
+ writeFileSync(file,patched);
+}
 const maintenance=[
 '<!doctype html>',
 '<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
@@ -35,6 +43,6 @@ writeFileSync(join(pages,'index.html'),maintenance);
 cpSync(join(root,'build-info.json'),join(pages,'build-info.json'));
 writeFileSync(join(pages,'.nojekyll'),'');
 if(readdirSync(root).some(n=>!keep.has(n)))throw new Error('Unexpected guest artifact in release.');
-const code=readFileSync(join(admin,'src','admin-app.js'),'utf8');
+const code=readFileSync(join(privateDir,'src','admin-app.js'),'utf8');
 if(code.includes('renderGuest(')||code.includes('activateGuest('))throw new Error('Guest entrypoint leaked into admin bundle.');
-console.log('ADMIN ONLY: maintenance root, password-protected /admin/, no guest assets.');
+console.log('ADMIN ONLY: maintenance root, PHP-authenticated /admin/, JS assets outside webroot.');
