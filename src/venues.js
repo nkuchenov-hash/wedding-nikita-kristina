@@ -1,20 +1,33 @@
 
-/* Venue comparison — self-contained browser-side working prototype.
- * Public names + publicly advertised facts only. Private quotations / visit notes
- * are imported as JSON into this browser and never committed or transmitted.
+/* Venue comparison — browser-side prototype hosted on public GitHub Pages.
+ * Selected venue quote amounts supplied by the couple are deliberately preloaded
+ * for immediate cross-device comparison; these numbers are PUBLIC in the frontend.
+ * Original photographed documents remain in access-controlled Google Drive.
  * Backend authentication is REQUIRED before this can be called a private admin.
  */
 const PUBLIC_VENUES = [
   {id:'vesenniy',name:'Весенний',region:'city',area:'Обводный канал',website:''},
   {id:'kraft',name:'Крафт — лофт',region:'city',area:'Санкт-Петербург'},
   {id:'loft-roof',name:'Лофт на крыше',region:'city',area:'Санкт-Петербург'},
-  {id:'alex-park',name:'Александровский парк',region:'city',area:'Санкт-Петербург'},
+  {id:'alex-park',name:'Александровский парк',region:'city',area:'Санкт-Петербург',
+    drive:'https://drive.google.com/drive/folders/1bzMTrULC8Qqve92-ugybFXZzHTu0A-9f',
+    quoteSource:'https://docs.google.com/document/d/1bOdS2FWzTOLC9vsTn-S8ywb9gp0Ey2eRRyh4dCMG3wQ/edit',
+    quoteDate:'2027-06-18',cost:{quoteTotal:712760,quoteGuests:80},
+    quoteAlternatives:[{date:'2027-06-18',guests:80,total:712760},{date:'2027-06-20',guests:80,total:687760}],
+    notes:'Предварительная рукописная смета для 80 гостей. Банкет 5 500 ₽ × 80 = 440 000 ₽; фуршет 195 ₽ × 80 = 15 600 ₽; напитки 650 ₽ × 80 = 52 000 ₽; питание специалистов 1 500 ₽ × 2 = 3 000 ₽. Аренда оборудования: 150 000 ₽ (18.06) / 125 000 ₽ (20.06). Сервисный сбор 10%. Рукописные итоги 712 760 ₽ и 687 760 ₽ отличаются от суммы читаемых строк на 1 100 ₽. Пробковый сбор 700 ₽/чел. (потенциально +56 000 ₽) — уточнить, входит ли. Консультационный договор 50 000 ₽, условия зачёта уточнить. На 19 июня цены нет.',
+    cons:'Итог рукописной сметы отличается от суммы читаемых строк на 1 100 ₽. Предложения только на 18 и 20 июня, дата 19 июня и пробковый сбор не подтверждены.'},
   {id:'seasons',name:'Сезоны в парке',region:'city',area:'Санкт-Петербург'},
   {id:'k2',name:'К2',region:'city',area:'Санкт-Петербург'},
   {id:'putilov',name:'Особняк Путилова',region:'city',area:'Санкт-Петербург',website:'https://putilovevent.tilda.ws/'},
   {id:'ermolinsky',name:'Особняк Ермолинского',region:'city',area:'Санкт-Петербург',website:'https://www.ermolinskievent.ru/kp'},
   {id:'royal',name:'Royal Beach — Крестовский',region:'city',area:'Крестовский остров'},
-  {id:'vinity',name:'Vinity — Таврический сад',region:'city',area:'Потёмкинская, 4А'},
+  {id:'vinity',name:'Vinity — Таврический сад',region:'city',area:'Потёмкинская, 4А',visited:true,
+    drive:'https://drive.google.com/drive/folders/1SoO1HSmdw_e1TBo_LrQB5HcvBrU1WaqK',
+    photos:'https://drive.google.com/drive/folders/1ufIQOjp0BiHqyvy0ew6C36od1z4ZX3ce',
+    quoteSource:'https://docs.google.com/document/d/1t37Broaa6dE4L8MJmJBTxMeDie1kZMd6or3h6zMv66Q/edit',
+    cost:{quoteTotal:863500,quoteGuests:80},
+    notes:'Предварительный расчёт на 80 гостей: пакет 760 000 ₽ (не подменять рекламным меню от 6 500 ₽/гость); фуршет 48 000 ₽ (600 ₽ × 80), безалкогольные напитки 36 000 ₽ (450 ₽ × 80), персонал 6 000 ₽ (2 000 ₽ × 3); дополнительные услуги 90 000 ₽; сервисный сбор 15% только от дополнительных услуг = 13 500 ₽. Итого 863 500 ₽. В пакете заявлены 5 часов зала, свет/звук и часть оформления. Чай/кофе 300 ₽/чел. по факту, продление 30 000 ₽/час, торт и дополнительный декор — отдельно. Дату торжества и включённые услуги необходимо подтвердить.',
+    cons:'Дата 19 июня не подтверждена; чай/кофе, продление, торт и дополнительный декор не входят в смету.'},
   {id:'petr',name:'Банкетный зал «Петръ»',region:'city',area:'Гороховая, 1',website:'https://www.petrbanket.com/'},
   {id:'roof18',name:'Крыша 18',region:'city',area:'Петроградская наб., 18',website:'https://roof18.ru'},
   {id:'bali',name:'Ресторан Bali',region:'city',area:'Савушкина, 98',website:'https://balispb.ru/banket/svadby'},
@@ -57,7 +70,7 @@ let ui={kind:'all',query:'',sort:'name',expanded:null,compare:[],onlyVisited:fal
 const h=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rub=(v)=>typeof v==='number'&&Number.isFinite(v)?Math.round(v).toLocaleString('ru-RU')+' ₽':'—';
 const safeUrl=(v)=>{try{const u=new URL(String(v));return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
-const get=(base)=>({...base,...(state.venues[base.id]||{}),cost:{...(base.publiclyAdvertised||{}),...(state.venues[base.id]?.cost||{})},ratings:{...(state.venues[base.id]?.ratings||{})}});
+const get=(base)=>({...base,...(state.venues[base.id]||{}),cost:{...(base.publiclyAdvertised||{}),...(base.cost||{}),...(state.venues[base.id]?.cost||{})},ratings:{...(state.venues[base.id]?.ratings||{})}});
 const numbers=(v)=>Number.isFinite(Number(v))&&v!==''&&v!==null?Math.max(0,Number(v)):null;
 function save(){state.updated=new Date().toISOString();try{localStorage.setItem(STORE,JSON.stringify(state));}catch{}}
 function patch(id,key,value){
@@ -83,7 +96,7 @@ function estimate(v){
  return {value:Math.round(val),partial:menu===null||rent===null||tech===null||extra===null||service===null};
 }
 function external(v){
- return [['Диск с файлами',v.drive],['Фотографии',v.photos],['Сайт',v.website]].filter(([,url])=>safeUrl(url))
+ return [['Документ со сметой',v.quoteSource],['Диск с файлами',v.drive],['Фотографии',v.photos],['Сайт',v.website]].filter(([,url])=>safeUrl(url))
  .map(([label,url])=>'<a href="'+h(safeUrl(url))+'" target="_blank" rel="noopener noreferrer">'+h(label)+' ↗</a>').join('');
 }
 function status(v){
@@ -117,6 +130,7 @@ function detail(v){
  COSTS.map(([key,label])=>'<label>'+h(label)+'<input type="number" min="0" step="any" data-venue="'+h(v.id)+'" data-cost="'+key+'" value="'+h(v.cost[key]??'')+'" placeholder="Неизвестно"></label>').join('')+
  '<p class="vw-calc-result">'+(estimateText.isQuote?'Сумма полученной сметы':'Расчёт')+': <strong>'+(estimateText.value===null?'Недостаточно данных':(estimateText.partial?'от ':'')+rub(estimateText.value))+'</strong></p>'+
  (estimateText.isQuote?'<p class="vw-muted">Сумма соответствует только '+state.guestCount+' гостям'+(estimateText.quoteDate?' на дату '+h(estimateText.quoteDate):'')+'. Это не подтверждение цены на 19 июня.</p>':'')+
+ (v.quoteAlternatives?.length?'<div class="vw-quote-options"><strong>Полученные варианты сметы:</strong><ul>'+v.quoteAlternatives.map(q=>'<li>'+h(q.date)+' · '+h(q.guests)+' гостей · '+rub(q.total)+'</li>').join('')+'</ul></div>':'')+
  '<p class="vw-muted">Формула: аренда + максимум(меню × гости; минимальный заказ) + оборудование + прочие расходы + сервисный % от расходов на питание. Не включайте депозит второй раз. Для реального итога уточните базу сервисного сбора и все исключения.</p>'+
  '</div></div>'+
  '<div class="vw-detail-block"><h3>Ваша оценка по критериям</h3><p class="vw-muted">Рейтинг рассчитывается только после заполнения всех шести пунктов. Сейчас: '+score.complete+'/6.</p><div class="vw-rating-grid">'+
@@ -143,7 +157,7 @@ export function renderVenueAdmin(){
  if(ui.sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name,'ru'));
  const detailVenue=all.find(v=>v.id===ui.expanded);
  return '<div class="vw-page" data-venues-page><div class="dashboard-heading vw-head"><div><div class="eyebrow">ОРГАНИЗАЦИЯ / ВЫБОР МЕСТА</div><h1>Сравнение площадок</h1><p>Регистрация 17 июня · торжество желательно 19 июня 2027 · город и загород</p></div><div class="vw-count"><strong>'+all.length+'</strong><span>площадок</span></div></div>'+
- '<div class="vw-alert"><strong>Важная оговорка по доступу.</strong> Текущая админка на GitHub Pages публичная. Здесь показаны только названия и открытые источники. Личные условия, фотографии и оценки можно загрузить файлом JSON: они останутся в вашем браузере и не отправятся на сайт. Это временный режим до серверной авторизации.</div>'+
+ '<div class="vw-alert"><strong>Важная оговорка по доступу.</strong> Текущая админка на GitHub Pages публичная и пока без входа. Суммы смет Александровского парка и Vinity уже включены в каталог и видны на всех устройствах, а исходные документы остаются в Google Drive с отдельными правами доступа. Персональные заметки, введённые здесь вручную, сохраняются только в вашем браузере. Приватная синхронизация потребует серверной авторизации.</div>'+
  '<div class="vw-stats"><div><strong>'+all.length+'</strong><span>На рассмотрении</span></div><div><strong>'+visited+'</strong><span>Просмотрены</span></div><div><strong>'+full+'</strong><span>С полной оценкой</span></div><div><strong>'+all.filter(v=>v.availability==='available').length+'</strong><span>19 июня свободно (подтверждено)</span></div></div>'+
  '<div class="vw-toolbar"><div class="vw-filter"><label>Район <select data-ui="kind"><option value="all" '+(ui.kind==='all'?'selected':'')+'>Все</option><option value="city" '+(ui.kind==='city'?'selected':'')+'>В городе</option><option value="country" '+(ui.kind==='country'?'selected':'')+'>За городом</option></select></label><label>Гостей <select data-state="guestCount"><option value="60">60</option><option value="70">70</option><option value="80">80</option><option value="90">90</option><option value="100">100</option></select></label><label>Сортировать <select data-ui="sort"><option value="name">По названию</option><option value="price">По известной цене</option><option value="score">По вашей оценке</option></select></label><label class="vw-search">Поиск<input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Название / район"></label></div>'+
  '<div class="vw-filetools"><label class="vw-upload">Импорт JSON <input type="file" accept="application/json,.json" data-import hidden></label><button type="button" data-export>Экспорт данных</button><button type="button" data-ui-toggle="onlyVisited" aria-pressed="'+ui.onlyVisited+'">Только просмотренные</button></div></div>'+
