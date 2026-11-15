@@ -40,6 +40,7 @@ const CRITERIA=[
   ['freedom','Гибкость / подрядчики',10]
 ];
 const COSTS=[
+ ['quoteTotal','Полная сумма полученной сметы, ₽'],['quoteGuests','Гостей в этой смете'],
  ['rent','Аренда зала, ₽'],['menu','Меню на гостя, ₽'],
  ['technical','Оборудование, ₽'],['extra','Прочие известные расходы, ₽'],
  ['service','Сервисный сбор, %'],['minSpend','Минимальный депозит / заказ, ₽']
@@ -72,6 +73,8 @@ function weighted(v){
 }
 function estimate(v){
  const c=v.cost||{};
+ const quoteTotal=numbers(c.quoteTotal),quoteGuests=numbers(c.quoteGuests);
+ if(quoteTotal!==null&&quoteGuests===state.guestCount)return {value:Math.round(quoteTotal),partial:false,isQuote:true,quoteDate:v.quoteDate||null};
  const menu=numbers(c.menu),rent=numbers(c.rent),tech=numbers(c.technical),extra=numbers(c.extra),service=numbers(c.service),min=numbers(c.minSpend);
  if(menu===null&&rent===null)return {value:null,partial:true};
  const meal=menu===null?0:(menu*state.guestCount);
@@ -94,7 +97,7 @@ function row(v){
  '<td><span class="vw-state '+(v.visited?'vw-seen':'')+'">'+(v.visited?'● Просмотрели':'○ Не отмечено')+'</span></td>'+
  '<td><span class="vw-date '+(v.availability==='unavailable'?'vw-no':v.availability==='available'?'vw-yes':'')+'">'+h(status(v))+'</span></td>'+
  '<td>'+h(v.capacity||'—')+'</td>'+
- '<td class="vw-money">'+(cost.value===null?'—':(cost.partial?'от ':'')+rub(cost.value))+'<small>'+(cost.partial?'неполный расчёт':'ориентир, проверить')+'</small></td>'+
+ '<td class="vw-money">'+(cost.value===null?'—':(cost.partial?'от ':'')+rub(cost.value))+'<small>'+(cost.isQuote?('смета для '+state.guestCount+' гостей'+(cost.quoteDate?' · '+cost.quoteDate:'')+'; уточнить'):cost.partial?'неполный расчёт':'ориентир, проверить')+'</small></td>'+
  '<td class="vw-score">'+(score.value===null?'—':score.value+' / 100')+'<small>'+score.complete+'/6 оценок</small></td>'+
  '<td><div class="vw-actions"><button type="button" data-compare="'+h(v.id)+'" aria-pressed="'+selected+'">'+(selected?'Убрать':'Сравнить')+'</button><button type="button" data-detail="'+h(v.id)+'">Подробнее</button></div></td></tr>';
 }
@@ -106,12 +109,14 @@ function detail(v){
  '<label>Просмотр <select data-venue="'+h(v.id)+'" data-field="visited"><option value="false" '+(!v.visited?'selected':'')+'>Ещё не отмечен</option><option value="true" '+(v.visited?'selected':'')+'>Лично смотрели</option></select></label>'+
  '<label>19 июня 2027 <select data-venue="'+h(v.id)+'" data-field="availability"><option value="unknown">Неизвестно</option><option value="pending">Уточняется</option><option value="available">Подтверждено свободно</option><option value="unavailable">Занято</option></select></label>'+
  '<label>Вместимость банкетом <input type="number" min="0" data-venue="'+h(v.id)+'" data-field="capacity" value="'+h(v.capacity??'')+'" placeholder="Неизвестно"></label>'+
+ '<label>Дата сметы (если известна) <input type="date" data-venue="'+h(v.id)+'" data-field="quoteDate" value="'+h(v.quoteDate||'')+'"></label>'+
  '<label>Ссылка на папку Drive <input type="url" data-venue="'+h(v.id)+'" data-field="drive" value="'+h(v.drive||'')+'" placeholder="https://drive.google.com/..."></label>'+
  '<label>Ссылка на фотоальбом <input type="url" data-venue="'+h(v.id)+'" data-field="photos" value="'+h(v.photos||'')+'" placeholder="https://drive.google.com/..."></label>'+
  '<label>Контакт / сайт <input type="url" data-venue="'+h(v.id)+'" data-field="website" value="'+h(v.website||'')+'" placeholder="https://..."></label>'+
  '</div><div class="vw-detail-block"><h3>Бюджет для '+state.guestCount+' гостей</h3>'+
  COSTS.map(([key,label])=>'<label>'+h(label)+'<input type="number" min="0" step="any" data-venue="'+h(v.id)+'" data-cost="'+key+'" value="'+h(v.cost[key]??'')+'" placeholder="Неизвестно"></label>').join('')+
- '<p class="vw-calc-result">Расчёт: <strong>'+(estimateText.value===null?'Недостаточно данных':(estimateText.partial?'от ':'')+rub(estimateText.value))+'</strong></p>'+
+ '<p class="vw-calc-result">'+(estimateText.isQuote?'Сумма полученной сметы':'Расчёт')+': <strong>'+(estimateText.value===null?'Недостаточно данных':(estimateText.partial?'от ':'')+rub(estimateText.value))+'</strong></p>'+
+ (estimateText.isQuote?'<p class="vw-muted">Сумма соответствует только '+state.guestCount+' гостям'+(estimateText.quoteDate?' на дату '+h(estimateText.quoteDate):'')+'. Это не подтверждение цены на 19 июня.</p>':'')+
  '<p class="vw-muted">Формула: аренда + максимум(меню × гости; минимальный заказ) + оборудование + прочие расходы + сервисный % от расходов на питание. Не включайте депозит второй раз. Для реального итога уточните базу сервисного сбора и все исключения.</p>'+
  '</div></div>'+
  '<div class="vw-detail-block"><h3>Ваша оценка по критериям</h3><p class="vw-muted">Рейтинг рассчитывается только после заполнения всех шести пунктов. Сейчас: '+score.complete+'/6.</p><div class="vw-rating-grid">'+
@@ -125,7 +130,7 @@ function detail(v){
 function selectedCompare(all){
  const subset=ui.compare.map(id=>all.find(v=>v.id===id)).filter(Boolean);
  if(subset.length<2)return '<p class="vw-muted">Выберите минимум две площадки кнопкой «Сравнить», чтобы увидеть их рядом.</p>';
- const fields=[['Район',v=>v.area],['19 июня',v=>status(v)],['Просмотр',v=>v.visited?'Да':'Не отмечено'],['Гостей',v=>v.capacity||'—'],['Бюджет',v=>{let q=estimate(v);return q.value===null?'—':(q.partial?'от ':'')+rub(q.value)}],['Рейтинг',v=>weighted(v).value===null?'Не заполнен':weighted(v).value+'/100'],['Плюсы',v=>v.pros||'—'],['Риски',v=>v.cons||'—']];
+ const fields=[['Район',v=>v.area],['19 июня',v=>status(v)],['Просмотр',v=>v.visited?'Да':'Не отмечено'],['Гостей',v=>v.capacity||'—'],['Бюджет',v=>{let q=estimate(v);return q.value===null?'—':(q.partial?'от ':'')+rub(q.value)+(q.isQuote&&q.quoteDate?' (смета '+q.quoteDate+')':'')}],['Рейтинг',v=>weighted(v).value===null?'Не заполнен':weighted(v).value+'/100'],['Плюсы',v=>v.pros||'—'],['Риски',v=>v.cons||'—']];
  return '<div class="vw-scroll"><table class="vw-matrix"><thead><tr><th>Критерий</th>'+subset.map(v=>'<th>'+h(v.name)+'</th>').join('')+'</tr></thead><tbody>'+fields.map(([label,fn])=>'<tr><th>'+label+'</th>'+subset.map(v=>'<td>'+h(fn(v))+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
 }
 export function renderVenueAdmin(){
@@ -159,7 +164,7 @@ function upload(file,root){
   for(const v of rows){
    if(!v||!allowed.has(v.id))continue;
    const old=state.venues[v.id]||{};
-   const fields=['visited','availability','capacity','website','drive','photos','pros','cons','notes','region','area','name'];
+   const fields=['visited','availability','capacity','quoteDate','website','drive','photos','pros','cons','notes','region','area','name'];
    const out={...old};for(const f of fields)if(Object.hasOwn(v,f))out[f]=v[f];
    if(v.cost&&typeof v.cost==='object')out.cost={...old.cost,...v.cost};
    if(v.ratings&&typeof v.ratings==='object')out.ratings={...old.ratings,...v.ratings};
