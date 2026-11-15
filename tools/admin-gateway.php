@@ -12,7 +12,7 @@ if (!$user) {
     $header = (string)($_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
     if (preg_match('/^Basic\\s+([A-Za-z0-9+\\/=]+)$/i', $header, $matches)) {
         $decoded = base64_decode($matches[1], true);
-        if (is_string($decoded) && str_contains($decoded, ':')) {
+        if (is_string($decoded) && strpos($decoded, ':') !== false) {
             [$user, $password] = explode(':', $decoded, 2);
         }
     }

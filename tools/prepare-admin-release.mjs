@@ -45,4 +45,5 @@ writeFileSync(join(pages,'.nojekyll'),'');
 if(readdirSync(root).some(n=>!keep.has(n)))throw new Error('Unexpected guest artifact in release.');
 const code=readFileSync(join(privateDir,'src','admin-app.js'),'utf8');
 if(code.includes('renderGuest(')||code.includes('activateGuest('))throw new Error('Guest entrypoint leaked into admin bundle.');
+if(!code.includes('index.php?asset=src/venues.js'))throw new Error('Protected admin import not rewritten.');
 console.log('ADMIN ONLY: maintenance root, PHP-authenticated /admin/, JS assets outside webroot.');

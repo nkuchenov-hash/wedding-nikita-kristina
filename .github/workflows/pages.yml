@@ -132,6 +132,7 @@ jobs:
       - name: Stage admin-only release
         run: |
           node --check src/admin-app.js
+          if command -v php >/dev/null 2>&1; then php -l tools/admin-gateway.php; fi
           node tools/prepare-admin-release.mjs
           test -s _site/admin/index.php
           test -s _admin-private/index.html
