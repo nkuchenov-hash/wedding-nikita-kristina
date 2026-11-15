@@ -55,20 +55,21 @@ test('Photo viewer supports room filtering, mini-grid, gallery, sort, full-scree
  assert.match(html,/class="vdp-photo-grid"/);
 });
 test('Royal Beach and Vinity preserve original package amounts without multiplying menu twice',()=>{
- const royal=renderVenueNewPage(venue('royal'),context('budget'));
- assert.match(royal,/852 165|852 165/);
- assert.match(royal,/567 100|567 100/);
- assert.match(royal,/200 000|200 000/);
- const vinity=renderVenueNewPage(venue('vinity'),context('budget'));
- assert.match(vinity,/863 500|863 500/);
- assert.match(vinity,/760 000|760 000/);
+ const normalize=html=>html.replace(/[\u00a0\u202f]/g,' ');
+ const royal=normalize(renderVenueNewPage(venue('royal'),context('budget')));
+ assert.ok(royal.includes('852 165'));
+ assert.ok(royal.includes('567 100'));
+ assert.ok(royal.includes('200 000'));
+ const vinity=normalize(renderVenueNewPage(venue('vinity'),context('budget')));
+ assert.ok(vinity.includes('863 500'));
+ assert.ok(vinity.includes('760 000'));
 });
 test('K2 rent and Zarenkov guest price are source-grounded, unknown components remain unknown',()=>{
  assert.equal(VENUE_PRICING.k2.rent.value,420000);
  assert.equal(VENUE_PRICING.k2.menu.value,null);
  assert.equal(VENUE_PRICING['zarenkov-gallery'].menu.value,4500);
- const html=renderVenueNewPage(venue('k2'),context('budget'));
- assert.match(html,/420 000|420 000/);
+ const html=renderVenueNewPage(venue('k2'),context('budget')).replace(/[\u00a0\u202f]/g,' ');
+ assert.ok(html.includes('420 000'));
  assert.match(html,/Нет данных/);
 });
 test('All five tabs render for every venue with no missing sections',()=>{
