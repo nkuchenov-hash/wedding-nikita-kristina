@@ -1,0 +1,130 @@
+PRAGMA foreign_keys=ON;
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS admins (
+  id TEXT PRIMARY KEY, login TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL,
+  display_name TEXT NOT NULL DEFAULT 'Организатор', disabled INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')), last_login_at TEXT
+);
+CREATE TABLE IF NOT EXISTS guests (
+  id TEXT PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL DEFAULT '',
+  display_name TEXT NOT NULL, side TEXT NOT NULL DEFAULT 'other',
+  relationship TEXT NOT NULL DEFAULT '', city TEXT NOT NULL DEFAULT '',
+  email TEXT, phone TEXT, language TEXT NOT NULL DEFAULT 'ru',
+  about TEXT NOT NULL DEFAULT '', profile_visible INTEGER NOT NULL DEFAULT 0,
+  consent_at TEXT, invited INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','invited','registered','archived')),
+  plus_one_allowed INTEGER NOT NULL DEFAULT 0, children_count INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_guests_side ON guests(side);
+CREATE INDEX IF NOT EXISTS idx_guests_name ON guests(display_name);
+CREATE TABLE IF NOT EXISTS invitations (
+  id TEXT PRIMARY KEY, guest_id TEXT NOT NULL REFERENCES guests(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE, expires_at TEXT,
+  used_at TEXT, revoked_at TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_invitations_guest ON invitations(guest_id);
+CREATE TABLE IF NOT EXISTS guest_companions (
+  id TEXT PRIMARY KEY, guest_id TEXT NOT NULL REFERENCES guests(id) ON DELETE CASCADE,
+  display_name TEXT NOT NULL, age_group TEXT NOT NULL DEFAULT 'adult'
+    CHECK(age_group IN ('adult','child','infant')), attendance TEXT NOT NULL DEFAULT 'unknown',
+  dietary_notes TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS rsvps (
+  guest_id TEXT PRIMARY KEY REFERENCES guests(id) ON DELETE CASCADE,
+  attendance TEXT NOT NULL CHECK(attendance IN ('yes','no','maybe')),
+  adults INTEGER NOT NULL DEFAULT 1 CHECK(adults BETWEEN 0 AND 15),
+  children INTEGER NOT NULL DEFAULT 0 CHECK(children BETWEEN 0 AND 15),
+  transport_needed INTEGER NOT NULL DEFAULT 0, arrival_notes TEXT NOT NULL DEFAULT '',
+  dietary_notes TEXT NOT NULL DEFAULT '', other_notes TEXT NOT NULL DEFAULT '',
+  submitted_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS menu_options (
+  id TEXT PRIMARY KEY, category TEXT NOT NULL, title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '', allergens TEXT NOT NULL DEFAULT '',
+  active INTEGER NOT NULL DEFAULT 1, sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS menu_choices (
+  guest_id TEXT NOT NULL REFERENCES guests(id) ON DELETE CASCADE,
+  category TEXT NOT NULL, option_id TEXT NOT NULL REFERENCES menu_options(id),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY(guest_id, category)
+);
+CREATE TABLE IF NOT EXISTS photos (
+  id TEXT PRIMARY KEY, guest_id TEXT NOT NULL REFERENCES guests(id) ON DELETE CASCADE,
+  filename TEXT NOT NULL UNIQUE, mime TEXT NOT NULL, bytes INTEGER NOT NULL,
+  width INTEGER NOT NULL, height INTEGER NOT NULL, sha256 TEXT NOT NULL,
+  caption TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'pending'
+    CHECK(status IN ('pending','approved','rejected')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')), reviewed_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_photos_status ON photos(status);
+CREATE TABLE IF NOT EXISTS stories (
+  id TEXT PRIMARY KEY, guest_id TEXT NOT NULL REFERENCES guests(id) ON DELETE CASCADE,
+  content TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending'
+    CHECK(status IN ('pending','approved','rejected')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')), reviewed_at TEXT
+);
+CREATE TABLE IF NOT EXISTS event_settings (
+  key TEXT PRIMARY KEY, value_json TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS venues (
+  id TEXT PRIMARY KEY, name TEXT NOT NULL, area TEXT NOT NULL DEFAULT '',
+  address TEXT NOT NULL DEFAULT '', website TEXT NOT NULL DEFAULT '',
+  capacity_min INTEGER, capacity_max INTEGER, quoted_total_rub INTEGER, quote_guests INTEGER,
+  desired_date_status TEXT NOT NULL DEFAULT 'unknown',
+  contact_name TEXT NOT NULL DEFAULT '', contact_email TEXT NOT NULL DEFAULT '',
+  contact_phone TEXT NOT NULL DEFAULT '', quote_source TEXT NOT NULL DEFAULT '',
+  pros TEXT NOT NULL DEFAULT '', cons TEXT NOT NULL DEFAULT '', notes TEXT NOT NULL DEFAULT '',
+  details_json TEXT NOT NULL DEFAULT '{}', photo_refs_json TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS vendors (
+  id TEXT PRIMARY KEY, category TEXT NOT NULL, name TEXT NOT NULL,
+  contact TEXT NOT NULL DEFAULT '', website TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'candidate', estimate_rub INTEGER,
+  contract_ref TEXT NOT NULL DEFAULT '', notes TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS budget_lines (
+  id TEXT PRIMARY KEY, category TEXT NOT NULL, description TEXT NOT NULL,
+  planned_rub INTEGER NOT NULL DEFAULT 0, committed_rub INTEGER NOT NULL DEFAULT 0,
+  paid_rub INTEGER NOT NULL DEFAULT 0, due_at TEXT, vendor_id TEXT REFERENCES vendors(id),
+  notes TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS tasks (
+  id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'todo', priority TEXT NOT NULL DEFAULT 'normal',
+  owner TEXT NOT NULL DEFAULT '', due_at TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS schedule_items (
+  id TEXT PRIMARY KEY, title TEXT NOT NULL, start_at TEXT, end_at TEXT,
+  place TEXT NOT NULL DEFAULT '', notes TEXT NOT NULL DEFAULT '',
+  is_public INTEGER NOT NULL DEFAULT 0, sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS documents (
+  id TEXT PRIMARY KEY, category TEXT NOT NULL, label TEXT NOT NULL, reference TEXT NOT NULL,
+  visibility TEXT NOT NULL DEFAULT 'admin', created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS import_batches (
+  id TEXT PRIMARY KEY, filename TEXT NOT NULL, row_count INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')), notes TEXT NOT NULL DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS audit_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, actor_type TEXT NOT NULL, actor_id TEXT NOT NULL,
+  action TEXT NOT NULL, entity_type TEXT NOT NULL, entity_id TEXT NOT NULL,
+  details_json TEXT NOT NULL DEFAULT '{}', created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at);
+CREATE TABLE IF NOT EXISTS throttle (
+  key_hash TEXT PRIMARY KEY, attempts INTEGER NOT NULL DEFAULT 0,
+  window_start INTEGER NOT NULL DEFAULT 0
+);
+INSERT OR IGNORE INTO schema_migrations(version) VALUES (1);
