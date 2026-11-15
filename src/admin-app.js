@@ -1,4 +1,5 @@
 import {renderVenueAdmin,activateVenueAdmin} from './venues.js';
+import {activateAdminData} from './admin-data-ui.js';
 import {adminModules} from './data.js';
 const app=document.querySelector('#app');
 const escapeHtml=str=>String(str??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -26,6 +27,7 @@ function render(){
  const section=(p.split('/')[2]||'overview');
  app.innerHTML=admin(section);
  if(section==='venues')activateVenueAdmin(app);
+ activateAdminData(app,section).catch(e=>console.warn('Admin data initialization failed',e));
  document.body.classList.add('admin-body');
  document.title='Панель организаторов — Никита и Кристина';
  window.scrollTo(0,0);
