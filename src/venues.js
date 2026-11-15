@@ -214,7 +214,10 @@ export function renderVenueAdmin(){
  '<div class="vw-panel"><div class="vw-panel-title"><h2>Вес критериев рейтинга</h2><span>Рейтинг доступен только при 6/6 оценках</span></div><div class="vw-weights">'+CRITERIA.map(([key,label])=>'<label><span>'+h(label)+'</span><input type="number" min="0" max="100" step="1" data-weight="'+key+'" value="'+h(state.weights[key])+'"><span>%</span></label>').join('')+'</div><p class="vw-muted">Весовые коэффициенты автоматически нормируются при расчёте. Цена и доступность сравниваются дополнительно и не подменяются субъективной оценкой.</p></div>'+
  '</div>';
 }
-function redraw(root){const el=root.querySelector('[data-venues-page]');if(!el)return;el.outerHTML=renderVenueAdmin();const n=root.querySelector('[data-state="guestCount"]');if(n)n.value=String(state.guestCount);for(const [key,v] of [['kind',ui.kind],['sort',ui.sort],['date',ui.date],['chosenDay',ui.chosenDay],['visit',ui.visit],['materials',ui.materials],['budget',ui.budget],['capacity',ui.capacity]]){const x=root.querySelector('[data-ui="'+key+'"]');if(x)x.value=v;}for(const s of root.querySelectorAll('select[data-field="availability"]'))s.value=get(PUBLIC_VENUES.find(x=>x.id===s.dataset.venue)).availability||'unknown';}
+function redraw(root){const el=root.querySelector('[data-venues-page]');if(!el)return;el.outerHTML=renderVenueAdmin();const n=root.querySelector('[data-state="guestCount"]');if(n)n.value=String(state.guestCount);for(const [key,v] of [['kind',ui.kind],['sort',ui.sort],['date',ui.date],['chosenDay',ui.chosenDay],['visit',ui.visit],['materials',ui.materials],['budget',ui.budget],['capacity',ui.capacity]]){const x=root.querySelector('[data-ui="'+key+'"]');if(x)x.value=v;}for(const s of root.querySelectorAll('select[data-field="availability"]'))s.value=get(PUBLIC_VENUES.find(x=>x.id===s.dataset.venue)).availability||'unknown';if(typeof document!=='undefined'){
+  document.documentElement.style.overflow=ui.photoLightbox?'hidden':'';
+  const close=root.querySelector('[data-photo-close]');if(close)close.focus({preventScroll:true});
+ }}
 function upload(file,root){
  if(!file)return;
  const reader=new FileReader();
@@ -289,6 +292,14 @@ export function activateVenueAdmin(root){
     redraw(root);
   }
  });
+ document.addEventListener('keydown',event=>{
+   if(!ui.photoLightbox)return;
+   if(event.key==='Escape'){event.preventDefault();ui.photoLightbox=false;redraw(root);return;}
+   if(event.key==='ArrowRight'||event.key==='ArrowLeft'){
+     const venue=PUBLIC_VENUES.find(v=>v.id===ui.expanded),photos=venue?filteredVenuePhotos(get(venue),ui):[];
+     if(photos.length){event.preventDefault();ui.photoIndex=(ui.photoIndex+(event.key==='ArrowRight'?1:-1)+photos.length)%photos.length;redraw(root);}
+   }
+ });
  let touchX=null;
  root.addEventListener('touchstart',event=>{if(ui.photoLightbox&&event.target.closest('.vdp-lightbox'))touchX=event.changedTouches[0]?.clientX??null;},{passive:true});
  root.addEventListener('touchend',event=>{
@@ -300,15 +311,7 @@ export function activateVenueAdmin(root){
  },{passive:true});
  // Search re-renders only when Enter is pressed or focus leaves input.
  root.addEventListener('keydown',event=>{
-  if(ui.photoLightbox){
-    if(event.key==='Escape'){event.preventDefault();ui.photoLightbox=false;redraw(root);return;}
-    if(event.key==='ArrowRight'||event.key==='ArrowLeft'){
-      const venue=PUBLIC_VENUES.find(v=>v.id===ui.expanded),photos=venue?filteredVenuePhotos(get(venue),ui):[];
-      if(photos.length){event.preventDefault();ui.photoIndex=(ui.photoIndex+(event.key==='ArrowRight'?1:-1)+photos.length)%photos.length;redraw(root);}
-      return;
-    }
-  }
-  if(event.key==='Escape'&&ui.expanded){location.hash='#/admin/venues';}
+  if(event.key==='Escape'&&ui.expanded&&!ui.photoLightbox){location.hash='#/admin/venues';}
   if(event.key==='Enter'&&event.target.matches('[data-ui="query"]')){event.preventDefault();ui.query=event.target.value;redraw(root);}
  });
 }
