@@ -1,0 +1,24 @@
+:root{font-family:Manrope,Arial,sans-serif;background:#eef3ed;color:#20392b}*{box-sizing:border-box}body{margin:0;min-height:100svh}
+.ga-shell{width:min(920px,calc(100% - 28px));margin:0 auto;padding:36px 0 60px}
+.ga-top{position:relative;padding:30px 30px 22px;background:#214c36;color:#fff;border-radius:20px;margin-bottom:14px}
+.ga-top h1{font-family:Georgia,serif;font-weight:400;font-size:clamp(28px,6vw,48px);line-height:1.2;margin:12px 0}
+.ga-eyebrow{color:#b6d7c0;font-size:11px;letter-spacing:.22em}
+.ga-button{border:0;border-radius:10px;background:#245b3e;color:#fff;padding:12px 20px;cursor:pointer;font-weight:650;font-size:14px}
+.ga-button:disabled{opacity:.6}.ga-quiet{background:transparent;border:1px solid #bdd4c2}
+.ga-navigation{margin-bottom:16px}
+.ga-tabs{display:flex;gap:8px;overflow:auto;padding:8px 0}.ga-tabs .ga-button{white-space:nowrap;background:#d8e4d9;color:#21432f}
+.ga-tabs .ga-button.selected{background:#245b3e;color:#fff}
+.ga-card{background:#fff;border-radius:20px;padding:clamp(20px,4vw,34px);box-shadow:0 5px 20px #1e45200b}
+.ga-card[hidden]{display:none}
+.ga-card h2{font-family:Georgia,serif;font-size:clamp(24px,4vw,36px);font-weight:400;margin:0 0 8px}
+.ga-lead{font-size:14px;line-height:1.65;color:#6b7d70;margin:0 0 24px}
+.ga-form{display:grid;gap:15px;max-width:580px}.ga-field{display:flex;flex-direction:column;gap:8px;font-weight:600;font-size:13px}
+.ga-field input,.ga-field textarea,.ga-field select{font:inherit;font-weight:400;border:1px solid #cddacf;border-radius:10px;padding:12px;min-width:0;background:#fff}
+.ga-checkbox,.ga-radio{display:flex;align-items:start;gap:10px;font-size:13px;line-height:1.5}.ga-checkbox input,.ga-radio input{margin-top:3px}
+.ga-status,.ga-notice{font-size:13px;line-height:1.65;color:#637c69}
+.ga-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.ga-person{border:1px solid #dfe9e0;border-radius:14px;padding:18px}
+.ga-person h3{margin:0 0 8px;font-size:18px}.ga-person p{font-size:13px;line-height:1.5;color:#607366}
+.ga-menu-group{margin:20px 0;border:1px solid #d9e5da;border-radius:12px;display:grid;gap:12px}
+.ga-menu-group legend{font-weight:650;font-size:16px;padding:0 8px}
+@media(max-width:540px){.ga-shell{padding-top:14px}.ga-top{padding:20px}.ga-tabs .ga-button{font-size:12px;padding:10px 13px}}
