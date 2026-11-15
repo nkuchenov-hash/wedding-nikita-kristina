@@ -54,6 +54,8 @@ const CRITERIA=[
   ['freedom','Гибкость / подрядчики',5]
 ];
 const DATE_WEIGHT=30;
+const DATE_CHOICES=[['18','18 июня'],['19','19 июня'],['20','20 июня']];
+
 const EXTRAS=[['alcohol','Алкоголь и пробковый сбор'],['decor','Декор'],['host','Ведущий и DJ'],['photoVideo','Фото и видео'],['transport','Трансфер'],['extension','Продление'],['other','Другие расходы']];
 const COSTS=[
  ['quoteTotal','Полная сумма полученной сметы, ₽'],['quoteGuests','Гостей в этой смете'],
@@ -69,11 +71,17 @@ function read(){
  return INITIAL();
 }
 let state=read();
-let ui={kind:'all',query:'',sort:'date',expanded:null,detailTab:'overview',compare:[],onlyVisited:false,date:'all',budget:'all',visit:'all',materials:'all',capacity:'all'};
+let ui={kind:'all',query:'',sort:'date',expanded:null,detailTab:'overview',compare:[],onlyVisited:false,date:'all',chosenDay:'all',budget:'all',visit:'all',materials:'all',capacity:'all'};
 const h=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rub=(v)=>typeof v==='number'&&Number.isFinite(v)?Math.round(v).toLocaleString('ru-RU')+' ₽':'—';
 const safeUrl=(v)=>{try{const u=new URL(String(v));return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
-const get=(base)=>{const d=VENUE_RECORDS[base.id]||{},edit=state.venues[base.id]||{};return {...base,...d,...edit,cost:{...(base.publiclyAdvertised||{}),...(base.cost||{}),...(d.cost||{}),...(edit.cost||{})},ratings:{...(edit.ratings||{})},extras:{...(edit.extras||{})},quotes:d.quotes||[],gallery:d.gallery||[]};};
+const get=(base)=>{const d=VENUE_RECORDS[base.id]||{},edit=state.venues[base.id]||{};return {...base,...d,...edit,cost:{...(base.publiclyAdvertised||{}),...(base.cost||{}),...(d.cost||{}),...(edit.cost||{})},ratings:{...(edit.ratings||{})},extras:{...(edit.extras||{})},quotes:d.quotes||[],gallery:d.gallery||[],dateAvailability:{'18':'unknown','19':edit.availability||d.availability||base.availability||'unknown','20':'unknown',...(d.dateAvailability||{}),...(edit.dateAvailability||{}),...(edit.availability?{'19':edit.availability}:{})}};};
+const dayStatus=(v,day)=>v.dateAvailability?.[String(day)]||(String(day)==='19'?(v.availability||'unknown'):'unknown');
+const dayText=(v,day)=>({available:'Свободно',unavailable:'Занято',pending:'Уточняется',unknown:'Нет подтверждения'}[dayStatus(v,day)]||'Нет подтверждения');
+const datePriority=v=>dayStatus(v,'19')==='available'?0:(dayStatus(v,'18')==='available'||dayStatus(v,'20')==='available')?1:(DATE_CHOICES.some(([d])=>dayStatus(v,d)==='pending'))?2:(DATE_CHOICES.some(([d])=>dayStatus(v,d)==='unknown'))?3:4;
+const bestAvailable=v=>dayStatus(v,'19')==='available'?'19':(dayStatus(v,'18')==='available'?'18':(dayStatus(v,'20')==='available'?'20':null));
+const threeDates=v=>DATE_CHOICES.map(([day])=>'<span class="vw-date-chip vw-day-'+dayStatus(v,day)+'"><b>'+day+'.06</b> '+h(dayText(v,day))+'</span>').join('');
+
 const numbers=(v)=>Number.isFinite(Number(v))&&v!==''&&v!==null?Math.max(0,Number(v)):null;
 function save(){state.updated=new Date().toISOString();try{localStorage.setItem(STORE,JSON.stringify(state));}catch{}}
 function patch(id,key,value){
@@ -82,11 +90,12 @@ function patch(id,key,value){
 }
 function weighted(v){
  const xs=CRITERIA.filter(([k])=>v.ratings[k]!==null&&v.ratings[k]!==undefined&&v.ratings[k]!=='');
- if(v.availability==='unavailable')return {value:null,complete:xs.length,blocked:true};
- if(v.availability!=='available'||xs.length!==CRITERIA.length)return {value:null,complete:xs.length,blocked:false};
+ if(xs.length!==CRITERIA.length)return {value:null,complete:xs.length,provisional:true};
+ const best=bestAvailable(v);
+ const datePoints=best==='19'?DATE_WEIGHT:best?22:0;
  const den=DATE_WEIGHT+CRITERIA.reduce((s,[k])=>s+(numbers(state.weights[k])??0),0);
- const points=DATE_WEIGHT+CRITERIA.reduce((s,[k])=>s+((numbers(v.ratings[k])??0)/5)*(numbers(state.weights[k])??0),0);
- return {value:Math.round(points/(den||1)*100),complete:xs.length,blocked:false};
+ const points=datePoints+CRITERIA.reduce((s,[k])=>s+((numbers(v.ratings[k])??0)/5)*(numbers(state.weights[k])??0),0);
+ return {value:Math.round(points/(den||100)*100),complete:xs.length,provisional:!best,preferred:best==='19',date:best};
 }
 function estimate(v){
  const q=(v.quotes||[]).find(q=>q.guests===state.guestCount&&q.kind!=='scenario');
@@ -115,17 +124,17 @@ function row(v){
  const score=weighted(v),cost=estimate(v),selected=ui.compare.includes(v.id),pic=v.gallery?.[0];
  const image=pic?'<img loading="lazy" class="vw-row-thumb" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(pic.id)+'&sz=w240" alt="">':'<span class="vw-row-thumb vw-no-image"></span>';
  return '<tr class="vw-row" data-id="'+h(v.id)+'"><td><div class="vw-venue-cell">'+image+'<div><button class="vw-name" data-detail="'+h(v.id)+'" type="button">'+h(v.name)+'</button><small>'+h(v.area)+' · '+(v.region==='country'?'За городом':'Город')+'</small></div></div></td>'+
- '<td><span class="vw-date '+(v.availability==='unavailable'?'vw-no':v.availability==='available'?'vw-yes':'')+'">'+h(status(v))+'</span></td>'+
+ '<td><div class="vw-date-list">'+threeDates(v)+'</div></td>'+
  '<td><span class="vw-state '+(v.visited?'vw-seen':'')+'">'+(v.visited?'● Были лично':'○ Не подтверждено')+'</span></td>'+
  '<td class="vw-money">'+(cost.value===null?'—':(cost.partial?'от ':'')+rub(cost.value))+'<small>'+(cost.isQuote?'По смете / условиям':cost.partial?'Расчётный минимум':'Ориентир')+(cost.value===null?'':' · '+Math.round(cost.value/state.guestCount).toLocaleString('ru-RU')+' ₽/гость')+'</small></td>'+
- '<td>'+h(v.capacity??'—')+'</td><td class="vw-score">'+(score.blocked?'Не подходит':score.value===null?'Не оценено':score.value+' / 100')+'<small>'+score.complete+'/6 оценок</small></td>'+
+ '<td>'+h(v.capacity??'—')+'</td><td class="vw-score">'+(score.value===null?'Не оценено':score.value+' / 100')+'<small>'+(score.value!==null&&score.provisional?'Предварительно: дата не подтверждена':score.complete+'/6 оценок')+'</small></td>'+
  '<td><div class="vw-actions"><button type="button" data-compare="'+h(v.id)+'" aria-pressed="'+selected+'">'+(selected?'✓ Выбрано':'Сравнить')+'</button><button type="button" data-detail="'+h(v.id)+'">Подробнее</button></div></td></tr>';
 }
 function detail(v){
  const e=estimate(v),s=weighted(v),tab=ui.detailTab||'overview';
  const tabs=[['overview','Обзор'],['photos','Фотографии'],['budget','Бюджет'],['terms','Условия'],['rating','Рейтинг']];
  const qs=(v.quotes||[]),bullets=(title,rows)=>rows?.length?'<div class="vw-detail-block"><h3>'+h(title)+'</h3><ul>'+rows.map(x=>'<li>'+h(x)+'</li>').join('')+'</ul></div>':'';
- const tiles='<div class="vw-quickfacts"><div><span>19 июня</span><strong class="vw-date '+(v.availability==='unavailable'?'vw-no':'')+'">'+h(status(v))+'</strong></div><div><span>Просмотр</span><strong>'+(v.visited?'Да · есть фото':'Не подтверждён')+'</strong></div><div><span>Вместимость</span><strong>'+h(v.capacityNote||v.capacity||'Уточнить')+'</strong></div></div>';
+ const tiles='<div class="vw-quickfacts"><div><span>18 / 19 / 20 июня</span><strong class="vw-date-list">'+threeDates(v)+'</strong></div><div><span>Просмотр</span><strong>'+(v.visited?'Да · есть фото':'Не подтверждён')+'</strong></div><div><span>Вместимость</span><strong>'+h(v.capacityNote||v.capacity||'Уточнить')+'</strong></div></div>';
  let content='';
  if(tab==='overview')content='<div class="vw-detail-grid"><div><div class="vw-detail-block"><h3>Что известно о площадке</h3><p>'+h(v.summary||'Описание нужно дополнить')+'</p>'+tiles+'</div><div class="vw-detail-block"><h3>Фото с телефона</h3>'+photoGallery({...v,gallery:v.gallery.slice(0,4)})+'</div>'+bullets('Что входит',v.included)+'</div><div><div class="vw-detail-block"><h3>Общий бюджет для '+state.guestCount+' гостей</h3>'+budgetTotal(v)+'</div>'+bullets('Что не входит / ограничения',v.excluded)+bullets('Что уточнить',v.questions)+'</div></div>';
  if(tab==='photos')content='<div class="vw-detail-block"><h3>Фотографии осмотра</h3><p>Фотографии открываются в полном размере через Google Drive.</p>'+photoGallery(v)+(v.photos?'<p><a href="'+h(v.photos)+'" target="_blank" rel="noopener noreferrer">Открыть полный альбом по помещениям ↗</a></p>':'')+'</div>';
@@ -136,7 +145,7 @@ function detail(v){
  '<div class="vw-detail-block"><h3>Ручная корректировка расчёта</h3><p>Для площадок без сметы: аренда + банкет + техника + прочие расходы + обслуживание. Точная смета имеет приоритет для соответствующего числа гостей.</p><div class="vw-input-grid">'+COSTS.map(([k,label])=>'<label>'+h(label)+'<input type="number" data-venue="'+h(v.id)+'" data-cost="'+k+'" min="0" value="'+h(v.cost[k]??'')+'" placeholder="Неизвестно"></label>').join('')+'</div></div>'+bullets('Исключения / неопределённые позиции',v.excluded);
  if(tab==='terms')content='<div class="vw-detail-grid"><div><div class="vw-detail-block"><h3>Условия и договорённости</h3><p>'+h(v.summary||'Неизвестно')+'</p></div>'+bullets('Входит',v.included)+bullets('Доплаты / ограничения',v.excluded)+'</div><div>'+bullets('Открытые вопросы',v.questions)+
  '<div class="vw-detail-block"><h3>Статус</h3><label>Лично смотрели<select data-venue="'+h(v.id)+'" data-field="visited"><option value="true" '+(v.visited?'selected':'')+'>Да</option><option value="false" '+(!v.visited?'selected':'')+'>Не подтверждено</option></select></label><label>19 июня 2027<select data-venue="'+h(v.id)+'" data-field="availability">'+[['unknown','Неизвестно'],['pending','Уточняется'],['available','Свободно подтверждено'],['unavailable','Занято']].map(([k,label])=>'<option value="'+k+'" '+(v.availability===k?'selected':'')+'>'+label+'</option>').join('')+'</select></label><label>Вместимость <input type="number" min="0" data-venue="'+h(v.id)+'" data-field="capacity" value="'+h(v.capacity??'')+'"></label><h3>Ваши заметки</h3><textarea rows="7" data-venue="'+h(v.id)+'" data-field="notes">'+h(v.notes||'')+'</textarea></div></div></div>';
- if(tab==='rating')content='<div class="vw-detail-block"><h3>Рейтинг площадки с учётом даты</h3><p>Доступность 19 июня — обязательный критерий с весом 30%. Если занято, площадка исключается; если неизвестно, балл пока не присваивается. Дальнейшие шесть критериев оцениваются только после просмотра.</p><div class="vw-rating-result"><strong>'+(s.blocked?'19 июня занято':s.value===null?'Нет итогового балла':s.value+' / 100')+'</strong><span>'+s.complete+'/6 личных оценок заполнено</span></div><div class="vw-rating-grid">'+CRITERIA.map(([key,label])=>'<label>'+h(label)+' · '+h(state.weights[key]||0)+'%<select data-venue="'+h(v.id)+'" data-rating="'+key+'"><option value="">Не оценивали</option>'+[1,2,3,4,5].map(n=>'<option value="'+n+'" '+(Number(v.ratings[key])===n?'selected':'')+'>'+n+' / 5</option>').join('')+'</select></label>').join('')+'</div></div>';
+ if(tab==='rating')content='<div class="vw-detail-block"><h3>Рейтинг площадки с учётом даты</h3><p>19 июня — предпочтительная дата, даёт до 30 баллов. Подтверждённые 18 или 20 июня — допустимые альтернативы, дают 22 балла. Если ни одна дата пока не подтверждена, оценка предварительная, но площадка не исключается.</p><div class="vw-rating-result"><strong>'+(s.value===null?'Пока нет итогового балла':s.value+' / 100'+(s.provisional?' · предварительно':''))+'</strong><span>'+s.complete+'/6 личных оценок заполнено</span></div><div class="vw-rating-grid">'+CRITERIA.map(([key,label])=>'<label>'+h(label)+' · '+h(state.weights[key]||0)+'%<select data-venue="'+h(v.id)+'" data-rating="'+key+'"><option value="">Не оценивали</option>'+[1,2,3,4,5].map(n=>'<option value="'+n+'" '+(Number(v.ratings[key])===n?'selected':'')+'>'+n+' / 5</option>').join('')+'</select></label>').join('')+'</div></div>';
  return '<section class="vw-detail"><header class="vw-detail-head"><div><span class="vw-kicker">'+(v.region==='country'?'ЗАГОРОДНАЯ':'ГОРОДСКАЯ')+' ПЛОЩАДКА</span><h2>'+h(v.name)+'</h2><p>'+h(v.area)+' · '+h(status(v))+'</p></div><button class="vw-close" type="button" data-close aria-label="Закрыть">×</button></header>'+
  '<div class="vw-detail-links">'+external(v)+'</div><nav class="vw-detail-tabs">'+tabs.map(([key,title])=>'<button type="button" data-detail-tab="'+key+'" class="'+(key===tab?'selected':'')+'">'+title+'</button>').join('')+'</nav>'+
  '<div class="vw-tab-content">'+content+'</div></section>';
@@ -144,7 +153,7 @@ function detail(v){
 function selectedCompare(all){
  const subset=ui.compare.map(id=>all.find(v=>v.id===id)).filter(Boolean);
  if(subset.length<2)return '<p class="vw-muted">Выберите минимум две площадки кнопкой «Сравнить», чтобы увидеть их рядом.</p>';
- const fields=[['Район',v=>v.area],['19 июня',v=>status(v)],['Просмотр',v=>v.visited?'Да':'Не отмечено'],['Гостей',v=>v.capacity||'—'],['Бюджет',v=>{let q=estimate(v);return q.value===null?'—':(q.partial?'от ':'')+rub(q.value)+(q.isQuote&&q.quoteDate?' (смета '+q.quoteDate+')':'')}],['Рейтинг',v=>weighted(v).value===null?'Не заполнен':weighted(v).value+'/100'],['Плюсы',v=>v.pros||'—'],['Риски',v=>v.cons||'—']];
+ const fields=[['Район',v=>v.area],['18 июня',v=>dayText(v,'18')],['19 июня',v=>dayText(v,'19')],['20 июня',v=>dayText(v,'20')],['Просмотр',v=>v.visited?'Да':'Не отмечено'],['Гостей',v=>v.capacity||'—'],['Бюджет',v=>{let q=estimate(v);return q.value===null?'—':(q.partial?'от ':'')+rub(q.value)+(q.isQuote&&q.quoteDate?' (смета '+q.quoteDate+')':'')}],['Рейтинг',v=>weighted(v).value===null?'Не заполнен':weighted(v).value+'/100'],['Плюсы',v=>v.pros||'—'],['Риски',v=>v.cons||'—']];
  return '<div class="vw-scroll"><table class="vw-matrix"><thead><tr><th>Критерий</th>'+subset.map(v=>'<th>'+h(v.name)+'</th>').join('')+'</tr></thead><tbody>'+fields.map(([label,fn])=>'<tr><th>'+label+'</th>'+subset.map(v=>'<td>'+h(fn(v))+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
 }
 export function renderVenueAdmin(){
