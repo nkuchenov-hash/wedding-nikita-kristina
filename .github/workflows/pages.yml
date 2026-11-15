@@ -2,6 +2,12 @@ name: Publish admin-only wedding site
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'tools/prepare-admin-release.mjs'
+      - 'tools/admin-gateway.php'
+      - '.github/workflows/pages.yml'
+      - 'tests/**'
   workflow_dispatch:
 permissions:
   contents: read
@@ -9,7 +15,7 @@ permissions:
   id-token: write
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   deploy:
     environment:
@@ -18,133 +24,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify wedding frontend
-        run: npm run check
-      - name: Prepare public website only
+      - name: Verify static code and prepared admin
         run: |
-          mkdir -p _site/src _site/public
-          cp index.html _site/
-          cp src/admin-app.js src/app.js src/data.js src/styles.css src/editorial.js src/editorial.css src/replica.js src/replica.css src/venue-exact.css src/wedding-polish.css src/reference-grade.css src/board-layered.css src/reference-corrections.css src/comparison.js src/comparison.css src/venues.js src/venues-data.js src/venues.css src/venue-detail-ui.js src/venue-detail-ui.css src/venues-pricing.js src/venues-photos-1.js src/venues-photos-2.js src/venues-photos-3.js src/venues-photos-4.js src/fidelity-pass.css src/invitation-v2.css src/invitation-reference-fix.css src/welcome-redesign.css _site/src/
-          cp public/mark.svg _site/public/
-          cp -R public/reference _site/public/reference
-          cp -R public/board _site/public/board
-          cp -R public/approved-reference _site/public/approved-reference
-          cp -R public/production _site/public/production
-          touch _site/.nojekyll
-      - name: Version frontend assets by commit to avoid stale gallery photos
-        run: node tools/stamp-deployment.mjs
-      - name: Extract clean marble column PNG and clarify estate image
-        run: |
-          python3 -m pip install --quiet Pillow
-          python3 tools/build-invitation-art.py
-          test -s _site/public/production/invitation-column-isolated.png
-      - name: Validate real transparent design assets
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import struct,zlib
-          from pathlib import Path
-          names = ["invitation-leaves-top.png","invitation-cherub.png","invitation-flowers-left.png","invitation-flowers-right.png","dress-statue.png","dress-flowers.png","gallery-leaves.png"]
-          for name in names:
-              p=Path("_site/public/production")/name
-              data=p.read_bytes()
-              assert data[:8] == b'\x89PNG\r\n\x1a\n', name
-              width,height,depth,color=struct.unpack(">IIBB",data[16:26])
-              assert color==6 and width>=1000 and height>=1000,(name,width,height,color)
-              print(f"Valid alpha-PNG {name}: {width}x{height}")
-          PY
-      - name: Build local photographic assets from individual references
+          npm run check
+          node --check src/admin-app.js
+          node --check src/admin-data-ui.js
+          php -l tools/admin-gateway.php
+      - name: Build only private administrative assets
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p _site/public/photos
-          fetch_photo() {
-            local name="$1"
-            local url="$2"
-            echo "Downloading ${name}"
-            curl --fail --location --silent --show-error --retry 2 --max-time 45 \
-              --user-agent 'Mozilla/5.0 (compatible; WeddingPreview/1.0)' \
-              --output "_site/public/photos/${name}.jpg" "$url"
-            test "$(stat -c%s "_site/public/photos/${name}.jpg")" -gt 10000
-            case "$(file --mime-type -b "_site/public/photos/${name}.jpg")" in
-              image/jpeg|image/png|image/webp) ;;
-              *) echo "Invalid photo: ${name}"; exit 1;;
-            esac
-            echo "Photo ${name}: $(du -h "_site/public/photos/${name}.jpg")"
-          }
-          # Replace the cold-toned placeholder with a warm neoclassical portrait.
-          # Source: Arda Öztürk, Pexels free-use image #31888286.
-          if ! fetch_photo couple 'https://images.pexels.com/photos/31888286/pexels-photo-31888286.jpeg?auto=compress&cs=tinysrgb&w=1500'; then
-            fetch_photo couple 'https://images.unsplash.com/photo-1768508659931-c28da83dad13?fit=crop&w=1400&q=85&fm=jpg'
-          fi
-          fetch_photo couple2 'https://upload.wikimedia.org/wikipedia/commons/2/20/Groom_follows_behind_bride_%28Unsplash%29.jpg'
-          fetch_photo ceremony 'https://images.unsplash.com/photo-1769812344099-8e52466aea8e?fit=crop&w=1200&q=85&fm=jpg'
-          fetch_photo table 'https://images.unsplash.com/photo-1769812343362-39484bff6db4?fit=crop&w=1100&q=85&fm=jpg'
-          fetch_photo statue 'https://images.unsplash.com/photo-1764061040784-9e50d16060e0?fit=crop&w=1100&q=85&fm=jpg'
-          fetch_photo columns 'https://usadbamaryino.ru/sites/default/files/images/photogallery/048_0.jpg'
-          fetch_photo estate 'https://usadbamaryino.ru/sites/default/files/styles/photogal/public/images/photogallery/010_1.jpg?itok=WjCDwPJU'
-          fetch_photo garden 'https://usadbamaryino.ru/sites/default/files/styles/photogal/public/images/photogallery/01_5.jpg?itok=u-XnOLTm'
-          fetch_photo lake 'https://media.kudago.com/images/place/0f/6d/0f6dca476493446d87b197f827991971.jpg'
-          cp _site/public/photos/lake.jpg _site/public/photos/bridge.jpg
-
-          # Warm free-use wedding portrait selected to resemble the photographed
-          # editorial reference. The fallback remains local to the site.
-          if ! curl --fail --location --silent --show-error --retry 2 --max-time 25 \
-            --user-agent 'Mozilla/5.0' \
-            --output _site/public/photos/couple-ref.jpg \
-            'https://images.pexels.com/photos/18004204/pexels-photo-18004204.jpeg?auto=compress&cs=tinysrgb&w=1400'; then
-            cp _site/public/photos/couple.jpg _site/public/photos/couple-ref.jpg
-          fi
-          if [ "$(stat -c%s _site/public/photos/couple-ref.jpg)" -lt 10000 ]; then
-            cp _site/public/photos/couple.jpg _site/public/photos/couple-ref.jpg
-          fi
-
-          # Dress-code cards: editorial formalwear portraits, no generic venue substitutions.
-          fetch_optional_photo() {
-            local name="$1" photo_id="$2" backup="$3"
-            if ! curl --fail --location --silent --show-error --retry 2 --max-time 25 \
-              --output "_site/public/photos/${name}.jpg" \
-              "https://images.pexels.com/photos/${photo_id}/pexels-photo-${photo_id}.jpeg?auto=compress&cs=tinysrgb&w=700"; then
-              cp "_site/public/photos/${backup}.jpg" "_site/public/photos/${name}.jpg"
-            fi
-            if [ "$(stat -c%s "_site/public/photos/${name}.jpg")" -lt 10000 ]; then
-              cp "_site/public/photos/${backup}.jpg" "_site/public/photos/${name}.jpg"
-            fi
-          }
-          fetch_optional_photo dressjacket 33815164 couple
-          fetch_optional_photo dressgown 7273705 couple2
-          fetch_optional_photo dresstux 17717574 couple
-
-          test "$(find _site/public/photos -type f | wc -l)" -ge 11
-      - name: Run visual regression checks (report but do not block publishing)
-        id: visual_checks
-        continue-on-error: true
+          mkdir -p _site/src _site/public
+          cp src/admin-app.js src/admin-data-ui.js src/admin-data.css src/data.js src/styles.css \
+             src/venues.js src/venues-data.js src/venues.css \
+             src/venue-detail-ui.js src/venue-detail-ui.css src/venues-pricing.js \
+             src/venues-photos-1.js src/venues-photos-2.js src/venues-photos-3.js src/venues-photos-4.js _site/src/
+          cp public/mark.svg _site/public/
+          touch _site/.nojekyll
+          node -e 'const fs=require("fs");fs.writeFileSync("_site/build-info.json",JSON.stringify({revision:process.env.GITHUB_SHA.slice(0,12),builtAt:new Date().toISOString()})+"\n")'
+      - name: Stage protected admin and neutral homepage
+        shell: bash
         run: |
-          npm install --no-save --no-package-lock puppeteer-core@24
-          node tools/visual-check.mjs
-      - name: Report visual-check outcome
-        if: always()
-        run: |
-          echo "Visual-check result: ${{ steps.visual_checks.outcome }}"
-          if [[ "${{ steps.visual_checks.outcome }}" != "success" ]]; then
-            echo "::warning::Visual regression check failed. Basic code and unit tests passed; deploy continues to prevent a stale website. See logs."
-          fi
-      - name: Stage admin-only release
-        run: |
-          node --check src/admin-app.js
-          if command -v php >/dev/null 2>&1; then php -l tools/admin-gateway.php; fi
+          set -euo pipefail
           node tools/prepare-admin-release.mjs
           test -s _site/admin/index.php
           test -s _admin-private/index.html
+          test -s _admin-private/src/admin-data-ui.js
           test ! -e _site/admin/src
           test ! -e _site/src/app.js
           test ! -e _site/public/photos
-      - name: Verify admin bundle and maintenance page
-        run: |
-          grep -Fq 'index.php?asset=src/admin-app.js' _admin-private/index.html
           grep -Fq 'Сайт готовится' _site/index.html
           grep -Fq 'password_verify' _site/admin/index.php
-      # Publish the exact verified static bundle to a separately configured hosting account.
       - name: Package website for purchased hosting
         uses: actions/upload-artifact@v4
         with:
