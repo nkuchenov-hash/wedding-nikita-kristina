@@ -118,6 +118,43 @@ jobs:
         run: |
           npm install --no-save --no-package-lock puppeteer-core@24
           node tools/visual-check.mjs
+      # Publish the exact verified static bundle to a separately configured hosting account.
+      - name: Package website for purchased hosting
+        uses: actions/upload-artifact@v4
+        with:
+          name: wedding-hosting-ready
+          path: _site/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Deploy to purchased hosting through SFTP (optional)
+        shell: bash
+        env:
+          HOST: ${{ secrets.WEDDING_SFTP_HOST }}
+          USERNAME: ${{ secrets.WEDDING_SFTP_USER }}
+          SSH_KEY: ${{ secrets.WEDDING_SFTP_SSH_KEY }}
+          HOST_KEYS: ${{ secrets.WEDDING_SFTP_KNOWN_HOSTS }}
+          DESTINATION: ${{ secrets.WEDDING_SFTP_PATH }}
+          PORT: ${{ secrets.WEDDING_SFTP_PORT }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$HOST" || -z "$USERNAME" || -z "$SSH_KEY" || -z "$HOST_KEYS" || -z "$DESTINATION" ]]; then
+            echo "SFTP not connected: hosting bundle created; GitHub Pages preview remains active."
+            exit 0
+          fi
+          if [[ "$DESTINATION" == "/" || "$DESTINATION" == "." ]]; then
+            echo "Invalid remote destination."
+            exit 1
+          fi
+          if [[ -z "$PORT" ]]; then PORT=22; fi
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/wedding_deploy_key"
+          printf '%s\n' "$HOST_KEYS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/wedding_deploy_key" "$HOME/.ssh/known_hosts"
+          # Never delete unrelated files from an existing hosting account.
+          rsync --archive --verbose --no-perms --omit-dir-times \
+            --rsh "ssh -i $HOME/.ssh/wedding_deploy_key -p $PORT -o StrictHostKeyChecking=yes" \
+            _site/ "$USERNAME@$HOST:$DESTINATION/"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
