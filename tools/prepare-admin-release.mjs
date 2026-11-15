@@ -1,0 +1,40 @@
+import {mkdirSync,cpSync,writeFileSync,rmSync,readdirSync,existsSync,readFileSync} from 'node:fs';
+import {join} from 'node:path';
+const root='_site';
+const sha=(process.env.GITHUB_SHA||'local').slice(0,12);
+if(!/^[a-zA-Z0-9-]+$/.test(sha))throw new Error('Invalid revision');
+const admin=join(root,'admin'), assets=join(admin,'src');
+mkdirSync(assets,{recursive:true});
+const required=['admin-app.js','data.js','styles.css','venues.js','venues-data.js','venues.css','venue-detail-ui.js','venue-detail-ui.css','venues-pricing.js','venues-photos-1.js','venues-photos-2.js','venues-photos-3.js','venues-photos-4.js'];
+for(const name of required){
+ const src=join(root,'src',name);
+ if(!existsSync(src))throw new Error('Missing admin dependency: '+name);
+ cpSync(src,join(assets,name));
+}
+mkdirSync(join(admin,'public'),{recursive:true});
+cpSync(join(root,'public','mark.svg'),join(admin,'public','mark.svg'));
+const styles=['styles.css','venues.css','venue-detail-ui.css'].map(n=>'<link rel="stylesheet" href="./src/'+n+'?v='+sha+'">').join('\n');
+const adminHtml='<!doctype html>\n<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#17332d"><title>Панель организаторов — Никита и Кристина</title><link rel="icon" href="./public/mark.svg">\n'+styles+'\n</head><body class="admin-body"><div id="app"></div><script type="module" src="./src/admin-app.js?v='+sha+'"></script></body></html>\n';
+const auth='AuthType Basic\nAuthName "Wedding Admin"\nAuthUserFile /var/www/u3728035/data/wedding-private/.htpasswd\nRequire valid-user\n';
+writeFileSync(join(admin,'index.html'),adminHtml);
+writeFileSync(join(admin,'.htaccess'),auth);
+const maintenance=[
+'<!doctype html>',
+'<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
+'<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#193529">',
+'<title>Никита и Кристина — сайт готовится</title>',
+'<style>*{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;background:#f4f7f2;color:#183629;font-family:Georgia,"Times New Roman",serif;text-align:center;padding:24px}main{max-width:620px}h1{font-weight:400;font-size:clamp(32px,6vw,58px);line-height:1.15;margin:0 0 24px}p{font:400 17px/1.7 system-ui,sans-serif;color:#52645b}small{display:block;letter-spacing:.3em;font:600 11px system-ui,sans-serif;margin-bottom:38px;color:#728476}</style>',
+'</head><body><main><small>НИКИТА &amp; КРИСТИНА</small><h1>Сайт готовится</h1><p>Приглашение появится здесь, когда всё будет готово.</p></main></body></html>'
+].join('\n')+'\n';
+const keep=new Set(['index.html','admin','build-info.json','.nojekyll','robots.txt']);
+for(const name of readdirSync(root)){if(!keep.has(name))rmSync(join(root,name),{recursive:true,force:true});}
+writeFileSync(join(root,'index.html'),maintenance);
+writeFileSync(join(root,'robots.txt'),'User-agent: *\nDisallow: /\n');
+const pages='_pages';mkdirSync(pages,{recursive:true});
+writeFileSync(join(pages,'index.html'),maintenance);
+cpSync(join(root,'build-info.json'),join(pages,'build-info.json'));
+writeFileSync(join(pages,'.nojekyll'),'');
+if(readdirSync(root).some(n=>!keep.has(n)))throw new Error('Unexpected guest artifact in release.');
+const code=readFileSync(join(admin,'src','admin-app.js'),'utf8');
+if(code.includes('renderGuest(')||code.includes('activateGuest('))throw new Error('Guest entrypoint leaked into admin bundle.');
+console.log('ADMIN ONLY: maintenance root, password-protected /admin/, no guest assets.');

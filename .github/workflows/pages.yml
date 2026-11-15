@@ -1,4 +1,4 @@
-name: Publish guest site preview
+name: Publish admin-only wedding site
 on:
   push:
     branches: [main]
@@ -129,6 +129,18 @@ jobs:
           if [[ "${{ steps.visual_checks.outcome }}" != "success" ]]; then
             echo "::warning::Visual regression check failed. Basic code and unit tests passed; deploy continues to prevent a stale website. See logs."
           fi
+      - name: Stage admin-only release
+        run: |
+          node --check src/admin-app.js
+          node tools/prepare-admin-release.mjs
+          test -s _site/admin/.htaccess
+          test ! -e _site/src/app.js
+          test ! -e _site/public/photos
+      - name: Verify admin bundle and maintenance page
+        run: |
+          grep -Fq 'admin-app.js' _site/admin/index.html
+          grep -Fq 'Сайт готовится' _site/index.html
+          grep -Fq 'AuthType Basic' _site/admin/.htaccess
       # Publish the exact verified static bundle to a separately configured hosting account.
       - name: Package website for purchased hosting
         uses: actions/upload-artifact@v4
@@ -147,6 +159,7 @@ jobs:
           HOST_KEYS: ${{ secrets.WEDDING_SFTP_KNOWN_HOSTS }}
           DESTINATION: ${{ secrets.WEDDING_SFTP_PATH }}
           PORT: ${{ secrets.WEDDING_SFTP_PORT }}
+          AUTH_LINE: 'wedding-admin:$2y$12$/vt10ztQUMyRV0p7Oz.IyuSpy8ECKzxBaSrJffFIbMMNqRQM71WCq'
         run: |
           set -euo pipefail
           if [[ -z "$HOST" || -z "$USERNAME" || -z "$SSH_KEY" || -z "$HOST_KEYS" || -z "$DESTINATION" ]]; then
@@ -164,12 +177,15 @@ jobs:
           printf '%s\n' "$HOST_KEYS" > "$HOME/.ssh/known_hosts"
           chmod 600 "$HOME/.ssh/wedding_deploy_key" "$HOME/.ssh/known_hosts"
           SSH_OPTS="-4 -i $HOME/.ssh/wedding_deploy_key -p $PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -o ConnectionAttempts=2 -o ServerAliveInterval=20 -o ServerAliveCountMax=2"
+          # Install strong bcrypt credentials outside web root before upload.
+          ssh $SSH_OPTS "$USERNAME@$HOST" "set -eu; umask 077; mkdir -p /var/www/u3728035/data/wedding-private; cat > /var/www/u3728035/data/wedding-private/.htpasswd" <<<"$AUTH_LINE"
           # The hosting account already contains a landing page; keep a recoverable copy
           # outside of the public document root before the very first replacement.
           ssh $SSH_OPTS "$USERNAME@$HOST" \
             "set -eu; test -d '$DESTINATION'; mkdir -p ~/wedding-backups; if test -f '$DESTINATION/index.html' && ! test -e ~/wedding-backups/index-before-github.html; then cp -p '$DESTINATION/index.html' ~/wedding-backups/index-before-github.html; fi"
-          # Never delete unrelated files or change their permissions.
-          rsync --archive --verbose --no-perms --omit-dir-times --timeout=120 \
+          # Site originally contained only index.html and files deployed from this workflow.
+          # Remove the guest bundle while preserving Let's Encrypt challenges and backup.
+          rsync --archive --verbose --delete --exclude='/.well-known/' --no-perms --omit-dir-times --timeout=120 \
             --rsh "ssh $SSH_OPTS" \
             _site/ "$USERNAME@$HOST:$DESTINATION/"
           local_sha=$(sha256sum _site/index.html | awk '{print $1}')
@@ -178,14 +194,20 @@ jobs:
             echo "::error::REG.RU index.html checksum mismatch after upload."
             exit 1
           fi
-          echo "REG.RU deployment confirmed by remote index.html SHA256."
+          admin_sha=$(sha256sum _site/admin/index.html | awk '{print $1}')
+          remote_admin_sha=$(ssh $SSH_OPTS "$USERNAME@$HOST" "sha256sum '$DESTINATION/admin/index.html'" | awk '{print $1}')
+          if [[ "$admin_sha" != "$remote_admin_sha" ]]; then
+            echo "::error::REG.RU admin/index.html checksum mismatch."
+            exit 1
+          fi
+          echo "REG.RU admin-only deployment confirmed by remote checksums."
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: _pages
       - id: deployment
         uses: actions/deploy-pages@v4
-      - name: Verify live Pages release and selected Vesennyi hero
+      - name: Verify Pages is in maintenance mode
         if: success()
         shell: bash
         run: |
@@ -193,15 +215,14 @@ jobs:
           BASE="https://nkuchenov-hash.github.io/wedding-nikita-kristina"
           VERSION="${GITHUB_SHA:0:12}"
           for i in $(seq 1 18); do
-            printf "Checking website release %s (attempt %s/18)\n" "$VERSION" "$i"
-            if curl --fail --silent --show-error --max-time 15 --output /tmp/wedding-build-info.json "$BASE/build-info.json?revision=$VERSION" && \
-              node -e 'const fs=require("fs"); const v=JSON.parse(fs.readFileSync("/tmp/wedding-build-info.json","utf8")); if(v.revision!==process.argv[1])process.exit(1)' "$VERSION" && \
-              curl --fail --silent --show-error --max-time 15 --output /tmp/wedding-live-venue.js "$BASE/src/venue-detail-ui.js?revision=$VERSION" && \
-              grep -Fq "1xrDBe6UYNcGcxGFadQ-Di8LCnHeM36Ux" /tmp/wedding-live-venue.js; then
-                echo "LIVE WEBSITE VERIFIED: release $VERSION with correct Vesennyi banquet hall image"
-                exit 0
+            if curl --fail --silent --show-error --max-time 15 --output /tmp/wedding-pages-build.json "$BASE/build-info.json?revision=$VERSION" &&
+               node -e 'const fs=require("fs"); const v=JSON.parse(fs.readFileSync("/tmp/wedding-pages-build.json","utf8")); process.exit(v.revision===process.argv[1]?0:1)' "$VERSION" &&
+               curl --fail --silent --show-error --max-time 15 --output /tmp/wedding-pages-index.html "$BASE/index.html?revision=$VERSION" &&
+               grep -Fq 'Сайт готовится' /tmp/wedding-pages-index.html; then
+              echo "Pages now serves maintenance only; guest invitation unpublished."
+              exit 0
             fi
             sleep 10
           done
-          echo "::warning::Published release not yet verified at Pages URL. Inspect deployment and GitHub Pages caching."
+          echo "::warning::Pages maintenance not yet verified."
           exit 1
