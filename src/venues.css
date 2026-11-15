@@ -83,3 +83,59 @@
 .vw-page textarea{resize:vertical;min-height:76px}
 @media(max-width:1100px){.vw-filter{grid-template-columns:repeat(2,minmax(0,1fr))}.vw-weights{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:740px){.vw-head{display:flex;align-items:flex-start}.vw-count{min-width:70px;padding:10px}.vw-count strong{font-size:24px}.vw-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.vw-filter{grid-template-columns:1fr 1fr;gap:9px}.vw-search{grid-column:span 2}.vw-panel-title{align-items:flex-start}.vw-filetools{justify-content:flex-start}.vw-weights{grid-template-columns:1fr}.vw-modal-wrap{padding:10px 6px}.vw-detail-head{padding:20px}.vw-detail-grid{grid-template-columns:1fr;padding:10px}.vw-detail>.vw-detail-block{margin:0 10px}.vw-rating-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.vw-detail-links{padding:12px}.vw-detail-block{padding:14px}}
+
+
+/* November 2026 venue comparison: evidence-driven list and tabbed venue page */
+.vw-page{--vw-border:#dce6df}
+.vw-filter{grid-template-columns:repeat(3,minmax(150px,1fr));gap:14px}
+.vw-filetools{justify-content:space-between}
+.vw-filetools>span{font-size:12px;color:#557461}
+.vw-venue-cell{display:flex;align-items:center;gap:12px;min-width:190px}
+.vw-row-thumb{display:block;width:76px;height:66px;flex:0 0 76px;object-fit:cover;border-radius:9px;background:#e8efe8;border:1px solid #e1e9e2}
+.vw-no-image{background:linear-gradient(145deg,#edf3ed,#dfe7e1)}
+.vw-table td:first-child{min-width:245px}
+.vw-modal{width:min(100%,1100px);margin:20px auto;border-radius:18px}
+.vw-modal-wrap{align-items:flex-start;padding:20px 16px}
+.vw-detail{padding-bottom:32px}
+.vw-detail-head{padding:24px 30px 20px}
+.vw-detail-head h2{font-size:clamp(23px,2.4vw,33px)}
+.vw-detail-tabs{position:sticky;top:0;z-index:4;display:flex;overflow-x:auto;gap:5px;padding:12px 25px;background:white;border-bottom:1px solid var(--vw-border)}
+.vw-detail-tabs button{border:0;border-radius:9px;background:transparent;padding:12px 18px;font-size:13px;font-weight:700;color:#6a8172;white-space:nowrap}
+.vw-detail-tabs button.selected{background:#234d37;color:#fff}
+.vw-tab-content{display:grid;gap:16px;padding:22px}
+.vw-tab-content>.vw-detail-block{margin:0}
+.vw-tab-content>.vw-detail-grid{padding:0;gap:15px;align-items:start}
+.vw-tab-content>.vw-detail-grid>div{min-width:0;display:grid;gap:15px}
+.vw-tab-content .vw-detail-block{border-radius:14px;padding:21px}
+.vw-tab-content .vw-detail-block h3{font-size:16px;line-height:1.3}
+.vw-tab-content .vw-detail-block p{font-size:13px;line-height:1.7;color:#5d7463;white-space:pre-line}
+.vw-tab-content .vw-detail-block li{font-size:13px;line-height:1.6;padding:4px 0}
+.vw-tab-content .vw-detail-block ul{margin:0;padding-left:19px}
+.vw-quickfacts{display:grid;gap:10px;margin-top:17px}
+.vw-quickfacts>div{display:grid;grid-template-columns:125px minmax(0,1fr);gap:10px;padding:9px 0;border-top:1px solid #e9eee9}
+.vw-quickfacts span{font-size:11px;color:#879a8d}
+.vw-quickfacts strong{font-size:13px;font-weight:650;line-height:1.45}
+.vw-gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:13px}
+.vw-photo{border:1px solid #e1eae3;border-radius:12px;overflow:hidden;background:#f8faf8;text-decoration:none;color:#355642;display:flex;flex-direction:column}
+.vw-photo img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#e6ebe6}
+.vw-photo span{padding:10px 12px;font-size:12px;line-height:1.35;font-weight:650}
+.vw-budget-boxes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.vw-budget-boxes>div{background:#f3f8f4;border:1px solid #dfebe0;padding:16px;border-radius:12px;min-width:0}
+.vw-budget-boxes small{display:block;font-size:11px;line-height:1.5;color:#66836e}
+.vw-budget-boxes strong{display:block;margin-top:8px;font-size:clamp(16px,2.2vw,23px);line-height:1.2;color:#214c35;white-space:nowrap}
+.vw-budget-boxes>div:last-child{background:#eaf2eb}
+.vw-quote-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:11px}
+.vw-quote-grid>div{padding:17px;background:#f6f9f6;border:1px solid #e4ece5;border-radius:12px}
+.vw-quote-grid span,.vw-quote-grid small{display:block;font-size:12px;line-height:1.5;color:#79917c}
+.vw-quote-grid strong{display:block;font-size:23px;margin:8px 0;color:#214c35}
+.vw-breakdown{display:grid}
+.vw-breakdown>div{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;border-bottom:1px solid #e9eee9;padding:11px 0;font-size:13px}
+.vw-breakdown strong{white-space:nowrap;font-weight:750}
+.vw-input-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.vw-input-grid label{display:grid;gap:6px;font-size:12px;color:#5e7b65}
+.vw-rating-result{display:flex;align-items:center;gap:20px;border-radius:12px;padding:15px;margin:18px 0;background:#f3f8f4}
+.vw-rating-result strong{font-size:21px}
+.vw-rating-result span{font-size:12px;color:#668069}
+.vw-quote-options{padding:10px 15px;background:#f3f8f4;border-radius:10px}
+@media(max-width:850px){.vw-filter{grid-template-columns:repeat(2,minmax(0,1fr))}.vw-budget-boxes{grid-template-columns:1fr}.vw-modal{margin:0}.vw-tab-content>.vw-detail-grid{grid-template-columns:1fr}}
+@media(max-width:550px){.vw-filter{grid-template-columns:1fr}.vw-tab-content{padding:12px}.vw-detail-tabs{padding:8px 10px}.vw-detail-tabs button{padding:10px 12px}.vw-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.vw-input-grid{grid-template-columns:1fr}.vw-quickfacts>div{grid-template-columns:1fr}.vw-modal-wrap{padding:5px}.vw-quote-grid{grid-template-columns:1fr}}
