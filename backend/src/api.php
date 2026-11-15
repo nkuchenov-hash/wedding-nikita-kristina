@@ -105,7 +105,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $d=payload(16384);
         $allowed=['event_date','event_time','event_venue','venue_address','rsvp_deadline',
           'dress_code','transport_info','public_notes','menu_open','directory_open',
-          'photos_open','guest_rsvp_open','date_confirmed','place_confirmed'];
+          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed'];
         $key=choice($d,'key',$allowed,'');
         if(!array_key_exists('value',$d) || (!is_scalar($d['value']) && $d['value']!==null))
             fail(422,'field','Значение настройки недопустимо');
@@ -320,6 +320,16 @@ function adminImportCsv(PDO $db,string $actor): never {
     json(['ok'=>true,'batch'=>$batch,'imported'=>$count,'skipped'=>$skipped],201);
 }
 
+function featureOpen(PDO $db,string $key): bool {
+    $row=one($db,'SELECT value_json FROM event_settings WHERE key=?',[$key]);
+    if(!$row)return false; // Fail closed until organizers explicitly open each feature.
+    return json_decode($row['value_json'],true)===true;
+}
+function requireFeature(PDO $db,string $key): void {
+    if(!featureOpen($db,$key))
+        fail(403,'feature_closed','Этот раздел ещё не открыт организаторами');
+}
+
 function guestRoute(PDO $db,string $actor,string $route,string $method): never {
     $isAdmin=isset($_SESSION['admin_id']);
     if ($route==='guest/me' && $method==='GET') {
@@ -375,12 +385,14 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
         json(['ok'=>true,'count'=>count($valid)]);
     }
     if ($route==='guest/directory' && $method==='GET') {
+        requireFeature($db,'directory_open');
         $guests=all($db,"SELECT id,display_name,city,side,relationship,about FROM guests
           WHERE profile_visible=1 AND consent_at IS NOT NULL AND status='registered'
           ORDER BY display_name LIMIT 1000");
         json(['ok'=>true,'guests'=>$guests]);
     }
     if ($route==='guest/menu' && $method==='GET') {
+        requireFeature($db,'menu_open');
         json(['ok'=>true,'options'=>all($db,'SELECT id,category,title,description,allergens FROM menu_options WHERE active=1 ORDER BY category,sort_order,title')]);
     }
     if ($route==='guest/profile' && $method==='PATCH') {
@@ -403,6 +415,7 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
         json(['ok'=>true]);
     }
     if ($route==='guest/rsvp' && $method==='POST') {
+        requireFeature($db,'guest_rsvp_open');
         if($isAdmin)fail(403,'role','Только для гостей');
         $d=payload(10000);$att=choice($d,'attendance',['yes','no','maybe'],'maybe');
         $guest=one($db,'SELECT plus_one_allowed,children_count FROM guests WHERE id=?',[$actor]);
@@ -422,6 +435,7 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
         json(['ok'=>true,'attendance'=>$att]);
     }
     if ($route==='guest/menu-choice' && $method==='POST') {
+        requireFeature($db,'menu_open');
         if($isAdmin)fail(403,'role','Только для гостей');
         $d=payload(4096);$id=strval($d,'option_id',40,true);
         $option=one($db,'SELECT id,category FROM menu_options WHERE id=? AND active=1',[$id]);
@@ -433,6 +447,7 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
         json(['ok'=>true]);
     }
     if ($route==='guest/story' && $method==='POST') {
+        requireFeature($db,'stories_open');
         if($isAdmin)fail(403,'role','Только для гостей');
         throttle($db,'stories:'.$actor,10,86400);
         $d=payload(6000);$content=strval($d,'content',2000,true);$id=uuid();
@@ -441,6 +456,7 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
         json(['ok'=>true,'id'=>$id,'status'=>'pending'],201);
     }
     if ($route==='guest/photos' && $method==='POST') {
+        requireFeature($db,'photos_open');
         if($isAdmin)fail(403,'role','Только для гостей');
         uploadPhoto($db,$actor);
     }
