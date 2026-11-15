@@ -7,7 +7,7 @@ import {getVenuePhotos,getVenueCover,filteredVenuePhotos,renderVenueNewPage} fro
 const allIds=[
  'vesenniy','kraft','loft-roof','alex-park','seasons','k2','putilov','ermolinsky',
  'royal','vinity','petr','roof18','bali','360','ambassador','english-roof',
- 'admiralty-roof','palma','repino-riviera','panorama','eva','maryino','harmony','zarenkov-gallery'
+ 'admiralty-roof','palma','repino-riviera','panorama','eva','maryino','harmony','zarenkov-gallery','zhemchuzhny'
 ];
 const context=(tab='overview',options={})=>({
  guests:80,
@@ -20,7 +20,7 @@ const context=(tab='overview',options={})=>({
 });
 const venue=id=>({id,name:id,region:'city',area:'Санкт-Петербург',extras:{},ratings:{},...(VENUE_RECORDS[id]||{})});
 
-test('All 24 venues have the same 13 price rows, even when price is unknown',()=>{
+test('All 25 venues have the same 13 price rows, even when price is unknown',()=>{
  assert.equal(VENUE_COST_LABELS.length,13);
  assert.deepEqual(Object.keys(VENUE_PRICING).sort(),[...allIds].sort());
  for(const id of allIds){
@@ -92,6 +92,15 @@ test('Royal Beach and Vinity preserve original package amounts without multiplyi
  const vinity=normalize(renderVenueNewPage(venue('vinity'),context('budget')));
  assert.ok(vinity.includes('863 500'));
  assert.ok(vinity.includes('760 000'));
+});
+test('Telegram source audits and previously missed venues retain their cost caveats',()=>{
+ assert.equal(VENUE_PRICING.putilov.rent.value,190000);
+ assert.equal(VENUE_PRICING.ermolinsky.rent.value,430000);
+ assert.equal(VENUE_PRICING.zhemchuzhny.menu.value,5500);
+ assert.equal(VENUE_RECORDS.ermolinsky.cost.technical,170000);
+ assert.ok(VENUE_RECORDS.eva.documents.length>=3);
+ assert.ok(VENUE_RECORDS.zhemchuzhny.drive.includes('1qM5zhh'));
+ assert.equal(['alex-park','putilov','ermolinsky','panorama','eva'].reduce((n,id)=>n+VENUE_RECORDS[id].telegramLinks.length,0),18);
 });
 test('K2 rent and Zarenkov guest price are source-grounded, unknown components remain unknown',()=>{
  assert.equal(VENUE_PRICING.k2.rent.value,420000);
