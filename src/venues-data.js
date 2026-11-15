@@ -1,7 +1,4 @@
-/* Venue facts copied from supplied Google Drive files / phone photos on 2026-11-15.
- * This is delivered through PUBLIC GitHub Pages; do not store private contacts.
- * None of these quotes confirms venue availability on June 19, 2027.
- */
+/* Venue facts from wedding project and public venue sources, 2026-11-15. Never include private guest data. */
 export const VENUE_RECORDS = {
   "360": {
     "drive": "https://drive.google.com/drive/folders/119tq7TDOuoimCaT7ARqDWNh-6dpd2jY8",
@@ -12,7 +9,9 @@ export const VENUE_RECORDS = {
     ]
   },
   "vesenniy": {
-    "dateAvailability": {"19":"unavailable"},
+    "dateAvailability": {
+      "19": "unavailable"
+    },
     "dateNote": "19 июня занято; смета на 18-е — предложение, а не подтверждение бронирования.",
     "visited": true,
     "visitEvidence": "Фото посещения в папке площадки",
@@ -325,7 +324,11 @@ export const VENUE_RECORDS = {
     ]
   },
   "loft-roof": {
-    "cost": {"menu":6000,"service":15,"rent":110000},
+    "cost": {
+      "menu": 6000,
+      "service": 15,
+      "rent": 110000
+    },
     "visited": true,
     "visitEvidence": "Фото залов, террасы и служебных помещений",
     "availability": "pending",
@@ -390,7 +393,11 @@ export const VENUE_RECORDS = {
     "summary": "Просмотр планировался вместе с Весенним и Лофтом на крыше 14 ноября. В доступной папке нет личных фотографий. Приложенный PDF описывает схему прохода и условия парковки, не полную смету."
   },
   "seasons": {
-    "dateAvailability": {"18":"available","19":"unavailable","20":"unavailable"},
+    "dateAvailability": {
+      "18": "available",
+      "19": "unavailable",
+      "20": "unavailable"
+    },
     "dateNote": "По сообщению менеджера от 14.11.2026 свободна только пятница 18.06.2027; актуальность подтвердить перед бронированием.",
     "visited": true,
     "visitEvidence": "Фото зала, сцены и территории",
@@ -528,7 +535,12 @@ export const VENUE_RECORDS = {
     ]
   },
   "petr": {
-    "cost": {"menu":4500,"service":10,"technical":35000,"rent":0},
+    "cost": {
+      "menu": 4500,
+      "service": 10,
+      "technical": 35000,
+      "rent": 0
+    },
     "visited": true,
     "visitEvidence": "Фото интерьеров и балкона",
     "capacity": 100,
@@ -624,7 +636,11 @@ export const VENUE_RECORDS = {
     ]
   },
   "panorama": {
-    "cost": {"rent":150000,"menu":7800,"service":10},
+    "cost": {
+      "rent": 150000,
+      "menu": 7800,
+      "service": 10
+    },
     "visited": true,
     "visitEvidence": "13 оригинальных фото с телефона",
     "photos": "https://drive.google.com/drive/folders/1fVfrSjWndp7pGqMCYgvmIeOcc-M49AdM",
@@ -671,7 +687,12 @@ export const VENUE_RECORDS = {
     ]
   },
   "eva": {
-    "cost": {"menu":5000,"service":10,"rent":90000,"minSpend":350000},
+    "cost": {
+      "menu": 5000,
+      "service": 10,
+      "rent": 90000,
+      "minSpend": 350000
+    },
     "drive": "https://drive.google.com/drive/folders/1A96wgKlQMhmxI-wI_DOHsZk-bo5zY8zp",
     "quoteSource": "https://docs.google.com/document/d/1ouH9sKXwSxjHRvP7iyryZmRop0eSvry7fUqoMc7KYls/edit",
     "summary": "Летний шатёр у залива: депозит для пятницы/субботы 350 000 ₽ плюс аренда 90 000 ₽; меню от 5 000 ₽/гость и 10% обслуживание.",
@@ -748,5 +769,41 @@ export const VENUE_RECORDS = {
         "folder": "1Cq3EEH_qMsAqMy3CB8sGcmd5BzObKsJf"
       }
     ]
+  },
+  "zarenkov-gallery": {
+    "summary": "Вероятное совпадение с упомянутой «Галереей на З…» — Zarenkov Gallery. До подтверждения названия не считать площадку окончательно идентифицированной. Арт-галерея с видовой террасой на крыше; официальный сайт подтверждает проведение свадеб и банкетов.",
+    "sourceStatus": "Вероятная идентификация по названию; личное коммерческое предложение не получено.",
+    "capacityNote": "На официальном сайте главный зал указан до 100 человек, терраса — до 150. Вместимость 80 гостей за единым банкетным столом нужно подтвердить.",
+    "cost": {
+      "rent": 30000,
+      "menu": 6000
+    },
+    "budgetItems": [
+      [
+        "Ориентир аренды из открытого каталога, не КП",
+        30000
+      ],
+      [
+        "Банкет от 6 000 ₽/гость (открытый каталог)",
+        480000
+      ]
+    ],
+    "included": [
+      "На официальном сайте заявлены звук, микрофоны, свет, экраны и сцена",
+      "Есть гримёрка, гардероб, раздельные санузлы и терраса с панорамным видом"
+    ],
+    "excluded": [
+      "Техническое наполнение конкретного свадебного пакета и формат кейтеринга требуют подтверждения",
+      "Сервис, напитки, пробковый сбор, декор, продление и трансфер не рассчитаны"
+    ],
+    "questions": [
+      "Подтвердить, что речь именно о Zarenkov Gallery, а не другой «Галерее»",
+      "Уточнить свободные даты 18, 19 и 20 июня 2027",
+      "Запросить смету на 80–100 гостей с итогом всех сборов",
+      "Согласовать план банкетной рассадки в одном зале и погодный сценарий для террасы"
+    ],
+    "quoteSource": "https://zarenkov-gallery.com/rent/",
+    "visited": false,
+    "gallery": []
   }
 };
