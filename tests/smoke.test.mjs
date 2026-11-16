@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {wedding,adminModules,sampleGuests} from '../src/data.js';
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 test('wedding details remain tentative',()=>{assert.equal(wedding.tentative,true);assert.equal(wedding.location,'Марьино');});
-test('all required admin modules exist',()=>{const ids=new Set(adminModules.map(x=>x.id));for(const id of ['guests','budget','venues','tasks','documents','schedule'])assert.ok(ids.has(id));for(const id of ['catering','vendors'])assert.ok(!ids.has(id),'deprecated section must not appear: '+id);});
+test('all required admin modules exist',()=>{const ids=new Set(adminModules.map(x=>x.id));for(const id of ['guests','budget','venues','tasks','schedule'])assert.ok(ids.has(id));for(const id of ['catering','vendors','documents'])assert.ok(!ids.has(id),'obsolete section must not appear: '+id);});
 test('no real attendees are seeded',()=>assert.ok(sampleGuests.every(x=>x.isSample)));
 test('public shell exposes responsive entry point',async()=>{const html=await read('../index.html');assert.match(html,/viewport/);assert.match(html,/src\/app\.js/);});
 test('migration has RLS and private storage',async()=>{const sql=await read('../supabase/migrations/001_initial.sql');assert.match(sql,/enable row level security/);assert.match(sql,/wedding-private.*false/);});
@@ -45,4 +45,12 @@ test('removed sections have no admin navigation or reachable content routes',asy
  assert.match(app,/adminModules.some\(m=>m.id===section\)/);
  assert.doesNotMatch(ui,/vendors:'vendors'|catering:'vendors'/);
  assert.doesNotMatch(ui,/supported=\[[^\]]*'catering'/);
+});
+
+test('guest records use authenticated database CRUD without file import UI',async()=>{
+ const ui=await read('../src/admin-data-ui.js');
+ assert.match(ui,/call\('admin\/guests'\)/);
+ assert.match(ui,/call\('admin\/guests',\{method:'POST'/);
+ for(const term of ['Импорт гостей','Загрузить CSV','admin/import/guests','documents(host)','section===\'documents\''])
+  assert.ok(!ui.includes(term),'Removed UI still references '+term);
 });
