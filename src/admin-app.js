@@ -36,18 +36,14 @@ function adminOverview(){
   </section>
  </div>`;
 }
-function adminCatering(){
- return `<div class="dashboard-heading"><div><div class="eyebrow">ОРГАНИЗАЦИЯ / ПИТАНИЕ</div><h1>Кейтеринг</h1><p>Предложения, меню и дополнительные услуги</p></div></div>
- <div class="admin-panel"><div class="panel-header"><h2>Документы и предложения</h2></div>
- <p><a class="text-link" href="https://drive.google.com/drive/folders/195OYX_CPglwFmwSqwzRhQt7yrYyIPeBi" target="_blank" rel="noopener noreferrer">Открыть материалы кейтеринга в Wedding Drive ↗</a></p></div>`;
-}
-function adminGeneric(active){const m=adminModules.find(m=>m.id===active);if(!m)return adminOverview();if(active==='catering')return adminCatering();if(active==='venues')return renderVenueAdmin();if(active==='overview')return adminOverview();return `<div class="dashboard-heading"><div><div class="eyebrow">ОРГАНИЗАЦИЯ</div><h1>${m.label}</h1><p>${m.text}</p></div></div><div class="admin-panel module-empty"><div class="module-symbol">${m.icon}</div><h2>${m.label}</h2></div>`;}
+function adminGeneric(active){const m=adminModules.find(m=>m.id===active);if(!m)return adminOverview();if(active==='venues')return renderVenueAdmin();if(active==='overview')return adminOverview();return `<div class="dashboard-heading"><div><div class="eyebrow">ОРГАНИЗАЦИЯ</div><h1>${m.label}</h1><p>${m.text}</p></div></div><div class="admin-panel module-empty"><div class="module-symbol">${m.icon}</div><h2>${m.label}</h2></div>`;}
 function admin(active='overview'){return `<div class="admin-layout">${adminSidebar(active)}<main class="admin-main"><div class="admin-topbar"><span>Панель организаторов</span></div><div class="admin-content">${adminGeneric(active)}</div></main></div>`;}
 
 function render(){
  const p=decodeURIComponent((location.hash||'#/admin/overview').slice(1)).replace(/\/+$/,'')||'/admin';
  if(!/^\/admin(?:\/|$)/.test(p)){location.replace('#/admin/overview');return;}
  const section=(p.split('/')[2]||'overview');
+ if(!adminModules.some(m=>m.id===section)){location.replace('#/admin/overview');return;}
  app.innerHTML=admin(section);
  if(section==='venues')activateVenueAdmin(app);
  activateAdminData(app,section).catch(e=>console.warn('Admin data initialization failed',e));
