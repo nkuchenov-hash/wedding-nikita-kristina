@@ -50,6 +50,9 @@ jobs:
           test -s _site/admin/index.php
           test -s _admin-private/index.html
           test -s _admin-private/src/admin-data-ui.js
+          ! grep -Fq 'Демо-панель:' _admin-private/src/admin-app.js
+          ! grep -Fq 'ДЕМО · БЕЗ БАЗЫ ДАННЫХ' _admin-private/src/admin-app.js
+          ! grep -Fq 'Пока без серверной авторизации' _admin-private/src/venue-detail-ui.js
           test ! -e _site/admin/src
           test ! -e _site/src/app.js
           test ! -e _site/public/photos
@@ -118,6 +121,15 @@ jobs:
             echo "::error::REG.RU admin/index.php checksum mismatch."
             exit 1
           fi
+          for asset in admin-app.js admin-data-ui.js venue-detail-ui.js; do
+            local_asset_sha=$(sha256sum "_admin-private/src/$asset" | awk '{print $1}')
+            remote_asset_sha=$(ssh $SSH_OPTS "$USERNAME@$HOST" "sha256sum '/var/www/u3728035/data/wedding-private/admin-release/src/$asset'" | awk '{print $1}')
+            if [[ "$local_asset_sha" != "$remote_asset_sha" ]]; then
+              echo "::error::REG.RU protected admin asset mismatch: $asset"
+              exit 1
+            fi
+          done
+          echo "REG.RU protected admin JavaScript bundle matches this release."
           echo "REG.RU admin-only deployment confirmed by remote checksums."
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
