@@ -229,6 +229,7 @@ export async function activateAdminData(root,section){
    for(const el of [...destination.children])if(el!==host)el.hidden=true;
    await renderSection(host,section);
  }catch(err){
-   host.append($('div','ad-live-offline','Серверная база подготовлена, но онлайн-доступ к личным данным пока отключён до завершения HTTPS и авторизации.'));
+   // Live API is not enabled on this release. Leave the existing authenticated admin tools visible.
+   host.remove();
  }
 }
