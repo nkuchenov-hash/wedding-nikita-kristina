@@ -200,7 +200,7 @@ async function renderSection(host,section){
  if(section==='guests'){await guests(host);return}
  if(section==='venues'){await collection(host,'venues');return}
  if(mapSection[section]){await collection(host,mapSection[section]);return}
- title(host,'База данных подключена','Раздел будет подключён к защищённым записям.');
+ return;
 }
 function login(host,section){
  title(host,'Подключение к базе данных','Для работы с персональными данными требуется отдельный вход администратора.');
