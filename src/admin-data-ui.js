@@ -8,8 +8,7 @@ const fields={
   budget_lines:[['category','Категория'],['description','Статья'],['planned_rub','План, ₽'],['committed_rub','Согласовано, ₽'],['paid_rub','Оплачено, ₽']],
   tasks:[['title','Задача'],['description','Описание'],['status','Статус'],['owner','Ответственный'],['due_at','Срок']],
   menu_options:[['category','Категория'],['title','Блюдо'],['description','Описание'],['allergens','Аллергены']],
-  schedule_items:[['title','Событие'],['start_at','Начало'],['end_at','Конец'],['place','Место'],['notes','Примечание']],
-  documents:[['category','Категория'],['label','Название'],['reference','Ссылка на файл'],['visibility','Доступ']]
+  schedule_items:[['title','Событие'],['start_at','Начало'],['end_at','Конец'],['place','Место'],['notes','Примечание']]
 };
 const numeric=new Set(['capacity_max','quoted_total_rub','estimate_rub','planned_rub','committed_rub','paid_rub']);
 const mapSection={budget:'budget_lines',tasks:'tasks',schedule:'schedule_items'};
@@ -81,12 +80,7 @@ async function guests(host){
  const data=await call('admin/guests');
  title(host,'Гости — защищённый реестр','Контакты, RSVP и особые пожелания видны только организаторам');
  message(host,'Гостей в базе: '+data.guests.length);
- if(!data.guests.length){
-   message(host,'Исходный единый список гостей уже есть в Wedding Drive. Его ещё нужно безопасно импортировать в этот закрытый реестр; приглашения не считаются подтверждениями.');
-   const source=$('a','ad-live-button','Открыть свадебные материалы');
-   source.href='https://drive.google.com/drive/folders/195OYX_CPglwFmwSqwzRhQt7yrYyIPeBi';
-   source.target='_blank';source.rel='noopener noreferrer';host.append(source);
- }
+
  const rows=data.guests.map(g=>{
    const action=button('Приглашение',async b=>{
      if(!window.confirm('Создать новый персональный токен? Старый токен этого гостя станет недействительным.'))return;
@@ -107,29 +101,15 @@ async function guests(host){
    await call('admin/guests',{method:'POST',body:d});
  });
  host.append(add);
- const imp=$('section','ad-live-subsection');title(imp,'Импорт гостей','Для Excel используйте конвертер XLSX→CSV; дубликаты не перезаписываются.');
- const form=$('form','ad-live-import');const file=$('input');file.type='file';file.accept='.csv,text/csv';file.required=true;
- const b=$('button','ad-live-button','Загрузить CSV');b.type='submit';const status=$('p','ad-live-message');
- form.append(file,b,status);host.append(imp);imp.append(form);
- form.addEventListener('submit',async e=>{
-   e.preventDefault();const f=file.files?.[0];if(!f)return;
-   const fd=new FormData();fd.append('file',f);
-   b.disabled=true;try{const out=await call('admin/import/guests',{method:'POST',body:fd,form:true});
-     status.textContent='Импортировано: '+out.imported+'; пропущено: '+out.skipped;
-   }catch(err){status.textContent=errorText(err)}finally{b.disabled=false}
- });
+
 }
-async function collection(host,type,filter=''){
+async function collection(host,type){
  const data=await call('admin/records?collection='+encodeURIComponent(type));
- const heading=filter==='catering'?'Кейтеринг':({venues:'Сравнение площадок',vendors:'Подрядчики',budget_lines:'Бюджет',tasks:'Задачи',menu_options:'Меню',schedule_items:'Программа',documents:'Документы'})[type]||type;
+ const heading=({venues:'Сравнение площадок',budget_lines:'Бюджет',tasks:'Задачи',menu_options:'Меню',schedule_items:'Программа'})[type]||type;
  title(host,heading);
  const keys=fields[type]||[];
- const items=(data.items||[]).filter(item=>!filter || item.category===filter);
+ const items=data.items||[];
  const records=items.map(item=>keys.map(([k])=>{
-   if(type==='documents' && k==='reference' && typeof item[k]==='string' && /^https:\/\//.test(item[k])){
-     const a=$('a','ad-live-link','Открыть документ');
-     a.href=item[k];a.target='_blank';a.rel='noopener noreferrer';return a;
-   }
    return item[k]??'—';
  }));
  if(records.length)table(host,keys.map(([,label])=>label),records);
@@ -209,30 +189,15 @@ async function moderation(host){
  };
  list(data.photos||[],'photos');list(data.stories||[],'stories');
 }
-async function documents(host){
-  title(host,'Документы и сметы','Материалы хранятся в Wedding Drive. Новые записи можно добавлять прямо здесь.');
-  const a=$('a','ad-live-button','Открыть Wedding Drive');
-  a.href='https://drive.google.com/drive/folders/195OYX_CPglwFmwSqwzRhQt7yrYyIPeBi';
-  a.target='_blank';a.rel='noopener noreferrer';host.append(a);
-  await collection(host,'documents');
-}
-function budgetScenario(host){
- const panel=$('section','ad-live-subsection');
- title(panel,'Сценарий банкета — Марьино','Предварительный ориентир 7 500 ₽ на человека из материалов от 29 октября. Не подтверждённая итоговая смета.');
- const grid=$('div','ad-live-metrics');
- for(const count of [50,80,100])metric(grid,count+' гостей',(count*7500).toLocaleString('ru-RU')+' ₽');
- panel.append(grid);host.append(panel);
-}
 async function renderSection(host,section){
  if(section==='overview'){await overview(host);return}
  if(section==='settings'){await settings(host);return}
  if(section==='moderation'){await moderation(host);return}
  if(section==='menu'){await collection(host,'menu_options');return}
- if(section==='documents'){await documents(host);return}
  if(section==='guests'){await guests(host);return}
  if(section==='venues'){await collection(host,'venues');return}
  if(mapSection[section]){
-   await collection(host,mapSection[section],section==='catering'?'catering':'');
+   await collection(host,mapSection[section]);
    if(section==='budget')budgetScenario(host);
    return;
  }
@@ -253,7 +218,7 @@ function login(host,section){
 }
 export async function activateAdminData(root,section){
  const destination=root.querySelector('.admin-content');if(!destination)return;
- const supported=['overview','guests','venues','budget','tasks','schedule','settings','moderation','menu','documents'];
+ const supported=['overview','guests','venues','budget','tasks','schedule','settings','moderation','menu'];
  if(!supported.includes(section))return;
  const host=$('section','ad-live-panel');host.setAttribute('aria-label','Данные свадебной базы');
  destination.prepend(host);
