@@ -82,3 +82,19 @@ test('three-day wedding itinerary contains only organizer-confirmed events',asyn
  assert.match(admin,/admin\/records\?collection=schedule_items/);
  assert.match(admin,/section==='schedule'/);
 });
+
+test('protected guest roster edits any core field inline and separates relationship to the couple',async()=>{
+ const ui=await read('../src/admin-guests.js');
+ assert.match(ui,/Кем приходится нам/);
+ assert.match(ui,/relation_to_couple/);
+ assert.match(ui,/admin\/guest\/fields/);
+ assert.match(ui,/ad-gb-expanded-row/);
+ assert.match(ui,/admin\/guest\/rsvp/);
+ assert.match(ui,/Связи с другими людьми/);
+ const schema=await read('../backend/schema.sql');
+ assert.match(schema,/relation_to_couple TEXT/);
+ assert.match(schema,/response_source TEXT/);
+ const api=await read('../backend/src/api.php');
+ assert.match(api,/admin\/guest\/fields/);
+ assert.match(api,/admin\/guest\/rsvp/);
+});

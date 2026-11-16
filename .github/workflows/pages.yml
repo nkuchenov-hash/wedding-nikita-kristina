@@ -30,6 +30,9 @@ jobs:
           npm run check
           node --check src/admin-app.js
           node --check src/admin-data-ui.js
+          node --check src/admin-guests.js
+          node --check src/admin-documents.js
+          node --check src/admin-photos.js
           php -l tools/admin-gateway.php
       - name: Build only private administrative assets
         shell: bash
