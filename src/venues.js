@@ -84,8 +84,15 @@ function patch(id,key,value){
  state.venues[id]={...old,[key]:value};save();
 }
 function estimate(v){return estimateVenue(v,state.guestCount);}
-function weighted(v){return scoreVenue(v,state.guestCount,estimate(v));}
 function extraTotal(v){return EXTRAS.reduce((s,[k])=>s+(numbers(v.extras?.[k])??0),0)}
+// The comparison table and its cost score use the same total as the venue budget page.
+function totalEstimate(v){
+ const base=estimate(v),extra=extraTotal(v);
+ if(base.value===null||extra===0)return base;
+ return {...base,value:base.value+extra,partial:true,isQuote:false,kind:'scenario',
+  note:base.note+'; добавлены указанные организаторами доплаты: '+rub(extra)};
+}
+function weighted(v){return scoreVenue(v,state.guestCount,totalEstimate(v));}
 function sourceThumb(g){if(!g)return '';const id=encodeURIComponent(g.id);return '<a href="https://drive.google.com/file/d/'+id+'/view" target="_blank" rel="noopener noreferrer" class="vw-photo"><img loading="lazy" src="https://drive.google.com/thumbnail?id='+id+'&sz=w800" alt="'+h(g.label)+'"><span>'+h(g.label)+'</span></a>'}
 function photoGallery(v){return v.gallery?.length?'<div class="vw-gallery">'+v.gallery.map(sourceThumb).join('')+'</div>':'<p class="vw-muted">Фотографий с телефона пока нет.</p>'}
 function budgetTotal(v){const e=estimate(v);return '<div class="vw-budget-boxes"><div><small>По смете / минимум</small><strong>'+rub(e.value)+'</strong></div><div><small>Добавленные доплаты</small><strong>'+rub(extraTotal(v))+'</strong></div><div><small>Суммарный известный бюджет</small><strong>'+rub(e.value===null?null:e.value+extraTotal(v))+'</strong></div></div><p class="vw-muted">Неизвестные позиции не считаются нулевыми. Не добавляйте депозит к уже оплаченному меню второй раз.</p>'}
@@ -99,7 +106,7 @@ function status(v){
  return {available:'19 июня — подтверждено',unavailable:'19 июня — занято',pending:'19 июня — уточняется',unknown:'19 июня — неизвестно'}[status]||'19 июня — неизвестно';
 }
 function row(v){
- const score=weighted(v),cost=estimate(v),pic=getVenueCover(v);
+ const score=weighted(v),cost=totalEstimate(v),pic=getVenueCover(v);
  const image=pic?'<img loading="lazy" class="vw-row-thumb" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(pic.id)+'&sz=w240" alt="Фото площадки: '+h(v.name)+'">':'<span class="vw-row-thumb vw-no-image"></span>';
  return '<tr class="vw-row" data-id="'+h(v.id)+'"><td><div class="vw-venue-cell"><span class="vw-venue-media"><button type="button" class="vw-image-open" data-detail="'+h(v.id)+'" aria-label="Открыть площадку '+h(v.name)+'">'+image+'</button></span><div class="vw-venue-label"><button class="vw-name" data-detail="'+h(v.id)+'" type="button">'+h(v.name)+'</button><small>'+h(v.area)+' · '+(v.region==='country'?'За городом':'Город')+'</small></div></div></td>'+
  '<td><div class="vw-date-list">'+threeDates(v)+'</div></td>'+
@@ -135,7 +142,7 @@ function sortVenues(rows){
  function key(v){
   if(ui.sort==='name')return v.name;
   if(ui.sort==='visit')return v.visited?0:1;
-  if(ui.sort==='price')return estimate(v).value;
+  if(ui.sort==='price')return totalEstimate(v).value;
   if(ui.sort==='capacity')return numbers(v.capacity);
   if(ui.sort==='score')return weighted(v).value;
   if(ui.sort==='date')return ui.chosenDay==='all'?datePriority(v):(ordinal[dayStatus(v,ui.chosenDay)]??2);
@@ -153,7 +160,7 @@ function sortVenues(rows){
 }
 function visibleVenues(all){
  return sortVenues(all.filter(v=>{
-  const e=estimate(v);
+  const e=totalEstimate(v);
   return (ui.kind==='all'||v.region===ui.kind)
     &&(ui.date==='all'||(ui.chosenDay==='all'?DATE_CHOICES.some(([d])=>dayStatus(v,d)===ui.date):dayStatus(v,ui.chosenDay)===ui.date))
     &&(ui.visit==='all'||(ui.visit==='yes')===!!v.visited)
