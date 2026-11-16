@@ -6,7 +6,9 @@ const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 test('wedding details remain tentative',()=>{assert.equal(wedding.tentative,true);assert.equal(wedding.location,'Марьино');});
 test('required organizer modules are present',()=>{
  const ids=new Set(adminModules.map(x=>x.id));
- for(const id of ['guests','budget','venues','photos','tasks','schedule','moderation'])assert.ok(ids.has(id));
+ for(const id of ['guests','budget','venues','photos','tasks','schedule'])assert.ok(ids.has(id));
+ assert.equal(adminModules.filter(x=>x.id==='photos').length,1);
+ assert.ok(!ids.has('moderation'),'No second photo or moderation section allowed');
  assert.equal(adminModules.length,ids.size);
 });
 test('no real attendees are seeded',()=>assert.ok(sampleGuests.every(x=>x.isSample)));
@@ -42,13 +44,23 @@ test('protected wedding admin has no development warnings or demo badges',async(
  assert.match(workflow,/admin-gateway\.php/);
 });
 
-test('photo archive is a dedicated protected organizer module',async()=>{
+test('one protected gallery only: pair, registration, approved programme places, Petersburg and activities',async()=>{
  const {adminModules}=await import('../src/data.js');
- assert.ok(adminModules.some(m=>m.id==='photos'));
+ const sections=adminModules.filter(x=>x.id==='photos'||x.id==='moderation'||/фото/i.test(x.label));
+ assert.deepEqual(sections.map(x=>x.id),['photos']);
  const src=await read('../src/admin-photos.js');
- assert.match(src,/getVenuePhotos/);
- assert.match(src,/ArrowRight/);
- assert.match(src,/photo\.section/);
+ assert.match(src,/GUEST_PHOTO_CATEGORIES/);
+ assert.match(src,/admin\/gallery/);
+ assert.match(src,/Наши фотографии/);
+ assert.match(src,/места регистрации/);
+ assert.match(src,/Петербург/);
+ assert.match(src,/развлечений/);
+ assert.doesNotMatch(src,/getVenuePhotos/);
+ const app=await read('../src/admin-app.js');
+ assert.match(app,/section==='moderation'.*#\/admin\/photos/);
+ const data=await read('../src/admin-data-ui.js');
+ assert.doesNotMatch(data,/async function moderation\(/);
+ assert.doesNotMatch(data,/section==='moderation'/);
  const stager=await read('../tools/prepare-admin-release.mjs');
  assert.match(stager,/admin-photos\.js/);
 });
@@ -190,7 +202,8 @@ test('wedding venue scoring is traceable and stays tentative for missing evidenc
  assert.ok(ninety.value>eighty.value);
  const rating=scoreVenue(venue,80,eighty);
  assert.equal(rating.breakdown.find(x=>x.key==='date').value,40);
- assert.equal(rating.breakdown.find(x=>x.key==='country').value,5);
+ assert.equal(rating.breakdown.find(x=>x.key==='city').value,0);
+ assert.equal(scoreVenue({...venue,region:'city'},80,eighty).breakdown.find(x=>x.key==='city').value,10);
  assert.equal(rating.breakdown.find(x=>x.key==='capacity').value,10);
  assert.equal(rating.provisional,true);
  const alternative={...venue,dateAvailability:{'19':'unavailable','18':'available'}};
