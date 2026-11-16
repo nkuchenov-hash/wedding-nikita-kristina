@@ -110,6 +110,8 @@ export async function activateGuestDirectory(root){
            }});
            person[field]=val||null;
            person.response_source=val?'admin':null;
+           if(val==='no'){person.adults=0;person.children=0}
+           if(val===''){person.adults=null;person.children=null;person.transport_needed=null;}
          }else{
            await api('admin/guest/fields',{method:'PATCH',csrf,
              body:{id:person.id,fields:{[field]:val}}});
@@ -334,7 +336,7 @@ export async function activateGuestDirectory(root){
        ['Первое открытие',g.first_opened_at],
        ['Последнее открытие',g.last_opened_at],
        ['Анкета сохранена',g.profile_completed_at],
-       ['Ответ RSVP',g.attendance],['Источник RSVP',g.response_source==='admin'?'Организатор':'Гость'],
+       ['Ответ RSVP',g.attendance],['Источник RSVP',g.attendance?(g.response_source==='admin'?'Организатор':'Гость'):'Нет ответа'],
        ['В базовом подсчёте',g.base_count]
      ]);
      const invitation=e('section','ad-gb-section ad-gb-invitation');
