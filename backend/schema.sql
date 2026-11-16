@@ -155,3 +155,16 @@ CREATE TABLE IF NOT EXISTS guest_relationships (
 );
 CREATE INDEX IF NOT EXISTS guest_relationships_member_1 ON guest_relationships(guest_id_1);
 CREATE INDEX IF NOT EXISTS guest_relationships_member_2 ON guest_relationships(guest_id_2);
+
+
+CREATE TABLE IF NOT EXISTS venue_files(
+  id TEXT PRIMARY KEY,
+  venue_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  mime TEXT NOT NULL,
+  file_id TEXT NOT NULL UNIQUE,
+  source_url TEXT NOT NULL,
+  type TEXT NOT NULL CHECK(type IN ('document','video','archive')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_venue_files_venue ON venue_files(venue_id,type);
