@@ -97,7 +97,7 @@ const getCost=v=>{
  const base=VENUE_PRICING[v.id]||{};
  const cost={...base},updates=v.cost||{};
  // Explicit organizer corrections appear everywhere, not just in the calculator.
- for(const [source,target] of [['menu','menu'],['rent','rent'],['service','service'],['technical','tech'],['minSpend','deposit']]){
+ for(const [source,target] of [['menu','menu'],['rent','rent'],['service','service'],['technical','tech'],['minSpend','deposit'],['sound','sound'],['light','light'],['welcome','welcome'],['drinks','drinks'],['cake','cake'],['corkage','corkage'],['staff','staff'],['extension','extension']]){
   const raw=updates[source];
   if(raw===null||raw===undefined||raw==='')continue;
   const value=Number(raw);
@@ -105,6 +105,12 @@ const getCost=v=>{
  }
  return cost;
 };
+// The value the organizer sees is also its editor. Never render a second edit-only card.
+function inlineValue(key,value,{label='',kind='text',className='',empty='Нажмите, чтобы добавить'}={}){
+ const show=value===null||value===undefined||String(value).trim()===''?empty:String(value);
+ return '<button type="button" class="vdp-inline '+className+'" data-venue-inline="'+h(key)+'" data-inline-kind="'+h(kind)+'" title="Изменить: '+h(label||key)+'" aria-label="Редактировать: '+h(label||key)+'"><span class="vdp-inline-text">'+h(show)+'</span><span class="vdp-inline-pencil" aria-hidden="true">✎</span></button>';
+}
+const lineItems=items=>(items||[]).map(item=>'• '+item).join('\n');
 function amountCell(entry,unit){
  if(!entry||entry.value===null||entry.value===undefined)return '<span class="vdp-unknown">Нет данных</span>';
  if(typeof entry.value==='string')return '<span class="vdp-included">'+h(entry.value)+'</span>';
@@ -112,12 +118,12 @@ function amountCell(entry,unit){
 }
 function costSchedule(v){
  const p=getCost(v);
- return rowGroups.map(([title,fields])=>'<section class="vdp-cost-group"><h3>'+h(title)+'</h3><div class="vdp-cost-list">'+fields.map(k=>{const f=labelMap[k],e=p[k];return '<div class="vdp-cost-row"><div><b>'+h(f.title)+'</b>'+(e?.note?'<small>'+h(e.note)+'</small>':'')+'</div><div>'+amountCell(e,f.unit)+'</div></div>'}).join('')+'</div></section>').join('');
+ return rowGroups.map(([title,fields])=>'<section class="vdp-cost-group"><h3>'+h(title)+'</h3><div class="vdp-cost-list">'+fields.map(k=>{const f=labelMap[k],e=p[k];return '<div class="vdp-cost-row"><div><b>'+h(f.title)+'</b>'+(e?.note?'<small>'+h(e.note)+'</small>':'')+'</div><div>'+inlineValue('cost:'+({deposit:'minSpend',tech:'technical'}[k]||k),typeof e?.value==='number'?e.value:null,{label:f.title,kind:'number',empty:'Нет данных'})+'</div></div>'}).join('')+'</div></section>').join('');
 }
 function quoteCards(v,guests){
  const quotes=v.quotes||[];
- if(!quotes.length)return '<p class="vdp-subtle">Полученной полной сметы пока нет. Ниже приведён только известный минимум и открытые условия.</p>';
- return '<div class="vdp-quote-list">'+quotes.map(q=>'<article class="vdp-quote-card'+(Number(q.guests)===guests?' is-current':'')+'"><small>'+h(q.guests)+' гостей'+(q.date?' · '+h(q.date.slice(8,10))+'.06.2027':'')+' · '+(q.kind==='scenario'?'Альтернативный сценарий':q.kind==='estimate'?'Прогноз менеджера':'Полученная смета')+'</small><strong>'+money(q.total)+'</strong><p>'+h(q.label||'')+'</p></article>').join('')+'</div>';
+ if(!quotes.length)return '<p class="vdp-subtle">Полученной сметы пока нет. Добавьте вариант здесь, без перехода к отдельному редактору.</p>';
+ return '<div class="vdp-quote-list">'+quotes.map((q,i)=>'<button type="button" class="vdp-quote-card vdp-quote-editable'+(Number(q.guests)===guests?' is-current':'')+'" data-inline-quote="'+i+'" aria-label="Изменить смету на '+h(q.guests)+' гостей"><small>'+h(q.guests)+' гостей'+(q.date?' · '+h(q.date.slice(8,10))+'.06.2027':'')+' · '+(q.kind==='scenario'?'Сценарий':q.kind==='estimate'?'Прогноз менеджера':'Полученная смета')+'</small><strong>'+money(q.total)+'</strong><p>'+h(q.label||'')+'</p><span class="vdp-inline-pencil" aria-hidden="true">✎</span></button>').join('')+'</div>';
 }
 function budget(v,ctx){
  const guests=ctx.guests,e=ctx.estimate(v),extra=ctx.extraTotal(v),total=e.value===null?null:e.value+extra;
@@ -127,7 +133,7 @@ function budget(v,ctx){
  return '<div class="vdp-budget-header"><div><small>Площадка · '+h(guests)+' гостей</small><strong>'+known+'</strong><span>'+(isQuote?'Полученная смета':e.partial?'Предварительный расчёт, не утверждённая смета':'Сумма предложения')+'</span></div><div><small>Внесённые доплаты</small><strong>'+money(extra)+'</strong><span>Только сверх суммы предложения</span></div><div><small>Суммарный известный бюджет</small><strong>'+money(total)+'</strong><span>Неизвестные расходы не учтены</span></div></div>';
 }
 function dates(v,ctx){
- return '<div class="vdp-dates">'+[['18','18 июня'],['19','19 июня'],['20','20 июня']].map(([n,label])=>{const s=ctx.dayStatus(v,n),txt=ctx.dayText(v,n);return '<div class="vdp-date '+h(s)+'"><span>'+label+(n==='19'?' · приоритет':'')+'</span><strong>'+h(txt)+'</strong></div>'}).join('')+'</div>';
+ return '<div class="vdp-dates">'+[['18','18 июня'],['19','19 июня'],['20','20 июня']].map(([n,label])=>{const status=ctx.dayStatus(v,n),txt=ctx.dayText(v,n);return '<button type="button" data-venue-inline="date:'+n+'" data-inline-kind="date" class="vdp-date vdp-date-editable '+h(status)+'" aria-label="Изменить доступность '+label+'"><span>'+label+(n==='19'?' · приоритет':'')+'</span><strong>'+h(txt)+' <span class="vdp-inline-pencil" aria-hidden="true">✎</span></strong></button>'}).join('')+'</div>';
 }
 function photoTile(photo,i,isSelected){
  return '<button type="button" class="vdp-thumb '+(isSelected?'is-active':'')+'" data-photo-open="'+i+'" title="'+h(photo.name)+'"><img loading="lazy" alt="'+h(photo.name)+'" src="'+thumb(photo.id,550)+'"><span>'+h(photo.name)+'</span></button>';
@@ -157,8 +163,8 @@ function hero(v,ctx,photos){
  return '<div class="vdp-hero">'+(pic?'<div class="vdp-hero-image" style="background-image:linear-gradient(90deg,rgba(14,36,28,.86),rgba(14,36,28,.27)),url(&quot;'+thumb(pic.id,1600)+'&quot;)"></div>':'<div class="vdp-hero-image vdp-no-image"></div>')+'<div class="vdp-hero-content"><span class="vdp-eyebrow">'+(v.region==='city'?'САНКТ-ПЕТЕРБУРГ':'ЗА ГОРОДОМ')+' · '+(v.visited?'ПОСМОТРЕЛИ':'ОСМОТР НЕ ПОДТВЕРЖДЁН')+'</span><h1>'+h(v.name)+'</h1><p>'+h(v.area||'')+'</p><div class="vdp-hero-bottom"><div><small>Банкет на гостя</small><strong>'+(typeof menu?.value==='number'?money(menu.value):'Нет данных')+'</strong></div><div><small>Известная стоимость на '+ctx.guests+' гостей</small><strong>'+money(budgeted.value)+'</strong><span>'+(budgeted.partial?'Ориентир, не полная смета':'По полученной смете')+'</span></div><div><small>Фотографии</small><strong>'+photos.length+'</strong><span>С осмотров в Wedding Drive</span></div></div></div></div>';
 }
 function scopeList(v){
- const blocks=[['Что входит',v.included||[]],['Доплаты и ограничения',v.excluded||[]],['Открытые вопросы',v.questions||[]]];
- return '<div class="vdp-scope-grid">'+blocks.map(([title,values])=>'<section class="vdp-pane"><div class="vdp-row-between"><h3>'+title+'</h3><a class="vdp-editor-link" href="#/admin/venues/'+encodeURIComponent(v.id)+'/edit">Изменить →</a></div>'+(values.length?'<ul>'+values.map(x=>'<li>'+h(x)+'</li>').join('')+'</ul>':'<p class="vdp-subtle">Пока нет сведений.</p>')+'</section>').join('')+'</div>';
+ const blocks=[['Что входит','included'],['Доплаты и ограничения','excluded'],['Открытые вопросы','questions']];
+ return '<div class="vdp-scope-grid">'+blocks.map(([title,key])=>'<section class="vdp-pane"><h3>'+title+'</h3>'+inlineValue(key,lineItems(v[key]),{label:title,kind:'lines',className:'vdp-inline-list',empty:'Добавить пункты'})+'</section>').join('')+'</div>';
 }
 function venueDocuments(v){
  return '<section class="vdp-pane vdp-files-pane"><div class="vdp-row-between"><div><h2>Документы и материалы площадки</h2><p class="vdp-files-intro">Исходные сметы, коммерческие предложения, документы, видео и папки Google Drive — всё привязано к этой площадке. Оригиналы хранятся в Wedding Drive.</p></div></div><div data-venue-files="'+h(v.id)+'"></div></section>';
@@ -171,7 +177,15 @@ function estimatePane(v,ctx){
 }
 function infoPane(v,ctx){
  const p=getCost(v);
- return '<div class="vdp-info-grid"><section class="vdp-pane"><h2>Условия площадки</h2><p>'+h(v.summary||'Условия ещё не получены')+'</p><p>'+h(p.summary||'')+'</p><h3>Даты 18–20 июня</h3>'+dates(v,ctx)+'<h3>Вместимость и формат</h3><p>'+h(v.capacityNote||('Заявленная вместимость: '+(v.capacity||'неизвестно')))+'</p><div class="vdp-source-links">'+sourceLinks(v)+'</div></section><section class="vdp-pane"><h2>Редактирование</h2><p>Изменения отправляются в общую базу организаторов. Если сохранение не удалось, появится предупреждение.</p><label>Лично смотрели<select data-venue="'+h(v.id)+'" data-field="visited"><option value="true" '+(v.visited?'selected':'')+'>Да</option><option value="false" '+(!v.visited?'selected':'')+'>Не подтверждено</option></select></label><div class="vdp-date-edit">'+[['18','18 июня'],['19','19 июня'],['20','20 июня']].map(([d,t])=>'<label>'+t+'<select data-venue="'+h(v.id)+'" data-day="'+d+'">'+[['unknown','Неизвестно'],['available','Свободно'],['pending','Уточняется'],['unavailable','Занято']].map(([s,l])=>'<option value="'+s+'" '+(ctx.dayStatus(v,d)===s?'selected':'')+'>'+l+'</option>').join('')+'</select></label>').join('')+'</div><label>Заметки<textarea rows="6" data-venue="'+h(v.id)+'" data-field="notes">'+h(v.notes||'')+'</textarea></label></section></div>'+scopeList(v);
+ return '<div class="vdp-info-grid"><section class="vdp-pane vdp-live-terms"><h2>Условия площадки</h2>'+
+ '<p class="vdp-inline-label">Описание</p>'+inlineValue('summary',v.summary,{label:'Условия площадки',kind:'multiline',className:'vdp-inline-block'})+
+ (p.summary?'<p class="vdp-source-note"><strong>Из предложения площадки:</strong> '+h(p.summary)+'</p>':'')+
+ '<h3>Даты 18–20 июня</h3>'+dates(v,ctx)+
+ '<h3>Вместимость и формат</h3><div class="vdp-inline-facts"><div><small>Максимум гостей</small>'+inlineValue('capacity',v.capacity,{label:'Вместимость',kind:'number'})+'</div><div><small>Формат и рассадка</small>'+inlineValue('capacityNote',v.capacityNote,{label:'Формат и рассадка',kind:'multiline'})+'</div></div>'+
+ '<h3>Личный осмотр</h3>'+inlineValue('visited',v.visited?'Да':'Не подтверждено',{label:'Осмотр',kind:'visited'})+
+ '<h3>Заметки</h3>'+inlineValue('notes',v.notes,{label:'Заметки организаторов',kind:'multiline',className:'vdp-inline-block'})+
+ '<h3>Контакты</h3><div class="vdp-inline-facts"><div><small>Телефон</small>'+inlineValue('contactPhone',v.contactPhone||v.phone,{label:'Телефон'})+'</div><div><small>Email</small>'+inlineValue('contactEmail',v.contactEmail||v.email,{label:'Email',kind:'email'})+'</div></div>'+
+ '<div class="vdp-source-links">'+sourceLinks(v)+'</div></section></div>'+scopeList(v);
 }
 function ratingPane(v,ctx){
  const sc=ctx.weighted(v);
