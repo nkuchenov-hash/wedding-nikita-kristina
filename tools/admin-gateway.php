@@ -100,6 +100,12 @@ $valid = $login !== '' && isset($users[$login]) &&
     time() - (int)($_SESSION['last_seen'] ?? 0) <= 12 * 3600;
 if (!$valid) {
     unset($_SESSION['admin_login'], $_SESSION['admin_stamp']);
+    if (isset($_GET['api'])) {
+        http_response_code(401);
+        header('Content-Type: application/json; charset=UTF-8', true);
+        echo '{"ok":false,"error":"login_required"}';
+        exit;
+    }
     if (isset($_GET['asset'])) {
         http_response_code(401);
         header('Content-Type: text/plain; charset=UTF-8', true);
