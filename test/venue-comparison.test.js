@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {VENUE_RECORDS} from '../src/venues-data.js';
 import {estimateVenue, scoreVenue, RATING_CRITERIA, RATING_MAX} from '../src/venue-evaluation.js';
 
 const venue=(overrides={})=>({
@@ -85,4 +86,35 @@ test('comparison keeps exactly six useful table columns and no extra import or c
  assert.equal(source.includes('Сравнить / подробности'),false);
  assert.match(source,/addEventListener\('input',event=>/);
  assert.match(source,/totalEstimate\(v\)/);
+});
+
+test('17 November updates preserve date specificity and only valid active June quotes',()=>{
+ const dates=(id)=>VENUE_RECORDS[id].dateAvailability;
+ assert.deepEqual(dates('vesenniy'),{'18':'available','19':'unavailable','20':'unavailable'});
+ assert.deepEqual(dates('ermolinsky'),{'18':'available','19':'unavailable','20':'unavailable'});
+ assert.deepEqual(dates('alex-park'),{'18':'unavailable','19':'unavailable','20':'available'});
+ assert.deepEqual(dates('k2'),{'18':'available','19':'available','20':'available'});
+ assert.deepEqual(dates('maryino'),{'18':'available','19':'available','20':'available'});
+ assert.equal(dates('vinity')['20'],'available');
+ assert.equal(VENUE_RECORDS.vinity.dateDiscounts['20'].percent,10);
+ assert.equal(VENUE_RECORDS.vinity.dateDiscounts['20'].applied,false);
+ assert.equal(VENUE_RECORDS['alex-park'].quotes.length,1);
+ assert.equal(VENUE_RECORDS['alex-park'].quotes[0].total,687760);
+ assert.equal(VENUE_RECORDS['alex-park'].historicalQuotes[0].total,712760);
+ const price=estimateVenue({id:'alex-park',quotes:VENUE_RECORDS['alex-park'].quotes,cost:VENUE_RECORDS['alex-park'].cost},80);
+ assert.equal(price.value,687760);
+ assert.equal(price.quoteDate,'2027-06-20');
+});
+
+test('shortlist excludes six dismissed venues but retains archived records',()=>{
+ const source=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');
+ const list=source.slice(source.indexOf('export const PUBLIC_VENUES'),source.indexOf('const DATE_CHOICES'));
+ for(const id of ['kraft','loft-roof','360','zhemchuzhny','english-roof','admiralty-roof']){
+  assert.doesNotMatch(list,new RegExp("id:'"+id+"'"));
+  assert.equal(VENUE_RECORDS[id].archived,true);
+ }
+ for(const id of ['vinity','vesenniy','k2','alex-park','ermolinsky','maryino','harmony','putilov']){
+  assert.match(list,new RegExp("id:'"+id+"'"));
+ }
+ assert.match(source,/FACTS_REVISION='2026-11-17-dates-v1'/);
 });
