@@ -23,12 +23,16 @@ test('replica is retained in draft source and withheld from production admin',as
 test('protected wedding admin has no development warnings or demo badges',async()=>{
  const ui=await read('../src/admin-app.js');
  const data=await read('../src/admin-data-ui.js');
- for(const text of ['Демо-панель:', 'ДЕМО · БЕЗ БАЗЫ ДАННЫХ','Раздел подготовлен','после настройки backend']){
+ for(const text of ['Демо-панель:', 'ДЕМО · БЕЗ БАЗЫ ДАННЫХ','Раздел подготовлен','после настройки backend','Ожидаем референсы','Черновой список','0 проверенных предложений']){
   assert.ok(!ui.includes(text),'Remove obsolete admin copy: '+text);
  }
  assert.ok(!ui.includes('class="admin-warning"'),'No yellow admin warning band');
  assert.ok(!ui.includes('class="demo-badge"'),'No demo badge');
  assert.ok(!data.includes('Серверная база подготовлена, но онлайн-доступ'),'No offline technical filler');
+ assert.ok(ui.includes('venueSummary.total'),'Venue dashboard must use real recorded data');
+ const detail=await read('../src/venue-detail-ui.js');
+ assert.ok(!detail.includes('Пока без серверной авторизации'),'Remove obsolete publicly-accessible banner');
+ assert.ok(!detail.includes('Для общей синхронизации необходим сервер'),'No future-implementation copy');
  const workflow=await read('../.github/workflows/pages.yml');
  assert.match(workflow,/Deploy to REG\.RU via SSH/);
  assert.match(workflow,/admin-gateway\.php/);
