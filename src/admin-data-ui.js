@@ -1,5 +1,5 @@
 // Wedding admin live-data layer. Never stores guest details in browser storage.
-const API='/api/index.php?r=';
+const API='/admin/index.php?api=';
 const $=(tag,cls='',text='')=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=String(text);return el};
 const state={csrf:'',role:'anonymous',busy:false};
 const fields={
@@ -225,9 +225,9 @@ export async function activateAdminData(root,section){
    const session=await call('auth/session');
    state.csrf=session.csrf;state.role=session.role;
    if(session.role!=='admin'){login(host,section);return}
-   // Remove stale demo-only figures once verified live data is available.
-   for(const el of [...destination.children])if(el!==host)el.hidden=true;
    await renderSection(host,section);
+   // Switch to live records only after the authenticated request succeeds.
+   for(const el of [...destination.children])if(el!==host)el.hidden=true;
  }catch(err){
    // Live API is not enabled on this release. Leave the existing authenticated admin tools visible.
    host.remove();
