@@ -65,6 +65,7 @@ jobs:
               php -l \"\$phpfile\" >/dev/null || exit 1
             done
             php bin/smoke.php
+            php bin/test-guest-progress.php
             if test -f '$PRIVATE/wedding.sqlite3'; then php bin/backup.php; fi
             php bin/migrate.php
             php bin/seed-venues.php
