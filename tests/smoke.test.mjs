@@ -19,3 +19,17 @@ test('guest editorial code is retained but excluded from live admin release',asy
 test('app references the screenshot-matched guest UI',async()=>{const app=await read('../src/app.js');assert.match(app,/from '.\/replica\.js'/);});
 test('all screenshot sections have real, separate HTML',async()=>{const ui=await read('../src/replica.js');for(const key of ['r-hero','r-invitation','r-timeline','v2-venue-thumbnails','r-dress-collage','r-rsvp-options','r-masonry','r-map','r-tabs'])assert.ok(ui.includes(key),key);});
 test('replica is retained in draft source and withheld from production admin',async()=>{const html=await read('../index.html'),yaml=await read('../.github/workflows/pages.yml');assert.match(html,/src\/replica\.css/);assert.doesNotMatch(yaml,/cp src\/replica\.js/);});
+
+test('protected wedding admin has no development warnings or demo badges',async()=>{
+ const ui=await read('../src/admin-app.js');
+ const data=await read('../src/admin-data-ui.js');
+ for(const text of ['Демо-панель:', 'ДЕМО · БЕЗ БАЗЫ ДАННЫХ','Раздел подготовлен','после настройки backend']){
+  assert.ok(!ui.includes(text),'Remove obsolete admin copy: '+text);
+ }
+ assert.ok(!ui.includes('class="admin-warning"'),'No yellow admin warning band');
+ assert.ok(!ui.includes('class="demo-badge"'),'No demo badge');
+ assert.ok(!data.includes('Серверная база подготовлена, но онлайн-доступ'),'No offline technical filler');
+ const workflow=await read('../.github/workflows/pages.yml');
+ assert.match(workflow,/Deploy to REG\.RU via SSH/);
+ assert.match(workflow,/admin-gateway\.php/);
+});
