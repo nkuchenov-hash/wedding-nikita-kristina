@@ -41,7 +41,7 @@ jobs:
           mkdir -p _site/src _site/public
           cp src/admin-app.js src/admin-data-ui.js src/admin-data.css src/admin-photos.js src/admin-photos.css src/venue-files-ui.js src/venue-files-ui.css src/admin-guests.js src/admin-guests.css src/data.js src/styles.css \
              src/venues.js src/venues-data.js src/venues.css \
-             src/venue-detail-ui.js src/venue-detail-ui.css src/venues-pricing.js \
+             src/venue-detail-ui.js src/venue-detail-ui.css src/venues-pricing.js src/venue-evaluation.js \
              src/venues-photos-1.js src/venues-photos-2.js src/venues-photos-3.js src/venues-photos-4.js _site/src/
           cp public/mark.svg _site/public/
           touch _site/.nojekyll

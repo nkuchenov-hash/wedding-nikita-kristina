@@ -6,7 +6,7 @@ if(!/^[a-zA-Z0-9-]+$/.test(sha))throw new Error('Invalid revision');
 const admin=join(root,'admin'), privateDir='_admin-private', assets=join(privateDir,'src');
 mkdirSync(admin,{recursive:true});
 mkdirSync(assets,{recursive:true});
-const required=['admin-app.js','admin-data-ui.js','admin-data.css','admin-photos.js','admin-photos.css','venue-files-ui.js','venue-files-ui.css','admin-guests.js','admin-guests.css','data.js','styles.css','venues.js','venues-data.js','venues.css','venue-detail-ui.js','venue-detail-ui.css','venues-pricing.js','venues-photos-1.js','venues-photos-2.js','venues-photos-3.js','venues-photos-4.js'];
+const required=['admin-app.js','admin-data-ui.js','admin-data.css','admin-photos.js','admin-photos.css','venue-files-ui.js','venue-files-ui.css','admin-guests.js','admin-guests.css','data.js','styles.css','venues.js','venues-data.js','venues.css','venue-detail-ui.js','venue-detail-ui.css','venues-pricing.js','venue-evaluation.js','venues-photos-1.js','venues-photos-2.js','venues-photos-3.js','venues-photos-4.js'];
 for(const name of required){
  const src=join(root,'src',name);
  if(!existsSync(src))throw new Error('Missing admin dependency: '+name);

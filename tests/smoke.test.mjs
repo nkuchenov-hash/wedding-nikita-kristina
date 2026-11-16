@@ -147,7 +147,7 @@ test('approved comprehensive venue comparison is never overlaid by generic datab
  assert.match(venue,/data-sort-col/);
  assert.match(venue,/data-clear-filters/);
  assert.match(venue,/headerSelect\('chosenDay'/);
- assert.match(venue,/selectedCompare\(all\)/);
+ assert.doesNotMatch(venue,/selectedCompare\(all\)/);
  assert.match(css,/\.vw-table/);
 });
 
@@ -157,10 +157,44 @@ test('venue table has six data columns with no useless actions column or clipped
  const css=await read('../src/venues.css');
  assert.ok(!venue.includes('<th scope="col">Действие</th>'));
  assert.ok(!venue.includes('class="vw-actions"'));
- assert.match(venue,/vw-compare-toggle/);
+ assert.doesNotMatch(venue,/vw-compare-toggle/);
  assert.match(venue,/vw-name/);
  assert.match(venue,/data-detail/);
- assert.match(venue,/data-compare/);
+ assert.doesNotMatch(venue,/data-compare/);
  assert.match(css,/\.vw-page \.vw-table-sortable\{width:100%;min-width:910px;table-layout:fixed\}/);
  assert.match(css,/\.vw-page \.vw-scroll\{overflow-x:auto/);
+});
+
+test('venue page stays a single detailed table with no import, export, comparison, material or adjustable-weights widget',async()=>{
+ const ui=await read('../src/venues.js');
+ for(const forbidden of ['Импорт правок','Экспорт правок','Сравнить рядом','Все материалы','Со сметой','С фото','data-export','data-import','data-compare','data-weight','selectedCompare(']){
+   assert.ok(!ui.includes(forbidden),'Unexpected venue clutter: '+forbidden);
+ }
+ assert.match(ui,/data-state="guestCount"/);
+ assert.match(ui,/type="number"/);
+ assert.match(ui,/scoreVenue/);
+ const build=await read('../tools/prepare-admin-release.mjs');
+ assert.match(build,/venue-evaluation\.js/);
+ const gate=await read('../tools/admin-gateway.php');
+ assert.match(gate,/src\/venue-evaluation\.js/);
+});
+test('wedding venue scoring is traceable and stays tentative for missing evidence',async()=>{
+ const {estimateVenue,scoreVenue,RATING_CRITERIA}=await import('../src/venue-evaluation.js');
+ const sum=RATING_CRITERIA.reduce((n,x)=>n+x[2],0);
+ assert.equal(sum,100);
+ const venue={id:'test',region:'country',dateAvailability:{'19':'available'},
+   capacity:100,cost:{menu:5000,rent:120000,service:10},ratings:{}};
+ const eighty=estimateVenue(venue,80),ninety=estimateVenue(venue,90);
+ assert.equal(eighty.value,560000);
+ assert.equal(ninety.value,615000);
+ assert.ok(ninety.value>eighty.value);
+ const rating=scoreVenue(venue,80,eighty);
+ assert.equal(rating.breakdown.find(x=>x.key==='date').value,40);
+ assert.equal(rating.breakdown.find(x=>x.key==='country').value,5);
+ assert.equal(rating.breakdown.find(x=>x.key==='capacity').value,10);
+ assert.equal(rating.provisional,true);
+ const alternative={...venue,dateAvailability:{'19':'unavailable','18':'available'}};
+ assert.equal(scoreVenue(alternative,80,eighty).breakdown.find(x=>x.key==='date').value,24);
+ const unknown={...venue,dateAvailability:{'19':'unknown','18':'unknown','20':'unknown'}};
+ assert.equal(scoreVenue(unknown,80,eighty).breakdown.find(x=>x.key==='date').value,null);
 });
