@@ -1,0 +1,164 @@
+{
+  "source": "Свадьба в Марьино — сравнение кейтеринга и цен (29.10.2026)",
+  "note": "Публичные ориентиры по состоянию на 29.10.2026, не индивидуальные КП. Наличие и итоговые расценки не подтверждены.",
+  "vendors": [
+    {
+      "id": "catering-fursa",
+      "category": "catering",
+      "name": "Fursa Catering",
+      "contact": "+7 911 920-81-06",
+      "website": "https://fursacatering.ru/svadba",
+      "status": "research",
+      "notes": "Опубликованный ориентир 3 200–6 500 ₽/чел.; выезд в ЛО, персонал и логистика уточняются — не КП на свадьбу 2027."
+    },
+    {
+      "id": "catering-severnyi-veter",
+      "category": "catering",
+      "name": "Северный Ветер",
+      "contact": "+7 968 195-55-53",
+      "website": "https://sv.spb.ru/",
+      "status": "research",
+      "notes": "Опубликованный ориентир от 3 500 ₽/чел.; официанты, повар, посуда, логистика указаны в условиях — не КП на свадьбу 2027."
+    },
+    {
+      "id": "catering-fenix",
+      "category": "catering",
+      "name": "Fenix Catering",
+      "contact": "+7 911 748-11-60",
+      "website": "https://fenix-catering.ru/banket/",
+      "status": "research",
+      "notes": "Опубликованный ориентир 3 700–6 500 ₽/чел.; мебель, посуда, персонал и доставка — не КП на свадьбу 2027."
+    },
+    {
+      "id": "catering-gastroclub",
+      "category": "catering",
+      "name": "GastroClub",
+      "contact": "+7 921 449-11-55",
+      "website": "https://gastrospb.ru/banquet/",
+      "status": "research",
+      "notes": "Опубликованный ориентир 3 850–4 500 ₽/чел.; три банкетных меню — не КП на свадьбу 2027."
+    },
+    {
+      "id": "catering-furset",
+      "category": "catering",
+      "name": "Фурсет",
+      "contact": "+7 981 900-11-12",
+      "website": "https://furset.ru/banket-svadba-var1",
+      "status": "research",
+      "notes": "Опубликованный ориентир 4 000–5 000 ₽/чел.; персонал, посуда, текстиль и логистика — не КП на свадьбу 2027."
+    },
+    {
+      "id": "catering-interfood",
+      "category": "catering",
+      "name": "Interfood Catering",
+      "contact": "+7 911 941-72-05",
+      "website": "https://interfood-catering.ru/banket/",
+      "status": "research",
+      "notes": "Опубликованный ориентир 4 470–6 970 ₽/чел.; свадебный пакет от 80 человек — не КП на свадьбу 2027."
+    },
+    {
+      "id": "catering-canapeclub",
+      "category": "catering",
+      "name": "CanapeClub",
+      "contact": "+7 812 615-21-50",
+      "website": "https://spb.canapeclub.ru/catering/wedding/",
+      "status": "research",
+      "notes": "Опубликованный ориентир 5 200–8 700 ₽/чел.; логистика только до КАД — не КП на свадьбу 2027."
+    },
+    {
+      "id": "catering-chefs",
+      "category": "catering",
+      "name": "CHEFS Eatertainment",
+      "contact": "+7 812 920-15-49",
+      "website": "https://chefs-eatertainment.ru/catering",
+      "status": "research",
+      "notes": "Опубликованный ориентир 5 500–10 000 ₽/чел.; банкет с рассадкой, выездной сервис — не КП на свадьбу 2027."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "planning-date",
+      "title": "Согласовать окончательную дату свадьбы",
+      "description": "Дата в материалах предварительная. Не подменять подтверждение предположением.",
+      "status": "todo",
+      "priority": "normal"
+    },
+    {
+      "id": "planning-venue",
+      "title": "Выбрать банкетную площадку",
+      "description": "Сверить Марьино (Белый зал), Vinity, Harmony, Александровский и другие предложения, включая вместимость, аренду и дату.",
+      "status": "todo",
+      "priority": "normal"
+    },
+    {
+      "id": "planning-catering",
+      "title": "Получить актуальные сметы кейтеринга",
+      "description": "Уточнить условия именно на дату свадьбы, все сборы, аренду кухни, доставку и возможность стороннего кейтеринга.",
+      "status": "todo",
+      "priority": "normal"
+    },
+    {
+      "id": "planning-guests",
+      "title": "Проверить единый список гостей",
+      "description": "Проверить пары, детей, возможных гостей, не считать приглашения подтверждёнными.",
+      "status": "todo",
+      "priority": "normal"
+    },
+    {
+      "id": "planning-registration",
+      "title": "Подтвердить регистрацию брака",
+      "description": "Уточнить место, дату, формат и возможность выездной регистрации.",
+      "status": "todo",
+      "priority": "normal"
+    },
+    {
+      "id": "planning-menu",
+      "title": "Утвердить меню и условия питания",
+      "description": "Собрать варианты блюд и ограничения только после согласования с площадкой.",
+      "status": "todo",
+      "priority": "normal"
+    },
+    {
+      "id": "planning-budget",
+      "title": "Составить бюджет по подтверждённым предложениям",
+      "description": "Разделить план, сметы, договоры, предоплаты и фактические платежи.",
+      "status": "todo",
+      "priority": "normal"
+    },
+    {
+      "id": "planning-host",
+      "title": "Согласовать ведущего и программу",
+      "description": "Проверить условия, стоимость и тайминг с выбранным ведущим.",
+      "status": "todo",
+      "priority": "normal"
+    },
+    {
+      "id": "planning-photos",
+      "title": "Утвердить фотографа, видео и фотозоны",
+      "description": "Уточнить состав услуг, сроки и доступность на дату свадьбы.",
+      "status": "todo",
+      "priority": "normal"
+    },
+    {
+      "id": "planning-decor",
+      "title": "Подготовить декор и план рассадки",
+      "description": "Учесть размещение 50–100 гостей, зону церемонии и банкет.",
+      "status": "todo",
+      "priority": "normal"
+    },
+    {
+      "id": "planning-website",
+      "title": "Утвердить гостевой дизайн сайта",
+      "description": "Не публиковать гостевое приглашение до одобрения внешнего вида.",
+      "status": "todo",
+      "priority": "normal"
+    },
+    {
+      "id": "planning-forms",
+      "title": "Протестировать анкеты RSVP и фотогалерею",
+      "description": "Проверить доступ по приглашениям, защиту данных и модерацию фотографий.",
+      "status": "todo",
+      "priority": "normal"
+    }
+  ]
+}
