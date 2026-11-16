@@ -254,11 +254,25 @@ async function collection(host,type){
  title(host,heading);
  const keys=fields[type]||[];
  const items=data.items||[];
+ if(type==='budget_lines'){
+   const totals=items.reduce((sum,row)=>{
+     for(const field of ['planned_rub','committed_rub','paid_rub'])
+       sum[field]+=Number(row[field])||0;
+     return sum;
+   },{planned_rub:0,committed_rub:0,paid_rub:0});
+   const summary=$('div','ad-live-metrics');
+   const rub=value=>Math.round(value).toLocaleString('ru-RU')+' ₽';
+   metric(summary,'План',totals.planned_rub?rub(totals.planned_rub):'Не задан');
+   metric(summary,'Согласовано',rub(totals.committed_rub));
+   metric(summary,'Оплачено',rub(totals.paid_rub));
+   metric(summary,'Остаток по плану',totals.planned_rub?rub(totals.planned_rub-totals.paid_rub):'—');
+   host.append(summary);
+   message(host,'Здесь учитываются только планируемые расходы свадьбы, принятые обязательства и реальные платежи. Альтернативные коммерческие предложения хранятся в карточках площадок.');
+ }
  let editor=null;
  async function redraw(){
    host.replaceChildren();
    await collection(host,type);
-   if(type==='budget_lines')budgetScenario(host);
  }
  function edit(item){
    if(editor)editor.remove();
@@ -278,7 +292,7 @@ async function collection(host,type){
  });
  if(records.length)table(host,[...keys.map(([,label])=>label),'Действие'],records);
  else message(host,type==='menu_options'?'Меню пока не утверждено — блюда можно добавить после выбора площадки.':
-   type==='budget_lines'?'Фактических платежей пока нет. Предложения площадок ниже не являются расходами.':
+   type==='budget_lines'?'Статей расходов пока нет. Добавьте планируемые суммы, обязательства или оплаты.':
    'Подтверждённых записей пока нет');
  const section=$('section','ad-live-subsection');title(section,'Добавить запись');
  showForm(section,keys,async fields=>{
@@ -411,46 +425,6 @@ async function moderation(host){
  };
  list(data.photos||[],'photos');list(data.stories||[],'stories');
 }
-function budgetScenario(host){
- const estimates=[];
- for(const venue of PUBLIC_VENUES){
-   const record=VENUE_RECORDS[venue.id]||{};
-   const sourceQuotes=Array.isArray(record.quotes)?record.quotes:[];
-   if(sourceQuotes.length){
-     for(const quote of sourceQuotes){
-       if(typeof quote.total!=='number'||!Number.isFinite(quote.total)||quote.total<=0)continue;
-       estimates.push({
-         name:venue.name,date:quote.date||'Не указана',guests:quote.guests||'—',
-         total:quote.total,source:venue.quoteSource||record.quoteSource||''
-       });
-     }
-   }else if(typeof venue.cost?.quoteTotal==='number'&&venue.cost.quoteTotal>0){
-     estimates.push({
-       name:venue.name,date:venue.quoteDate||'Не указана',
-       guests:venue.cost.quoteGuests||'—',total:venue.cost.quoteTotal,
-       source:venue.quoteSource||record.quoteSource||''
-     });
-   }
- }
- if(!estimates.length){
-   message(host,'Сметы и исходные файлы находятся в карточках соответствующих площадок.');
-   return;
- }
- const section=$('section','ad-live-subsection');title(section,'Полученные предложения площадок',
-   'Это альтернативные варианты банкета, а не совместные расходы. Суммы нельзя складывать между площадками.');
- const rows=estimates.sort((a,b)=>a.total-b.total).map(item=>{
-   const source=$('a','ad-live-document-link','Документ');
-   try{
-     const uri=new URL(item.source);
-     if(!['https:'].includes(uri.protocol))throw Error('unsafe');
-     source.href=uri.href;source.target='_blank';source.rel='noopener noreferrer';
-   }catch{source.textContent='В архиве';source.removeAttribute('href')}
-   return [item.name,item.date,item.guests,item.total.toLocaleString('ru-RU')+' ₽',source];
- });
- table(section,['Площадка','Дата','Гостей','Стоимость предложения','Источник'],rows);
- section.append($('p','ad-live-muted','Условия, состав услуг и итоговая цена требуют сверки с приложенными сметами. Подтверждённые платежи ведутся отдельно выше.'));
- host.append(section);
-}
 async function renderSection(host,section){
  if(section==='overview'){await overview(host);return}
  if(section==='moderation'){await moderation(host);return}
@@ -460,7 +434,6 @@ async function renderSection(host,section){
  if(section==='venues'){await collection(host,'venues');return}
  if(mapSection[section]){
    await collection(host,mapSection[section]);
-   if(section==='budget')budgetScenario(host);
    return;
  }
  return;
