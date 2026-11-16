@@ -246,13 +246,14 @@ function buildInlineFieldEditor(trigger,v){
  form.dataset.inlineKey=key;
  const value=currentInlineValue(v,key);
  let control;
- if(kind==='date'||kind==='visited'){
+ if(kind==='date'||kind==='visited'||kind==='region'){
   control=document.createElement('select');
   const list=kind==='date'
    ?[['unknown','Нет подтверждения'],['available','Свободно'],['pending','Уточняется'],['unavailable','Занято']]
+   :kind==='region'?[['city','Санкт-Петербург'],['country','За городом']]
    :[['false','Не подтверждено'],['true','Да, осматривали']];
   for(const [id,label] of list){const o=document.createElement('option');o.value=id;o.textContent=label;control.add(o)}
-  control.value=String(value);
+  control.value=kind==='region'?String(v.region||'city'):String(value);
  }else if(kind==='multiline'||kind==='lines'){
   control=document.createElement('textarea');control.rows=kind==='lines'?6:4;control.value=String(value);
   control.placeholder=kind==='lines'?'По одному пункту на строку':'Введите значение';
