@@ -6,7 +6,7 @@
  * Backend authentication is REQUIRED before this can be called a private admin.
  */
 import {VENUE_RECORDS} from './venues-data.js';
-import {renderVenueNewPage,filteredVenuePhotos,getVenueCover} from './venue-detail-ui.js';
+import {renderVenueNewPage,renderVenueQuoteEditorRow,filteredVenuePhotos,getVenueCover} from './venue-detail-ui.js';
 import {hydrateVenueFiles} from './venue-files-ui.js';
 import {estimateVenue,scoreVenue,PERSONAL_CRITERIA,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
 export const PUBLIC_VENUES = [
@@ -70,7 +70,7 @@ let ui={kind:'all',query:'',sort:'date',sortDir:'asc',expanded:null,detailTab:'o
 const h=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rub=(v)=>typeof v==='number'&&Number.isFinite(v)?Math.round(v).toLocaleString('ru-RU')+' ₽':'—';
 const safeUrl=(v)=>{try{const u=new URL(String(v));return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
-const get=(base)=>{const d=VENUE_RECORDS[base.id]||{},edit=state.venues[base.id]||{};return {...base,...d,...edit,cost:{...(base.publiclyAdvertised||{}),...(base.cost||{}),...(d.cost||{}),...(edit.cost||{})},ratings:{...(edit.ratings||{})},extras:{...(edit.extras||{})},quotes:d.quotes||[],gallery:d.gallery||[],dateAvailability:{'18':'unknown','19':edit.availability||d.availability||base.availability||'unknown','20':'unknown',...(d.dateAvailability||{}),...(edit.dateAvailability||{}),...(edit.availability?{'19':edit.availability}:{})}};};
+const get=(base)=>{const d=VENUE_RECORDS[base.id]||{},edit=state.venues[base.id]||{};return {...base,...d,...edit,cost:{...(base.publiclyAdvertised||{}),...(base.cost||{}),...(d.cost||{}),...(edit.cost||{})},ratings:{...(edit.ratings||{})},extras:{...(edit.extras||{})},quotes:edit.quotes??d.quotes??[],gallery:d.gallery||[],dateAvailability:{'18':'unknown','19':edit.availability||d.availability||base.availability||'unknown','20':'unknown',...(d.dateAvailability||{}),...(edit.dateAvailability||{}),...(edit.availability?{'19':edit.availability}:{})}};};
 const dayStatus=(v,day)=>v.dateAvailability?.[String(day)]||(String(day)==='19'?(v.availability||'unknown'):'unknown');
 const dayText=(v,day)=>({available:'Свободно',unavailable:'Занято',pending:'Уточняется',unknown:'Нет подтверждения'}[dayStatus(v,day)]||'Нет подтверждения');
 const datePriority=v=>dayStatus(v,'19')==='available'?0:(dayStatus(v,'18')==='available'||dayStatus(v,'20')==='available')?1:(DATE_CHOICES.some(([d])=>dayStatus(v,d)==='pending'))?2:(DATE_CHOICES.some(([d])=>dayStatus(v,d)==='unknown'))?3:4;
@@ -83,6 +83,123 @@ function patch(id,key,value){
  const old=state.venues[id]||{};
  state.venues[id]={...old,[key]:value};save();
 }
+
+// Durable organizer edits use the existing authenticated wedding admin SQLite API.
+// Static venue facts and original source materials remain untouched.
+const venueDb={rows:new Map(),csrf:'',ready:false,loading:false,error:''};
+const formNumber=(raw,label)=>{
+ const text=String(raw??'').trim();
+ if(!text)return null;
+ const n=Number(text);
+ if(!Number.isFinite(n)||n<0)throw new Error('Неверное число: '+label);
+ return n;
+};
+const formTextLines=value=>String(value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+async function venueApi(route,{method='GET',body}={}){
+ const [name,params='']=route.split('?');
+ const headers={Accept:'application/json'};
+ if(method!=='GET'){
+  if(!venueDb.csrf)throw new Error('Нет защищённой сессии для сохранения');
+  headers['X-CSRF-Token']=venueDb.csrf;
+  headers['Content-Type']='application/json';
+ }
+ const response=await fetch('/admin/index.php?api='+encodeURIComponent(name)+(params?'&'+params:''),{
+  method,headers,body:body?JSON.stringify(body):undefined,credentials:'same-origin',cache:'no-store'
+ });
+ let payload;
+ try{payload=await response.json()}catch{throw new Error('Сервер не вернул данные')}
+ if(!response.ok||!payload.ok)throw new Error(payload.message||'Сервер не принял изменения ('+response.status+')');
+ return payload;
+}
+function parseOverrides(row){
+ try{
+  const data=JSON.parse(row.details_json||'{}');
+  if(data&&PUBLIC_VENUES.some(x=>x.id===data.wedding_comparison_id)&&data.overrides&&typeof data.overrides==='object'){
+   return {venueId:data.wedding_comparison_id,overrides:data.overrides};
+  }
+ }catch{}
+ return null;
+}
+async function initVenueDatabase(root){
+ if(venueDb.loading||venueDb.ready)return;
+ venueDb.loading=true;
+ try{
+  const [session,data]=await Promise.all([venueApi('auth/session'),venueApi('admin/records?collection=venues')]);
+  venueDb.csrf=session.csrf||'';
+  const incoming={};
+  for(const row of data.items||[]){
+   const item=parseOverrides(row);
+   if(!item)continue;
+   venueDb.rows.set(item.venueId,row.id);
+   incoming[item.venueId]=item.overrides;
+  }
+  // The database is authoritative across devices. Existing browser-only edits
+  // remain visible unless the server already has a newer override for that venue.
+  state.venues={...state.venues,...incoming};
+  save();
+  venueDb.ready=true;
+  venueDb.error='';
+  if(root.querySelector('[data-venues-page]'))redraw(root);
+ }catch(error){
+  venueDb.error=error.message;
+  const status=root.querySelector('[data-venue-edit-feedback]');
+  if(status)status.textContent='Не удалось подключиться к сохранению: '+venueDb.error;
+ }finally{venueDb.loading=false}
+}
+async function persistVenue(id){
+ if(!venueDb.ready)throw new Error(venueDb.error||'Связь с базой не установлена. Изменения не отправлены на сервер');
+ const current=PUBLIC_VENUES.find(v=>v.id===id);
+ if(!current)throw new Error('Площадка не найдена');
+ const v=get(current);
+ const fields={
+  name:String(v.name||current.name),area:String(v.area||''),
+  details_json:JSON.stringify({wedding_comparison_id:id,overrides:state.venues[id]||{}})
+ };
+ const rowId=venueDb.rows.get(id);
+ const method=rowId?'PATCH':'POST';
+ const body={collection:'venues',fields,...(rowId?{id:rowId}:{})};
+ const saved=await venueApi('admin/records',{method,body});
+ if(!rowId)venueDb.rows.set(id,saved.id);
+ return saved;
+}
+function collectVenueEdit(form){
+ const id=form.dataset.venueEdit;
+ const current=PUBLIC_VENUES.find(v=>v.id===id);
+ if(!current)throw new Error('Неизвестная площадка');
+ const v=get(current),old=state.venues[id]||{};
+ const pick=key=>form.querySelector('[data-edit-field="'+key+'"]')?.value.trim()??'';
+ const numeric=(key)=>formNumber(pick(key),key);
+ const name=pick('name');if(!name)throw new Error('Введите название площадки');
+ const dateAvailability=Object.assign({},v.dateAvailability||{});
+ for(const day of ['18','19','20'])dateAvailability[day]=pick('date-'+day)||'unknown';
+ const cost={...(v.cost||{})};
+ for(const key of ['menu','rent','technical','extra','service','minSpend'])cost[key]=numeric('cost-'+key);
+ if(cost.service!==null&&cost.service>100)throw new Error('Сервисный сбор не должен превышать 100%');
+ const quotes=[];
+ for(const row of form.querySelectorAll('[data-venue-quote-row]')){
+  const value=field=>row.querySelector('[data-quote-field="'+field+'"]')?.value?.trim()??'';
+  const guests=formNumber(value('guests'),'Гостей в смете');
+  const total=formNumber(value('total'),'Полная сумма сметы');
+  if(guests===null&&total===null&&!value('label'))continue;
+  if(!Number.isInteger(guests)||guests<1||guests>500||total===null)
+   throw new Error('У каждого варианта сметы укажите количество гостей и сумму');
+  quotes.push({guests,total,date:value('date'),label:value('label'),kind:value('kind')||'quote'});
+ }
+ const updates={
+  ...old,name,area:pick('area'),region:pick('region'),address:pick('address'),
+  capacity:numeric('capacity'),capacityNote:pick('capacityNote'),
+  visited:pick('visited')==='true',summary:pick('summary'),notes:pick('notes'),
+  dateAvailability,availability:dateAvailability['19'],cost,quotes,
+  included:formTextLines(pick('included')),
+  excluded:formTextLines(pick('excluded')),
+  questions:formTextLines(pick('questions')),
+  website:pick('website'),drive:pick('drive'),photos:pick('photos'),
+  quoteSource:pick('quoteSource'),
+  contactPhone:pick('contactPhone'),contactEmail:pick('contactEmail')
+ };
+ return {id,updates};
+}
+
 function estimate(v){return estimateVenue(v,state.guestCount);}
 function extraTotal(v){return EXTRAS.reduce((s,[k])=>s+(numbers(v.extras?.[k])??0),0)}
 // The comparison table and its cost score use the same total as the venue budget page.
