@@ -293,7 +293,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         if (!one($db,"SELECT id FROM guests WHERE id=? AND status!='archived'",[$guestId]))
             fail(404,'not_found','Гость не найден');
         $raw=bin2hex(random_bytes(32));$hash=tokenHash($raw,$cfg);
-        $expires=gmdate('Y-m-d H:i:s',time()+60*60*24*90);$id=uuid();
+        $expires=gmdate('Y-m-d H:i:s',time()+60*60*24*365);$id=uuid();
         statement($db,"UPDATE invitations SET revoked_at=datetime('now') WHERE guest_id=? AND revoked_at IS NULL",[$guestId]);
         statement($db,'INSERT INTO invitations(id,guest_id,token_hash,expires_at) VALUES(?,?,?,?)',[$id,$guestId,$hash,$expires]);
         // A link is generated, NOT delivered. Never count this as a sent invitation.
