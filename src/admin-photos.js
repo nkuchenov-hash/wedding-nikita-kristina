@@ -1,171 +1,257 @@
+/* The organizer's ONE guest-facing photo collection.
+   It is NOT a gallery of candidate venue research or a guest moderation screen.
+   No assets appear here without explicit organizer upload. */
 import {PUBLIC_VENUES} from './venues.js';
-import {getVenuePhotos} from './venue-detail-ui.js';
 
-const safe=(value='')=>String(value??'');
-const node=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=safe(text);return n};
-const thumb=(id,w=900)=>'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w'+w;
-const orig=(id)=>'https://drive.google.com/file/d/'+encodeURIComponent(id)+'/view';
-const ALL_ALBUMS=PUBLIC_VENUES.map(v=>({id:v.id,name:v.name,photos:getVenuePhotos(v),drive:v.drive||'',area:v.area||''}));
-// The only source of truth for the wedding gallery is the approved programme.
-// Other locations remain accessible in their individual venue comparison cards.
+const CATEGORY = Object.freeze([
+  ['couple','Наши фотографии','Совместные снимки Никиты и Кристины'],
+  ['location','Места из программы и регистрация','Только уже утверждённые места'],
+  ['city','Петербург и достопримечательности','Город, архитектура, красивые места'],
+  ['guide','Дополнительные развлечения','Куда сходить и чем заняться']
+]);
+export const GUEST_PHOTO_CATEGORIES=CATEGORY.map(([id,title])=>({id,title}));
 export function approvedVenueIds(items=[]){
- return new Set(items.filter(item=>item&&Number(item.is_confirmed)===1&&item.venue_id)
-  .map(item=>String(item.venue_id)));
+  return new Set(items.filter(item=>item&&Number(item.is_confirmed)===1&&item.venue_id)
+    .map(item=>String(item.venue_id)));
 }
-const categories=(photos)=>['Все фотографии',...new Set(photos.map(p=>p.section||'Разное'))];
-const styleButton=(text,cls='')=>{const b=node('button','ad-photo-button '+cls,text);b.type='button';return b};
-let activeCleanup=null;
+export function guestGalleryAssets(items=[],approved=new Set()){
+  return items.filter(item=>item&&['couple','location','city','guide'].includes(item.category)
+    &&(item.category!=='location'||approved.has(String(item.venue_id||''))));
+}
+
+const venueLabels=new Map(PUBLIC_VENUES.map(v=>[v.id,v.name]));
+const element=(tag,className='',value)=>{
+  const el=document.createElement(tag);
+  if(className)el.className=className;
+  if(value!==undefined)el.textContent=String(value);
+  return el;
+};
+const button=(label,cls='')=>{const b=element('button','ad-photo-button '+cls,label);b.type='button';return b};
+const linkImage=id=>'/admin/index.php?media=gallery&id='+encodeURIComponent(id);
+const apiBase='/admin/index.php?api=';
+const categoryName=id=>CATEGORY.find(c=>c[0]===id)?.[1]||'Фотография';
+let cleanupActive=null;
 
 export function activatePhotoArchive(root){
- if(activeCleanup)activeCleanup();
- const host=root.querySelector('.admin-content');if(!host)return;
- host.replaceChildren();
- const ui={venue:'all',section:'Все фотографии',search:'',limit:72,cols:3,view:null};
- let albumList=[],loaded=false,loadError='',disposed=false;
- const wrap=node('section','ad-photo-archive');
- const eyebrow=node('div','ad-photo-eyebrow','СВАДЬБА  ·  ФОТОАРХИВ');
- const head=node('header','ad-photo-head');
- head.append(eyebrow,node('h1','','Фотографии и альбомы'));
- const lead=node('p','ad-photo-lead','Загружаем утверждённые площадки из программы свадьбы…');
- head.append(lead);
- wrap.append(head);
- const tools=node('div','ad-photo-toolbar');
- const select=node('select','ad-photo-select');
- const allOption=node('option','','Все утверждённые площадки');allOption.value='all';select.append(allOption);
- const search=node('input','ad-photo-search');search.type='search';search.placeholder='Поиск по площадкам и фотографиям';search.setAttribute('aria-label','Поиск по фото');
- const density=node('div','ad-photo-density');
- for(const count of [2,3,4]){
-   const btn=styleButton(count+' в ряд');btn.dataset.count=String(count);
-   btn.addEventListener('click',()=>{ui.cols=count;render();});
-   density.append(btn);
- }
- tools.append(select,search,density);wrap.append(tools);
- const chips=node('nav','ad-photo-chips');chips.setAttribute('aria-label','Категории фотографий');wrap.append(chips);
- const resultInfo=node('p','ad-photo-count');wrap.append(resultInfo);
- const grid=node('div','ad-photo-grid');wrap.append(grid);
- const more=styleButton('Показать ещё фотографии','ad-photo-more');wrap.append(more);
- const footer=node('div','ad-photo-sources');wrap.append(footer);
- const dialog=node('div','ad-photo-overlay');dialog.hidden=true;dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','Просмотр фотографии');
- const close=styleButton('Закрыть ×','ad-photo-close');
- const previous=styleButton('‹','ad-photo-prev');previous.setAttribute('aria-label','Предыдущая фотография');
- const next=styleButton('›','ad-photo-next');next.setAttribute('aria-label','Следующая фотография');
- const figure=node('figure','ad-photo-figure');
- const bigImg=node('img','ad-photo-full');bigImg.alt='';
- const caption=node('figcaption','ad-photo-caption');
- const originalLink=node('a','ad-photo-original','Открыть оригинал в Google Drive');originalLink.target='_blank';originalLink.rel='noopener noreferrer';
- figure.append(bigImg,caption,originalLink);
- const info=node('div','ad-photo-lightbox-count');
- dialog.append(close,previous,figure,next,info);
- wrap.append(dialog);
- host.append(wrap);
- let displayed=[];
- function items(){
-   const all=albumList.filter(v=>ui.venue==='all'||v.id===ui.venue);
-   const matches=[];
-   for(const venue of all){
-     for(const photo of venue.photos){
-       if(ui.section!=='Все фотографии'&&photo.section!==ui.section)continue;
-       const text=(venue.name+' '+photo.name+' '+photo.section).toLocaleLowerCase('ru');
-       if(ui.search && !text.includes(ui.search))continue;
-       matches.push({...photo,venueName:venue.name,venueId:venue.id});
-     }
-   }
-   return matches;
- }
- function drawLightbox(){
-    if(ui.view===null||!displayed.length)return;
-    const photo=displayed[ui.view]||displayed[0];
-    if(!photo){closeLightbox();return}
-    bigImg.src=thumb(photo.id,2000);
-    bigImg.alt=photo.name||'Фотография площадки';
-    caption.replaceChildren(node('strong','',photo.venueName),node('span','',photo.section+' · '+photo.name));
-    originalLink.href=orig(photo.id);
-    info.textContent=(ui.view+1)+' / '+displayed.length;
- }
- function closeLightbox(){ui.view=null;dialog.hidden=true;document.body.classList.remove('ad-photo-lock')}
- function openLightbox(index){ui.view=index;dialog.hidden=false;document.body.classList.add('ad-photo-lock');drawLightbox();close.focus()}
- function nextImage(delta){ui.view=(ui.view+delta+displayed.length)%displayed.length;drawLightbox()}
- function render(){
-   const visible=ui.venue==='all'?albumList:albumList.filter(v=>v.id===ui.venue);
-   const available=categories(visible.flatMap(v=>v.photos));
-   if(!available.includes(ui.section))ui.section='Все фотографии';
-   chips.replaceChildren();
-   for(const cat of available){
-      const b=styleButton(cat,cat===ui.section?'is-current':'');
-      b.addEventListener('click',()=>{ui.section=cat;ui.limit=72;render()});chips.append(b);
-   }
-   select.value=ui.venue;
-   for(const b of density.querySelectorAll('button'))b.classList.toggle('is-current',Number(b.dataset.count)===ui.cols);
-   displayed=items();
-   const count=displayed.length;
-   resultInfo.textContent=count+' фотографий'+(ui.venue==='all'?' · '+albumList.filter(v=>v.photos.length).length+' площадок':' · '+(visible[0]?.name||''))+
-     (ui.search?' · поиск: '+ui.search:'');
-   grid.replaceChildren();grid.style.setProperty('--photo-cols',String(ui.cols));
-   for(let i=0;i<Math.min(ui.limit,count);i++){
-      const item=displayed[i];
-      const cell=styleButton('','ad-photo-card');
-      const img=node('img');img.loading='lazy';img.decoding='async';img.src=thumb(item.id,760);img.alt=item.name;
-      img.onerror=()=>{cell.classList.add('ad-photo-no-image');img.style.display='none'};
-      const details=node('span','ad-photo-card-info');
-      details.append(node('strong','',item.venueName),node('small','',(item.section||'Разное')+' · '+item.name));
-      cell.append(img,details);cell.addEventListener('click',()=>openLightbox(i));
-      grid.append(cell);
-   }
-   more.hidden=count<=ui.limit;more.textContent='Показать ещё · '+Math.min(count-ui.limit,72)+' из '+(count-ui.limit);
-   footer.replaceChildren();
-   if(ui.venue!=='all'&&visible[0]?.drive){
-      const link=node('a','ad-photo-drive','Открыть исходный альбом в Google Drive');
-      link.href=visible[0].drive;link.rel='noopener noreferrer';link.target='_blank';footer.append(link);
-   }
-   if(!count)grid.append(node('p','ad-photo-empty',
-     loadError || (!loaded?'Загрузка фотографий утверждённых площадок…':
-     !albumList.length?'В программе пока нет утверждённых площадок. Отметьте площадку как утверждённую в разделе «Программа».':
-     'Для выбранных площадок пока нет фотографий в альбомах.')));
-   if(ui.view!==null){closeLightbox()}
- }
- select.addEventListener('change',()=>{ui.venue=select.value;ui.section='Все фотографии';ui.limit=72;render()});
- search.addEventListener('input',()=>{ui.search=search.value.trim().toLocaleLowerCase('ru');ui.limit=72;render()});
- more.addEventListener('click',()=>{ui.limit+=72;render()});
- close.addEventListener('click',closeLightbox);
- previous.addEventListener('click',()=>nextImage(-1));
- next.addEventListener('click',()=>nextImage(1));
- dialog.addEventListener('click',e=>{if(e.target===dialog)closeLightbox()});
- const key=e=>{if(dialog.hidden)return;if(e.key==='Escape')closeLightbox();if(e.key==='ArrowLeft')nextImage(-1);if(e.key==='ArrowRight')nextImage(1)};
- document.addEventListener('keydown',key);
- let touchX=0;
- dialog.addEventListener('touchstart',e=>{touchX=e.changedTouches[0]?.clientX||0},{passive:true});
- dialog.addEventListener('touchend',e=>{const dx=(e.changedTouches[0]?.clientX||0)-touchX;if(Math.abs(dx)>60)nextImage(dx<0?1:-1)},{passive:true});
- activeCleanup=()=>{disposed=true;document.removeEventListener('keydown',key);document.body.classList.remove('ad-photo-lock');activeCleanup=null;};
- // Load from the authenticated programme API; do not fall back to unapproved venues.
- async function loadApprovedProgramme(){
-  try{
-   const response=await fetch('/admin/index.php?api=admin%2Frecords&collection=schedule_items',{
-    headers:{Accept:'application/json'},credentials:'same-origin',cache:'no-store'
-   });
-   const data=await response.json();
-   if(!response.ok||!data.ok||!Array.isArray(data.items))throw new Error(data.message||'Программа недоступна');
-   if(disposed)return;
-   const approved=approvedVenueIds(data.items);
-   albumList=ALL_ALBUMS.filter(album=>approved.has(album.id));
-   const total=albumList.reduce((sum,album)=>sum+album.photos.length,0);
-   select.replaceChildren(allOption);
-   for(const venue of albumList){
-    const option=node('option','',venue.name+' · '+venue.photos.length);
-    option.value=venue.id;select.append(option);
-   }
-   lead.textContent=albumList.length
-    ?total+' фотографий из '+albumList.length+' утверждённых площадок программы. Выберите место или категорию: залы, террасы, территории и помещения.'
-    :'В программе пока не отмечено ни одной утверждённой площадки. После утверждения она появится здесь автоматически.';
-  }catch(error){
-   if(disposed)return;
-   loadError='Не удалось получить утверждённые площадки из программы. Проверьте доступ к базе данных и обновите страницу.';
-   lead.textContent=loadError;
-   albumList=[]; // Fail closed: never show all candidate venues as approved.
+  if(cleanupActive)cleanupActive();
+  const host=root.querySelector('.admin-content');
+  if(!host)return;
+  host.replaceChildren();
+  const ui={category:'all',query:'',cols:3,limit:72,assets:[],approved:new Set(),
+    csrf:'',busy:false,view:null,loaded:false,disposed:false};
+  const page=element('section','ad-photo-archive ad-guest-curation');
+  const head=element('header','ad-photo-head');
+  head.append(element('div','ad-photo-eyebrow','ГОСТЕВАЯ ГАЛЕРЕЯ'),
+    element('h1','','Фотографии для гостей'));
+  const intro=element('p','ad-photo-lead',
+    'Только фотографии пары, места регистрации, утверждённых локаций программы, Петербурга, достопримечательностей и дополнительных развлечений. Фотографии площадок для сравнения остаются в разделе «Площадки».');
+  head.append(intro);page.append(head);
+  const status=element('p','ad-photo-count');
+  status.setAttribute('aria-live','polite');
+  const form=element('form','ad-photo-upload-form');
+  const uploadTitle=element('h2','','Добавить в гостевую галерею');
+  const uploadHint=element('p','ad-photo-lead','Новые фото сохраняются закрытыми. Отметка «Для гостей» подготавливает их к публикации, но сама по себе не открывает гостевой сайт.');
+  const inputs=element('div','ad-photo-upload-fields');
+  const fileLabel=element('label','','Фотография');
+  const file=element('input');file.type='file';file.accept='image/jpeg,image/png,image/webp';file.required=true;
+  fileLabel.append(file);
+  const categoryLabel=element('label','','Раздел');
+  const category=element('select');
+  for(const [id,title] of CATEGORY){const o=element('option','',title);o.value=id;category.append(o)}
+  categoryLabel.append(category);
+  const venueLabel=element('label','','Утверждённая локация');
+  const venue=element('select');
+  venueLabel.append(venue);
+  const captionLabel=element('label','','Подпись для гостей');
+  const caption=element('input');caption.type='text';caption.maxLength=500;caption.placeholder='Короткая подпись к фотографии';
+  captionLabel.append(caption);
+  inputs.append(fileLabel,categoryLabel,venueLabel,captionLabel);
+  const submit=button('Добавить фотографию','ad-photo-submit');submit.type='submit';
+  const feedback=element('p','ad-photo-feedback');feedback.setAttribute('role','status');
+  form.append(uploadTitle,uploadHint,inputs,submit,feedback);page.append(form);
+  const toolbar=element('div','ad-photo-toolbar');
+  const search=element('input','ad-photo-search');search.type='search';search.placeholder='Поиск по подписям и местам';
+  search.setAttribute('aria-label','Поиск по фотографиям для гостей');
+  const density=element('div','ad-photo-density');
+  for(const count of [2,3,4]){
+    const b=button(count+' в ряд');b.dataset.count=count;
+    b.addEventListener('click',()=>{ui.cols=count;render()});density.append(b);
   }
-  loaded=true;
-  if(!disposed)render();
- }
- render();
- loadApprovedProgramme();
- return activeCleanup;
+  toolbar.append(search,density);
+  const chips=element('nav','ad-photo-chips');
+  chips.setAttribute('aria-label','Категории гостевой галереи');
+  const grid=element('div','ad-photo-grid');
+  const more=button('Показать ещё','ad-photo-more');
+  const overlay=element('div','ad-photo-overlay');
+  overlay.hidden=true;overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
+  overlay.setAttribute('aria-label','Просмотр фотографии для гостей');
+  const close=button('Закрыть ×','ad-photo-close');
+  const prev=button('‹','ad-photo-prev');prev.setAttribute('aria-label','Предыдущая фотография');
+  const next=button('›','ad-photo-next');next.setAttribute('aria-label','Следующая фотография');
+  const figure=element('figure','ad-photo-figure');
+  const full=element('img','ad-photo-full');full.alt='';
+  const detail=element('figcaption','ad-photo-caption');
+  const flag=button('','ad-photo-publish');
+  const original=element('a','ad-photo-original','Открыть фото');original.target='_blank';original.rel='noopener noreferrer';
+  figure.append(full,detail,flag,original);
+  const count=element('div','ad-photo-lightbox-count');
+  overlay.append(close,prev,figure,next,count);
+  page.append(toolbar,chips,status,grid,more,overlay);host.append(page);
+  let visible=[];
+
+  async function request(route,{method='GET',data,formData}={}){
+    const headers={Accept:'application/json'};
+    if(method!=='GET'&&ui.csrf)headers['X-CSRF-Token']=ui.csrf;
+    if(data)headers['Content-Type']='application/json';
+    const response=await fetch(apiBase+encodeURIComponent(route),{
+      method,headers,credentials:'same-origin',cache:'no-store',
+      body:formData||(data?JSON.stringify(data):undefined)
+    });
+    let result;
+    try{result=await response.json()}catch{throw new Error('Сервер галереи не отвечает')}
+    if(!response.ok||!result.ok)throw new Error(result.message||'Ошибка галереи ('+response.status+')');
+    return result;
+  }
+  function updateCategory(){
+    const isLocation=category.value==='location';
+    venueLabel.hidden=!isLocation;venue.required=isLocation;
+    submit.disabled=ui.busy||(isLocation&&!ui.approved.size);
+    if(isLocation&&!ui.approved.size)feedback.textContent='Сначала утвердите место в программе свадьбы — только тогда можно добавлять фото локации.';
+    else if(!ui.busy)feedback.textContent='';
+  }
+  function setApproved(ids=[]){
+    ui.approved=new Set(ids.map(String));
+    venue.replaceChildren();
+    const placeholder=element('option','','Выберите место из программы');placeholder.value='';venue.append(placeholder);
+    for(const id of ui.approved){
+      const option=element('option','',venueLabels.get(id)||id);option.value=id;venue.append(option);
+    }
+    venue.value='';
+    updateCategory();
+  }
+  function currentItems(){
+    const q=ui.query.trim().toLocaleLowerCase('ru');
+    return guestGalleryAssets(ui.assets,ui.approved).filter(item=>
+      (ui.category==='all'||item.category===ui.category)&&
+      (!q||(item.caption||'').toLocaleLowerCase('ru').includes(q)||
+        (venueLabels.get(item.venue_id)||'').toLocaleLowerCase('ru').includes(q))
+    );
+  }
+  function drawLightbox(){
+    if(ui.view===null||!visible.length)return;
+    const item=visible[ui.view];
+    if(!item){closeView();return}
+    full.src=linkImage(item.id);full.alt=item.caption||categoryName(item.category);
+    original.href=linkImage(item.id);
+    detail.replaceChildren(element('strong','',item.caption||categoryName(item.category)),
+      element('span','',categoryName(item.category)+
+        (item.category==='location'?' · '+(venueLabels.get(item.venue_id)||item.venue_id):'')));
+    flag.textContent=Number(item.is_public)===1?'Для гостей: включено ✓':'Для гостей: выключено';
+    flag.disabled=ui.busy;flag.dataset.assetId=item.id;
+    count.textContent=(ui.view+1)+' / '+visible.length;
+  }
+  function openView(index){
+    ui.view=index;overlay.hidden=false;document.body.classList.add('ad-photo-lock');
+    drawLightbox();close.focus({preventScroll:true});
+  }
+  function closeView(){ui.view=null;overlay.hidden=true;document.body.classList.remove('ad-photo-lock')}
+  function step(delta){if(!visible.length)return;ui.view=(ui.view+delta+visible.length)%visible.length;drawLightbox()}
+  function render(){
+    chips.replaceChildren();
+    const source=guestGalleryAssets(ui.assets,ui.approved);
+    const choices=[['all','Все фотографии'],...CATEGORY.map(([id,title])=>[id,title])];
+    for(const [id,title]of choices){
+      const n=id==='all'?source.length:source.filter(x=>x.category===id).length;
+      const chip=button(title+' · '+n,id===ui.category?'is-current':'');
+      chip.addEventListener('click',()=>{ui.category=id;ui.limit=72;render()});
+      chips.append(chip);
+    }
+    for(const b of density.querySelectorAll('button'))b.classList.toggle('is-current',Number(b.dataset.count)===ui.cols);
+    visible=currentItems();
+    status.textContent=ui.loaded?visible.length+' фотографий для гостей · '+source.filter(x=>Number(x.is_public)===1).length+' отмечены к публикации':'Загружаем фотографии для гостей…';
+    grid.replaceChildren();grid.style.setProperty('--photo-cols',String(ui.cols));
+    for(let i=0;i<Math.min(ui.limit,visible.length);i++){
+      const item=visible[i];
+      const cell=button('','ad-photo-card');
+      const img=element('img');img.src=linkImage(item.id);img.loading='lazy';
+      img.alt=item.caption||categoryName(item.category);
+      img.onerror=()=>{img.style.display='none';cell.classList.add('ad-photo-no-image')};
+      const text=element('span','ad-photo-card-info');
+      text.append(element('strong','',item.caption||categoryName(item.category)),
+        element('small','',(Number(item.is_public)===1?'Для гостей · ':'Черновик · ')+categoryName(item.category)));
+      cell.append(img,text);cell.addEventListener('click',()=>openView(i));grid.append(cell);
+    }
+    if(ui.loaded&&!visible.length)grid.append(element('p','ad-photo-empty',
+      'Пока нет фотографий в этом разделе. Добавьте только подходящие для гостей снимки; материалы неутверждённых площадок сюда не переносятся.'));
+    more.hidden=visible.length<=ui.limit;
+    more.textContent='Показать ещё · '+Math.min(72,visible.length-ui.limit);
+    if(ui.view!==null)drawLightbox();
+  }
+  async function reload(){
+    const data=await request('admin/gallery');
+    if(ui.disposed)return;
+    ui.assets=data.assets||[];
+    setApproved(data.approved_venues||[]);
+    ui.loaded=true;render();
+  }
+  form.addEventListener('submit',async event=>{
+    event.preventDefault();if(ui.busy)return;
+    if(!file.files?.[0]){feedback.textContent='Выберите фотографию';return}
+    if(file.files[0].size>10*1024*1024){feedback.textContent='Размер файла должен быть не более 10 МБ';return}
+    ui.busy=true;submit.disabled=true;feedback.textContent='Загрузка фотографии…';
+    try{
+      const data=new FormData();data.append('photo',file.files[0]);
+      data.append('category',category.value);
+      data.append('caption',caption.value.trim());
+      if(category.value==='location'){
+        if(!ui.approved.has(venue.value))throw new Error('Выберите утверждённую площадку из программы');
+        data.append('venue_id',venue.value);
+      }
+      const result=await request('admin/gallery/upload',{method:'POST',formData:data});
+      await reload();file.value='';caption.value='';
+      feedback.textContent=result.duplicate?'Эта фотография уже есть в галерее.':'Фото сохранено как черновик для гостей.';
+    }catch(error){feedback.textContent=error.message}
+    finally{ui.busy=false;updateCategory()}
+  });
+  flag.addEventListener('click',async()=>{
+    if(ui.view===null||ui.busy)return;
+    const item=visible[ui.view];if(!item)return;
+    ui.busy=true;flag.disabled=true;
+    try{
+      await request('admin/gallery/update',{method:'PATCH',data:{id:item.id,is_public:Number(item.is_public)!==1}});
+      await reload();drawLightbox();
+    }catch(error){feedback.textContent=error.message}
+    finally{ui.busy=false;flag.disabled=false}
+  });
+  category.addEventListener('change',updateCategory);
+  search.addEventListener('input',()=>{ui.query=search.value;ui.limit=72;render()});
+  more.addEventListener('click',()=>{ui.limit+=72;render()});
+  close.addEventListener('click',closeView);
+  prev.addEventListener('click',()=>step(-1));next.addEventListener('click',()=>step(1));
+  overlay.addEventListener('click',e=>{if(e.target===overlay)closeView()});
+  const key=e=>{if(overlay.hidden)return;if(e.key==='Escape')closeView();if(e.key==='ArrowLeft')step(-1);if(e.key==='ArrowRight')step(1)};
+  document.addEventListener('keydown',key);
+  let touchX=0;
+  overlay.addEventListener('touchstart',e=>{touchX=e.changedTouches[0]?.clientX||0},{passive:true});
+  overlay.addEventListener('touchend',e=>{const dx=(e.changedTouches[0]?.clientX||0)-touchX;if(Math.abs(dx)>60)step(dx<0?1:-1)},{passive:true});
+  cleanupActive=()=>{
+    ui.disposed=true;document.removeEventListener('keydown',key);
+    document.body.classList.remove('ad-photo-lock');cleanupActive=null;
+  };
+  updateCategory();render();
+  Promise.all([request('auth/session'),request('admin/gallery')]).then(([session,data])=>{
+    if(ui.disposed)return;
+    ui.csrf=session.csrf||'';
+    ui.assets=data.assets||[];
+    setApproved(data.approved_venues||[]);
+    ui.loaded=true;render();
+  }).catch(error=>{
+    if(ui.disposed)return;
+    ui.loaded=true;
+    feedback.textContent='Не удалось загрузить защищённую галерею: '+error.message;
+    intro.textContent='Галерея недоступна без авторизованного сервера. Фотографии площадок для сравнения не подставляются вместо гостевых.';
+    form.querySelectorAll('input,select,button').forEach(el=>el.disabled=true);
+    render();
+  });
+  return cleanupActive;
 }
