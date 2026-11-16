@@ -128,3 +128,30 @@ CREATE TABLE IF NOT EXISTS throttle (
   window_start INTEGER NOT NULL DEFAULT 0
 );
 INSERT OR IGNORE INTO schema_migrations(version) VALUES (1);
+
+
+-- Imported guest profile and relationship metadata, stored privately with the guest table.
+CREATE TABLE IF NOT EXISTS guest_profile_details (
+  guest_id TEXT PRIMARY KEY REFERENCES guests(id) ON DELETE CASCADE,
+  source_person_id TEXT NOT NULL UNIQUE,
+  name_en TEXT NOT NULL DEFAULT '',
+  source_people_json TEXT NOT NULL DEFAULT '{}',
+  source_invitation_json TEXT NOT NULL DEFAULT '{}',
+  source_profile_json TEXT NOT NULL DEFAULT '{}',
+  source_english_json TEXT NOT NULL DEFAULT '{}',
+  seating_group TEXT NOT NULL DEFAULT '',
+  decision TEXT NOT NULL DEFAULT '',
+  base_count TEXT NOT NULL DEFAULT '',
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS guest_relationships (
+  id TEXT PRIMARY KEY,
+  guest_id_1 TEXT NOT NULL REFERENCES guests(id) ON DELETE CASCADE,
+  guest_id_2 TEXT NOT NULL REFERENCES guests(id) ON DELETE CASCADE,
+  relation_1_to_2 TEXT NOT NULL DEFAULT '',
+  relation_2_to_1 TEXT NOT NULL DEFAULT '',
+  relation_type TEXT NOT NULL DEFAULT '',
+  source_json TEXT NOT NULL DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS guest_relationships_member_1 ON guest_relationships(guest_id_1);
+CREATE INDEX IF NOT EXISTS guest_relationships_member_2 ON guest_relationships(guest_id_2);
