@@ -29,9 +29,9 @@ test('All 25 venues have the same 13 price rows, even when price is unknown',()=
   assert.match(html,/Неизвестные расходы не учтены/);
  }
 });
-test('Photo archive includes all 304 indexed photographs in source room categories',()=>{
+test('Photo archive includes all 330 indexed photographs in source room categories',()=>{
  const total=allIds.reduce((s,id)=>s+getVenuePhotos(venue(id)).length,0);
- assert.equal(total,304);
+ assert.equal(total,330);
  assert.equal(getVenuePhotos(venue('vinity')).length,24);
  assert.ok(getVenuePhotos(venue('royal')).some(f=>f.section==='Террасы и виды'));
  assert.ok(getVenuePhotos(venue('alex-park')).some(f=>f.section==='Санузлы'));
