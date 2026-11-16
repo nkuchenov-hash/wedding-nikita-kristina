@@ -108,6 +108,7 @@ CREATE TABLE IF NOT EXISTS schedule_items (
   id TEXT PRIMARY KEY, title TEXT NOT NULL, start_at TEXT, end_at TEXT,
   place TEXT NOT NULL DEFAULT '', notes TEXT NOT NULL DEFAULT '',
   is_public INTEGER NOT NULL DEFAULT 0, sort_order INTEGER NOT NULL DEFAULT 0,
+  venue_id TEXT NOT NULL DEFAULT '', is_confirmed INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE TABLE IF NOT EXISTS documents (
@@ -182,3 +183,19 @@ CREATE TABLE IF NOT EXISTS guest_progress (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS guest_progress_profile_completed ON guest_progress(profile_completed_at);
+
+-- Single wedding gallery for organizer photos, confirmed locations and guides.
+-- Research photos remain exclusively in their respective venue detail cards.
+CREATE TABLE IF NOT EXISTS gallery_assets (
+  id TEXT PRIMARY KEY,
+  category TEXT NOT NULL CHECK(category IN ('couple','location','city','guide')),
+  venue_id TEXT NOT NULL DEFAULT '',
+  caption TEXT NOT NULL DEFAULT '',
+  filename TEXT NOT NULL UNIQUE,
+  mime TEXT NOT NULL DEFAULT 'image/jpeg',
+  bytes INTEGER NOT NULL, width INTEGER NOT NULL, height INTEGER NOT NULL,
+  sha256 TEXT NOT NULL UNIQUE,
+  is_public INTEGER NOT NULL DEFAULT 0 CHECK(is_public IN (0,1)),
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_gallery_assets_category ON gallery_assets(category,created_at);

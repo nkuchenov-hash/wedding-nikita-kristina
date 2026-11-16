@@ -123,12 +123,16 @@ function adminCollections(): array {
       'vendors'=>['category','name','contact','website','status','estimate_rub','contract_ref','notes'],
       'budget_lines'=>['category','description','planned_rub','committed_rub','paid_rub','due_at','vendor_id','notes'],
       'tasks'=>['title','description','status','priority','owner','due_at'],
-      'schedule_items'=>['title','start_at','end_at','place','notes','is_public','sort_order'],
+      'schedule_items'=>['title','start_at','end_at','place','notes','is_public','sort_order','venue_id','is_confirmed'],
       'menu_options'=>['category','title','description','allergens','active','sort_order'],
       'documents'=>['category','label','reference','visibility'],
     ];
 }
 function adminRoute(PDO $db,string $actor,string $route,string $method,array $cfg): never {
+    if(str_starts_with($route,'admin/gallery')){
+        require_once __DIR__.'/gallery.php';
+        adminGallery($db,$actor,$route,$method);
+    }
     if ($route==='admin/settings' && $method==='GET') {
         $entries=all($db,'SELECT key,value_json,updated_at FROM event_settings ORDER BY key');
         $settings=[];

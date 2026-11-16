@@ -36,6 +36,11 @@ if(!in_array('relation_to_couple',array_column($cols,'name'),true))
 $columns=$database->query('PRAGMA table_info(rsvps)')->fetchAll(PDO::FETCH_ASSOC);
 if(!in_array('response_source',array_column($columns,'name'),true))
     $database->exec("ALTER TABLE rsvps ADD COLUMN response_source TEXT NOT NULL DEFAULT 'guest'");
+$scheduleColumns=$database->query('PRAGMA table_info(schedule_items)')->fetchAll(PDO::FETCH_ASSOC);
+if(!in_array('venue_id',array_column($scheduleColumns,'name'),true))
+    $database->exec("ALTER TABLE schedule_items ADD COLUMN venue_id TEXT NOT NULL DEFAULT ''");
+if(!in_array('is_confirmed',array_column($scheduleColumns,'name'),true))
+    $database->exec("ALTER TABLE schedule_items ADD COLUMN is_confirmed INTEGER NOT NULL DEFAULT 0");
 $tables=(int)$database->query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")->fetchColumn();
 chmod($root.'/wedding.sqlite3',0600);
 foreach(['-wal','-shm'] as $suffix)if(is_file($root.'/wedding.sqlite3'.$suffix))
