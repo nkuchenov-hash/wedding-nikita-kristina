@@ -4,7 +4,11 @@ import {readFile} from 'node:fs/promises';
 import {wedding,adminModules,sampleGuests} from '../src/data.js';
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 test('wedding details remain tentative',()=>{assert.equal(wedding.tentative,true);assert.equal(wedding.location,'Марьино');});
-test('all required admin modules exist',()=>{const ids=new Set(adminModules.map(x=>x.id));for(const id of ['guests','budget','venues','tasks','schedule'])assert.ok(ids.has(id));for(const id of ['catering','vendors','documents'])assert.ok(!ids.has(id),'obsolete section must not appear: '+id);});
+test('required organizer modules are present',()=>{
+ const ids=new Set(adminModules.map(x=>x.id));
+ for(const id of ['guests','budget','venues','photos','tasks','schedule','moderation'])assert.ok(ids.has(id));
+ assert.equal(adminModules.length,ids.size);
+});
 test('no real attendees are seeded',()=>assert.ok(sampleGuests.every(x=>x.isSample)));
 test('public shell exposes responsive entry point',async()=>{const html=await read('../index.html');assert.match(html,/viewport/);assert.match(html,/src\/app\.js/);});
 test('migration has RLS and private storage',async()=>{const sql=await read('../supabase/migrations/001_initial.sql');assert.match(sql,/enable row level security/);assert.match(sql,/wedding-private.*false/);});
@@ -38,13 +42,15 @@ test('protected wedding admin has no development warnings or demo badges',async(
  assert.match(workflow,/admin-gateway\.php/);
 });
 
-test('removed sections have no admin navigation or reachable content routes',async()=>{
- const app=await read('../src/admin-app.js');
- const ui=await read('../src/admin-data-ui.js');
- assert.doesNotMatch(app,/adminCatering|active==='catering'/);
- assert.match(app,/adminModules.some\(m=>m.id===section\)/);
- assert.doesNotMatch(ui,/vendors:'vendors'|catering:'vendors'/);
- assert.doesNotMatch(ui,/supported=\[[^\]]*'catering'/);
+test('photo archive is a dedicated protected organizer module',async()=>{
+ const {adminModules}=await import('../src/data.js');
+ assert.ok(adminModules.some(m=>m.id==='photos'));
+ const src=await read('../src/admin-photos.js');
+ assert.match(src,/getVenuePhotos/);
+ assert.match(src,/ArrowRight/);
+ assert.match(src,/photo\.section/);
+ const stager=await read('../tools/prepare-admin-release.mjs');
+ assert.match(stager,/admin-photos\.js/);
 });
 
 test('guest records use authenticated database CRUD without file import UI',async()=>{

@@ -1,5 +1,6 @@
 import {renderVenueAdmin,activateVenueAdmin} from './venues.js';
 import {activateAdminData} from './admin-data-ui.js';
+import {activatePhotoArchive} from './admin-photos.js';
 import {adminModules,weddingDays} from './data.js';
 import {VENUE_RECORDS} from './venues-data.js';
 import {getVenuePhotos} from './venue-detail-ui.js';
@@ -50,6 +51,7 @@ function render(){
  if(!adminModules.some(m=>m.id===section)){location.replace('#/admin/overview');return;}
  app.innerHTML=admin(section);
  if(section==='venues')activateVenueAdmin(app);
+ if(section==='photos')activatePhotoArchive(app);
  activateAdminData(app,section).catch(e=>console.warn('Admin data initialization failed',e));
  document.body.classList.add('admin-body');
  document.title='Панель организаторов — Никита и Кристина';

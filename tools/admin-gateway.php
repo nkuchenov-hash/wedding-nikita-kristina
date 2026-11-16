@@ -174,6 +174,7 @@ $types = [
     'index.html' => 'text/html; charset=UTF-8',
     'src/admin-app.js' => 'text/javascript; charset=UTF-8',
     'src/admin-data-ui.js' => 'text/javascript; charset=UTF-8',
+    'src/admin-photos.js' => 'text/javascript; charset=UTF-8',
     'src/data.js' => 'text/javascript; charset=UTF-8',
     'src/venues.js' => 'text/javascript; charset=UTF-8',
     'src/venues-data.js' => 'text/javascript; charset=UTF-8',
@@ -187,6 +188,7 @@ $types = [
     'src/venues.css' => 'text/css; charset=UTF-8',
     'src/venue-detail-ui.css' => 'text/css; charset=UTF-8',
     'src/admin-data.css' => 'text/css; charset=UTF-8',
+    'src/admin-photos.css' => 'text/css; charset=UTF-8',
 ];
 $asset = $_GET['asset'] ?? 'index.html';
 if (!is_string($asset) || !isset($types[$asset])) {

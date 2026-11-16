@@ -7,13 +7,16 @@ $path=__DIR__.'/../seed/planning.json';
 $seed=json_decode((string)file_get_contents($path),true,512,JSON_THROW_ON_ERROR);
 $db=db();
 $db->beginTransaction();
-$vendors=0;$tasks=0;
+$tasks=0;
 try {
-    $insertVendor=$db->prepare('INSERT OR IGNORE INTO vendors(id,category,name,contact,website,status,notes) VALUES(?,?,?,?,?,?,?)');
-    foreach($seed['vendors'] as $v) {
-        $insertVendor->execute([$v['id'],$v['category'],$v['name'],$v['contact'],$v['website'],$v['status'],$v['notes']]);
-        $vendors+=$insertVendor->rowCount();
-    }
+    // Remove eight unrequested initial research rows only when the baseline
+    // matches exactly. Never remove organizer-created supplier records.
+    $existingVendors=(int)$db->query('SELECT COUNT(*) FROM vendors')->fetchColumn();
+    $baseline=(int)$db->query("SELECT COUNT(*) FROM vendors WHERE status='research'")->fetchColumn();
+    if($existingVendors===8 && $baseline===8) $db->exec('DELETE FROM vendors');
+    // Remove the legacy price-study pointer, not the Drive source document.
+    $db->exec("DELETE FROM documents WHERE category NOT IN
+        ('archive','venue','quote','contract','invoice','legal','other','photo','reference')");
     $insertTask=$db->prepare('INSERT OR IGNORE INTO tasks(id,title,description,status,priority) VALUES(?,?,?,?,?)');
     foreach($seed['tasks'] as $task) {
         $insertTask->execute([$task['id'],$task['title'],$task['description'],$task['status'],$task['priority']]);
@@ -24,7 +27,7 @@ try {
     $obsolete=[
         ['draft-schedule-arrival','Сбор гостей','Время и место будут определены после выбора площадки.'],
         ['draft-schedule-ceremony','Церемония','Дата, время и формат ещё требуют подтверждения.'],
-        ['draft-schedule-welcome','Приветственный фуршет','Согласовать с площадкой и кейтерингом.'],
+        ['draft-schedule-welcome','Приветственный фуршет','Согласовать с площадкой и менеджером банкета.'],
         ['draft-schedule-dinner','Свадебный банкет','Время и меню после согласования договора.'],
         ['draft-schedule-first-dance','Первый танец','Песня и постановка ещё не утверждены.'],
         ['draft-schedule-final','Завершение вечера','Трансфер, такси и время окончания уточняются.']

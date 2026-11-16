@@ -1,7 +1,6 @@
 {
   "source": "Свадьба 17–19 июня 2027: факты, подтверждённые организаторами 16.11.2026",
   "note": "17 июня в 14:00 регистрация в Марьино; 19 июня торжественная часть в Санкт-Петербурге. 18 июня без утверждённых мероприятий. Время 19 июня и банкетная площадка не определены.",
-  "vendors": [],
   "tasks": [
     {
       "id": "planning-date",
@@ -107,13 +106,6 @@
       "category": "archive",
       "label": "Wedding Drive — исходные документы и фотографии",
       "reference": "https://drive.google.com/drive/folders/195OYX_CPglwFmwSqwzRhQt7yrYyIPeBi",
-      "visibility": "admin"
-    },
-    {
-      "id": "document-catering-study",
-      "category": "catering",
-      "label": "Сравнение кейтеринга и цен — 29 октября 2026",
-      "reference": "https://docs.google.com/document/d/1qBdkL9J0aQtxTuw0vsSs712MXCIr5YaebYmHXFuAXsU/edit",
       "visibility": "admin"
     }
   ],
