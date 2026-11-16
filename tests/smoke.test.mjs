@@ -54,3 +54,25 @@ test('guest records use authenticated database CRUD without file import UI',asyn
  for(const term of ['Импорт гостей','Загрузить CSV','admin/import/guests','documents(host)','section===\'documents\''])
   assert.ok(!ui.includes(term),'Removed UI still references '+term);
 });
+
+test('three-day wedding itinerary contains only organizer-confirmed events',async()=>{
+ const {weddingDays}=await import('../src/data.js');
+ assert.deepEqual(weddingDays.map(day=>day.date),['2027-06-17','2027-06-18','2027-06-19']);
+ assert.equal(weddingDays[0].time,'14:00');
+ assert.match(weddingDays[0].place,/Марьино/);
+ assert.equal(weddingDays[1].time,null);
+ assert.equal(weddingDays[2].time,null);
+ assert.match(weddingDays[2].place,/Санкт-Петербург/);
+ const seed=JSON.parse(await read('../backend/seed/planning.json'));
+ assert.deepEqual(seed.schedule.map(e=>e.start_at),['2027-06-17T14:00:00','2027-06-19']);
+ assert.equal(seed.schedule[0].place,'Усадьба Марьино');
+ assert.equal(seed.schedule[1].title,'Торжественная часть');
+ assert.ok(!seed.schedule.some(e=>e.id.startsWith('draft-schedule-')));
+ const backend=await read('../backend/bin/seed-planning.php');
+ assert.match(backend,/DELETE FROM schedule_items WHERE id=/);
+ assert.match(backend,/INSERT OR IGNORE INTO schedule_items\(id,title,start_at,place,notes,is_public,sort_order\)/);
+ const admin=await read('../src/admin-data-ui.js');
+ assert.match(admin,/async function schedule\(host\)/);
+ assert.match(admin,/admin\/records\?collection=schedule_items/);
+ assert.match(admin,/section==='schedule'/);
+});
