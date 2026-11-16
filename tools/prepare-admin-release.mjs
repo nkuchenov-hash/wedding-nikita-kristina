@@ -1,5 +1,7 @@
 import {mkdirSync,cpSync,writeFileSync,rmSync,readdirSync,existsSync,readFileSync} from 'node:fs';
 import {join} from 'node:path';
+import {execFileSync} from 'node:child_process';
+execFileSync(process.execPath,['tools/check-single-photo-section.mjs'],{stdio:'inherit'});
 const root='_site';
 const sha=(process.env.GITHUB_SHA||'local').slice(0,12);
 if(!/^[a-zA-Z0-9-]+$/.test(sha))throw new Error('Invalid revision');
