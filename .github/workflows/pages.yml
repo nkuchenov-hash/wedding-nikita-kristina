@@ -76,7 +76,6 @@ jobs:
           HOST_KEYS: ${{ secrets.WEDDING_SFTP_KNOWN_HOSTS }}
           DESTINATION: ${{ secrets.WEDDING_SFTP_PATH }}
           PORT: ${{ secrets.WEDDING_SFTP_PORT }}
-          AUTH_LINE: 'wedding-admin:$2y$12$/vt10ztQUMyRV0p7Oz.IyuSpy8ECKzxBaSrJffFIbMMNqRQM71WCq'
         run: |
           set -euo pipefail
           if [[ -z "$HOST" || -z "$USERNAME" || -z "$SSH_KEY" || -z "$HOST_KEYS" || -z "$DESTINATION" ]]; then
@@ -94,8 +93,9 @@ jobs:
           printf '%s\n' "$HOST_KEYS" > "$HOME/.ssh/known_hosts"
           chmod 600 "$HOME/.ssh/wedding_deploy_key" "$HOME/.ssh/known_hosts"
           SSH_OPTS="-4 -i $HOME/.ssh/wedding_deploy_key -p $PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -o ConnectionAttempts=2 -o ServerAliveInterval=20 -o ServerAliveCountMax=2"
-          # Install strong bcrypt credentials outside web root before upload.
-          ssh $SSH_OPTS "$USERNAME@$HOST" "set -eu; umask 077; mkdir -p /var/www/u3728035/data/wedding-private; cat > /var/www/u3728035/data/wedding-private/.htpasswd" <<<"$AUTH_LINE"
+          # Never replace the organizer password file during website releases.
+          # Only an explicit credential-management action may rotate access.
+          ssh $SSH_OPTS "$USERNAME@$HOST" "set -eu; umask 077; test -s /var/www/u3728035/data/wedding-private/.htpasswd; chmod 600 /var/www/u3728035/data/wedding-private/.htpasswd"
           # The hosting account already contains a landing page; keep a recoverable copy
           # outside of the public document root before the very first replacement.
           ssh $SSH_OPTS "$USERNAME@$HOST" \
