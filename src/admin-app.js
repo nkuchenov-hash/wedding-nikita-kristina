@@ -49,6 +49,8 @@ function render(){
  const p=decodeURIComponent((location.hash||'#/admin/overview').slice(1)).replace(/\/+$/,'')||'/admin';
  if(!/^\/admin(?:\/|$)/.test(p)){location.replace('#/admin/overview');return;}
  const section=(p.split('/')[2]||'overview');
+ // Old bookmarks and links to the duplicate photo section lead to the single archive.
+ if(section==='moderation'){location.replace('#/admin/photos');return;}
  if(!adminModules.some(m=>m.id===section)){location.replace('#/admin/overview');return;}
  app.innerHTML=admin(section);
  if(section==='venues')activateVenueAdmin(app);
