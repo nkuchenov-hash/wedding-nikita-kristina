@@ -456,16 +456,37 @@ export function activateVenueAdmin(root){
  redraw(root);
  initVenueDatabase(root);
  root.addEventListener('click',event=>{
-  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-add-venue-quote],[data-remove-venue-quote],[data-retry-venue-db]');if(!target)return;
-  if(target.hasAttribute('data-retry-venue-db')){venueDb.error='';initVenueDatabase(root);}
-  else if(target.hasAttribute('data-add-venue-quote')){
-    const holder=root.querySelector('[data-venue-edit-quotes]');
-    if(holder)holder.insertAdjacentHTML('beforeend',renderVenueQuoteEditorRow({}));
-   }
-   else if(target.hasAttribute('data-remove-venue-quote')){
-    target.closest('[data-venue-quote-row]')?.remove();
-   }
-   else if(target.hasAttribute('data-photo-close')){ui.photoLightbox=false;redraw(root);}
+  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-venue-inline],[data-inline-quote],[data-add-inline-quote],[data-cancel-inline],[data-remove-venue-quote]');if(!target)return;
+  const venueBase=PUBLIC_VENUES.find(x=>x.id===ui.expanded);
+  const showError=message=>{
+   const page=root.querySelector('.vdp-page');if(!page)return;
+   const alert=document.createElement('p');alert.className='vdp-sync-error';alert.setAttribute('role','alert');alert.textContent=message;page.prepend(alert);
+  };
+  if(target.hasAttribute('data-cancel-inline')){redraw(root);}
+  else if(target.hasAttribute('data-venue-inline')){
+   if(!venueDb.ready){showError('Общая база недоступна. Редактирование не открывается: '+(venueDb.error||'нет соединения'));return}
+   if(!venueBase)return;
+   if(root.querySelector('.vdp-inline-form,.vdp-inline-quote-form')){showError('Сначала сохраните или отмените открытое изменение.');return}
+   buildInlineFieldEditor(target,get(venueBase));
+  }
+  else if(target.hasAttribute('data-inline-quote')||target.hasAttribute('data-add-inline-quote')){
+   if(!venueDb.ready){showError('Общая база недоступна — смету нельзя безопасно сохранить.');return}
+   if(!venueBase)return;
+   if(root.querySelector('.vdp-inline-form,.vdp-inline-quote-form')){showError('Сначала сохраните или отмените открытое изменение.');return}
+   buildInlineQuoteEditor(target.hasAttribute('data-add-inline-quote')?null:target,get(venueBase),
+    target.hasAttribute('data-add-inline-quote')?-1:Number(target.dataset.inlineQuote));
+  }
+  else if(target.hasAttribute('data-remove-venue-quote')){
+   const form=target.closest('[data-inline-quote-index]');if(!form)return;
+   const index=Number(form.dataset.inlineQuoteIndex);
+   if(index<0){redraw(root);return}
+   if(!window.confirm('Удалить выбранный вариант сметы из расчётов?'))return;
+   if(!venueBase)return;
+   const current=get(venueBase),quotes=[...(current.quotes||[])];quotes.splice(index,1);
+   target.disabled=true;
+   commitInlineChanges(venueBase.id,{...(state.venues[venueBase.id]||{}),quotes},root).catch(()=>{});
+  }
+  else if(target.hasAttribute('data-photo-close')){ui.photoLightbox=false;redraw(root);}
   else if(target.dataset.photoSection!==undefined){ui.photoSection=target.dataset.photoSection;ui.photoIndex=0;ui.photoLightbox=false;redraw(root);}
   else if(target.dataset.photoView!==undefined){ui.photoView=target.dataset.photoView;ui.photoIndex=0;ui.photoLightbox=false;redraw(root);}
   else if(target.dataset.photoOpen!==undefined){
@@ -498,37 +519,36 @@ export function activateVenueAdmin(root){
   const visible=root.querySelector('[data-venues-visible]');
   if(visible)visible.textContent=String(rows.length);
  });
- // Save the entire edited venue through the existing authenticated SQLite-backed records API.
+ // Save the field right where it was displayed, not in a second editor.
  root.addEventListener('submit',async event=>{
-  const form=event.target.closest('[data-venue-edit]');
+  const form=event.target.closest('[data-inline-key],[data-inline-quote-index]');
   if(!form)return;
   event.preventDefault();
-  const feedback=form.querySelector('[data-venue-edit-feedback]');
-  const button=form.querySelector('.vdp-editor-save');
-  if(!feedback||!button)return;
-  button.disabled=true;
-  feedback.textContent='Проверка полей и сохранение…';
-  let changed=null,previous=null;
+  if(form.dataset.saving==='yes')return;
+  form.dataset.saving='yes';
+  const button=form.querySelector('button[type="submit"]');if(button)button.disabled=true;
+  const base=PUBLIC_VENUES.find(x=>x.id===ui.expanded);
+  if(!base){form.dataset.saving='';return}
   try{
-   changed=collectVenueEdit(form);
-   if(!venueDb.ready)throw new Error(venueDb.error||'Сервер недоступен — правки не сохранены');
-   previous=state.venues[changed.id];
-   state.venues[changed.id]=changed.updates;
-   await queueVenuePersist(changed.id);
-   save();
-   feedback.textContent='Сохранено в базе. Таблица, рейтинг и смета обновлены.';
-   ui.savedVenue=changed.id;
-   location.hash='#/admin/venues/'+encodeURIComponent(changed.id);
-   redraw(root);
+   const id=base.id,current=get(base);
+   let updates;
+   if(form.hasAttribute('data-inline-key')){
+    const key=form.dataset.inlineKey,value=form.querySelector('[data-inline-control]')?.value;
+    updates=updateInlineOverrides(id,key,value);
+   }else updates={...(state.venues[id]||{}),quotes:collectInlineQuote(form,current)};
+   await commitInlineChanges(id,updates,root);
   }catch(error){
-   if(changed){if(previous===undefined)delete state.venues[changed.id];else state.venues[changed.id]=previous}
-   feedback.textContent='Не сохранено: '+error.message;
-   feedback.setAttribute('role','alert');
-  }finally{button.disabled=false}
+   if(form.isConnected){
+    let notice=form.querySelector('.vdp-inline-error');
+    if(!notice){notice=document.createElement('p');notice.className='vdp-inline-error';notice.setAttribute('role','alert');form.append(notice)}
+    notice.textContent='Не сохранено: '+error.message;
+   }
+  }finally{form.dataset.saving='';if(button&&button.isConnected)button.disabled=false}
  });
  root.addEventListener('change',event=>{
   const t=event.target;
   if(t.hasAttribute('data-photo-sort')){ui.photoSort=t.value;ui.photoIndex=0;redraw(root);return;}
+  if(t.matches('select[data-inline-control]')){t.closest('form')?.requestSubmit();return;}
   if(t.dataset.state==='guestCount'){state.guestCount=Math.max(1,Math.min(300,Number(t.value)||80));save();redraw(root);return;}
   if(t.dataset.ui){ui[t.dataset.ui]=t.value;redraw(root);return;}
   if(t.dataset.venue){
@@ -572,6 +592,7 @@ export function activateVenueAdmin(root){
  },{passive:true});
  // Search re-renders only when Enter is pressed or focus leaves input.
  root.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&event.target.closest('.vdp-inline-form,.vdp-inline-quote-form')){event.preventDefault();redraw(root);return;}
   if(event.key==='Escape'&&ui.expanded&&!ui.photoLightbox){location.hash='#/admin/venues';}
   if(event.key==='Enter'&&event.target.matches('[data-ui="query"]')){event.preventDefault();ui.query=event.target.value;redraw(root);}
  });
