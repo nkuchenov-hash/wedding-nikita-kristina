@@ -203,20 +203,41 @@ try {
         }
     }
     if(count($valid)<100)throw new \RuntimeException('Insufficient valid people found');
-    $insertRelation=$db->prepare('INSERT OR IGNORE INTO guest_relationships
+    $insertRelation=$db->prepare('INSERT INTO guest_relationships
         (id,guest_id_1,guest_id_2,relation_1_to_2,relation_2_to_1,relation_type,source_json)
-        VALUES(?,?,?,?,?,?,?)');
+        VALUES(?,?,?,?,?,?,?)
+        ON CONFLICT(id) DO UPDATE SET guest_id_1=excluded.guest_id_1,
+          guest_id_2=excluded.guest_id_2,
+          relation_1_to_2=excluded.relation_1_to_2,
+          relation_2_to_1=excluded.relation_2_to_1,
+          relation_type=excluded.relation_type,
+          source_json=excluded.source_json');
+    $sourceRelationIds=[];
     foreach($relations as $row){
         $a=(string)($row['ID человека 1']??'');
         $b=(string)($row['ID человека 2']??'');
         if(!isset($valid[$a],$valid[$b])||$a===$b)continue;
         $source=(string)($row['ID связи']??$a.'-'.$b);
-        $insertRelation->execute([deterministicUuid('relationship:'.$source),
+        $relationId=deterministicUuid('relationship:'.$source);
+        $sourceRelationIds[$relationId]=true;
+        $insertRelation->execute([$relationId,
           $valid[$a],$valid[$b],(string)($row['Кем 1 приходится 2']??''),
           (string)($row['Кем 2 приходится 1']??''),
           (string)($row['Тип связи']??''),
           json_encode($row,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR)]);
-        $linkRows+=$insertRelation->rowCount();
+        $linkRows++;
+    }
+    // Remove only previously imported relations that no longer exist in this source.
+    // A hand-created relation without a sheet R-id is never deleted by the importer.
+    $removedRelations=0;
+    $existingRelations=$db->query('SELECT id,source_json FROM guest_relationships')->fetchAll(\PDO::FETCH_ASSOC);
+    $removeRelation=$db->prepare('DELETE FROM guest_relationships WHERE id=?');
+    foreach($existingRelations as $existingLink){
+        if(isset($sourceRelationIds[$existingLink['id']]))continue;
+        $previous=decodeImportSnapshot($existingLink['source_json']??null);
+        if(!preg_match('/^R[0-9]+$/',(string)($previous['ID связи']??'')))continue;
+        $removeRelation->execute([$existingLink['id']]);
+        $removedRelations+=$removeRelation->rowCount();
     }
     $total=(int)$db->query("SELECT COUNT(*) FROM guest_profile_details")->fetchColumn();
     if($total<count($valid))throw new \RuntimeException('Imported profile count mismatch');
@@ -225,4 +246,4 @@ try {
 $recordCount=(int)$db->query('SELECT COUNT(*) FROM guests')->fetchColumn();
 $relationCount=(int)$db->query('SELECT COUNT(*) FROM guest_relationships')->fetchColumn();
 $profileCount=(int)$db->query('SELECT COUNT(*) FROM guest_profile_details')->fetchColumn();
-echo "PRIVATE_GUEST_IMPORT_OK people=$recordCount profiles=$profileCount relationships=$relationCount inserted=$added changed_fields=$changed preserved_manual=$preserved potential=$candidates invited_sent=0 rsvp_confirmed=0\n";
+echo "PRIVATE_GUEST_IMPORT_OK people=$recordCount profiles=$profileCount relationships=$relationCount removed_relations=$removedRelations inserted=$added changed_fields=$changed preserved_manual=$preserved potential=$candidates invited_sent=0 rsvp_confirmed=0\n";
