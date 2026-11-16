@@ -450,7 +450,6 @@ async function renderSection(host,section){
  if(section==='menu'){await collection(host,'menu_options');return}
  if(section==='guests'){await guests(host);return}
  if(section==='schedule'){await schedule(host);return}
- if(section==='venues'){await collection(host,'venues');return}
  if(mapSection[section]){
    await collection(host,mapSection[section]);
    return;
@@ -473,7 +472,9 @@ function login(host,section){
 export async function activateAdminData(root,section){
  if(overviewTimer){clearInterval(overviewTimer);overviewTimer=null;}
  const destination=root.querySelector('.admin-content');if(!destination)return;
- const supported=['overview','venues','budget','tasks','schedule','moderation','menu'];
+ // Venue comparison has its own approved detailed table in venues.js.
+ // Never inject a generic database table above it.
+ const supported=['overview','budget','tasks','schedule','moderation','menu'];
  if(!supported.includes(section))return;
  const host=$('section','ad-live-panel');host.setAttribute('aria-label','Данные свадебной базы');
  destination.prepend(host);
