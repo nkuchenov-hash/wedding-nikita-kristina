@@ -81,6 +81,12 @@ async function guests(host){
  const data=await call('admin/guests');
  title(host,'Гости — защищённый реестр','Контакты, RSVP и особые пожелания видны только организаторам');
  message(host,'Гостей в базе: '+data.guests.length);
+ if(!data.guests.length){
+   message(host,'Исходный единый список гостей уже есть в Wedding Drive. Его ещё нужно безопасно импортировать в этот закрытый реестр; приглашения не считаются подтверждениями.');
+   const source=$('a','ad-live-button','Открыть свадебные материалы');
+   source.href='https://drive.google.com/drive/folders/195OYX_CPglwFmwSqwzRhQt7yrYyIPeBi';
+   source.target='_blank';source.rel='noopener noreferrer';host.append(source);
+ }
  const rows=data.guests.map(g=>{
    const action=button('Приглашение',async b=>{
      if(!window.confirm('Создать новый персональный токен? Старый токен этого гостя станет недействительным.'))return;
@@ -113,13 +119,23 @@ async function guests(host){
    }catch(err){status.textContent=errorText(err)}finally{b.disabled=false}
  });
 }
-async function collection(host,type){
+async function collection(host,type,filter=''){
  const data=await call('admin/records?collection='+encodeURIComponent(type));
- title(host,({venues:'Сравнение площадок',vendors:'Подрядчики',budget_lines:'Бюджет',tasks:'Задачи',menu_options:'Меню',schedule_items:'Программа'})[type]||type);
+ const heading=filter==='catering'?'Кейтеринг':({venues:'Сравнение площадок',vendors:'Подрядчики',budget_lines:'Бюджет',tasks:'Задачи',menu_options:'Меню',schedule_items:'Программа',documents:'Документы'})[type]||type;
+ title(host,heading);
  const keys=fields[type]||[];
- const records=(data.items||[]).map(item=>keys.map(([k])=>item[k]??'—'));
+ const items=(data.items||[]).filter(item=>!filter || item.category===filter);
+ const records=items.map(item=>keys.map(([k])=>{
+   if(type==='documents' && k==='reference' && typeof item[k]==='string' && /^https:\/\//.test(item[k])){
+     const a=$('a','ad-live-link','Открыть документ');
+     a.href=item[k];a.target='_blank';a.rel='noopener noreferrer';return a;
+   }
+   return item[k]??'—';
+ }));
  if(records.length)table(host,keys.map(([,label])=>label),records);
- else message(host,'Пока нет записей в базе');
+ else message(host,type==='menu_options'?'Меню пока не утверждено. После согласования с площадкой добавим варианты блюд.':
+   type==='budget_lines'?'Подтверждённых платежей и договоров пока нет; ориентиры ниже не являются расходами.':
+   'Подтверждённых записей пока нет');
  const section=$('section','ad-live-subsection');title(section,'Добавить запись');
  showForm(section,keys,async row=>call('admin/records',{method:'POST',body:{collection:type,fields:row}}));
  host.append(section);
@@ -216,7 +232,7 @@ async function renderSection(host,section){
  if(section==='guests'){await guests(host);return}
  if(section==='venues'){await collection(host,'venues');return}
  if(mapSection[section]){
-   await collection(host,mapSection[section]);
+   await collection(host,mapSection[section],section==='catering'?'catering':'');
    if(section==='budget')budgetScenario(host);
    return;
  }
