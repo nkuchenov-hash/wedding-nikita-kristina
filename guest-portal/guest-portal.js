@@ -62,10 +62,10 @@ async function dashboard(){
  const logout=action('Выйти',async()=>{await api('auth/logout',{method:'POST'});csrf='';guest=null;login()});logout.classList.add('ga-quiet');header.append(logout);host.append(header);
  const nav=el('div','ga-navigation');host.append(nav);
  await Promise.all([profilePanel(info),rsvpPanel(info),menuPanel(info),photosPanel(),directoryPanel(),storyPanel()]);
- tabs(nav,[['profile','Моя карточка'],['rsvp','Участие'],['menu','Меню'],['photos','Фотографии'],['directory','Гости'],['story','История']]);
+ tabs(nav,[['profile','Моя карточка'],['rsvp','Участие'],['menu','Меню'],['photos','Фотографии'],['directory','Подтверждённые'],['story','История']]);
 }
 function profilePanel(info){
- const card=section('profile','Моя карточка','Ты сам определяешь, увидят ли другие приглашённые твою карточку.');
+ const card=section('profile','Шаг 1. Данные гостя','Сохраните свою карточку перед подтверждением участия. Только вы решаете, показывать ли её другим гостям.');
  const form=el('form','ga-form');
  const display=input(info.guest.display_name);display.required=true;display.maxLength=255;
  const city=input(info.guest.city);city.maxLength=255;
@@ -77,12 +77,14 @@ function profilePanel(info){
  form.addEventListener('submit',async e=>{
    e.preventDefault();b.disabled=true;
    try{await api('guest/profile',{method:'PATCH',data:{display_name:display.value,city:city.value,about:about.value,profile_visible:visible.checked,consent:consent.checked}});
-     status(form,'Карточка сохранена');}
+     guest.profile_completed_at=new Date().toISOString();
+     status(form,'Анкета сохранена. Теперь перейдите к подтверждению участия.');
+     host.querySelector('.ga-tabs button:nth-child(2)')?.click();}
    catch(err){status(form,err.message)}finally{b.disabled=false}
  });
 }
 function rsvpPanel(info){
- const card=section('rsvp','Подтверждение участия','Ответ можно изменить позднее в личном кабинете.');
+ const card=section('rsvp','Шаг 2. Подтверждение участия','После сохранения анкеты выберите «Да, буду», «Пока не знаю» или «Не смогу». Ответ можно изменить позднее.');
  const form=el('form','ga-form');
  const select=el('select');
  for(const [v,t]of [['yes','Да, буду'],['maybe','Пока не знаю'],['no','Не смогу']]){const o=el('option','',t);o.value=v;select.append(o)}
@@ -100,7 +102,7 @@ function rsvpPanel(info){
   try{await api('guest/rsvp',{method:'POST',data:{
     attendance:select.value,adults:Number(adults.value),children:Number(kids.value),
     transport_needed:transport.checked,dietary_notes:dietary.value,other_notes:notes.value
-  }});status(form,'Ответ получен и сохранён');}
+  }});status(form,select.value==='yes'?'Участие подтверждено. В списке гостей вы появитесь только если разрешили публикацию в своей карточке.':'Ответ получен и сохранён');}
   catch(err){status(form,err.message)}finally{b.disabled=false}
  });
 }
@@ -141,10 +143,10 @@ async function photosPanel(){
  catch{}
 }
 async function directoryPanel(){
- const card=section('directory','Другие гости','Только те, кто согласился показывать свои карточки.');
+ const card=section('directory','Подтверждённые гости','Здесь только те, кто подтвердил участие и отдельно разрешил показывать свои данные. Контакты и личные ответы не публикуются.');
  try{
    const data=await api('guest/directory');
-   if(!data.guests?.length){notice(card,'Карточки других гостей пока не опубликованы');return}
+   if(!data.guests?.length){notice(card,'Никто из подтвердивших участие пока не разрешил показать свою карточку.');return}
    const grid=el('div','ga-grid');
    for(const person of data.guests){const tile=el('article','ga-person');tile.append(el('h3','',person.display_name),el('p','',person.city),el('p','',person.about));grid.append(tile)}
    card.append(grid);
