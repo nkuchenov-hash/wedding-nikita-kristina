@@ -27,6 +27,21 @@ jobs:
               echo
             done
           done
+          echo '===== cookie challenge continuity ====='
+          for origin in public reg-origin; do
+            args=()
+            if [[ "$origin" == reg-origin ]]; then args+=(--resolve nikitakristina.ru:443:31.31.196.24); fi
+            jar="/tmp/cookies-$origin.txt"
+            : > "$jar"
+            for path in '/admin/' '/admin/?attempt=1' '/admin/?attempt=2' '/admin/index.php?attempt=1' '/admin/index.php?attempt=2'; do
+              result=$(curl -k -sS --max-time 15 -c "$jar" -b "$jar" \
+                "${args[@]}" -o /tmp/wedding-cookie-body -w '%{http_code}' "https://nikitakristina.ru$path" || echo err)
+              echo "cookie probe $origin $path HTTP=$result"
+              head -c 100 /tmp/wedding-cookie-body | tr '\n' ' ' || true
+              echo
+            done
+            sed -n '/^#HttpOnly_/s/^#HttpOnly_\([^[:space:]]*\)[[:space:]]*.*/cookie-present/p' "$jar" | head -2
+          done
           echo '===== valid TLS? ====='
           curl -sS -m 12 --output /dev/null --write-out 'public TLS HTTP=%{http_code}\n' https://nikitakristina.ru/admin/index.php || true
           curl -sS -m 12 --resolve nikitakristina.ru:443:31.31.196.24 --output /dev/null --write-out 'origin TLS HTTP=%{http_code}\n' https://nikitakristina.ru/admin/index.php || true
