@@ -1,7 +1,6 @@
 import {weddingDays} from './data.js';
 import {PUBLIC_VENUES} from './venues.js';
 import {VENUE_RECORDS} from './venues-data.js';
-import {getVenuePhotos} from './venue-detail-ui.js';
 // Wedding admin live-data layer. Never stores guest details in browser storage.
 const API='/admin/index.php?api=';
 const $=(tag,cls='',text='')=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=String(text);return el};
@@ -90,7 +89,7 @@ async function overview(host){
  const venueBox=$('div','ad-overview-venue-summary');venuesCard.append(venueBox);
  const financeCard=panel('Бюджет','budget','Смотреть бюджет');
  const budgetBox=$('div','ad-overview-finance');financeCard.append(budgetBox);
- const docsCard=panel('Материалы площадок','venues','Открыть площадки');
+ const docsCard=panel('Гостевые фотографии и материалы','photos','Открыть галерею');
  const docBox=$('div','ad-overview-docs');docsCard.append(docBox);
  const programCard=panel('Программа свадьбы','schedule','Открыть программу');
  const schedule=$('div','ad-overview-schedule');
@@ -104,9 +103,7 @@ async function overview(host){
  host.append(page);
  const venueCount=PUBLIC_VENUES.length;
  const visited=PUBLIC_VENUES.filter(v=>VENUE_RECORDS[v.id]?.visited===true).length;
- const photoAlbums=PUBLIC_VENUES.map(v=>getVenuePhotos(v));
- const photoCount=photoAlbums.reduce((sum,photos)=>sum+photos.length,0);
- const photoVenues=photoAlbums.filter(photos=>photos.length).length;
+ let photoCount=null,photoPublic=null;
  const quoted=PUBLIC_VENUES.filter(v=>(VENUE_RECORDS[v.id]?.quotes||[]).some(q=>Number(q.total)>0)).length;
  let docsCount=null;
  let openTasks=null;
@@ -126,7 +123,7 @@ async function overview(host){
  const renderDocs=()=>{
    docBox.replaceChildren();
    const photos=$('a','ad-overview-doc-item');photos.href='#/admin/photos';
-   photos.append($('strong','',photoCount),$('span','','фотографий'),$('small','',photoVenues+' альбомов'));
+   photos.append($('strong','',photoCount===null?'—':photoCount),$('span','','фотографий для гостей'),$('small','',photoPublic===null?'Проверка галереи':photoPublic+' подготовлено к публикации'))
    const documents=$('a','ad-overview-doc-item');documents.href='#/admin/venues';
    documents.append($('strong','',docsCount===null?'—':docsCount),
      $('span','','документов и видео'),$('small','',docsCount===null?'Проверка архива':'В карточках площадок'));
@@ -170,9 +167,9 @@ async function overview(host){
  renderVenues();renderDocs();renderTasks();
  const initial=await call('admin/overview');
  renderOverview(initial);
- const [taskResult,docResult]=await Promise.allSettled([
-   call('admin/records?collection=tasks'),call('admin/venue-files')
- ]);
+ const [taskResult,docResult,galleryResult]=await Promise.allSettled([
+    call('admin/records?collection=tasks'),call('admin/venue-files'),call('admin/gallery')
+  ]);
  if(taskResult.status==='fulfilled'){
    openTasks=(taskResult.value.items||[]).filter(t=>!['done','completed','cancelled'].includes(String(t.status||'').toLowerCase()));
    openTasks.sort((a,b)=>String(a.due_at||'9999').localeCompare(String(b.due_at||'9999')));
@@ -180,6 +177,12 @@ async function overview(host){
  }else{taskList.replaceChildren($('p','ad-overview-muted','Список задач временно недоступен.'))}
  if(docResult.status==='fulfilled'){
    docsCount=(docResult.value.files||[]).length;renderDocs();
+ }
+ if(galleryResult.status==='fulfilled'){
+  const assets=galleryResult.value.assets||[];
+  photoCount=assets.length;
+  photoPublic=assets.filter(photo=>Number(photo.is_public)===1).length;
+  renderDocs();
  }
  if(overviewTimer)clearInterval(overviewTimer);
  overviewTimer=setInterval(()=>{
