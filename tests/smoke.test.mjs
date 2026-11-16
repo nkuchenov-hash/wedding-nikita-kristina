@@ -117,3 +117,16 @@ test('all venue documents and quotes are embedded in venue cards, not a separate
  const gate=await read('../tools/admin-gateway.php');
  assert.match(gate,/src\/venue-files-ui\.js/);
 });
+
+
+test('wedding budget excludes unaccepted venue quotes and tracks only costs',async()=>{
+ const ui=await read('../src/admin-data-ui.js');
+ assert.ok(!ui.includes('budgetScenario('));
+ assert.ok(!ui.includes('Полученные предложения площадок'));
+ assert.match(ui,/Остаток по плану/);
+ assert.match(ui,/planned_rub/);
+ assert.match(ui,/paid_rub/);
+ assert.match(ui,/Альтернативные коммерческие предложения хранятся в карточках площадок/);
+ const venue=await read('../src/venue-detail-ui.js');
+ assert.match(venue,/Полученные сметы и сценарии/);
+});
