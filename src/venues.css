@@ -231,3 +231,31 @@
 
 .vw-score-link{color:#28593c;font-weight:750;text-decoration:none;border-bottom:1px dotted #91ab97;text-underline-offset:4px}
 .vw-score-link:hover{color:#176b3d;border-bottom-color:currentColor}
+
+/* Table fidelity: six original data columns, no ghost action column, no clipped right edge. */
+.vw-page,.vw-page .vw-panel,.vw-page .vw-scroll{max-width:100%;min-width:0}
+.vw-page .vw-table-sortable{width:100%;table-layout:fixed}
+.vw-page .vw-table-sortable td,.vw-page .vw-table-sortable th{overflow-wrap:anywhere}
+.vw-page .vw-table-sortable .vw-date-chip{max-width:100%;white-space:normal;flex-wrap:wrap;gap:3px 5px;line-height:1.4}
+.vw-page .vw-table-sortable .vw-date-chip b{min-width:0;flex:none}
+.vw-page .vw-table-sortable .vw-money{font-variant-numeric:tabular-nums}
+.vw-page .vw-table-sortable .vw-score-link{font-size:15px;font-weight:800;white-space:nowrap}
+.vw-page .vw-table-sortable .vw-score small{line-height:1.45}
+@media(min-width:1180px){
+ .vw-page .vw-table-sortable{min-width:0}
+}
+@media(min-width:800px) and (max-width:1179px){
+ .vw-page .vw-table-sortable{min-width:0}
+ .vw-page .vw-table-sortable td,.vw-page .vw-table-sortable th{padding:10px 6px;font-size:11px}
+ .vw-page .vw-table-sortable .vw-date-chip{font-size:9.5px;padding:4px 5px}
+ .vw-page .vw-venue-cell{gap:6px}
+ .vw-page .vw-venue-media,.vw-page .vw-image-open{flex-basis:46px;width:46px;height:48px}
+ .vw-page .vw-image-open>.vw-row-thumb{width:46px;height:48px}
+ .vw-page .vw-table-sortable .vw-th-sort{font-size:11px}
+ .vw-page .vw-head-filter{font-size:10px!important;padding-left:4px!important;padding-right:12px!important}
+}
+@media(max-width:799px){
+ .vw-page .vw-scroll{overflow-x:auto;overscroll-behavior-inline:contain}
+ .vw-page .vw-table-sortable{min-width:820px}
+ .vw-page .vw-scroll:focus-visible{outline:2px solid #528369;outline-offset:-2px}
+}
