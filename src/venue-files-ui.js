@@ -43,6 +43,7 @@ function showPreview(root,file){
  const url=driveUrl(file.source_url);
  const preview=previewLink(url,file.mime);
  if(!preview){window.open(url,'_blank','noopener,noreferrer');return}
+ const controller=root.__venueFileController||(root.__venueFileController=new AbortController());
  let lightbox=root.querySelector('.vdp-file-dialog');
  if(!lightbox){
   lightbox=node('div','vdp-file-dialog');lightbox.setAttribute('role','dialog');
@@ -52,7 +53,6 @@ function showPreview(root,file){
   const key=e=>{if(e.key==='Escape'&&!lightbox.hidden)closePreview()};
   document.addEventListener('keydown',key,{signal:controller.signal});
  }
- const controller=root.__venueFileController||(root.__venueFileController=new AbortController());
  function closePreview(){
   lightbox.hidden=true;lightbox.replaceChildren();
   document.body.classList.remove('vdp-file-locked');
