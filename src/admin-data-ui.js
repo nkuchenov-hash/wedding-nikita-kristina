@@ -51,6 +51,10 @@ async function overview(host){
  host.append(pipeline,pulse);
  const cards=$('div','ad-live-metrics');host.append(cards);
  const detail=$('section','ad-guest-overview-detail');host.append(detail);
+ const feed=$('section','ad-guest-activity');
+ feed.append($('h3','','Последние действия гостей'));
+ const timeline=$('div','ad-guest-activity-list');
+ feed.append(timeline);host.append(feed);
  const steps=[
    ['total','В списке'],
    ['prepared','Ссылки подготовлены'],
@@ -84,6 +88,17 @@ async function overview(host){
    const row=$('div','ad-guest-overview-links');
    row.append(button('Перейти к гостям',()=>{location.hash='#/admin/guests'}));
    detail.append(explanation,row);
+   timeline.replaceChildren();
+   const actionLabels={login:'Открыл приглашение',mark_sent:'Приглашение отмечено отправленным',
+     mark_not_sent:'Отменена отметка об отправке',submit:'Ответил на приглашение',update:'Изменил данные'};
+   const events=(data.recent_activity||[]).filter(item=>item.guest_name);
+   if(!events.length)timeline.append($('p','ad-live-muted','Пока никто не открыл приглашение и не заполнил анкету.'));
+   else for(const item of events.slice(0,15)){
+     const entry=$('div','ad-guest-activity-item');
+     entry.append($('strong','',item.guest_name),$('span','',actionLabels[item.action]||'Обновил данные'),
+       $('time','',item.created_at||''));
+     timeline.append(entry);
+   }
    pulse.textContent='Последнее обновление: '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
  };
  await load();
