@@ -269,3 +269,68 @@
 .vdp-sync-error{margin:0 0 17px;padding:15px;border:1px solid #f0c5bf;background:#fff7f5;border-radius:11px;color:#9b3e34}
 .vdp-editor-wait{margin:20px 0;max-width:100%}
 .vdp-editor-wait button{background:#24583e;color:#fff;border:0;border-radius:10px;padding:13px 18px;font-size:14px;min-height:46px;cursor:pointer}
+
+
+/* True inline editing. Read values in their original cards, click to edit in place. */
+.vdp-inline-hint{font-size:13px;color:#577a60;font-weight:650;letter-spacing:0}
+.vdp-page .vdp-inline{
+ display:inline-flex;flex-direction:row;align-items:flex-start;justify-content:space-between;
+ text-align:left;gap:12px;vertical-align:top;min-width:0;max-width:100%;
+ margin:0;padding:7px 9px;border:1px dashed transparent;border-radius:8px;
+ background:transparent;color:#274634;font:inherit;font-size:14px;line-height:1.6;
+ cursor:pointer;transition:background .16s,border-color .16s;
+}
+.vdp-page .vdp-inline:hover,.vdp-page .vdp-inline:focus-visible{
+ background:#eaf4eb;border-color:#9abea1;outline-offset:2px;
+}
+.vdp-inline-text{white-space:pre-line;overflow-wrap:anywhere;min-width:0;flex:1}
+.vdp-inline-pencil{flex:none;color:#5a9a6c;font-size:13px;opacity:.65;line-height:inherit}
+.vdp-inline:hover .vdp-inline-pencil,.vdp-date-editable:hover .vdp-inline-pencil,.vdp-quote-editable:hover .vdp-inline-pencil{opacity:1}
+.vdp-page .vdp-inline-block{display:flex;width:100%;padding:12px 10px;margin:6px 0 12px;min-height:52px}
+.vdp-page .vdp-inline-list{display:flex;width:100%;padding:4px 2px;min-height:65px}
+.vdp-page .vdp-inline-list .vdp-inline-text{line-height:1.9}
+.vdp-page .vdp-inline-hero{color:#fff;padding:6px 0;border-radius:7px;font-weight:inherit;font-size:inherit;line-height:inherit}
+.vdp-page .vdp-inline-hero .vdp-inline-pencil,.vdp-hero-area .vdp-inline-pencil{color:#d0e3d1;opacity:.8}
+.vdp-page .vdp-inline-hero:hover,.vdp-page .vdp-inline-hero:focus-visible,.vdp-hero-area .vdp-inline:hover{
+ background:#ffffff1d;border-color:#ffffff70;color:#fff
+}
+.vdp-hero-area .vdp-inline{font-size:15px;color:#e7f0e6;padding:4px 5px}
+.vdp-hero .vdp-inline-form{background:#fff;color:#173b29;border-radius:10px;padding:13px}
+.vdp-hero .vdp-inline-form input{font-size:17px}
+.vdp-inline-label{font-size:12px!important;font-weight:650;color:#698571!important;margin:12px 0 0!important}
+.vdp-live-terms>h3{margin:23px 0 10px;font-size:17px}
+.vdp-live-terms .vdp-source-note{background:#f5f9f5;border-left:3px solid #a5c4ab;padding:13px 16px;margin:12px 0;line-height:1.7;font-size:13px}
+.vdp-inline-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.vdp-inline-facts>div{border:1px solid #e3eae1;background:#f9fcf9;border-radius:10px;padding:13px;min-width:0;display:grid;gap:5px;align-content:start}
+.vdp-inline-facts small{font-size:12px;color:#6c8572}
+.vdp-date-editable{font:inherit;cursor:pointer;text-align:left;width:100%;display:block;min-width:0}
+.vdp-date-editable .vdp-inline-pencil{margin-left:4px}
+.vdp-date-editable:hover,.vdp-date-editable:focus-visible{outline:2px solid #8bb99a;outline-offset:1px}
+.vdp-quote-editable{cursor:pointer;text-align:left;position:relative;display:flex;flex-direction:column;align-items:flex-start;min-width:0;max-width:100%;width:100%;font:inherit}
+.vdp-quote-editable .vdp-inline-pencil{position:absolute;right:13px;top:9px}
+.vdp-quote-editable:hover,.vdp-quote-editable:focus-visible{border-color:#82b292;background:#f3faf4;outline-offset:2px}
+.vdp-inline-add{border:1px solid #b7d4bf;color:#245a3b;background:#f1f8f2;border-radius:10px;min-height:42px;padding:9px 15px;font-size:13px;font-weight:700;cursor:pointer}
+.vdp-inline-add:hover{background:#e6f2e8}
+.vdp-inline-extra{display:grid;gap:8px;align-content:start;color:#5e7965;font-size:13px;min-width:0}
+.vdp-inline-extra .vdp-inline{border:1px solid #dfe9df;background:#f9fbf8;width:100%;font-size:14px}
+.vdp-inline-extra .vdp-inline:hover{background:#eaf4eb;border-color:#9abea1}
+.vdp-inline-form{display:grid;gap:10px;min-width:min(100%,220px);max-width:100%;width:100%;padding:10px;border:1px solid #a8c5ae;background:#f6fbf6;border-radius:10px;box-sizing:border-box}
+.vdp-inline-form input,.vdp-inline-form select,.vdp-inline-form textarea{
+ display:block;width:100%;min-width:0;box-sizing:border-box;border:1px solid #b6cdbb;
+ padding:11px 12px;border-radius:8px;font-size:14px;color:#234c33;background:#fff;line-height:1.5
+}
+.vdp-inline-form textarea{resize:vertical;min-height:106px}
+.vdp-inline-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.vdp-inline-actions button{border-radius:9px;padding:10px 14px;min-height:43px;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:#345d42;border:1px solid #c7daca}
+.vdp-inline-actions .vdp-inline-save{background:#24593c;color:#fff;border-color:#24593c}
+.vdp-inline-actions button:disabled{opacity:.55;cursor:default}
+.vdp-inline-quote-form{background:#f6faf6;border:1px solid #c3dbc8;border-radius:12px;padding:17px;grid-column:1/-1;display:grid;gap:13px;min-width:0}
+.vdp-inline-quote-form .vdp-editor-quote-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;padding:0;border:0;background:transparent}
+.vdp-inline-quote-form .vdp-editor-quote-row label{min-width:0;display:grid;gap:6px;color:#4f7157;font-size:12px;font-weight:650}
+.vdp-inline-quote-form .vdp-editor-quote-row input,.vdp-inline-quote-form .vdp-editor-quote-row select{min-width:0;width:100%;font-size:14px;min-height:43px;padding:9px 11px;box-sizing:border-box}
+.vdp-inline-quote-form [data-remove-venue-quote]{min-height:43px}
+.vdp-inline-error{color:#a13f36;font-size:13px;line-height:1.5}
+.vdp-page .vdp-scope-grid .vdp-pane{min-width:0}
+.vdp-page .vdp-key-costs .vdp-inline{font-weight:700}
+@container(max-width:740px){.vdp-inline-facts{grid-template-columns:1fr}.vdp-inline-quote-form .vdp-editor-quote-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container(max-width:520px){.vdp-inline-quote-form .vdp-editor-quote-row{grid-template-columns:1fr}.vdp-inline-hint{font-size:12px}.vdp-page .vdp-inline-block{padding:8px 4px}}
