@@ -69,3 +69,7 @@ jobs:
           test "$asset_code" = 200
           grep -Fq 'activateAdminData' /tmp/admin-app.js
           echo 'ADMIN_END_TO_END_LOGIN_PASSED'
+          curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" \
+            'https://nikitakristina.ru/admin/index.php?api=admin%2Frecords&collection=venues' \
+            -o /tmp/wedding-venues.json
+          python3 -c 'import json; v=json.load(open("/tmp/wedding-venues.json")); assert v.get("ok") and len(v.get("items",[]))>=25; print("VENUES_API_OK")'
