@@ -120,6 +120,56 @@ if (!$valid) {
     exit;
 }
 $_SESSION['last_seen'] = time();
+// Private organizer data API shares this already-authenticated admin session.
+// Guest-facing API remains disabled and is never reachable through this gateway.
+if (isset($_GET['api'])) {
+    header('Content-Type: application/json; charset=UTF-8', true);
+    $route = (string)($_GET['api'] ?? '');
+    $method = (string)($_SERVER['REQUEST_METHOD'] ?? 'GET');
+    if ($route === 'auth/session' && $method === 'GET') {
+        echo json_encode(['ok'=>true,'role'=>'admin','csrf'=>(string)$_SESSION['csrf']],
+          JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        exit;
+    }
+    if (!preg_match('~^admin/[a-z][a-z0-9/-]{0,70}$~', $route) ||
+        !in_array($method, ['GET','POST','PATCH'], true)) {
+        http_response_code(404);
+        echo '{"ok":false,"error":"not_found"}';
+        exit;
+    }
+    $origin = (string)($_SERVER['HTTP_ORIGIN'] ?? '');
+    if ($origin !== '') {
+        $parts = parse_url($origin);
+        if (!is_array($parts) ||
+            ($parts['scheme'] ?? '') !== 'https' ||
+            !in_array(strtolower((string)($parts['host'] ?? '')),
+                ['nikitakristina.ru','www.nikitakristina.ru'], true)) {
+            http_response_code(403);
+            echo '{"ok":false,"error":"bad_origin"}';
+            exit;
+        }
+    }
+    if ($method !== 'GET') {
+        $csrfToken = (string)($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+        if ($csrfToken === '' || !hash_equals((string)$_SESSION['csrf'], $csrfToken)) {
+            http_response_code(403);
+            echo '{"ok":false,"error":"csrf"}';
+            exit;
+        }
+    }
+    try {
+        $backend = $private.'/backend/src/api.php';
+        if (!is_file($backend)) throw new RuntimeException('Backend not installed');
+        require_once $backend;
+        $database = \Wedding\db();
+        \Wedding\adminRoute($database, $login, $route, $method, \Wedding\config());
+    } catch (Throwable $error) {
+        error_log('Wedding admin API error: '.$error->getMessage());
+        http_response_code(503);
+        echo '{"ok":false,"error":"admin_backend_unavailable","message":"База данных временно недоступна"}';
+        exit;
+    }
+}
 $types = [
     'index.html' => 'text/html; charset=UTF-8',
     'src/admin-app.js' => 'text/javascript; charset=UTF-8',
