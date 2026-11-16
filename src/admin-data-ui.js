@@ -8,7 +8,8 @@ const fields={
   budget_lines:[['category','Категория'],['description','Статья'],['planned_rub','План, ₽'],['committed_rub','Согласовано, ₽'],['paid_rub','Оплачено, ₽']],
   tasks:[['title','Задача'],['description','Описание'],['status','Статус'],['owner','Ответственный'],['due_at','Срок']],
   menu_options:[['category','Категория'],['title','Блюдо'],['description','Описание'],['allergens','Аллергены']],
-  schedule_items:[['title','Событие'],['start_at','Начало'],['end_at','Конец'],['place','Место'],['notes','Примечание']]
+  schedule_items:[['title','Событие'],['start_at','Начало'],['end_at','Конец'],['place','Место'],['notes','Примечание']],
+  documents:[['category','Категория'],['label','Название'],['reference','Ссылка на файл'],['visibility','Доступ']]
 };
 const numeric=new Set(['capacity_max','quoted_total_rub','estimate_rub','planned_rub','committed_rub','paid_rub']);
 const mapSection={budget:'budget_lines',vendors:'vendors',tasks:'tasks',schedule:'schedule_items',catering:'vendors'};
@@ -192,14 +193,33 @@ async function moderation(host){
  };
  list(data.photos||[],'photos');list(data.stories||[],'stories');
 }
+async function documents(host){
+  title(host,'Документы и сметы','Материалы хранятся в Wedding Drive. Новые записи можно добавлять прямо здесь.');
+  const a=$('a','ad-live-button','Открыть Wedding Drive');
+  a.href='https://drive.google.com/drive/folders/195OYX_CPglwFmwSqwzRhQt7yrYyIPeBi';
+  a.target='_blank';a.rel='noopener noreferrer';host.append(a);
+  await collection(host,'documents');
+}
+function budgetScenario(host){
+ const panel=$('section','ad-live-subsection');
+ title(panel,'Сценарий банкета — Марьино','Предварительный ориентир 7 500 ₽ на человека из материалов от 29 октября. Не подтверждённая итоговая смета.');
+ const grid=$('div','ad-live-metrics');
+ for(const count of [50,80,100])metric(grid,count+' гостей',(count*7500).toLocaleString('ru-RU')+' ₽');
+ panel.append(grid);host.append(panel);
+}
 async function renderSection(host,section){
  if(section==='overview'){await overview(host);return}
  if(section==='settings'){await settings(host);return}
  if(section==='moderation'){await moderation(host);return}
  if(section==='menu'){await collection(host,'menu_options');return}
+ if(section==='documents'){await documents(host);return}
  if(section==='guests'){await guests(host);return}
  if(section==='venues'){await collection(host,'venues');return}
- if(mapSection[section]){await collection(host,mapSection[section]);return}
+ if(mapSection[section]){
+   await collection(host,mapSection[section]);
+   if(section==='budget')budgetScenario(host);
+   return;
+ }
  return;
 }
 function login(host,section){
@@ -217,7 +237,7 @@ function login(host,section){
 }
 export async function activateAdminData(root,section){
  const destination=root.querySelector('.admin-content');if(!destination)return;
- const supported=['overview','guests','venues','budget','vendors','tasks','schedule','catering','settings','moderation','menu'];
+ const supported=['overview','guests','venues','budget','vendors','tasks','schedule','catering','settings','moderation','menu','documents'];
  if(!supported.includes(section))return;
  const host=$('section','ad-live-panel');host.setAttribute('aria-label','Данные свадебной базы');
  destination.prepend(host);
@@ -227,7 +247,7 @@ export async function activateAdminData(root,section){
    if(session.role!=='admin'){login(host,section);return}
    await renderSection(host,section);
    // Switch to live records only after the authenticated request succeeds.
-   for(const el of [...destination.children])if(el!==host)el.hidden=true;
+   if(!['overview','venues','catering'].includes(section))for(const el of [...destination.children])if(el!==host)el.hidden=true;
  }catch(err){
    // Live API is not enabled on this release. Leave the existing authenticated admin tools visible.
    host.remove();
