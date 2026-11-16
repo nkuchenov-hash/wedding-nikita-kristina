@@ -28,7 +28,9 @@ const rows=PUBLIC_VENUES.map(v=>{
    photo_refs_json:JSON.stringify(ext.photos||ext.photo_refs||[]),
  };
 });
-if(rows.length<20)throw Error('Venue catalog unexpectedly incomplete');
+if(!rows.length)throw Error('Venue catalog is empty');
+// Organizers may legitimately dismiss venues: do not enforce a fixed minimum shortlist size.
+if(rows.some(row=>!row.id||!row.name))throw Error('Venue catalog contains an unnamed venue');
 const ids=new Set(rows.map(x=>x.id));
 if(ids.size!==rows.length)throw Error('Duplicate venue IDs');
 mkdirSync('backend/seed',{recursive:true});
