@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 namespace Wedding;
+use PDO;
 require_once __DIR__.'/../src/core.php';
 
 if (PHP_SAPI!=='cli') {http_response_code(404);exit;}
@@ -28,6 +29,10 @@ $database->exec('PRAGMA journal_mode = WAL');
 $schema=file_get_contents(__DIR__.'/../schema.sql');
 if($schema===false)throw new \RuntimeException('Schema missing');
 $database->exec($schema);
+// Existing wedding.sqlite3 predates the editable couple relationship field.
+$cols=$database->query('PRAGMA table_info(guest_profile_details)')->fetchAll(PDO::FETCH_ASSOC);
+if(!in_array('relation_to_couple',array_column($cols,'name'),true))
+    $database->exec("ALTER TABLE guest_profile_details ADD COLUMN relation_to_couple TEXT NOT NULL DEFAULT ''");
 $tables=(int)$database->query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")->fetchColumn();
 chmod($root.'/wedding.sqlite3',0600);
 foreach(['-wal','-shm'] as $suffix)if(is_file($root.'/wedding.sqlite3'.$suffix))

@@ -201,7 +201,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
     }
     if ($route==='admin/guests' && $method==='GET') {
         $items=all($db,"SELECT g.*,r.attendance,r.adults,r.children,r.transport_needed,r.dietary_notes,
-            r.other_notes,r.submitted_at,p.source_person_id,p.name_en,p.seating_group,p.decision,p.base_count,
+            r.other_notes,r.submitted_at,p.source_person_id,p.name_en,p.relation_to_couple,p.seating_group,p.decision,p.base_count,
             t.invitation_sent_at,t.first_opened_at,t.last_opened_at,t.profile_completed_at,
             (SELECT i.id FROM invitations i WHERE i.guest_id=g.id AND i.revoked_at IS NULL
               AND (i.expires_at IS NULL OR i.expires_at>datetime('now'))
@@ -218,7 +218,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
     if($route==='admin/guest-profile' && $method==='GET'){
         $id=(string)($_GET['guest_id']??'');
         if(!preg_match('/^[a-f0-9-]{36}$/',$id))fail(422,'guest','Неверный ID гостя');
-        $item=one($db,"SELECT g.*,p.source_person_id,p.name_en,p.seating_group,p.decision,p.base_count,
+        $item=one($db,"SELECT g.*,p.source_person_id,p.name_en,p.relation_to_couple,p.seating_group,p.decision,p.base_count,
           p.source_people_json,p.source_invitation_json,p.source_profile_json,p.source_english_json,
           t.invitation_sent_at,t.first_opened_at,t.last_opened_at,t.profile_completed_at,
           (SELECT i.id FROM invitations i WHERE i.guest_id=g.id AND i.revoked_at IS NULL
@@ -267,6 +267,63 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
        statement($db,'UPDATE guest_profile_details SET '.implode(',',$fields).",updated_at=datetime('now') WHERE guest_id=?",$params);
        audit($db,'admin',$actor,'update','guest_profile',$id,['fields'=>array_keys(array_intersect_key($data,array_flip(['name_en','seating_group'])))]);
        json(['ok'=>true]);
+    }
+    if($route==='admin/guest/fields' && $method==='PATCH'){
+        $data=payload(10000);
+        $id=strval($data,'id',40,true);
+        $values=$data['fields']??null;
+        if(!is_array($values)||array_is_list($values)||!count($values)||count($values)>24)
+            fail(422,'fields','Нужно передать изменённые поля гостя');
+        if(!one($db,'SELECT id FROM guests WHERE id=?',[$id]))
+            fail(404,'guest','Гость не найден');
+        $profileFields=['name_en','relation_to_couple','seating_group','decision','base_count'];
+        $guestFields=['first_name','last_name','display_name','side','relationship','city',
+            'email','phone','language','about','plus_one_allowed','children_count'];
+        $setGuest=[];$argsGuest=[];$setProfile=[];$argsProfile=[];
+        foreach($values as $key=>$value){
+            if(!is_string($key)||!in_array($key,array_merge($guestFields,$profileFields),true))
+                fail(422,'field','Это поле нельзя редактировать напрямую');
+            if(is_bool($value))$value=$value?1:0;
+            if(!is_string($value)&&!is_numeric($value))
+                fail(422,'field','Недопустимый тип значения');
+            if($key==='side'&&!in_array($value,['groom','bride','both','other'],true))
+                fail(422,'field','Некорректная сторона');
+            if($key==='children_count' && (!preg_match('/^\d{1,2}$/',(string)$value)||
+                (int)$value>15))fail(422,'field','Допустимо от 0 до 15 детей');
+            if($key==='plus_one_allowed' && !in_array((string)$value,['0','1'],true))
+                fail(422,'field','Некорректное разрешение на сопровождающего');
+            if($key==='email' && $value!=='' && !filter_var($value,FILTER_VALIDATE_EMAIL))
+                fail(422,'email','Некорректный email');
+            if($key==='language' && !in_array($value,['ru','en','de','other'],true))
+                fail(422,'language','Язык должен быть ru, en, de или other');
+            if($key==='display_name' && trim((string)$value)==='')
+                fail(422,'name','Имя не может быть пустым');
+            $max=$key==='about'?1200:(in_array($key,['email','name_en','display_name','relationship','relation_to_couple','city'],true)?320:($key==='phone'?64:($key==='seating_group'?160:320)));
+            if(mb_strlen((string)$value)>$max)fail(422,'field','Слишком длинное значение');
+            if(in_array($key,['plus_one_allowed','children_count'],true))$value=(int)$value;
+            if(in_array($key,$guestFields,true)){
+                $setGuest[]=$key.'=?';$argsGuest[]=$value;
+            }else{
+                $setProfile[]=$key.'=?';$argsProfile[]=$value;
+            }
+        }
+        $db->beginTransaction();
+        try{
+            if($setGuest){
+                $argsGuest[]=$id;
+                statement($db,"UPDATE guests SET ".implode(',',$setGuest).",updated_at=datetime('now') WHERE id=?",$argsGuest);
+            }
+            if($setProfile){
+                statement($db,"INSERT OR IGNORE INTO guest_profile_details(guest_id,source_person_id)
+                  VALUES(?,?)",[$id,'manual:'.$id]);
+                $argsProfile[]=$id;
+                statement($db,"UPDATE guest_profile_details SET ".implode(',',$setProfile).
+                  ",updated_at=datetime('now') WHERE guest_id=?",$argsProfile);
+            }
+            audit($db,'admin',$actor,'update','guest',$id,['fields'=>array_keys($values)]);
+            $db->commit();
+        }catch(Throwable $err){$db->rollBack();throw $err;}
+        json(['ok'=>true,'updated'=>array_keys($values)]);
     }
     if ($route==='admin/guest/update' && $method==='POST') {
         $d=payload(8192);$id=strval($d,'id',40,true);

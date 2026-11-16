@@ -14,6 +14,9 @@ $db->exec('PRAGMA foreign_keys=ON');
 $schema=file_get_contents(__DIR__.'/../schema.sql');
 checkGuestStage(is_string($schema),'schema missing');
 $db->exec($schema);
+$profileColumns=$db->query('PRAGMA table_info(guest_profile_details)')->fetchAll(\PDO::FETCH_ASSOC);
+checkGuestStage(in_array('relation_to_couple',array_column($profileColumns,'name'),true),
+  'Missing separate couple relationship column');
 statement($db,"INSERT INTO guests(id,first_name,display_name) VALUES(?,?,?)",
     ['guest-a','Guest','Guest A']);
 statement($db,"INSERT INTO guests(id,first_name,display_name) VALUES(?,?,?)",

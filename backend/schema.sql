@@ -135,6 +135,7 @@ CREATE TABLE IF NOT EXISTS guest_profile_details (
   guest_id TEXT PRIMARY KEY REFERENCES guests(id) ON DELETE CASCADE,
   source_person_id TEXT NOT NULL UNIQUE,
   name_en TEXT NOT NULL DEFAULT '',
+  relation_to_couple TEXT NOT NULL DEFAULT '',
   source_people_json TEXT NOT NULL DEFAULT '{}',
   source_invitation_json TEXT NOT NULL DEFAULT '{}',
   source_profile_json TEXT NOT NULL DEFAULT '{}',

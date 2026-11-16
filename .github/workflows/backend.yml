@@ -71,6 +71,7 @@ jobs:
             php bin/seed-venues.php
             php bin/import-venue-files.php
             php bin/seed-planning.php
+            php bin/backfill-couple-relation.php
             php bin/smoke.php
             test -f '$PRIVATE/wedding.sqlite3'
             test -f '$PRIVATE/wedding-config.json'
