@@ -12,7 +12,7 @@ const fields={
   documents:[['category','Категория'],['label','Название'],['reference','Ссылка на файл'],['visibility','Доступ']]
 };
 const numeric=new Set(['capacity_max','quoted_total_rub','estimate_rub','planned_rub','committed_rub','paid_rub']);
-const mapSection={budget:'budget_lines',vendors:'vendors',tasks:'tasks',schedule:'schedule_items',catering:'vendors'};
+const mapSection={budget:'budget_lines',tasks:'tasks',schedule:'schedule_items'};
 function errorText(e){return e instanceof Error?e.message:'Не удалось выполнить запрос'}
 async function call(route,{method='GET',body,form=false}={}){
  const headers={'Accept':'application/json'};
@@ -237,7 +237,7 @@ function login(host,section){
 }
 export async function activateAdminData(root,section){
  const destination=root.querySelector('.admin-content');if(!destination)return;
- const supported=['overview','guests','venues','budget','vendors','tasks','schedule','catering','settings','moderation','menu','documents'];
+ const supported=['overview','guests','venues','budget','tasks','schedule','settings','moderation','menu','documents'];
  if(!supported.includes(section))return;
  const host=$('section','ad-live-panel');host.setAttribute('aria-label','Данные свадебной базы');
  destination.prepend(host);
@@ -247,7 +247,7 @@ export async function activateAdminData(root,section){
    if(session.role!=='admin'){login(host,section);return}
    await renderSection(host,section);
    // Switch to live records only after the authenticated request succeeds.
-   if(!['overview','venues','catering'].includes(section))for(const el of [...destination.children])if(el!==host)el.hidden=true;
+   if(!['overview','venues'].includes(section))for(const el of [...destination.children])if(el!==host)el.hidden=true;
  }catch(err){
    // Live API is not enabled on this release. Leave the existing authenticated admin tools visible.
    host.remove();
