@@ -29,7 +29,7 @@ jobs:
               command -v "$p" >/dev/null 2>&1 || continue
               echo "== $p =="
               "$p" -v | head -1
-              "$p" -m | grep -Ei "sqlite|pdo|mysql|gd|fileinfo|imagick|openssl|mbstring" || true
+              "$p" -m | grep -Ei "sqlite|pdo|mysql|gd|fileinfo|imagick|openssl|mbstring|zip|xml|dom|simplexml" || true
             done
             if test -d ~/wedding-private; then echo "PRIVATE_DIR=yes"; else echo "PRIVATE_DIR=no"; fi
           '
