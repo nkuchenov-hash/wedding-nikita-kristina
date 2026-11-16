@@ -1,0 +1,28 @@
+name: Verify venue photo thumbnails reach the admin browser
+on:
+  push:
+    paths: ['.github/workflows/venue-photo-access.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify publicly shareable Drive thumbnail response types
+        shell: bash
+        run: |
+          set -euo pipefail
+          ids=(
+            1ffsqxY6YRuCfBsoL_JyklY2Nuc-yyAb8
+            1Z9gUeIP4V3iNa3QPCuGw08YjRvknjWSW
+            1zFfBPwAtpRvC4CuI2jK5iyX4G4RD4XM_
+          )
+          ok=0
+          for id in "${ids[@]}"; do
+            read -r status type <<< "$(curl -sS -L --max-time 25 -o /tmp/venue-thumbnail -w '%{http_code} %{content_type}' "https://drive.google.com/thumbnail?id=$id&sz=w760" || echo 'ERR failed')"
+            echo "Venue preview status=$status type=$type"
+            if [[ "$status" == 200 && "$type" == image/* ]]; then ok=$((ok+1)); fi
+          done
+          echo "VERIFIED_PHOTO_PREVIEWS=$ok / ${#ids[@]}"
+          test "$ok" -eq "${#ids[@]}"
