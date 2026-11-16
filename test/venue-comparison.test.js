@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {estimateVenue, scoreVenue, RATING_CRITERIA, RATING_MAX} from '../src/venue-evaluation.js';
 
 const venue=(overrides={})=>({
@@ -65,4 +66,16 @@ test('ratings never presume that rental-only pricing is a comparable total',()=>
  const v=venue({cost:{rent:250000},ratings:{}});
  const score=scoreVenue(v,80);
  assert.equal(score.breakdown.find(x=>x.key==='cost').value,null);
+});
+
+test('comparison keeps exactly six useful table columns and no extra import or comparison UI',()=>{
+ const source=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');
+ const columns=[...source.matchAll(/columnHeading\('(?:name|date|visit|price|capacity|score)'/g)];
+ assert.equal(columns.length,6);
+ assert.equal(source.includes('Импорт правок'),false);
+ assert.equal(source.includes('Экспорт правок'),false);
+ assert.equal(source.includes('Все материалы с фото и со сметой'),false);
+ assert.equal(source.includes('Сравнить / подробности'),false);
+ assert.match(source,/addEventListener\('input',event=>/);
+ assert.match(source,/totalEstimate\(v\)/);
 });
