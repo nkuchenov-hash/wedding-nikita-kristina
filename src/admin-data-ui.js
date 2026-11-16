@@ -330,6 +330,21 @@ async function schedule(host){
    const name=makeField('Событие','text',item?.title||'');name.required=true;
    const place=makeField('Место','text',item?.place||'');
    const notes=makeField('Примечание','text',item?.notes||'');
+   const venueField=$('label','ad-live-field');
+   venueField.append($('span','','Площадка из списка (для фотогалереи)'));
+   const venueSelect=$('select');
+   const noVenue=$('option','','Не выбрана');noVenue.value='';venueSelect.append(noVenue);
+   for(const venue of PUBLIC_VENUES){
+     const option=$('option','',venue.name);option.value=venue.id;venueSelect.append(option);
+   }
+   venueSelect.value=item?.venue_id||'';
+   venueField.append(venueSelect);form.append(venueField);
+   const confirmField=$('label','ad-live-field');
+   const confirmBox=$('input');confirmBox.type='checkbox';
+   confirmBox.checked=Number(item?.is_confirmed||0)===1;
+   confirmField.append(confirmBox,$('span','','Место утверждено — включить его фотографии в свадебную галерею'));
+   form.append(confirmField);
+   venueSelect.addEventListener('change',()=>{if(!venueSelect.value)confirmBox.checked=false});
    const actions=$('div','ad-program-actions'),save=$('button','ad-live-button','Сохранить'),cancel=$('button','ad-program-secondary','Отмена');
    save.type='submit';cancel.type='button';cancel.addEventListener('click',()=>{editor.remove();editor=null});
    actions.append(save,cancel);form.append(actions);
@@ -344,11 +359,14 @@ async function schedule(host){
            start_at:date.value+(time.value?'T'+time.value+':00':''),
            place:place.value.trim(),
            notes:notes.value.trim(),
+           venue_id:venueSelect.value,
+           is_confirmed:confirmBox.checked?1:0,
            is_public:Number(item?.is_public||0),
            sort_order:item?.sort_order??90
          }
        };
        if(!payload.fields.title)throw new Error('Укажите название события');
+       if(payload.fields.is_confirmed&&!payload.fields.venue_id)throw new Error('Для утверждённой площадки выберите место из списка');
        if(item?.id)payload.id=item.id;
        await call('admin/records',{method:item?.id?'PATCH':'POST',body:payload});
        host.replaceChildren();await schedule(host);
@@ -372,6 +390,7 @@ async function schedule(host){
        content.append($('h3','',entry.title));
        if(entry.place)content.append($('p','',entry.place));
        if(entry.notes)content.append($('small','',entry.notes));
+       if(Number(entry.is_confirmed)===1)content.append($('small','ad-program-confirmed','Площадка утверждена — фото в свадебной галерее'));
        row.append(content,button('Изменить',()=>eventForm(entry,day.date)));
        card.append(row);
      }
