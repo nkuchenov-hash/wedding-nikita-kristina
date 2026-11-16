@@ -250,3 +250,22 @@
 @container(min-width:1251px){.vdp-overview{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}.vdp-overview>.vdp-pane:first-child,.vdp-overview>.vdp-scope-grid{grid-column:1/-1}}
 @container(max-width:900px){.vdp-scope-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.vdp-editor-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.vdp-editor-quote-row{grid-template-columns:repeat(2,minmax(0,1fr))}.vdp-editor-quote-row button{justify-self:start}}
 @container(max-width:580px){.vdp-budget-header{grid-template-columns:1fr}.vdp-dates,.vdp-scope-grid,.vdp-editor-grid,.vdp-editor-dates,.vdp-editor-quote-row{grid-template-columns:1fr}.vdp-photo-main{grid-template-columns:38px minmax(0,1fr) 38px}.vdp-date{padding:14px 15px}.vdp-editor-actions{position:static}}
+
+
+/* Readable detail typography: do not shrink notes or labels to make a narrow layout fit. */
+.vdp-page .vdp-note{font-size:13px!important;line-height:1.7!important}
+.vdp-page .vdp-subtle{font-size:14px!important}
+.vdp-page .vdp-date span{font-size:12px;line-height:1.45}
+.vdp-page .vdp-date strong{font-size:14px;line-height:1.45}
+.vdp-page .vdp-key-costs>div{min-width:0;gap:14px;flex-wrap:wrap}
+.vdp-page .vdp-key-costs>div>span{font-size:14px}
+.vdp-page .vdp-key-costs>div strong{font-size:15px;white-space:normal;overflow-wrap:break-word}
+.vdp-page .vdp-hero-bottom small{font-size:12px}
+.vdp-page .vdp-hero-bottom span{font-size:12px}
+.vdp-page .vdp-filmstrip .vdp-thumb{flex-basis:138px}
+.vdp-page .vdp-filmstrip .vdp-thumb img{height:95px}
+.vdp-page .vdp-filmstrip .vdp-thumb span{font-size:12px;line-height:1.4;padding:9px 10px}
+.vdp-save-confirmation{display:block;margin:0 0 16px;padding:13px 18px;border:1px solid #b2d2b9;background:#f6faf6;border-radius:11px;color:#255b3a;font-size:14px;line-height:1.5;font-weight:650}
+.vdp-sync-error{margin:0 0 17px;padding:15px;border:1px solid #f0c5bf;background:#fff7f5;border-radius:11px;color:#9b3e34}
+.vdp-editor-wait{margin:20px 0;max-width:100%}
+.vdp-editor-wait button{background:#24583e;color:#fff;border:0;border-radius:10px;padding:13px 18px;font-size:14px;min-height:46px;cursor:pointer}
