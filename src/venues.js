@@ -12,15 +12,13 @@ import {hydrateVenueFiles} from './venue-files-ui.js';
 import {estimateVenue,scoreVenue,PERSONAL_CRITERIA,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
 export const PUBLIC_VENUES = [
   {id:'vesenniy',name:'Весенний',region:'city',area:'Обводный канал',website:''},
-  {id:'kraft',name:'Крафт — лофт',region:'city',area:'Санкт-Петербург'},
-  {id:'loft-roof',name:'Лофт на крыше',region:'city',area:'Санкт-Петербург'},
   {id:'alex-park',name:'Александровский парк',region:'city',area:'Санкт-Петербург',
     drive:'https://drive.google.com/drive/folders/1bzMTrULC8Qqve92-ugybFXZzHTu0A-9f',
     quoteSource:'https://docs.google.com/document/d/1bOdS2FWzTOLC9vsTn-S8ywb9gp0Ey2eRRyh4dCMG3wQ/edit',
-    quoteDate:'2027-06-18',cost:{quoteTotal:712760,quoteGuests:80},
+    quoteDate:'2027-06-20',cost:{quoteTotal:687760,quoteGuests:80},
     quoteAlternatives:[{date:'2027-06-18',guests:80,total:712760},{date:'2027-06-20',guests:80,total:687760}],
     notes:'Предварительная рукописная смета для 80 гостей. Банкет 5 500 ₽ × 80 = 440 000 ₽; фуршет 195 ₽ × 80 = 15 600 ₽; напитки 650 ₽ × 80 = 52 000 ₽; питание специалистов 1 500 ₽ × 2 = 3 000 ₽. Аренда оборудования: 150 000 ₽ (18.06) / 125 000 ₽ (20.06). Сервисный сбор 10%. Рукописные итоги 712 760 ₽ и 687 760 ₽ отличаются от суммы читаемых строк на 1 100 ₽. Пробковый сбор 700 ₽/чел. (потенциально +56 000 ₽) — уточнить, входит ли. Консультационный договор 50 000 ₽, условия зачёта уточнить. На 19 июня цены нет.',
-    cons:'Итог рукописной сметы отличается от суммы читаемых строк на 1 100 ₽. Предложения только на 18 и 20 июня, дата 19 июня и пробковый сбор не подтверждены.'},
+    cons:'На 18 и 19 июня мест уже нет, свободно только 20-е. Итог рукописной сметы отличается от суммы читаемых строк на 1 100 ₽. Пробковый сбор остаётся неясным.'},
   {id:'seasons',name:'Сезоны в парке',region:'city',area:'Санкт-Петербург'},
   {id:'k2',name:'К2',region:'city',area:'Каменный остров, Санкт-Петербург',capacity:200},
   {id:'putilov',name:'Особняк Путилова',region:'city',area:'Крестовский остров, пр. Динамо, 2Б',capacity:120,website:'https://putilovevent.ru/'},
@@ -33,18 +31,14 @@ export const PUBLIC_VENUES = [
     quoteSource:'https://docs.google.com/document/d/1t37Broaa6dE4L8MJmJBTxMeDie1kZMd6or3h6zMv66Q/edit',
     cost:{quoteTotal:863500,quoteGuests:80},
     notes:'Предварительный расчёт на 80 гостей: пакет 760 000 ₽ (не подменять рекламным меню от 6 500 ₽/гость); фуршет 48 000 ₽ (600 ₽ × 80), безалкогольные напитки 36 000 ₽ (450 ₽ × 80), персонал 6 000 ₽ (2 000 ₽ × 3); дополнительные услуги 90 000 ₽; сервисный сбор 15% только от дополнительных услуг = 13 500 ₽. Итого 863 500 ₽. В пакете заявлены 5 часов зала, свет/звук и часть оформления. Чай/кофе 300 ₽/чел. по факту, продление 30 000 ₽/час, торт и дополнительный декор — отдельно. Дату торжества и включённые услуги необходимо подтвердить.',
-    cons:'Дата 19 июня не подтверждена; чай/кофе, продление, торт и дополнительный декор не входят в смету.'},
+    cons:'Скидка 10% на 20 июня подтверждена, но база её начисления пока не ясна; чай/кофе, продление, торт и дополнительный декор не входят в смету.'},
   {id:'petr',name:'Банкетный зал «Петръ»',region:'city',area:'Гороховая, 1',website:'https://www.petrbanket.com/'},
   {id:'roof18',name:'Крыша 18',region:'city',area:'Петроградская наб., 18',website:'https://roof18.ru'},
   {id:'bali',name:'Ресторан Bali',region:'city',area:'Савушкина, 98',website:'https://balispb.ru/banket/svadby'},
-  {id:'360',name:'Пространство 360',region:'city',area:'Санкт-Петербург'},
   {id:'ambassador',name:'Амбассадор Ивент',region:'city',area:'Римского-Корсакова, 5–7'},
-  {id:'english-roof',name:'Крыша на Английской',region:'city',area:'Галерная, 73'},
-  {id:'admiralty-roof',name:'Крыша — Адмиралтейский, 8',region:'city',area:'Адмиралтейский пр., 8'},
   {id:'palma',name:'Пальма',region:'city',area:'пер. Пирогова, 18'},
   {id:'repino-riviera',name:'Репинская Ривьера',region:'country',area:'Репино'},
   {id:'panorama',name:'Панорама — Репино',region:'country',area:'Приморское шоссе, 428Д'},
-  {id:'zhemchuzhny',name:'Event Hall Жемчужный',region:'city',area:'Приморский проспект, 50Ж',website:'https://xn--80aaaav9bebfeihcggq.xn--p1ai/prl',capacity:150},
   {id:'eva',name:'Шатёр Eva — Летний',region:'country',area:'Большая Купальная, 28'},
   {id:'maryino',name:'Усадьба Марьино — Белый зал',region:'country',area:'Андрианово, Тосненский район',website:'https://usadbamaryino.ru/rental/halls',capacity:80,
     publiclyAdvertised:{rent:250000,menu:6500,extension:35000},publicNote:'Белый зал предпочтителен. Вместимость до 80 по официальному сайту, в сторонних каталогах есть противоречия. Меню от 6 500 ₽/чел. — ориентир из каталога, не смета на июнь 2027.'},
@@ -327,11 +321,12 @@ function status(v){
 }
 function row(v){
  const score=weighted(v),cost=totalEstimate(v),pic=getVenueCover(v);
+ const offer=v.offerNote?'<small class="vw-offer-note">'+h(v.offerNote)+'</small>':'';
  const image=pic?'<img loading="lazy" class="vw-row-thumb" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(pic.id)+'&sz=w240" alt="Фото площадки: '+h(v.name)+'">':'<span class="vw-row-thumb vw-no-image"></span>';
  return '<tr class="vw-row" data-id="'+h(v.id)+'"><td><div class="vw-venue-cell"><span class="vw-venue-media"><button type="button" class="vw-image-open" data-detail="'+h(v.id)+'" aria-label="Открыть площадку '+h(v.name)+'">'+image+'</button></span><div class="vw-venue-label"><button class="vw-name" data-detail="'+h(v.id)+'" type="button">'+h(v.name)+'</button><small>'+h(v.area)+' · '+(v.region==='country'?'За городом':'Город')+'</small></div></div></td>'+
  '<td><div class="vw-date-list">'+threeDates(v)+'</div></td>'+
  '<td><span class="vw-state '+(v.visited?'vw-seen':'')+'">'+(v.visited?'● Были лично':'○ Не подтверждено')+'</span></td>'+
- '<td class="vw-money" title="'+h(cost.note||'')+'">'+(cost.value===null?'—':(cost.partial?'≈ ':'')+rub(cost.value))+'<small>'+(cost.isQuote?'Полученная смета':cost.partial?'Предварительный расчёт':'Ориентир')+(cost.value===null?'':' · '+Math.round(cost.value/state.guestCount).toLocaleString('ru-RU')+' ₽/гость в среднем')+'</small></td>'+
+ '<td class="vw-money" title="'+h(cost.note||'')+'">'+(cost.value===null?'—':(cost.partial?'≈ ':'')+rub(cost.value))+'<small>'+(cost.isQuote?'Полученная смета':cost.partial?'Предварительный расчёт':'Ориентир')+(cost.value===null?'':' · '+Math.round(cost.value/state.guestCount).toLocaleString('ru-RU')+' ₽/гость в среднем')+'</small>'+offer+'</td>'+
  '<td>'+h(v.capacity??'—')+'</td><td class="vw-score"><a class="vw-score-link" href="#/admin/venues/'+encodeURIComponent(v.id)+'/rating" title="Открыть баллы и причины оценки">'+(score.value===null?'—':score.value+' / '+RATING_MAX)+'</a><small>'+(score.provisional?'Предварительно':'Проверено')+' · '+score.complete+'/'+RATING_CRITERIA.length+' критериев</small></td>'+
  '</tr>';
 }
@@ -408,7 +403,7 @@ export function renderVenueAdmin(){
    return '<div class="vw-page" data-venues-page>'+renderVenueNewPage(detailVenue,{guests:state.guestCount,ui,estimate,extraTotal,dayStatus,dayText,weighted})+'</div>';
   }
  return '<div class="vw-page" data-venues-page><div class="dashboard-heading vw-head"><div><div class="eyebrow">ОРГАНИЗАЦИЯ / ВЫБОР МЕСТА</div><h1>Сравнение площадок</h1><p>Регистрация 17 июня · торжество желательно 19 июня 2027 · город и загород</p></div><div class="vw-count"><strong>'+all.length+'</strong><span>площадок</span></div></div>'+
- '<div class="vw-alert"><strong>Даты свадьбы:</strong> 19 июня — предпочтительно, но 18 и 20 июня также рассматриваем. Занятость 19-го не исключает площадку: проверяйте все три даты и условия каждого предложения. «Весенний» и «Сезоны в парке» сообщили, что 19-е занято. Неизвестный статус не означает свободную дату.</div>'+
+ '<div class="vw-alert"><strong>Даты свадьбы:</strong> 19 июня — предпочтительно, но 18 и 20 июня также рассматриваем. Занятость 19-го не исключает площадку: проверяйте все три даты и условия каждого предложения. «Весенний» и «Особняк Ермолинского» свободны только 18-го, «Александровский парк» — только 20-го. «Сезоны в парке» сообщили о занятости 19-го. Неизвестный статус не означает свободную дату.</div>'+
  '<div class="vw-stats"><div><strong>'+all.length+'</strong><span>На рассмотрении</span></div><div><strong>'+visited+'</strong><span>Просмотрены</span></div><div><strong>'+full+'</strong><span>С полной оценкой</span></div><div><strong>'+all.filter(v=>DATE_CHOICES.some(([d])=>dayStatus(v,d)==='available')).length+'</strong><span>Подтверждённая дата (18/19/20)</span></div></div>'+
  '<div class="vw-panel"><div class="vw-panel-title vw-table-panel-title"><div><h2>Все площадки</h2><span><b data-venues-visible>'+list.length+'</b> из '+all.length+' · нажмите на заголовок столбца для сортировки</span></div><div class="vw-table-tools"><label class="vw-compact-control">Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+state.guestCount+'" aria-label="Число гостей для пересчёта смет"></label><input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Поиск по названию / району" aria-label="Поиск площадки (Enter)"><button type="button" data-clear-filters>Сбросить фильтры</button></div></div><div class="vw-scroll"><table class="vw-table vw-table-sortable"><thead><tr>'+
  columnHeading('name','Площадка','<div class="vw-head-filter-row">'+headerSelect('kind','Расположение',[['all','Все районы'],['city','Город'],['country','За городом']])+'</div>')+
