@@ -4,18 +4,14 @@ import {activatePhotoArchive} from './admin-photos.js';
 import {activateGuestDirectory} from './admin-guests.js';
 import {adminModules,weddingDays} from './data.js';
 import {VENUE_RECORDS} from './venues-data.js';
-import {getVenuePhotos} from './venue-detail-ui.js';
 const app=document.querySelector('#app');
 const escapeHtml=str=>String(str??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const link=(path,title,className='')=>`<a href="#${path}" class="${className}">${escapeHtml(title)}</a>`;
 const stamp=(t='Дата и место уточняются')=>`<span class="status-stamp"><span class="stamp-dot"></span>${t}</span>`;
 const venueIds=Object.keys(VENUE_RECORDS);
-const venuePhotos=venueIds.map(id=>getVenuePhotos({id}));
 const venueSummary={
  total:venueIds.length,
  inspected:venueIds.filter(id=>VENUE_RECORDS[id].visited===true).length,
- withPhotos:venuePhotos.filter(photos=>photos.length>0).length,
- photos:venuePhotos.reduce((sum,photos)=>sum+photos.length,0),
  quotes:venueIds.filter(id=>VENUE_RECORDS[id].quotes?.length>0).length
 };
 function adminSidebar(active){return `<aside class="admin-side"><a href="#/admin/overview" class="admin-brand"><span class="admin-brand-logo">НК</span><span>Wedding<br/><small>Панель организаторов</small></span></a><div class="side-caption">УПРАВЛЕНИЕ</div><nav aria-label="Разделы админки">${adminModules.map(m=>`<a href="#/admin/${m.id}" class="side-link ${active===m.id?'selected':''}"><span class="side-icon">${m.icon}</span>${m.label}</a>`).join('')}</nav></aside>`;}
@@ -24,7 +20,7 @@ function adminOverview(){
  <div class="metrics-grid">
   <article class="metric"><span>Площадок</span><strong>${venueSummary.total}</strong><small>В сравнении</small></article>
   <article class="metric"><span>Посмотрели</span><strong>${venueSummary.inspected}</strong><small>По материалам осмотров</small></article>
-  <article class="metric"><span>Фотографий</span><strong>${venueSummary.photos}</strong><small>Из ${venueSummary.withPhotos} альбомов</small></article>
+  <article class="metric"><span>Гостевая галерея</span><strong>—</strong><small>Только специально отобранные фотографии</small></article>
   <article class="metric"><span>Полученных смет</span><strong>${venueSummary.quotes}</strong><small>С полным указанным итогом</small></article>
  </div>
  <div class="admin-columns">
@@ -32,7 +28,7 @@ function adminOverview(){
    <p><b>17 июня, 14:00</b> — регистрация в Марьино. <b>19 июня</b> — торжественная часть в Санкт-Петербурге. Площадка ещё выбирается.</p>
    <p><a class="text-link" href="#/admin/venues">Открыть все площадки →</a></p>
   </section>
-  <section class="admin-panel"><div class="panel-header"><h2>Материалы свадьбы</h2></div>
+  <section class="admin-panel"><div class="panel-header"><h2>Гостевые фотографии и документы</h2></div>
    <p>Фотографии осмотров, предложения менеджеров и документы собраны в Wedding Drive.</p>
    <p><a class="text-link" href="https://drive.google.com/drive/folders/195OYX_CPglwFmwSqwzRhQt7yrYyIPeBi" target="_blank" rel="noopener noreferrer">Открыть Wedding Drive ↗</a></p>
   </section>
