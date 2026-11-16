@@ -166,6 +166,10 @@ if (isset($_GET['api'])) {
     try {
         $backend = $private.'/backend/src/api.php';
         if (!is_file($backend)) throw new RuntimeException('Backend not installed');
+        // Fail closed rather than echoing PHP source if a broken deployment
+        // accidentally removes the opening PHP tag.
+        $prefix = file_get_contents($backend, false, null, 0, 5);
+        if ($prefix !== '<?php') throw new RuntimeException('Malformed backend PHP entrypoint');
         require_once $backend;
         $database = \Wedding\db();
         \Wedding\adminRoute($database, $login, $route, $method, \Wedding\config());
