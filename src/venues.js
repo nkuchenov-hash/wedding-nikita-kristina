@@ -306,7 +306,12 @@ export function renderVenueAdmin(){
  const full=all.filter(v=>weighted(v).value!==null&&!weighted(v).provisional).length;
  const list=visibleVenues(all);
  const detailVenue=all.find(v=>v.id===ui.expanded);
- if(match&&detailVenue)return '<div class="vw-page" data-venues-page>'+renderVenueNewPage(detailVenue,{guests:state.guestCount,ui,estimate,extraTotal,dayStatus,dayText,weighted})+'</div>';
+ if(match&&detailVenue){
+   if(ui.detailTab==='edit'&&!venueDb.ready){
+    return '<div class="vw-page" data-venues-page><a class="vdp-back" href="#/admin/venues/'+encodeURIComponent(detailVenue.id)+'">← К площадке</a><section class="vdp-pane vdp-editor-wait"><h2>Подключение редактора</h2><p>'+(venueDb.error?'Нет доступа к общей базе: '+h(venueDb.error)+'. Сохранение недоступно, пока соединение не восстановлено.':'Загружаем актуальные данные площадки из базы. Открывать форму до синхронизации нельзя, чтобы не затереть последние изменения.')+'</p><button type="button" data-retry-venue-db>Повторить подключение</button></section></div>';
+   }
+   return '<div class="vw-page" data-venues-page>'+renderVenueNewPage(detailVenue,{guests:state.guestCount,ui,estimate,extraTotal,dayStatus,dayText,weighted})+'</div>';
+  }
  return '<div class="vw-page" data-venues-page><div class="dashboard-heading vw-head"><div><div class="eyebrow">ОРГАНИЗАЦИЯ / ВЫБОР МЕСТА</div><h1>Сравнение площадок</h1><p>Регистрация 17 июня · торжество желательно 19 июня 2027 · город и загород</p></div><div class="vw-count"><strong>'+all.length+'</strong><span>площадок</span></div></div>'+
  '<div class="vw-alert"><strong>Даты свадьбы:</strong> 19 июня — предпочтительно, но 18 и 20 июня также рассматриваем. Занятость 19-го не исключает площадку: проверяйте все три даты и условия каждого предложения. «Весенний» и «Сезоны в парке» сообщили, что 19-е занято. Неизвестный статус не означает свободную дату.</div>'+
  '<div class="vw-stats"><div><strong>'+all.length+'</strong><span>На рассмотрении</span></div><div><strong>'+visited+'</strong><span>Просмотрены</span></div><div><strong>'+full+'</strong><span>С полной оценкой</span></div><div><strong>'+all.filter(v=>DATE_CHOICES.some(([d])=>dayStatus(v,d)==='available')).length+'</strong><span>Подтверждённая дата (18/19/20)</span></div></div>'+
@@ -357,8 +362,9 @@ export function activateVenueAdmin(root){
  redraw(root);
  initVenueDatabase(root);
  root.addEventListener('click',event=>{
-  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-add-venue-quote],[data-remove-venue-quote]');if(!target)return;
-  if(target.hasAttribute('data-add-venue-quote')){
+  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-add-venue-quote],[data-remove-venue-quote],[data-retry-venue-db]');if(!target)return;
+  if(target.hasAttribute('data-retry-venue-db')){venueDb.error='';initVenueDatabase(root);}
+  else if(target.hasAttribute('data-add-venue-quote')){
     const holder=root.querySelector('[data-venue-edit-quotes]');
     if(holder)holder.insertAdjacentHTML('beforeend',renderVenueQuoteEditorRow({}));
    }
@@ -417,6 +423,7 @@ export function activateVenueAdmin(root){
    await queueVenuePersist(changed.id);
    save();
    feedback.textContent='Сохранено в базе. Таблица, рейтинг и смета обновлены.';
+   ui.savedVenue=changed.id;
    location.hash='#/admin/venues/'+encodeURIComponent(changed.id);
    redraw(root);
   }catch(error){
