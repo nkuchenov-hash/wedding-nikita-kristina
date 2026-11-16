@@ -1,3 +1,4 @@
+import {weddingDays} from './data.js';
 // Wedding admin live-data layer. Never stores guest details in browser storage.
 const API='/admin/index.php?api=';
 const $=(tag,cls='',text='')=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=String(text);return el};
@@ -120,6 +121,104 @@ async function collection(host,type){
  showForm(section,keys,async row=>call('admin/records',{method:'POST',body:{collection:type,fields:row}}));
  host.append(section);
 }
+
+const scheduleDay=x=>String(x.start_at||'').slice(0,10);
+const scheduleTime=x=>{
+ const found=String(x.start_at||'').match(/T(\d{2}:\d{2})/);
+ return found?found[1]:'Время уточняется';
+};
+async function schedule(host){
+ const response=await call('admin/records?collection=schedule_items');
+ const entries=(response.items||[]).filter(x=>x&&typeof x.title==='string');
+ title(host,'Программа свадьбы','17–19 июня 2027 года');
+ const cards=$('div','ad-program-days');host.append(cards);
+ let editor=null;
+ const eventForm=(item=null,selectedDay='2027-06-19')=>{
+   if(editor)editor.remove();
+   editor=$('section','ad-program-editor');host.append(editor);
+   title(editor,item?'Изменить событие':'Добавить событие');
+   const form=$('form','ad-program-form');
+   const makeField=(label,type,value='')=>{
+     const wrap=$('label','ad-live-field'),heading=$('span','',label),input=$('input');input.type=type;input.value=value;wrap.append(heading,input);form.append(wrap);return input;
+   };
+   const dateWrapper=$('label','ad-live-field');dateWrapper.append($('span','','Дата'));
+   const date=$('select');for(const day of weddingDays){const option=$('option','',day.label);option.value=day.date;date.append(option)}
+   date.value=item? (scheduleDay(item)||selectedDay):selectedDay;
+   dateWrapper.append(date);form.append(dateWrapper);
+   const timeText=String(item?.start_at||'').match(/T(\d{2}:\d{2})/);
+   const time=makeField('Время (необязательно)','time',timeText?timeText[1]:'');
+   const name=makeField('Событие','text',item?.title||'');name.required=true;
+   const place=makeField('Место','text',item?.place||'');
+   const notes=makeField('Примечание','text',item?.notes||'');
+   const actions=$('div','ad-program-actions'),save=$('button','ad-live-button','Сохранить'),cancel=$('button','ad-program-secondary','Отмена');
+   save.type='submit';cancel.type='button';cancel.addEventListener('click',()=>{editor.remove();editor=null});
+   actions.append(save,cancel);form.append(actions);
+   const feedback=$('p','ad-live-message');form.append(feedback);editor.append(form);
+   form.addEventListener('submit',async event=>{
+     event.preventDefault();save.disabled=true;
+     try{
+       const payload={
+         collection:'schedule_items',
+         fields:{
+           title:name.value.trim(),
+           start_at:date.value+(time.value?'T'+time.value+':00':''),
+           place:place.value.trim(),
+           notes:notes.value.trim(),
+           is_public:Number(item?.is_public||0),
+           sort_order:item?.sort_order??90
+         }
+       };
+       if(!payload.fields.title)throw new Error('Укажите название события');
+       if(item?.id)payload.id=item.id;
+       await call('admin/records',{method:item?.id?'PATCH':'POST',body:payload});
+       host.replaceChildren();await schedule(host);
+     }catch(error){feedback.textContent=errorText(error);save.disabled=false}
+   });
+   name.focus({preventScroll:true});
+ };
+ for(const [index,day] of weddingDays.entries()){
+   const card=$('article','ad-program-card');
+   const header=$('header','ad-program-card-head');
+   const counter=$('span','ad-program-card-number','0'+(index+1));
+   const dateBlock=$('div','ad-program-card-date');
+   dateBlock.append($('span','',day.weekday),$('strong','',day.label));
+   header.append(counter,dateBlock);card.append(header);
+   const dayEvents=entries.filter(item=>scheduleDay(item)===day.date).sort((a,b)=>String(a.start_at||'').localeCompare(String(b.start_at||''))||(a.sort_order||0)-(b.sort_order||0));
+   if(dayEvents.length){
+     for(const entry of dayEvents){
+       const row=$('div','ad-program-event');
+       row.append($('time','ad-program-time',scheduleTime(entry)));
+       const content=$('div','ad-program-event-body');
+       content.append($('h3','',entry.title));
+       if(entry.place)content.append($('p','',entry.place));
+       if(entry.notes)content.append($('small','',entry.notes));
+       row.append(content,button('Изменить',()=>eventForm(entry,day.date)));
+       card.append(row);
+     }
+   }else if(day.date==='2027-06-17'||day.date==='2027-06-19'){
+     // Display established facts even if a prior database installation has not yet run the seed.
+     const row=$('div','ad-program-event');
+     row.append($('time','ad-program-time',day.time||'Время уточняется'));
+     const content=$('div','ad-program-event-body');
+     content.append($('h3','',day.title),$('p','',day.place||''));row.append(content);card.append(row);
+   }else{
+     card.append($('p','ad-program-empty','Программа на этот день ещё не определена'));
+   }
+   const add=button('+ Добавить событие',()=>eventForm(null,day.date));
+   add.classList.add('ad-program-add');card.append(add);
+   cards.append(card);
+ }
+ const undated=entries.filter(x=>!weddingDays.some(day=>scheduleDay(x)===day.date)&&!/^draft-schedule-/.test(x.id||''));
+ if(undated.length){
+   const section=$('section','ad-program-other');section.append($('h3','','События без даты'));
+   for(const item of undated){
+     const row=$('div','ad-program-event');
+     row.append($('strong','',item.title),button('Указать дату',()=>eventForm(item)));
+     section.append(row);
+   }
+   host.append(section);
+ }
+}
 async function settings(host){
  const data=await call('admin/settings');
  title(host,'Настройки свадьбы','Гостевые функции изначально закрыты и включаются только организаторами.');
@@ -195,6 +294,7 @@ async function renderSection(host,section){
  if(section==='moderation'){await moderation(host);return}
  if(section==='menu'){await collection(host,'menu_options');return}
  if(section==='guests'){await guests(host);return}
+ if(section==='schedule'){await schedule(host);return}
  if(section==='venues'){await collection(host,'venues');return}
  if(mapSection[section]){
    await collection(host,mapSection[section]);
