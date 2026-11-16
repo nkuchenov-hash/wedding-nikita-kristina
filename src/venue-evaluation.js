@@ -80,21 +80,26 @@ export function estimateVenue(v,guests){
    note:menu===null?'Посчитана только известная аренда — банкет и услуги не включены':'Нижняя граница по известным строкам; дополнительные услуги не учтены'};
 }
 
+/* 100-point decision score: the desired 19 June is the strongest single criterion.
+   Missing subjective evidence remains unrated, never silently treated as confirmed. */
 export const RATING_CRITERIA=[
- ['date','Доступность даты',40],
- ['cost','Стоимость для числа гостей',20],
+ ['date','Доступность 19 июня / альтернатив',40],
+ ['cost','Полная стоимость для гостей',15],
  ['capacity','Вместимость',10],
- ['country','За городом',5],
- ['look','Атмосфера',10],
- ['comfort','Комфорт гостей',5],
- ['food','Меню и обслуживание',5],
- ['travel','Логистика',5]
+ ['country','Загородное расположение',10],
+ ['look','Атмосфера',6],
+ ['comfort','Комфорт гостей',3],
+ ['food','Меню и обслуживание',3],
+ ['travel','Логистика',3],
+ ['terrace','Терраса, природа и виды',5],
+ ['terms','Условия аренды и ограничения',5]
 ];
-export const PERSONAL_CRITERIA=RATING_CRITERIA.filter(([key])=>['look','comfort','food','travel'].includes(key));
+export const PERSONAL_CRITERIA=RATING_CRITERIA.filter(([key])=>['look','comfort','food','travel','terrace','terms'].includes(key));
+export const RATING_MAX=RATING_CRITERIA.reduce((sum,[,,points])=>sum+points,0);
 function pricePoints(total){
- if(total<=650000)return 20;
- if(total<=800000)return 15;
- if(total<=1000000)return 10;
+ if(total<=650000)return 15;
+ if(total<=800000)return 12;
+ if(total<=1000000)return 9;
  if(total<=1200000)return 5;
  return 0;
 }
@@ -116,7 +121,7 @@ export function scoreVenue(v,guests,cost=estimateVenue(v,guests)){
  const cap=num(v.capacity),n=Math.round(Number(guests)||80);
  if(cap!==null&&cap>0)add('capacity',cap>=n?10:0,true,cap>=n?'Вмещает '+n+' гостей':'Недостаточная вместимость');
  else add('capacity',0,false,'Вместимость не подтверждена');
- add('country',v.region==='country'?5:0,true,v.region==='country'?'Бонус за загородную площадку':'Городская площадка');
+ add('country',v.region==='country'?10:0,true,v.region==='country'?'Бонус за загородную площадку':'Городская площадка');
  for(const [key,,weight] of PERSONAL_CRITERIA){
     const n=num(v.ratings?.[key]),known=n!==null&&n>=1&&n<=5;
     add(key,known?n/5*weight:0,known,known?'Ваша оценка '+n+'/5':'Личная оценка не заполнена');
@@ -125,7 +130,7 @@ export function scoreVenue(v,guests,cost=estimateVenue(v,guests)){
  const total=known.reduce((sum,r)=>sum+r.value,0);
  const provisional=known.length<breakdown.length||cost.partial;
  // Zero is a meaningful score only when other criteria have been evaluated.
- return {value:known.length<=1?null:Math.round(total),complete:known.length,
+ return {value:known.every(x=>x.key==='country')?null:Math.round(total),complete:known.length,maximum:RATING_MAX,
    rated:PERSONAL_CRITERIA.filter(([key])=>num(v.ratings?.[key])!==null).length,
    provisional,preferred:preferred==='available',date:preferred,breakdown};
 }
