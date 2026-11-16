@@ -56,8 +56,34 @@ const COSTS=[
 ];
 const STORE='nk-wedding-venues-comparison-v2';
 const INITIAL=()=>({version:2,guestCount:80,venues:{},updated:null});
+// Earlier browser and server overrides may carry outdated June date/quote fields.
+// Migrate only the affected fields once; keep personal ratings, notes and costs.
+const FACTS_REVISION='2026-11-17-dates-v1';
+const CORRECTED_IDS=new Set(['vesenniy','k2','ermolinsky','alex-park','vinity','maryino']);
+function migrateVenueOverrides(venues={}){
+ const result={...venues};
+ for(const id of CORRECTED_IDS){
+  const prior=result[id];
+  if(!prior||prior._factsRevision===FACTS_REVISION)continue;
+  const edit={...prior,_factsRevision:FACTS_REVISION};
+  delete edit.dateAvailability;
+  delete edit.availability;
+  delete edit.dateNote;
+  delete edit.offerNote;
+  if(id==='alex-park'||id==='vinity'){
+   delete edit.quotes;
+   if(id==='alex-park'&&edit.cost){
+    edit.cost={...edit.cost};
+    delete edit.cost.quoteTotal;
+    delete edit.cost.quoteGuests;
+   }
+  }
+  result[id]=edit;
+ }
+ return result;
+}
 function read(){
- try {const v=JSON.parse(localStorage.getItem(STORE)||'null');if(v&&v.version===2&&v.venues&&typeof v.venues==='object')return {...INITIAL(),...v};}catch{}
+ try {const v=JSON.parse(localStorage.getItem(STORE)||'null');if(v&&v.version===2&&v.venues&&typeof v.venues==='object')return {...INITIAL(),...v,venues:migrateVenueOverrides(v.venues)};}catch{}
  return INITIAL();
 }
 let state=read();
@@ -130,7 +156,7 @@ async function initVenueDatabase(root){
   }
   // The database is authoritative across devices. Existing browser-only edits
   // remain visible unless the server already has a newer override for that venue.
-  state.venues={...state.venues,...incoming};
+  state.venues={...state.venues,...migrateVenueOverrides(incoming)};
   save();
   venueDb.ready=true;
   venueDb.error='';
