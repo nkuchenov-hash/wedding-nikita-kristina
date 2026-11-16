@@ -8,6 +8,7 @@ on:
       - 'tools/admin-gateway.php'
       - '.github/workflows/pages.yml'
       - 'tests/**'
+      - 'test/**'
   workflow_dispatch:
 permissions:
   contents: read
