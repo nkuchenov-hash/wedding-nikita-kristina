@@ -12,3 +12,8 @@ if(($cfg['enabled']??false)!==false){
 $counts=(int)db()->query("SELECT COUNT(*) FROM schema_migrations")->fetchColumn();
 if($counts<1)throw new \RuntimeException('No schema version installed');
 echo "SCHEMA_VERSION_OK\n";
+
+foreach (['venues','vendors','tasks','schedule_items','documents','guests'] as $table) {
+    $number=(int)db()->query('SELECT COUNT(*) FROM '.$table)->fetchColumn();
+    echo 'RECORD_COUNT '.$table.'='.$number."\n";
+}
