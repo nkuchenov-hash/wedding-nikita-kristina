@@ -159,9 +159,26 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
     }
     if ($route==='admin/guests' && $method==='GET') {
         $items=all($db,"SELECT g.*,r.attendance,r.adults,r.children,r.transport_needed,r.dietary_notes,
-            r.other_notes,r.submitted_at FROM guests g LEFT JOIN rsvps r ON r.guest_id=g.id
+            r.other_notes,r.submitted_at,p.source_person_id,p.name_en,p.seating_group,p.decision,p.base_count
+            FROM guests g LEFT JOIN rsvps r ON r.guest_id=g.id
+            LEFT JOIN guest_profile_details p ON p.guest_id=g.id
             ORDER BY g.display_name LIMIT 1500");
         json(['ok'=>true,'guests'=>$items]);
+    }
+    if($route==='admin/guest-profile' && $method==='GET'){
+        $id=(string)($_GET['guest_id']??'');
+        if(!preg_match('/^[a-f0-9-]{36}$/',$id))fail(422,'guest','Неверный ID гостя');
+        $item=one($db,"SELECT g.*,p.source_person_id,p.name_en,p.seating_group,p.decision,p.base_count,
+          p.source_people_json,p.source_invitation_json,p.source_profile_json,p.source_english_json
+          FROM guests g LEFT JOIN guest_profile_details p ON p.guest_id=g.id WHERE g.id=?",[$id]);
+        if(!$item)fail(404,'guest','Гость не найден');
+        foreach(['source_people_json','source_invitation_json','source_profile_json','source_english_json'] as $key)
+            $item[$key]=json_decode($item[$key]??'{}',true)?:[];
+        $relations=all($db,"SELECT r.*,
+          (SELECT display_name FROM guests WHERE id=r.guest_id_1) AS person_one,
+          (SELECT display_name FROM guests WHERE id=r.guest_id_2) AS person_two
+          FROM guest_relationships r WHERE r.guest_id_1=? OR r.guest_id_2=? ORDER BY r.relation_type LIMIT 100",[$id,$id]);
+        json(['ok'=>true,'guest'=>$item,'relations'=>$relations]);
     }
     if ($route==='admin/guests' && $method==='POST') {
         $d=payload(8192);
