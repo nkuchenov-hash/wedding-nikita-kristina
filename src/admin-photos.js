@@ -115,7 +115,7 @@ export function activatePhotoArchive(root){
   function updateCategory(){
     const isLocation=category.value==='location';
     venueLabel.hidden=!isLocation;venue.required=isLocation;
-    submit.disabled=ui.busy||(isLocation&&!ui.approved.size);
+    submit.disabled=ui.busy||!ui.loaded||(isLocation&&!ui.approved.size);
     if(isLocation&&!ui.approved.size)feedback.textContent='Сначала утвердите место в программе свадьбы — только тогда можно добавлять фото локации.';
     else if(feedback.textContent.startsWith('Сначала утвердите'))feedback.textContent='';
   }
@@ -192,7 +192,7 @@ export function activatePhotoArchive(root){
     if(ui.disposed)return;
     ui.assets=data.assets||[];
     setApproved(data.approved_venues||[]);
-    ui.loaded=true;render();
+    ui.loaded=true;updateCategory();render();
   }
   form.addEventListener('submit',async event=>{
     event.preventDefault();if(ui.busy)return;
