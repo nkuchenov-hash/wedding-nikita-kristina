@@ -103,7 +103,8 @@ export function activatePhotoArchive(root){
     const headers={Accept:'application/json'};
     if(method!=='GET'&&ui.csrf)headers['X-CSRF-Token']=ui.csrf;
     if(data)headers['Content-Type']='application/json';
-    const response=await fetch(apiBase+encodeURIComponent(route),{
+    const [endpoint,params='']=route.split('?');
+    const response=await fetch(apiBase+encodeURIComponent(endpoint)+(params?'&'+params:''),{
       method,headers,credentials:'same-origin',cache:'no-store',
       body:formData||(data?JSON.stringify(data):undefined)
     });
@@ -239,7 +240,8 @@ export function activatePhotoArchive(root){
     document.body.classList.remove('ad-photo-lock');cleanupActive=null;
   };
   updateCategory();render();
-  Promise.all([request('auth/session'),request('admin/gallery')]).then(([session,data])=>{
+  Promise.all([request('auth/session'),request('admin/gallery'),request('admin/records?collection=venues').catch(()=>({items:[]}))]).then(([session,data,venueData])=>{
+    for(const v of venueData.items||[])if(v.id&&v.name)venueLabels.set(String(v.id),String(v.name));
     if(ui.disposed)return;
     ui.csrf=session.csrf||'';
     ui.assets=data.assets||[];
