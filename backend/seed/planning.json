@@ -160,5 +160,65 @@
       "status": "todo",
       "priority": "normal"
     }
+  ],
+  "schedule": [
+    {
+      "id": "draft-schedule-arrival",
+      "title": "Сбор гостей",
+      "notes": "Время и место будут определены после выбора площадки.",
+      "is_public": 0,
+      "sort_order": 10
+    },
+    {
+      "id": "draft-schedule-ceremony",
+      "title": "Церемония",
+      "notes": "Дата, время и формат ещё требуют подтверждения.",
+      "is_public": 0,
+      "sort_order": 20
+    },
+    {
+      "id": "draft-schedule-welcome",
+      "title": "Приветственный фуршет",
+      "notes": "Согласовать с площадкой и кейтерингом.",
+      "is_public": 0,
+      "sort_order": 30
+    },
+    {
+      "id": "draft-schedule-dinner",
+      "title": "Свадебный банкет",
+      "notes": "Время и меню после согласования договора.",
+      "is_public": 0,
+      "sort_order": 40
+    },
+    {
+      "id": "draft-schedule-first-dance",
+      "title": "Первый танец",
+      "notes": "Песня и постановка ещё не утверждены.",
+      "is_public": 0,
+      "sort_order": 50
+    },
+    {
+      "id": "draft-schedule-final",
+      "title": "Завершение вечера",
+      "notes": "Трансфер, такси и время окончания уточняются.",
+      "is_public": 0,
+      "sort_order": 60
+    }
+  ],
+  "documents": [
+    {
+      "id": "document-wedding-drive",
+      "category": "archive",
+      "label": "Wedding Drive — исходные документы и фотографии",
+      "reference": "https://drive.google.com/drive/folders/195OYX_CPglwFmwSqwzRhQt7yrYyIPeBi",
+      "visibility": "admin"
+    },
+    {
+      "id": "document-catering-study",
+      "category": "catering",
+      "label": "Сравнение кейтеринга и цен — 29 октября 2026",
+      "reference": "https://docs.google.com/document/d/1qBdkL9J0aQtxTuw0vsSs712MXCIr5YaebYmHXFuAXsU/edit",
+      "visibility": "admin"
+    }
   ]
 }
