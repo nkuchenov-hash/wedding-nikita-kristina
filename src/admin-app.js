@@ -1,6 +1,6 @@
 import {renderVenueAdmin,activateVenueAdmin} from './venues.js';
 import {activateAdminData} from './admin-data-ui.js';
-import {adminModules} from './data.js';
+import {adminModules,weddingDays} from './data.js';
 import {VENUE_RECORDS} from './venues-data.js';
 import {getVenuePhotos} from './venue-detail-ui.js';
 const app=document.querySelector('#app');
@@ -27,7 +27,7 @@ function adminOverview(){
  </div>
  <div class="admin-columns">
   <section class="admin-panel"><div class="panel-header"><h2>Сравнение площадок</h2></div>
-   <p>18, 19 и 20 июня 2027 года · 19 июня — предпочтительно. У каждой площадки отдельно доступны фото, сметы и условия.</p>
+   <p><b>17 июня, 14:00</b> — регистрация в Марьино. <b>19 июня</b> — торжественная часть в Санкт-Петербурге. Площадка ещё выбирается.</p>
    <p><a class="text-link" href="#/admin/venues">Открыть все площадки →</a></p>
   </section>
   <section class="admin-panel"><div class="panel-header"><h2>Материалы свадьбы</h2></div>
@@ -36,7 +36,11 @@ function adminOverview(){
   </section>
  </div>`;
 }
-function adminGeneric(active){const m=adminModules.find(m=>m.id===active);if(!m)return adminOverview();if(active==='venues')return renderVenueAdmin();if(active==='overview')return adminOverview();return `<div class="dashboard-heading"><div><div class="eyebrow">ОРГАНИЗАЦИЯ</div><h1>${m.label}</h1><p>${m.text}</p></div></div><div class="admin-panel module-empty"><div class="module-symbol">${m.icon}</div><h2>${m.label}</h2></div>`;}
+function adminProgram(){
+ return `<div class="dashboard-heading"><div><div class="eyebrow">17—19 ИЮНЯ 2027</div><h1>Программа свадьбы</h1><p>Три дня · место торжества выбирается</p></div></div>
+ <div class="ad-wedding-days">${weddingDays.map((day,i)=>`<article class="ad-day-card"><div class="ad-day-number">0${i+1}</div><div class="ad-day-date"><span>${day.weekday}</span><strong>${day.label}</strong></div><div class="ad-day-content"><h2>${escapeHtml(day.title)}</h2><p>${escapeHtml(day.description)}</p><div class="ad-day-facts"><span>${day.time||'Время уточняется'}</span><span>${escapeHtml(day.place||'Место не определено')}</span></div></div></article>`).join('')}</div>`;
+}
+function adminGeneric(active){const m=adminModules.find(m=>m.id===active);if(!m)return adminOverview();if(active==='venues')return renderVenueAdmin();if(active==='overview')return adminOverview();if(active==='schedule')return adminProgram();return `<div class="dashboard-heading"><div><div class="eyebrow">ОРГАНИЗАЦИЯ</div><h1>${m.label}</h1><p>${m.text}</p></div></div><div class="admin-panel module-empty"><div class="module-symbol">${m.icon}</div><h2>${m.label}</h2></div>`;}
 function admin(active='overview'){return `<div class="admin-layout">${adminSidebar(active)}<main class="admin-main"><div class="admin-topbar"><span>Панель организаторов</span></div><div class="admin-content">${adminGeneric(active)}</div></main></div>`;}
 
 function render(){
