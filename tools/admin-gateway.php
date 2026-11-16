@@ -1,32 +1,125 @@
 <?php
 declare(strict_types=1);
+
+/**
+ * REG.RU shared hosting admin gateway. Password is never passed in an HTTP
+ * Authorization header: some hosting proxies drop that header before PHP.
+ * Every HTML/CSS/JS asset is served only after a verified PHP session.
+ */
 header('X-Robots-Tag: noindex, nofollow', true);
 header('X-Content-Type-Options: nosniff', true);
+header('Referrer-Policy: no-referrer', true);
 header('Cache-Control: private, no-store', true);
-$usersPath = '/var/www/u3728035/data/wedding-private/.htpasswd';
+header('Content-Security-Policy: frame-ancestors \'none\'', true);
+
+$private = '/var/www/u3728035/data/wedding-private';
+$usersPath = $private.'/.htpasswd';
+$sessionDir = $private.'/admin-sessions';
+if (!is_dir($sessionDir) && !@mkdir($sessionDir, 0700, true) && !is_dir($sessionDir)) {
+    http_response_code(503);
+    exit('Administrative session storage unavailable');
+}
+ini_set('session.save_path', $sessionDir);
+ini_set('session.use_strict_mode', '1');
+ini_set('session.use_only_cookies', '1');
+ini_set('session.cookie_httponly', '1');
+ini_set('session.cookie_secure', '1');
+ini_set('session.cookie_samesite', 'Lax');
+session_name('wedding_admin');
+session_set_cookie_params([
+    'lifetime' => 0, 'path' => '/admin', 'secure' => true,
+    'httponly' => true, 'samesite' => 'Lax'
+]);
+session_start();
+if (empty($_SESSION['csrf'])) {
+    $_SESSION['csrf'] = bin2hex(random_bytes(24));
+}
+
 $rows = @file($usersPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-$stored = is_array($rows) && count($rows) ? explode(':', $rows[0], 2) : [];
-$user = (string)($_SERVER['PHP_AUTH_USER'] ?? '');
-$password = (string)($_SERVER['PHP_AUTH_PW'] ?? '');
-if (!$user) {
-    $header = (string)($_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
-    if (preg_match('/^Basic\\s+([A-Za-z0-9+\\/=]+)$/i', $header, $matches)) {
-        $decoded = base64_decode($matches[1], true);
-        if (is_string($decoded) && strpos($decoded, ':') !== false) {
-            [$user, $password] = explode(':', $decoded, 2);
+$users = [];
+if (is_array($rows)) {
+    foreach ($rows as $row) {
+        $pair = explode(':', $row, 2);
+        if (count($pair) === 2 && preg_match('/^[a-z][a-z0-9_-]{3,40}$/i', $pair[0])) {
+            $users[$pair[0]] = $pair[1];
         }
     }
 }
-$authorized = count($stored) === 2 &&
-    hash_equals((string)$stored[0], $user) &&
-    password_verify($password, (string)$stored[1]);
-if (!$authorized) {
-    header('WWW-Authenticate: Basic realm="Wedding admin", charset="UTF-8"', true);
-    header('Content-Type: text/plain; charset=UTF-8', true);
-    http_response_code(401);
-    echo 'Authentication required.';
+function adminEscape(string $text): string {
+    return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+function adminCsrfValid(): bool {
+    return isset($_POST['csrf']) && is_string($_POST['csrf']) &&
+        hash_equals((string)($_SESSION['csrf'] ?? ''), $_POST['csrf']);
+}
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['logout'])) {
+    if (adminCsrfValid()) {
+        $_SESSION = [];
+        session_regenerate_id(true);
+    }
+    header('Location: /admin/', true, 303);
     exit;
 }
+
+$loginError = '';
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['login'])) {
+    $attempts = (int)($_SESSION['attempts'] ?? 0);
+    $since = (int)($_SESSION['attempt_start'] ?? 0);
+    if (time() - $since > 900) {
+        $attempts = 0;
+        $_SESSION['attempt_start'] = time();
+    }
+    if ($attempts >= 8) {
+        http_response_code(429);
+        $loginError = 'Слишком много попыток. Повторите позже.';
+    } elseif (!adminCsrfValid()) {
+        http_response_code(403);
+        $loginError = 'Страница устарела. Обновите её и попробуйте ещё раз.';
+    } else {
+        $user = substr(trim((string)($_POST['username'] ?? '')), 0, 100);
+        $password = (string)($_POST['password'] ?? '');
+        $hash = $users[$user] ?? '';
+        if ($hash !== '' && strlen($password) <= 512 && password_verify($password, $hash)) {
+            session_regenerate_id(true);
+            $_SESSION['admin_login'] = $user;
+            $_SESSION['admin_stamp'] = hash('sha256', $hash);
+            $_SESSION['last_seen'] = time();
+            $_SESSION['attempts'] = 0;
+            header('Location: /admin/', true, 303);
+            exit;
+        }
+        $_SESSION['attempts'] = $attempts + 1;
+        http_response_code(401);
+        $loginError = 'Неверный логин или пароль.';
+    }
+}
+
+$login = (string)($_SESSION['admin_login'] ?? '');
+$valid = $login !== '' && isset($users[$login]) &&
+    hash_equals(hash('sha256', $users[$login]), (string)($_SESSION['admin_stamp'] ?? '')) &&
+    time() - (int)($_SESSION['last_seen'] ?? 0) <= 12 * 3600;
+if (!$valid) {
+    unset($_SESSION['admin_login'], $_SESSION['admin_stamp']);
+    if (isset($_GET['asset'])) {
+        http_response_code(401);
+        header('Content-Type: text/plain; charset=UTF-8', true);
+        exit('Authentication required');
+    }
+    header('Content-Type: text/html; charset=UTF-8', true);
+    $csrf = adminEscape((string)$_SESSION['csrf']);
+    $error = adminEscape($loginError);
+    echo '<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
+    echo '<meta name="robots" content="noindex,nofollow"><title>Вход — Никита и Кристина</title>';
+    echo '<style>*,*:before,*:after{box-sizing:border-box}body{margin:0;min-height:100svh;background:#eff3ed;color:#203b2c;font:16px system-ui,Arial,sans-serif;display:grid;place-items:center;padding:20px}main{background:white;padding:clamp(24px,5vw,44px);border-radius:20px;width:min(100%,450px);box-shadow:0 12px 48px #173b2414}h1{font-family:Georgia,serif;font-size:34px;font-weight:400;margin:8px 0 18px}p{font-size:14px;color:#627568;line-height:1.6}label{display:block;margin:15px 0;font-weight:600;font-size:14px}input{display:block;width:100%;margin-top:8px;padding:13px;border:1px solid #c5d4c8;border-radius:10px;font:inherit}button{background:#26563c;color:#fff;border:0;border-radius:10px;width:100%;padding:14px;margin-top:12px;font-weight:600;font:inherit;cursor:pointer}.error{color:#9c2c2c}</style>';
+    echo '</head><body><main><p>НИКИТА И КРИСТИНА</p><h1>Панель организаторов</h1><p>Вход только для организаторов свадьбы.</p>';
+    if ($error !== '') echo '<p class="error" role="alert">'.$error.'</p>';
+    echo '<form method="post" action="/admin/" autocomplete="on"><input type="hidden" name="csrf" value="'.$csrf.'">';
+    echo '<input type="hidden" name="login" value="1"><label>Логин<input name="username" value="wedding-admin" autocomplete="username" required maxlength="100"></label>';
+    echo '<label>Пароль<input name="password" type="password" autocomplete="current-password" required maxlength="512"></label>';
+    echo '<button type="submit">Войти в админку</button></form></main></body></html>';
+    exit;
+}
+$_SESSION['last_seen'] = time();
 $types = [
     'index.html' => 'text/html; charset=UTF-8',
     'src/admin-app.js' => 'text/javascript; charset=UTF-8',
@@ -50,12 +143,11 @@ if (!is_string($asset) || !isset($types[$asset])) {
     http_response_code(404);
     exit;
 }
-$path = '/var/www/u3728035/data/wedding-private/admin-release/' . $asset;
+$path = $private.'/admin-release/'.$asset;
 if (!is_file($path) || !is_readable($path)) {
     http_response_code(503);
     header('Content-Type: text/plain; charset=UTF-8', true);
-    echo 'Admin bundle unavailable.';
-    exit;
+    exit('Admin bundle unavailable');
 }
-header('Content-Type: ' . $types[$asset], true);
+header('Content-Type: '.$types[$asset], true);
 readfile($path);
