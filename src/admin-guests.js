@@ -43,7 +43,7 @@ export async function activateGuestDirectory(root){
  const panel=e('section','ad-gb-panel'),close=e('button','ad-gb-close','Закрыть ×');close.type='button';
  const details=e('div','ad-gb-details');panel.append(close,details);shade.append(panel);page.append(shade);
  target.append(page);
- let people=[],csrf='';
+ let people=[],csrf='',expandedId=null,activeEditors=0;
  const modalClose=()=>{shade.hidden=true;document.body.classList.remove('ad-gb-lock')};
  function metric(label,value){
    const box=e('div','ad-gb-metric');box.append(e('strong','',value),e('span','',label));metrics.append(box);
@@ -65,6 +65,126 @@ export async function activateGuestDirectory(root){
    return box;
  };
  const stageDate=p=>p.profile_completed_at||p.first_opened_at||p.invitation_sent_at||p.invite_prepared_at||'';
+
+ // Main columns are editable without opening a separate guest card.
+ // A single row can expand to edit every personal and planning field.
+ const sideChoices=[['groom','Никита'],['bride','Кристина'],['both','Общие'],['other','Не уточнено']];
+ const languageChoices=[['ru','Русский'],['en','English'],['de','Deutsch'],['other','Другой']];
+ function cellEdit(person,field,empty='Уточнить',choices=null){
+   const td=e('td','ad-gb-edit-cell');
+   const raw=stringify(person[field]);
+   const btn=e('button','ad-gb-cell-edit');btn.type='button';
+   const label=choices?.find(([key])=>key===raw)?.[1]||raw||empty;
+   btn.append(e('span','ad-gb-cell-value',label),e('span','ad-gb-pencil','✎'));
+   btn.setAttribute('aria-label','Изменить поле '+field+': '+label);
+   td.append(btn);
+   btn.addEventListener('click',()=>{
+     activeEditors++;
+     btn.hidden=true;
+     const input=choices?e('select','ad-gb-cell-input'):e('input','ad-gb-cell-input');
+     if(choices){
+       for(const [val,name]of choices){const option=e('option','',name);option.value=val;input.append(option)}
+     }else{
+       input.type='text';input.placeholder=empty;input.maxLength=field==='relation_to_couple'?320:255;
+     }
+     input.value=raw;td.append(input);input.focus();
+     if(!choices&&typeof input.select==='function')input.select();
+     let stopped=false;
+     const stop=()=>{if(stopped)return false;stopped=true;activeEditors--;return true};
+     const reset=()=>{if(!stop())return;input.remove();btn.hidden=false};
+     const save=async()=>{
+       if(stopped)return;
+       const val=input.value.trim();
+       if(val===raw){reset();return}
+       if(!stop())return;
+       input.disabled=true;input.setAttribute('aria-busy','true');
+       try{
+         await api('admin/guest/fields',{method:'PATCH',csrf,
+           body:{id:person.id,fields:{[field]:val}}});
+         person[field]=field==='plus_one_allowed'||field==='children_count'?Number(val):val;
+         repaint();
+       }catch(error){
+         input.disabled=false;input.remove();btn.hidden=false;
+         const note=e('span','ad-gb-inline-error',error.message);
+         td.append(note);setTimeout(()=>note.remove(),6000);
+       }
+     };
+     input.addEventListener('keydown',event=>{
+       if(event.key==='Escape'){event.preventDefault();reset()}
+       else if(event.key==='Enter'){event.preventDefault();save()}
+     });
+     if(choices)input.addEventListener('change',save);
+     else input.addEventListener('blur',save);
+   });
+   return td;
+ }
+ const allFields=[
+   ['first_name','Имя','text'],['last_name','Фамилия','text'],
+   ['name_en','Имя на английском','text'],
+   ['relation_to_couple','Кем приходится нам','text'],
+   ['side','Чья сторона','side'],
+   ['relationship','Связи с другими гостями (из исходного списка)','textarea'],
+   ['seating_group','Группа рассадки','text'],
+   ['decision','Решение о приглашении','text'],
+   ['base_count','В первоначальном подсчёте','text'],
+   ['city','Город / страна','text'],['email','Email','email'],
+   ['phone','Телефон','tel'],['language','Язык','language'],
+   ['about','Описание гостя','textarea'],
+   ['plus_one_allowed','Можно пригласить +1','boolean'],
+   ['children_count','Разрешено детей','number']
+ ];
+ function expandedRow(person){
+   const row=e('tr','ad-gb-expanded-row');
+   const td=e('td');td.colSpan=8;
+   const panel=e('div','ad-gb-expanded-content');
+   const title=e('div','ad-gb-expanded-head');
+   title.append(e('h3','','Редактирование: '+person.display_name),
+     e('p','','Все данные в этой форме сохраняются прямо в закрытую базу. Системные события открытия и регистрации не редактируются.'));
+   panel.append(title);
+   const form=e('form','ad-gb-edit-grid'),inputs={};
+   for(const [field,label,type]of allFields){
+     const wrap=e('label','ad-gb-edit-field'),caption=e('span','',label);
+     let input;
+     if(type==='textarea'){input=e('textarea');input.rows=2}
+     else if(type==='side'||type==='language'||type==='boolean'){
+       input=e('select');
+       const options=type==='side'?sideChoices:
+         type==='language'?languageChoices:[['0','Нет'],['1','Да']];
+       for(const [val,name]of options){const option=e('option','',name);option.value=val;input.append(option)}
+     }else{
+       input=e('input');input.type=type==='number'?'number':type;
+       if(type==='number'){input.min='0';input.max='15';input.step='1'}
+       input.maxLength=type==='textarea'?1200:320;
+     }
+     input.name=field;input.value=stringify(person[field]);
+     if(!stringify(person[field])&&(type==='side'||type==='language'))input.value=type==='side'?'other':'ru';
+     wrap.append(caption,input);inputs[field]=input;form.append(wrap);
+   }
+   const actions=e('div','ad-gb-edit-actions');
+   const save=e('button','ad-gb-save-row','Сохранить изменения');save.type='submit';
+   const cancel=e('button','ad-gb-cancel-row','Отмена');cancel.type='button';
+   cancel.addEventListener('click',()=>{expandedId=null;repaint()});
+   const feedback=e('p','ad-gb-edit-feedback');
+   actions.append(save,cancel,feedback);form.append(actions);
+   form.addEventListener('submit',async event=>{
+     event.preventDefault();
+     const changed={};
+     for(const [field]of allFields){
+       const val=inputs[field].value.trim();
+       if(val!==stringify(person[field]))changed[field]=val;
+     }
+     if(!Object.keys(changed).length){expandedId=null;repaint();return}
+     save.disabled=true;feedback.textContent='Сохраняю…';
+     try{
+       await api('admin/guest/fields',{method:'PATCH',csrf,
+         body:{id:person.id,fields:changed}});
+       Object.assign(person,changed);
+       expandedId=null;repaint();
+     }catch(err){feedback.textContent='Не удалось сохранить: '+err.message;save.disabled=false}
+   });
+   panel.append(form);td.append(panel);row.append(td);return row;
+ }
+
  function repaint(){
    metrics.replaceChildren();
    metric('Всего человек',people.length);
@@ -78,28 +198,42 @@ export async function activateGuestDirectory(root){
      if(side.value!=='all'&&person.side!==side.value)return false;
      if(status.value==='question'&&!/вопрос/i.test(stringify(person.decision)))return false;
      if(status.value!=='all'&&status.value!=='question'&&stageOf(person)[0]!==status.value)return false;
-     return !query||[person.display_name,person.name_en,person.relationship,person.seating_group,
+     return !query||[person.display_name,person.name_en,person.relation_to_couple,person.relationship,person.seating_group,
        person.source_person_id].some(s=>stringify(s).toLocaleLowerCase('ru').includes(query));
    }).sort((a,b)=>a.display_name.localeCompare(b.display_name,'ru',{numeric:true}));
    list.replaceChildren();
+   const legend=e('p','ad-gb-edit-legend',
+     'Нажмите на любое поле с карандашом, чтобы изменить его сразу. Кнопка «Все поля» откроет остальные данные под строкой.');
+   list.append(legend);
    const table=e('table','ad-gb-table');
    const headings=e('thead'),thRow=e('tr');
-   for(const name of ['Гость','Сторона','Связь','Рассадка','Этап','Изменён',''])thRow.append(e('th','',name));
+   for(const name of ['Гость','Кем приходится нам','Сторона','Рассадка','Этап','Дата изменения','Действия','']){
+     const head=e('th','',name);thRow.append(head);
+   }
    headings.append(thRow);table.append(headings);
    const tbody=e('tbody');
    for(const p of filtered){
-     const row=e('tr'),name=e('td','ad-gb-name');
-     name.append(e('strong','',p.display_name),e('small','',p.name_en||p.source_person_id||''));
+     const row=e('tr','ad-gb-person-row');
+     const name=cellEdit(p,'display_name','Введите имя');
+     name.classList.add('ad-gb-name');
+     name.append(e('small','ad-gb-english-hint',p.name_en||p.source_person_id||''));
      const stage=stageBadge(p);
-     const action=e('button','ad-gb-view','Открыть');action.type='button';action.addEventListener('click',()=>open(p));
-     const buttonCell=e('td');buttonCell.append(action);
-     row.append(name,e('td','',sideLabels[p.side]||'—'),e('td','',p.relationship||'—'),
-       e('td','',p.seating_group||'—'));
+     const action=e('button','ad-gb-view','Карточка');action.type='button';
+     action.addEventListener('click',()=>open(p));
+     const expand=e('button','ad-gb-expand',expandedId===p.id?'Свернуть':'Все поля');
+     expand.type='button';expand.setAttribute('aria-expanded',expandedId===p.id?'true':'false');
+     expand.addEventListener('click',()=>{expandedId=expandedId===p.id?null:p.id;repaint()});
      const stageCell=e('td');stageCell.append(stage);
-     row.append(stageCell,e('td','',stageDate(p)||'—'),buttonCell);
+     const actionCell=e('td');actionCell.append(action);
+     const expandCell=e('td');expandCell.append(expand);
+     row.append(name,cellEdit(p,'relation_to_couple','Уточнить'),
+       cellEdit(p,'side','Не уточнено',sideChoices),cellEdit(p,'seating_group','Не указана'),
+       stageCell,e('td','ad-gb-stage-date',stageDate(p)||'—'),actionCell,expandCell);
      tbody.append(row);
+     if(expandedId===p.id)tbody.append(expandedRow(p));
    }
-   table.append(tbody);const holder=e('div','ad-gb-scroll');holder.append(table);list.append(holder);
+   table.append(tbody);
+   const holder=e('div','ad-gb-scroll');holder.append(table);list.append(holder);
    list.append(e('p','ad-gb-count','Показано '+filtered.length+' из '+people.length+' · данные защищены авторизацией'));
  }
  function factSection(title,rows){
@@ -122,7 +256,8 @@ export async function activateGuestDirectory(root){
      details.replaceChildren(e('span','ad-gb-id',g.source_person_id||''),
        e('h2','',g.display_name),e('p','ad-gb-english',g.name_en||'Английское имя не заполнено'));
      factSection('Контакты и приглашение',[
-       ['Сторона',sideLabels[g.side]],['Связи',g.relationship],['Город',g.city],
+       ['Сторона',sideLabels[g.side]],['Кем приходится нам',g.relation_to_couple],
+       ['Связи с другими людьми (исходник)',g.relationship],['Город',g.city],
        ['Email',g.email],['Телефон',g.phone],['Рассадка',g.seating_group],
        ['Решение',g.decision],['Приглашение',g.source_invitation_json?.['Приглашение']],
        ['Последний этап',stageOf(g)[1]],
@@ -193,7 +328,8 @@ export async function activateGuestDirectory(root){
      const section=e('section','ad-gb-section');section.append(e('h3','','Редактировать'));
      const form=e('form','ad-gb-form'),inputMap={};
      for(const [field,label,value]of [
-       ['display_name','Имя в списке',g.display_name],['relationship','Отношения',g.relationship],
+       ['display_name','Имя в списке',g.display_name],['relation_to_couple','Кем приходится нам',g.relation_to_couple],
+       ['relationship','Связи с гостями (из исходника)',g.relationship],
        ['city','Город',g.city],['email','Email',g.email],['phone','Телефон',g.phone],
        ['name_en','Имя на английском',g.name_en],['seating_group','Группа рассадки',g.seating_group]]){
        const wrap=e('label','ad-gb-field');wrap.append(e('span','',label));
@@ -204,18 +340,10 @@ export async function activateGuestDirectory(root){
      form.addEventListener('submit',async ev=>{
        ev.preventDefault();submit.disabled=true;feedback.textContent='Сохранение…';
        try{
-         await api('admin/guest/update',{method:'POST',csrf,body:{
-           id:g.id,display_name:inputMap.display_name.value,
-           relationship:inputMap.relationship.value,city:inputMap.city.value,
-           email:inputMap.email.value,phone:inputMap.phone.value
-         }});
-         if(g.source_person_id)await api('admin/guest-profile/update',{method:'PATCH',csrf,body:{
-           id:g.id,name_en:inputMap.name_en.value,seating_group:inputMap.seating_group.value
-         }});
-         person.display_name=inputMap.display_name.value;
-         person.name_en=inputMap.name_en.value;
-         person.relationship=inputMap.relationship.value;
-         person.seating_group=inputMap.seating_group.value;
+         const payload={};
+         for(const [key,input]of Object.entries(inputMap))payload[key]=input.value;
+         await api('admin/guest/fields',{method:'PATCH',csrf,body:{id:g.id,fields:payload}});
+         Object.assign(person,payload);
          feedback.textContent='Сохранено в базе';repaint();
        }catch(err){feedback.textContent=err.message}finally{submit.disabled=false}
      });
@@ -223,7 +351,7 @@ export async function activateGuestDirectory(root){
  }
  const refresh=async()=>{
    if(!page.isConnected){clearInterval(refreshTimer);return}
-   if(document.visibilityState!=='visible')return;
+   if(document.visibilityState!=='visible'||expandedId!==null||activeEditors>0)return;
    try{const result=await api('admin/guests');people=result.guests||[];repaint()}catch{}
  };
  let refreshTimer=setInterval(refresh,15000);
