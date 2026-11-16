@@ -197,13 +197,6 @@ export const VENUE_RECORDS = {
         "date": "2027-06-20",
         "kind": "quote",
         "label": "20 июня — рукописная смета"
-      },
-      {
-        "guests": 80,
-        "total": 712760,
-        "date": "2027-06-18",
-        "kind": "historical",
-        "label": "18 июня — историческая смета, дата уже занята"
       }
     ],
     "budgetItems": [
@@ -305,7 +298,16 @@ export const VENUE_RECORDS = {
       "quoteTotal": 687760,
       "quoteGuests": 80
     },
-    "offerNote": "20.06: дешевле на 25 000 ₽, чем 18.06"
+    "offerNote": "20.06: дешевле на 25 000 ₽, чем 18.06",
+    "historicalQuotes": [
+      {
+        "guests": 80,
+        "total": 712760,
+        "date": "2027-06-18",
+        "kind": "historical",
+        "label": "18 июня — историческая смета, дата уже занята"
+      }
+    ]
   },
   "vinity": {
     "visited": true,
