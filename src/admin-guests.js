@@ -70,6 +70,7 @@ export async function activateGuestDirectory(root){
  // A single row can expand to edit every personal and planning field.
  const sideChoices=[['groom','Никита'],['bride','Кристина'],['both','Общие'],['other','Не уточнено']];
  const languageChoices=[['ru','Русский'],['en','English'],['de','Deutsch'],['other','Другой']];
+ const answerChoices=[['','Не ответил'],['yes','Буду'],['maybe','Пока не знаю'],['no','Не приду']];
  function cellEdit(person,field,empty='Уточнить',choices=null){
    const td=e('td','ad-gb-edit-cell');
    const raw=stringify(person[field]);
@@ -99,9 +100,21 @@ export async function activateGuestDirectory(root){
        if(!stop())return;
        input.disabled=true;input.setAttribute('aria-busy','true');
        try{
-         await api('admin/guest/fields',{method:'PATCH',csrf,
-           body:{id:person.id,fields:{[field]:val}}});
-         person[field]=field==='plus_one_allowed'||field==='children_count'?Number(val):val;
+         if(field==='attendance'){
+           if(val===''&&raw&&!confirm('Удалить сохранённый RSVP этого гостя?')){input.disabled=false;input.remove();btn.hidden=false;return}
+           await api('admin/guest/rsvp',{method:'PATCH',csrf,body:{
+             id:person.id,attendance:val,adults:Number(person.adults??1),
+             children:Number(person.children??0),transport_needed:Boolean(Number(person.transport_needed||0)),
+             arrival_notes:person.arrival_notes||'',dietary_notes:person.dietary_notes||'',
+             other_notes:person.other_notes||''
+           }});
+           person[field]=val||null;
+           person.response_source=val?'admin':null;
+         }else{
+           await api('admin/guest/fields',{method:'PATCH',csrf,
+             body:{id:person.id,fields:{[field]:val}}});
+           person[field]=field==='plus_one_allowed'||field==='children_count'?Number(val):val;
+         }
          repaint();
        }catch(error){
          input.disabled=false;input.remove();btn.hidden=false;
@@ -135,7 +148,7 @@ export async function activateGuestDirectory(root){
  ];
  function expandedRow(person){
    const row=e('tr','ad-gb-expanded-row');
-   const td=e('td');td.colSpan=8;
+   const td=e('td');td.colSpan=9;
    const panel=e('div','ad-gb-expanded-content');
    const title=e('div','ad-gb-expanded-head');
    title.append(e('h3','','Редактирование: '+person.display_name),
@@ -182,7 +195,61 @@ export async function activateGuestDirectory(root){
        expandedId=null;repaint();
      }catch(err){feedback.textContent='Не удалось сохранить: '+err.message;save.disabled=false}
    });
-   panel.append(form);td.append(panel);row.append(td);return row;
+   panel.append(form);
+   // A second inline form corrects RSVP fields without impersonating a guest.
+   const responseSection=e('section','ad-gb-response-section');
+   responseSection.append(e('h3','','Ответ гостя и пожелания'),
+     e('p','ad-gb-response-help',
+       'Если гость ответил по телефону, исправьте данные здесь. Изменение будет отмечено как внесённое организатором. Подтверждение участия по-прежнему требует заполненной анкеты.'));
+   const rsvpForm=e('form','ad-gb-edit-grid ad-gb-rsvp-form');
+   const responseFields=[
+     ['attendance','Участие','attendance'],['adults','Взрослых','number'],
+     ['children','Детей','number'],['transport_needed','Нужен трансфер','boolean'],
+     ['dietary_notes','Пожелания по питанию','textarea'],
+     ['arrival_notes','Прибытие / транспорт','textarea'],
+     ['other_notes','Другие пожелания','textarea']
+   ];
+   const responseInputs={};
+   for(const [field,label,type]of responseFields){
+     const wrap=e('label','ad-gb-edit-field');wrap.append(e('span','',label));
+     let input;
+     if(type==='textarea'){input=e('textarea');input.rows=2}
+     else if(type==='attendance'||type==='boolean'){
+       input=e('select');
+       const choices=type==='attendance'?answerChoices:[['0','Нет'],['1','Да']];
+       for(const [value,name]of choices){const option=e('option','',name);option.value=value;input.append(option)}
+     }else{
+       input=e('input');input.type='number';input.min='0';input.max=field==='adults'?
+         String(1+Number(person.plus_one_allowed||0)):String(Number(person.children_count||0));
+       input.step='1';
+     }
+     input.name=field;
+     input.value=stringify(person[field]??(field==='adults'?1:0));
+     if(type==='attendance')input.value=stringify(person.attendance);
+     if(type==='textarea')input.value=stringify(person[field]);
+     wrap.append(input);responseInputs[field]=input;rsvpForm.append(wrap);
+   }
+   const foot=e('div','ad-gb-edit-actions');
+   const rspSave=e('button','ad-gb-save-row','Сохранить ответ');rspSave.type='submit';
+   const rspFeedback=e('span','ad-gb-edit-feedback');
+   foot.append(rspSave,rspFeedback);rsvpForm.append(foot);
+   rsvpForm.addEventListener('submit',async ev=>{
+     ev.preventDefault();rspSave.disabled=true;rspFeedback.textContent='Сохраняю…';
+     const payload={id:person.id};
+     for(const [field]of responseFields)payload[field]=responseInputs[field].value.trim();
+     payload.adults=Number(payload.adults);
+     payload.children=Number(payload.children);
+     payload.transport_needed=payload.transport_needed==='1';
+     try{
+       const result=await api('admin/guest/rsvp',{method:'PATCH',csrf,body:payload});
+       Object.assign(person,payload);
+       person.attendance=result.attendance;
+       person.response_source=result.source||null;
+       expandedId=null;repaint();
+     }catch(err){rspFeedback.textContent='Ошибка: '+err.message;rspSave.disabled=false}
+   });
+   responseSection.append(rsvpForm);panel.append(responseSection);
+   td.append(panel);row.append(td);return row;
  }
 
  function repaint(){
@@ -207,7 +274,7 @@ export async function activateGuestDirectory(root){
    list.append(legend);
    const table=e('table','ad-gb-table');
    const headings=e('thead'),thRow=e('tr');
-   for(const name of ['Гость','Кем приходится нам','Сторона','Рассадка','Этап','Дата изменения','Действия','']){
+   for(const name of ['Гость','Кем приходится нам','Сторона','Рассадка','Этап','Ответ RSVP','Дата изменения','Действия','']){
      const head=e('th','',name);thRow.append(head);
    }
    headings.append(thRow);table.append(headings);
@@ -228,7 +295,8 @@ export async function activateGuestDirectory(root){
      const expandCell=e('td');expandCell.append(expand);
      row.append(name,cellEdit(p,'relation_to_couple','Уточнить'),
        cellEdit(p,'side','Не уточнено',sideChoices),cellEdit(p,'seating_group','Не указана'),
-       stageCell,e('td','ad-gb-stage-date',stageDate(p)||'—'),actionCell,expandCell);
+       stageCell,cellEdit(p,'attendance','Не ответил',answerChoices),
+       e('td','ad-gb-stage-date',stageDate(p)||'—'),actionCell,expandCell);
      tbody.append(row);
      if(expandedId===p.id)tbody.append(expandedRow(p));
    }
@@ -266,6 +334,7 @@ export async function activateGuestDirectory(root){
        ['Первое открытие',g.first_opened_at],
        ['Последнее открытие',g.last_opened_at],
        ['Анкета сохранена',g.profile_completed_at],
+       ['Ответ RSVP',g.attendance],['Источник RSVP',g.response_source==='admin'?'Организатор':'Гость'],
        ['В базовом подсчёте',g.base_count]
      ]);
      const invitation=e('section','ad-gb-section ad-gb-invitation');
