@@ -4,77 +4,88 @@ import {readFileSync} from 'node:fs';
 import {renderVenueNewPage,renderVenueQuoteEditorRow} from '../src/venue-detail-ui.js';
 
 const venue={
- id:'venue-editor-test',name:'Площадка для проверки',region:'city',
- area:'Санкт-Петербург',capacity:100,visited:true,
- summary:'Сведения о площадке',notes:'Заметки',
+ id:'venue-editor-test',name:'Площадка для проверки',region:'city',area:'Санкт-Петербург',
+ capacity:100,capacityNote:'80-100 гостей',visited:true,
+ summary:'Сведения о площадке',notes:'Заметки организаторов',
  dateAvailability:{'18':'unknown','19':'available','20':'pending'},
- cost:{menu:5500,rent:110000,service:10},
- included:['Банкет'],excluded:['Продление'],questions:['Уточнить бронь'],
- quotes:[{date:'2027-06-19',guests:80,total:700000,kind:'quote',label:'Смета'}],
- ratings:{},extras:{}
+ cost:{menu:5500,rent:110000,service:10},included:['Банкет'],
+ excluded:['Продление'],questions:['Уточнить бронь'],
+ quotes:[{date:'2027-06-19',guests:80,total:700000,kind:'quote',label:'Смета'}],ratings:{},extras:{}
 };
-const ctx=(tab)=>({
- guests:80,ui:{detailTab:tab,photoView:'gallery',photoSection:'all'},
+const context=(detailTab)=>({
+ guests:80,ui:{detailTab,photoView:'gallery',photoSection:'all'},
  estimate:()=>({value:700000,partial:false,isQuote:true,note:'Полученная смета'}),
  extraTotal:()=>0,
  dayStatus:(v,d)=>v.dateAvailability[d]||'unknown',
- dayText:(v,d)=>({available:'Свободно',pending:'Уточняется',unknown:'Нет подтверждения',unavailable:'Занято'}[v.dateAvailability[d]]||'Нет подтверждения'),
+ dayText:(v,d)=>({available:'Свободно',pending:'Уточняется',unknown:'Нет подтверждения'}[v.dateAvailability[d]]||'Нет данных'),
  weighted:()=>({value:80,complete:6,provisional:true,breakdown:[]})
 });
 
-test('venue overview gives clear edit entry points without extra table columns',()=>{
- const html=renderVenueNewPage(venue,ctx('overview'));
- assert.match(html,/vdp-edit-main/);
- assert.match(html,/Редактировать данные и смету/);
- assert.match(html,/Изменить даты/);
- assert.match(html,/Изменить смету/);
- assert.match(html,/vdp-overview-actions/);
- assert.match(html,/Все площадки/);
-});
-
-test('editor supports directly changing all substantive venue facts',()=>{
- const html=renderVenueNewPage(venue,ctx('edit'));
- for(const field of ['name','area','region','capacity','capacityNote','visited',
-  'summary','notes','date-18','date-19','date-20',
-  'cost-menu','cost-rent','cost-technical','cost-extra','cost-service','cost-minSpend',
-  'included','excluded','questions','website','drive','photos','quoteSource',
-  'contactPhone','contactEmail']){
-  assert.ok(html.includes('data-edit-field="'+field+'"'),field+' not editable');
+test('overview displays data directly as editable values, without an edit-only page',()=>{
+ const html=renderVenueNewPage(venue,context('overview'));
+ for(const key of ['name','area','summary','capacity','capacityNote',
+  'date:18','date:19','date:20','cost:menu','cost:rent','cost:service',
+  'included','excluded','questions']){
+  assert.ok(html.includes('data-venue-inline="'+key+'"'),key+' not clickable');
  }
- assert.match(html,/data-venue-edit="venue-editor-test"/);
- assert.match(html,/data-venue-edit-quotes/);
- assert.match(html,/Сохранить изменения/);
- assert.match(html,/Изменения не сохранены/);
+ assert.match(html,/Нажмите на значение, чтобы изменить его/);
+ assert.doesNotMatch(html,/Редактировать данные и смету/);
+ assert.doesNotMatch(html,/Изменить даты →/);
+ assert.doesNotMatch(html,/data-venue-edit=/);
 });
 
-test('existing offer variants are editable with amount, date and guest count',()=>{
+test('conditions values are clickable in the same cards, no repeated editing section',()=>{
+ const html=renderVenueNewPage(venue,context('terms'));
+ for(const key of ['summary','capacity','capacityNote','visited','notes',
+  'contactPhone','contactEmail','date:18','date:19','date:20',
+  'included','excluded','questions']){
+  assert.ok(html.includes('data-venue-inline="'+key+'"'),key+' is missing');
+ }
+ assert.match(html,/Условия площадки/);
+ assert.doesNotMatch(html,/<h2>Редактирование<\/h2>/);
+ assert.doesNotMatch(html,/data-edit-field=/);
+ assert.doesNotMatch(html,/href="#\/admin\/venues\/venue-editor-test\/edit"/);
+});
+
+test('budget sums and quote cards are editable in place',()=>{
+ const html=renderVenueNewPage(venue,context('budget'));
+ assert.match(html,/data-venue-inline="cost:menu"/);
+ assert.match(html,/data-venue-inline="cost:rent"/);
+ assert.match(html,/data-venue-inline="extra:alcohol"/);
+ assert.match(html,/data-inline-quote="0"/);
+ assert.match(html,/data-add-inline-quote/);
+ assert.doesNotMatch(html,/data-venue-edit=/);
+});
+
+test('quote editing supports count, total, date, label and type',()=>{
  const html=renderVenueQuoteEditorRow(venue.quotes[0]);
  for(const field of ['guests','total','date','label','kind'])
   assert.ok(html.includes('data-quote-field="'+field+'"'),field+' missing');
  assert.match(html,/700000/);
- assert.match(html,/2027-06-19/);
  assert.match(html,/data-remove-venue-quote/);
 });
 
-test('admin venue editing uses protected server DB and visible success/error feedback',()=>{
+test('in-place editing persists to protected database and keeps validation',()=>{
  const source=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');
- assert.match(source,/auth\/session/);
  assert.match(source,/admin\/records\?collection=venues/);
- assert.match(source,/details_json/);
- assert.match(source,/wedding_comparison_id/);
+ assert.match(source,/X-CSRF-Token/);
+ assert.match(source,/buildInlineFieldEditor/);
+ assert.match(source,/buildInlineQuoteEditor/);
+ assert.match(source,/updateInlineOverrides/);
+ assert.match(source,/commitInlineChanges/);
  assert.match(source,/queueVenuePersist/);
- assert.match(source,/data-venue-edit-feedback/);
- assert.match(source,/Сервер недоступен/);
- assert.match(source,/Загружаем актуальные данные площадки/);
+ assert.match(source,/Не сохранено в базе/);
+ assert.match(source,/select\[data-inline-control\]/);
+ assert.doesNotMatch(source,/function collectVenueEdit/);
 });
 
-test('CSS uses full admin width with container-aware no-overlap venue cards',()=>{
+test('responsive CSS uses full workspace without duplicate edit form',()=>{
  const base=readFileSync(new URL('../src/styles.css',import.meta.url),'utf8');
- const detail=readFileSync(new URL('../src/venue-detail-ui.css',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../src/venue-detail-ui.css',import.meta.url),'utf8');
  assert.match(base,/\.admin-content\{width:100%;max-width:none/);
- assert.match(detail,/container-type:inline-size/);
- assert.match(detail,/@container\(max-width:1250px\)/);
- assert.match(detail,/\.vdp-overview-actions\{display:flex;flex-wrap:wrap;gap:12px/);
- assert.match(detail,/\.vdp-budget-header strong\{[^}]*white-space:normal/);
- assert.match(detail,/@container\(max-width:580px\)/);
+ assert.match(css,/container-type:inline-size/);
+ assert.match(css,/\.vdp-inline:hover/);
+ assert.match(css,/\.vdp-inline-form\{/);
+ assert.match(css,/\.vdp-date-editable\{/);
+ assert.match(css,/@container\(max-width:520px\)/);
 });
