@@ -1,0 +1,77 @@
+name: Import wedding guests privately from encrypted Google Sheet reference
+on:
+  push:
+    paths:
+      - 'backend/bin/import-guests.php'
+      - 'backend/seed/guest-source.enc'
+      - '.github/workflows/guest-import.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: wedding-backend
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check importer source and PHP syntax
+        run: |
+          php -l backend/bin/import-guests.php
+          test -s backend/seed/guest-source.enc
+      - name: Fetch personal data inside protected REG.RU storage and import
+        timeout-minutes: 6
+        shell: bash
+        env:
+          HOST: ${{ secrets.WEDDING_SFTP_HOST }}
+          USERNAME: ${{ secrets.WEDDING_SFTP_USER }}
+          SSH_KEY: ${{ secrets.WEDDING_SFTP_SSH_KEY }}
+          HOST_KEYS: ${{ secrets.WEDDING_SFTP_KNOWN_HOSTS }}
+          PORT: ${{ secrets.WEDDING_SFTP_PORT }}
+        run: |
+          set -euo pipefail
+          : "${PORT:=22}"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/guest_import_deploy
+          printf '%s\n' "$HOST_KEYS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/guest_import_deploy ~/.ssh/known_hosts
+          SSH_OPTS="-4 -i $HOME/.ssh/guest_import_deploy -p $PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15"
+          PRIVATE=/var/www/u3728035/data/wedding-private
+          ssh $SSH_OPTS "$USERNAME@$HOST" "umask 077; mkdir -p '$PRIVATE/backend' '$PRIVATE/imports'"
+          rsync --archive --no-perms --omit-dir-times --timeout=120 \
+            --rsh "ssh $SSH_OPTS" \
+            backend/ "$USERNAME@$HOST:$PRIVATE/backend/"
+          ssh $SSH_OPTS "$USERNAME@$HOST" 'bash -se' <<'REMOTE'
+          set -euo pipefail
+          umask 077
+          root=/var/www/u3728035/data/wedding-private
+          mkdir -p "$root/imports"
+          chmod 700 "$root/imports"
+          trap 'rm -f "$root/imports/"*.csv "$root/imports/source.bin"' EXIT
+          base64 -d "$root/backend/seed/guest-source.enc" > "$root/imports/source.bin"
+          source_id=$(openssl pkeyutl -decrypt -inkey "$root/guest-import.key" \
+            -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 \
+            -in "$root/imports/source.bin")
+          if ! [[ "$source_id" =~ ^[A-Za-z0-9_-]{30,80}$ ]]; then
+            echo "ERROR: invalid decrypted source identity"
+            exit 1
+          fi
+          for item in people:210502 invitations:210505 relations:210503 profiles:210509 english:210508; do
+            file="${item%%:*}"
+            gid="${item##*:}"
+            curl --fail --location --silent --show-error --retry 2 --max-time 70 \
+              --header 'Accept: text/csv' \
+              "https://docs.google.com/spreadsheets/d/$source_id/export?format=csv&gid=$gid" \
+              --output "$root/imports/$file.csv"
+            test -s "$root/imports/$file.csv"
+          done
+          cd "$root/backend"
+          php -l bin/import-guests.php >/dev/null
+          php bin/migrate.php
+          php bin/backup.php
+          php bin/import-guests.php "$root/imports"
+          php bin/status.php
+          echo 'PRIVATE_GUEST_IMPORT_WORKFLOW_COMPLETE'
+          REMOTE
