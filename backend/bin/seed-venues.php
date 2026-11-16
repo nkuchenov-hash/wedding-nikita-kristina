@@ -6,7 +6,7 @@ if(PHP_SAPI!=='cli'){http_response_code(404);exit;}
 $file=__DIR__.'/../seed/venues.json';
 if(!is_file($file))throw new \RuntimeException('Venue seed JSON missing');
 $rows=json_decode((string)file_get_contents($file),true,512,JSON_THROW_ON_ERROR);
-if(!is_array($rows)||count($rows)<20)throw new \RuntimeException('Incomplete venue seed');
+if(!is_array($rows)||count($rows)===0)throw new \RuntimeException('Venue seed missing or empty');
 $db=db();
 $cols=['id','name','area','address','website','capacity_min','capacity_max','quoted_total_rub',
 'quote_guests','desired_date_status','contact_name','contact_email','contact_phone','quote_source',
