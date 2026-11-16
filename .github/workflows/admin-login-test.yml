@@ -124,4 +124,11 @@ jobs:
                      'first_opened_at','profile_completed_at','attendance'):
               assert key in sample, 'Missing guest stage '+key
           print('INDIVIDUAL_GUEST_PROGRESS_OK')
+
+relation_count=sum(bool(g.get('relation_to_couple')) for g in guests)
+assert relation_count>=35, ('Couple relations not backfilled',relation_count)
+for key in ('relation_to_couple','relationship','name_en','seating_group','response_source','dietary_notes'):
+    assert key in sample, 'Missing editable guest field '+key
+print('COUPLE_RELATIONS_AND_GUEST_FIELDS_OK',relation_count)
+
           PY
