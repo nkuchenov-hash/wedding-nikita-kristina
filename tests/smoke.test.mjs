@@ -150,3 +150,17 @@ test('approved comprehensive venue comparison is never overlaid by generic datab
  assert.match(venue,/selectedCompare\(all\)/);
  assert.match(css,/\.vw-table/);
 });
+
+
+test('venue table has six data columns with no useless actions column or clipped 1150px minimum',async()=>{
+ const venue=await read('../src/venues.js');
+ const css=await read('../src/venues.css');
+ assert.ok(!venue.includes('<th scope="col">Действие</th>'));
+ assert.ok(!venue.includes('class="vw-actions"'));
+ assert.match(venue,/vw-compare-toggle/);
+ assert.match(venue,/vw-name/);
+ assert.match(venue,/data-detail/);
+ assert.match(venue,/data-compare/);
+ assert.match(css,/\.vw-page \.vw-table-sortable\{width:100%;min-width:910px;table-layout:fixed\}/);
+ assert.match(css,/\.vw-page \.vw-scroll\{overflow-x:auto/);
+});
