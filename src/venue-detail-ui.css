@@ -334,3 +334,44 @@
 .vdp-page .vdp-key-costs .vdp-inline{font-weight:700}
 @container(max-width:740px){.vdp-inline-facts{grid-template-columns:1fr}.vdp-inline-quote-form .vdp-editor-quote-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @container(max-width:520px){.vdp-inline-quote-form .vdp-editor-quote-row{grid-template-columns:1fr}.vdp-inline-hint{font-size:12px}.vdp-page .vdp-inline-block{padding:8px 4px}}
+
+
+/* Venue overview is a decision dashboard, never a photo-first page. */
+.vdp-overview{grid-template-columns:minmax(0,1fr);gap:20px}
+.vdp-overview>.vdp-parameter-dashboard,
+.vdp-overview>.vdp-dashboard-details,
+.vdp-overview>.vdp-scope-grid,
+.vdp-overview>.vdp-overview-gallery{grid-column:1/-1;min-width:0}
+.vdp-parameter-dashboard{background:#fff;border:1px solid #dce7dc;border-radius:16px;padding:clamp(20px,2.3vw,30px);min-width:0}
+.vdp-dashboard-title{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px;margin-bottom:22px}
+.vdp-dashboard-title h2{font-size:clamp(23px,2.1vw,30px);font-weight:720;line-height:1.2;letter-spacing:-.025em;color:#203e2e;margin:5px 0 0}
+.vdp-dashboard-eyebrow{font-size:11px;letter-spacing:.14em;font-weight:750;color:#728f79}
+.vdp-dashboard-guest-count{display:flex;align-items:center;gap:12px;font-size:14px;color:#567560;font-weight:650}
+.vdp-dashboard-guest-count input{width:92px;height:45px;border:1px solid #c8dbc9;border-radius:10px;padding:8px 11px;font:inherit;font-size:16px;color:#244e36;box-sizing:border-box}
+.vdp-overview-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.vdp-overview-metric{min-width:0;min-height:132px;display:flex;flex-direction:column;justify-content:flex-start;gap:10px;padding:19px 20px;border:1px solid #dfe8df;background:#f8fbf7;border-radius:13px}
+.vdp-overview-metric.is-date.available{border-color:#c3dec9;background:#edf8ed}
+.vdp-overview-metric.is-date.unavailable{border-color:#e4caca;background:#fcf4f3}
+.vdp-overview-metric.is-budget{border-color:#bcd3bf;background:#f1f8ef}
+.vdp-overview-metric-label{font-size:12px;line-height:1.4;color:#66816c;font-weight:700}
+.vdp-overview-metric-value{min-width:0;color:#1e4b32;font-weight:750;font-size:clamp(21px,1.9vw,28px);line-height:1.2;letter-spacing:-.025em;overflow-wrap:anywhere}
+.vdp-overview-metric-value>strong{font:inherit}
+.vdp-overview-metric-value .vdp-inline{font-size:inherit!important;color:inherit;font-weight:inherit;line-height:inherit;max-width:100%;padding:0 4px 3px 0;white-space:normal;letter-spacing:inherit}
+.vdp-overview-metric-value .vdp-inline:hover{background:#e2f0e3}
+.vdp-overview-metric-value .vdp-inline-text{line-height:1.25}
+.vdp-overview-metric small{margin-top:auto;font-size:12px;color:#68836f;line-height:1.45;font-weight:500}
+.vdp-metric-link{color:#255b40;text-decoration:underline;text-decoration-color:#b4ccba;text-underline-offset:4px}
+.vdp-metric-link:hover{color:#113823;text-decoration-color:currentColor}
+.vdp-dashboard-details{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start;min-width:0}
+.vdp-dashboard-details>.vdp-pane{min-width:0}
+.vdp-dashboard-details .vdp-pane h2{font-size:clamp(20px,1.6vw,26px)}
+.vdp-dashboard-details .vdp-budget-header{grid-template-columns:repeat(auto-fit,minmax(min(100%,215px),1fr))}
+.vdp-dashboard-details .vdp-key-costs{margin-top:13px}
+.vdp-overview-gallery{padding:clamp(20px,2vw,30px)}
+.vdp-overview-gallery .vdp-gallery-context{font-size:13px;color:#738c79;margin:2px 0 12px}
+.vdp-overview-gallery .vdp-photo-header{margin-top:14px}
+.vdp-page:has(.vdp-parameter-dashboard) .vdp-hero{min-height:265px}
+.vdp-page:has(.vdp-parameter-dashboard) .vdp-hero-content{padding-top:27px;padding-bottom:27px}
+@container(min-width:1500px){.vdp-dashboard-details{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container(max-width:1040px){.vdp-overview-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container(max-width:600px){.vdp-overview-metrics,.vdp-dashboard-details{grid-template-columns:minmax(0,1fr)}.vdp-dashboard-title{align-items:flex-start}.vdp-overview-metric{min-height:112px;padding:16px 18px}.vdp-parameter-dashboard{padding:18px}}
