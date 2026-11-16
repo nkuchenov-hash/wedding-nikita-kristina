@@ -117,7 +117,7 @@ export function activatePhotoArchive(root){
     venueLabel.hidden=!isLocation;venue.required=isLocation;
     submit.disabled=ui.busy||(isLocation&&!ui.approved.size);
     if(isLocation&&!ui.approved.size)feedback.textContent='Сначала утвердите место в программе свадьбы — только тогда можно добавлять фото локации.';
-    else if(!ui.busy)feedback.textContent='';
+    else if(feedback.textContent.startsWith('Сначала утвердите'))feedback.textContent='';
   }
   function setApproved(ids=[]){
     ui.approved=new Set(ids.map(String));
@@ -223,7 +223,7 @@ export function activatePhotoArchive(root){
     }catch(error){feedback.textContent=error.message}
     finally{ui.busy=false;flag.disabled=false}
   });
-  category.addEventListener('change',updateCategory);
+  category.addEventListener('change',()=>{feedback.textContent='';updateCategory()});
   search.addEventListener('input',()=>{ui.query=search.value;ui.limit=72;render()});
   more.addEventListener('click',()=>{ui.limit+=72;render()});
   close.addEventListener('click',closeView);
