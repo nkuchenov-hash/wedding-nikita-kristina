@@ -325,6 +325,38 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         }catch(Throwable $err){$db->rollBack();throw $err;}
         json(['ok'=>true,'updated'=>array_keys($values)]);
     }
+    // Manual correction by an organiser is recorded separately from a
+    // response submitted by a guest. No automatic registration is fabricated.
+    if($route==='admin/guest/rsvp' && $method==='PATCH'){
+        $d=payload(8192);
+        $id=strval($d,'id',40,true);
+        $g=one($db,'SELECT id,plus_one_allowed,children_count FROM guests WHERE id=?',[$id]);
+        if(!$g)fail(404,'guest','Гость не найден');
+        $attendance=choice($d,'attendance',['yes','no','maybe',''],'');
+        if($attendance===''){
+            statement($db,'DELETE FROM rsvps WHERE guest_id=?',[$id]);
+            audit($db,'admin',$actor,'clear','rsvp',$id,['manual'=>true]);
+            json(['ok'=>true,'attendance'=>null]);
+        }
+        $adults=intvalField($d,'adults',0,1+(int)$g['plus_one_allowed'],1);
+        $children=intvalField($d,'children',0,(int)$g['children_count'],0);
+        if($attendance==='no'){$adults=0;$children=0;}
+        $transport=boolval($d,'transport_needed')?1:0;
+        $diet=strval($d,'dietary_notes',1000);
+        $arrival=strval($d,'arrival_notes',1000);
+        $notes=strval($d,'other_notes',1200);
+        statement($db,"INSERT INTO rsvps(guest_id,attendance,adults,children,transport_needed,
+          arrival_notes,dietary_notes,other_notes,response_source)
+          VALUES(?,?,?,?,?,?,?,?,?)
+          ON CONFLICT(guest_id) DO UPDATE SET
+            attendance=excluded.attendance,adults=excluded.adults,children=excluded.children,
+            transport_needed=excluded.transport_needed,arrival_notes=excluded.arrival_notes,
+            dietary_notes=excluded.dietary_notes,other_notes=excluded.other_notes,
+            response_source='admin',updated_at=datetime('now')",
+          [$id,$attendance,$adults,$children,$transport,$arrival,$diet,$notes,'admin']);
+        audit($db,'admin',$actor,'submit','rsvp',$id,['attendance'=>$attendance,'source'=>'admin']);
+        json(['ok'=>true,'attendance'=>$attendance,'source'=>'admin']);
+    }
     if ($route==='admin/guest/update' && $method==='POST') {
         $d=payload(8192);$id=strval($d,'id',40,true);
         if (!one($db,'SELECT id FROM guests WHERE id=?',[$id])) fail(404,'not_found','Гость не найден');
@@ -553,7 +585,7 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
          ON CONFLICT(guest_id) DO UPDATE SET attendance=excluded.attendance,adults=excluded.adults,
          children=excluded.children,transport_needed=excluded.transport_needed,
          arrival_notes=excluded.arrival_notes,dietary_notes=excluded.dietary_notes,
-         other_notes=excluded.other_notes,updated_at=datetime('now')",
+         other_notes=excluded.other_notes,response_source='guest',updated_at=datetime('now')",
           [$actor,$att,$adults,$children,boolval($d,'transport_needed')?1:0,
            strval($d,'arrival_notes',1000),strval($d,'dietary_notes',1000),strval($d,'other_notes',1200)]);
         audit($db,'guest',$actor,'submit','rsvp',$actor,['attendance'=>$att]);

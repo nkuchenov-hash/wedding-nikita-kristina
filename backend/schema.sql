@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS rsvps (
   children INTEGER NOT NULL DEFAULT 0 CHECK(children BETWEEN 0 AND 15),
   transport_needed INTEGER NOT NULL DEFAULT 0, arrival_notes TEXT NOT NULL DEFAULT '',
   dietary_notes TEXT NOT NULL DEFAULT '', other_notes TEXT NOT NULL DEFAULT '',
+  response_source TEXT NOT NULL DEFAULT 'guest' CHECK(response_source IN ('guest','admin')),
   submitted_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE TABLE IF NOT EXISTS menu_options (
