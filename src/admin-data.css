@@ -61,3 +61,19 @@
 .ad-program-other .ad-program-event{display:flex;align-items:center;justify-content:space-between}
 @media(max-width:1100px){.ad-wedding-days,.ad-program-days{grid-template-columns:1fr}}
 @media(max-width:620px){.ad-day-card,.ad-program-card{padding:17px}.ad-program-form{grid-template-columns:1fr}.ad-program-event{grid-template-columns:90px minmax(0,1fr)}}
+
+
+/* Guest-response funnel: every number reflects server state, not invitations guessed. */
+.ad-guest-pipeline{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin:20px 0 12px}
+.ad-guest-pipeline-step{position:relative;display:flex;flex-direction:column;justify-content:center;gap:12px;min-height:112px;padding:17px 15px;border:1px solid #cddfd0;border-radius:15px;background:linear-gradient(160deg,#fbfdfa,#eef6ef)}
+.ad-guest-pipeline-step::after{content:"";position:absolute;right:-7px;top:50%;z-index:2;width:10px;height:10px;transform:translateY(-50%) rotate(45deg);border-top:1px solid #bbd2c1;border-right:1px solid #bbd2c1;background:#f4f9f4}
+.ad-guest-pipeline-step:last-child{background:#e3eee5;border-color:#b2cdb8}
+.ad-guest-pipeline-step:last-child::after{display:none}
+.ad-guest-pipeline-step strong{font-size:clamp(25px,2.5vw,38px);font-weight:650;color:#244d35;font-variant-numeric:tabular-nums;line-height:1}
+.ad-guest-pipeline-step span{font-size:11px;line-height:1.45;color:#657d6b;font-weight:650}
+.ad-live-updated{font-size:11px;color:#829689;text-align:right;margin:8px 0 23px}
+.ad-guest-overview-detail{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;padding:21px 22px;margin-top:18px;background:#f6faf5;border:1px solid #d9e7da;border-radius:15px}
+.ad-guest-privacy-note{max-width:830px;line-height:1.65;font-size:13px;color:#52715c;margin:0}
+.ad-guest-overview-links .ad-live-button{white-space:nowrap}
+@media(max-width:1150px){.ad-guest-pipeline{grid-template-columns:repeat(3,minmax(0,1fr))}.ad-guest-pipeline-step:nth-child(3)::after{display:none}}
+@media(max-width:570px){.ad-guest-pipeline{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.ad-guest-pipeline-step{min-height:92px;padding:13px}.ad-guest-pipeline-step::after{display:none}.ad-guest-pipeline-step span{font-size:10px}}

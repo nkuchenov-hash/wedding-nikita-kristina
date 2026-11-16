@@ -35,3 +35,20 @@
 body.ad-gb-lock{overflow:hidden}
 @media(max-width:980px){.ad-gb-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:630px){.ad-gb-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ad-gb-facts,.ad-gb-form{grid-template-columns:1fr}.ad-gb-facts dd{padding-bottom:8px}}
+
+
+.ad-gb-stage{display:inline-flex;align-items:center;white-space:nowrap;max-width:250px;border-radius:25px;background:#edf3ec;color:#54715c;padding:7px 11px;font-size:11px;font-weight:700;line-height:1.2}
+.ad-gb-stage-confirmed{background:#ddefe0;color:#1b743e}
+.ad-gb-stage-registered{background:#e7f0f7;color:#265c86}
+.ad-gb-stage-sent{background:#e9ebfb;color:#455ca3}
+.ad-gb-stage-prepared{background:#f4f0e2;color:#94712e}
+.ad-gb-stage-opened{background:#e9effb;color:#375f99}
+.ad-gb-stage-declined{background:#f9e9e8;color:#ae4744}
+.ad-gb-stage-maybe{background:#fff0dd;color:#9d7626}
+.ad-gb-invitation{background:#f5faf5;border:1px solid #d8e6d8;padding:20px;border-radius:14px;margin:15px 0}
+.ad-gb-invitation-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px}
+.ad-gb-mark-sent{background:#507e5d}
+.ad-gb-personal-link{padding:15px;margin:14px 0;background:#fff;border:1px solid #cedecd;border-radius:12px}
+.ad-gb-personal-link input{width:100%;padding:13px 10px;border:1px solid #cddbd1;border-radius:8px;font-size:12px;min-height:44px;box-sizing:border-box}
+.ad-gb-personal-link .ad-gb-view{margin-top:10px}
+.ad-gb-invitation .ad-gb-view:disabled{opacity:.45;cursor:not-allowed}
