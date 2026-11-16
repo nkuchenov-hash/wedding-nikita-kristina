@@ -41,3 +41,24 @@
 body.ad-photo-lock{overflow:hidden}
 @media(max-width:900px){.ad-photo-grid{grid-template-columns:repeat(min(var(--photo-cols,3),3),minmax(0,1fr));gap:9px}.ad-photo-density{display:none}}
 @media(max-width:650px){.ad-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.ad-photo-card{border-radius:10px;aspect-ratio:3/4}.ad-photo-toolbar{gap:8px}.ad-photo-toolbar input{flex-basis:100%}.ad-photo-head{padding-top:8px}.ad-photo-figure{max-width:calc(100vw - 30px)}.ad-photo-prev,.ad-photo-next{top:auto;bottom:45px;width:47px;min-height:50px;font-size:37px}.ad-photo-overlay{padding:7px}.ad-photo-full{max-height:72vh}.ad-photo-caption{padding:0 38px}.ad-photo-close{right:8px;top:8px}}
+
+/* A curated guest album, not a mass archive of researched venues. */
+.ad-guest-curation .ad-photo-head{padding-bottom:18px}
+.ad-guest-curation .ad-photo-lead{max-width:1000px}
+.ad-photo-upload-form{margin:0 0 25px;padding:22px;border:1px solid #d6e5da;background:#fff;border-radius:16px;display:grid;gap:12px}
+.ad-photo-upload-form h2{font-size:19px;line-height:1.3;font-weight:750;margin:0}
+.ad-photo-upload-form>.ad-photo-lead{margin:0;font-size:12px;max-width:950px}
+.ad-photo-upload-fields{display:grid;grid-template-columns:minmax(170px,1.25fr) minmax(180px,1fr) minmax(165px,1fr) minmax(180px,1.5fr);gap:12px;align-items:end}
+.ad-photo-upload-fields label{min-width:0;display:grid;gap:6px;color:#45624e;font-weight:650;font-size:12px}
+.ad-photo-upload-fields label[hidden]{display:none}
+.ad-photo-upload-fields input,.ad-photo-upload-fields select{box-sizing:border-box;min-width:0;max-width:100%;width:100%;min-height:43px;padding:9px 10px;border:1px solid #cdddcf;border-radius:9px;background:#fff;color:#1c4330;font:inherit;font-size:13px}
+.ad-photo-upload-fields input[type=file]{padding:7px}
+.ad-photo-submit{justify-self:start;background:#23583c;color:white;font-size:13px;min-height:43px}
+.ad-photo-submit:disabled,.ad-photo-publish:disabled{opacity:.5;cursor:not-allowed}
+.ad-photo-feedback{color:#375e44;font-size:13px;line-height:1.5;margin:0;min-height:1em}
+.ad-guest-curation .ad-photo-chips{flex-wrap:wrap;overflow:visible}
+.ad-guest-curation .ad-photo-chips .ad-photo-button{white-space:normal;font-size:12px;line-height:1.45}
+.ad-photo-publish{background:#d9eedf;color:#183f2b;border:1px solid #a4cbb1}
+.ad-photo-publish:hover{background:#bce0c7}
+@media(max-width:1250px){.ad-photo-upload-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.ad-photo-upload-form{padding:15px}.ad-photo-upload-fields{grid-template-columns:1fr}.ad-guest-curation .ad-photo-chips{gap:5px}.ad-guest-curation .ad-photo-chips .ad-photo-button{padding:10px 11px}}
