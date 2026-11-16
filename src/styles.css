@@ -183,3 +183,10 @@ body:not(.admin-body) .mobile-nav.app-dock a:focus-visible{outline:2px solid #C1
 @media(prefers-reduced-motion:reduce){.hero-photo .depth-layer{transition:none!important;transform:none!important}}
 
 .hero-scroll-cue{background:none;border:0;cursor:pointer;font-family:inherit;padding:0}.hero-scroll-cue:hover .scroll-cue-arrow{background:rgba(226,228,225,.15);border-color:#C1A46C}
+
+
+/* Venue management must use the full admin workspace rather than a centred narrow column. */
+.admin-layout{grid-template-columns:224px minmax(0,1fr)}
+.admin-main{min-width:0;width:100%}
+.admin-content{width:100%;max-width:none;margin:0;padding:30px clamp(16px,2.2vw,44px) 70px}
+@media(max-width:760px){.admin-layout{grid-template-columns:minmax(0,1fr)}.admin-content{padding:20px 14px 48px}}
