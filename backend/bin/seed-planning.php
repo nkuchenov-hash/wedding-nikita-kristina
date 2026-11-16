@@ -19,6 +19,14 @@ try {
         $insertTask->execute([$task['id'],$task['title'],$task['description'],$task['status'],$task['priority']]);
         $tasks+=$insertTask->rowCount();
     }
+    $insertSchedule=$db->prepare('INSERT OR IGNORE INTO schedule_items(id,title,notes,is_public,sort_order) VALUES(?,?,?,?,?)');
+    foreach($seed['schedule']??[] as $item) {
+        $insertSchedule->execute([$item['id'],$item['title'],$item['notes'],$item['is_public'],$item['sort_order']]);
+    }
+    $insertDoc=$db->prepare('INSERT OR IGNORE INTO documents(id,category,label,reference,visibility) VALUES(?,?,?,?,?)');
+    foreach($seed['documents']??[] as $item) {
+        $insertDoc->execute([$item['id'],$item['category'],$item['label'],$item['reference'],$item['visibility']]);
+    }
     $db->commit();
 } catch (\Throwable $e) {
     $db->rollBack();
