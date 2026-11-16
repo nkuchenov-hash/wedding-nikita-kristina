@@ -105,7 +105,7 @@ function row(v){
  '<td><div class="vw-date-list">'+threeDates(v)+'</div></td>'+
  '<td><span class="vw-state '+(v.visited?'vw-seen':'')+'">'+(v.visited?'● Были лично':'○ Не подтверждено')+'</span></td>'+
  '<td class="vw-money">'+(cost.value===null?'—':(cost.partial?'≈ ':'')+rub(cost.value))+'<small>'+(cost.isQuote?'Полученная смета':cost.partial?'Предварительный расчёт':'Ориентир')+(cost.value===null?'':' · '+Math.round(cost.value/state.guestCount).toLocaleString('ru-RU')+' ₽/гость')+'</small></td>'+
- '<td>'+h(v.capacity??'—')+'</td><td class="vw-score">'+(score.value===null?'Нет баллов':score.value+' баллов')+'<small>'+(score.value!==null&&score.provisional?'Предварительно · '+score.complete+'/8 критериев':'Проверено · '+score.complete+'/8 критериев')+'</small></td>'+
+ '<td>'+h(v.capacity??'—')+'</td><td class="vw-score"><a class="vw-score-link" href="#/admin/venues/'+encodeURIComponent(v.id)+'/rating" title="Открыть подробную оценку площадки">'+(score.value===null?'Нет баллов':score.value+' баллов')+'</a><small>'+(score.value!==null&&score.provisional?'Предварительно · '+score.complete+'/8 критериев':'Проверено · '+score.complete+'/8 критериев')+'</small></td>'+
  '</tr>';
 }
 function detail(v){

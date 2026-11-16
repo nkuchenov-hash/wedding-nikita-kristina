@@ -228,3 +228,6 @@
 .vdp-rating-breakdown strong{font-weight:700;color:#23513a;font-size:13px;white-space:nowrap}
 .vdp-budget-page input[data-state="guestCount"]{width:80px;min-width:75px;height:40px;padding:8px 9px;border:1px solid #bfd0c0;border-radius:8px;background:#fff;color:#234c34;font-size:14px}
 @media(max-width:630px){.vdp-rating-breakdown{grid-template-columns:1fr}}
+
+.vw-score-link{color:#28593c;font-weight:750;text-decoration:none;border-bottom:1px dotted #91ab97;text-underline-offset:4px}
+.vw-score-link:hover{color:#176b3d;border-bottom-color:currentColor}
