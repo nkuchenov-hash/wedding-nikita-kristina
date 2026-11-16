@@ -68,6 +68,7 @@ jobs:
             if test -f '$PRIVATE/wedding.sqlite3'; then php bin/backup.php; fi
             php bin/migrate.php
             php bin/seed-venues.php
+            php bin/import-venue-files.php
             php bin/seed-planning.php
             php bin/smoke.php
             test -f '$PRIVATE/wedding.sqlite3'
