@@ -1,0 +1,40 @@
+name: Prepare private wedding import key
+on:
+  push:
+    paths: ['.github/workflows/guest-import-key.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  initialize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate encryption key on REG.RU; disclose public key only
+        shell: bash
+        env:
+          HOST: ${{ secrets.WEDDING_SFTP_HOST }}
+          USERNAME: ${{ secrets.WEDDING_SFTP_USER }}
+          SSH_KEY: ${{ secrets.WEDDING_SFTP_SSH_KEY }}
+          HOST_KEYS: ${{ secrets.WEDDING_SFTP_KNOWN_HOSTS }}
+          PORT: ${{ secrets.WEDDING_SFTP_PORT }}
+        run: |
+          set -euo pipefail
+          : "${PORT:=22}"
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/guest_import_key"
+          printf '%s\n' "$HOST_KEYS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/guest_import_key" "$HOME/.ssh/known_hosts"
+          ssh -4 -i "$HOME/.ssh/guest_import_key" -p "$PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 "$USERNAME@$HOST" '
+            set -eu
+            umask 077
+            base=/var/www/u3728035/data/wedding-private
+            if test ! -f "$base/guest-import.key"; then
+              openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out "$base/guest-import.key" 2>/dev/null
+            fi
+            chmod 600 "$base/guest-import.key"
+            openssl pkey -in "$base/guest-import.key" -pubout -out "$base/guest-import.pub" 2>/dev/null
+            echo "GUEST_IMPORT_PUBLIC_KEY_BEGIN"
+            cat "$base/guest-import.pub"
+            echo "GUEST_IMPORT_PUBLIC_KEY_END"
+          '
