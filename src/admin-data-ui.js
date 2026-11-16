@@ -63,18 +63,28 @@ function fieldInput(field,label){
  if(inp.type==='number')inp.min='0';
  wrap.append(inp);return wrap;
 }
-function showForm(host,config,submit){
+function showForm(host,config,submit,defaults=null,actionLabel='Сохранить'){
  const form=$('form','ad-live-form');
- for(const [key,label]of config)form.append(fieldInput(key,label));
- const action=$('button','ad-live-button','Сохранить');action.type='submit';form.append(action);
- const status=$('p','ad-live-message');form.append(status);
- form.addEventListener('submit',async e=>{
-   e.preventDefault();action.disabled=true;
+ for(const [key,label]of config){
+   const wrap=fieldInput(key,label),input=wrap.querySelector('input');
+   if(defaults&&defaults[key]!==undefined&&defaults[key]!==null)input.value=String(defaults[key]);
+   form.append(wrap);
+ }
+ const action=$('button','ad-live-button',actionLabel);action.type='submit';form.append(action);
+ const feedback=$('p','ad-live-message');form.append(feedback);
+ form.addEventListener('submit',async event=>{
+   event.preventDefault();action.disabled=true;
    const payload={};
-   for(const [key]of config){const val=form.elements.namedItem(key)?.value?.trim()||'';
-     if(!val)continue;payload[key]=numeric.has(key)?Number(val):val;
+   for(const [key]of config){
+     const val=String(form.elements.namedItem(key)?.value||'').trim();
+     if(val===''&&defaults===null)continue;
+     payload[key]=numeric.has(key)?(val===''?0:Number(val)):val;
    }
-   try{await submit(payload);status.textContent='Сохранено в базе';form.reset();}catch(err){status.textContent=errorText(err)}
+   try{
+     await submit(payload);
+     feedback.textContent='Изменения сохранены в базе';
+     if(!defaults)form.reset();
+   }catch(err){feedback.textContent=errorText(err)}
    finally{action.disabled=false}
  });
  host.append(form);
@@ -112,15 +122,37 @@ async function collection(host,type){
  title(host,heading);
  const keys=fields[type]||[];
  const items=data.items||[];
- const records=items.map(item=>keys.map(([k])=>{
-   return item[k]??'—';
- }));
- if(records.length)table(host,keys.map(([,label])=>label),records);
- else message(host,type==='menu_options'?'Меню пока не утверждено. После согласования с площадкой добавим варианты блюд.':
-   type==='budget_lines'?'Подтверждённых платежей и договоров пока нет; ориентиры ниже не являются расходами.':
+ let editor=null;
+ async function redraw(){
+   host.replaceChildren();
+   await collection(host,type);
+   if(type==='budget_lines')budgetScenario(host);
+ }
+ function edit(item){
+   if(editor)editor.remove();
+   editor=$('section','ad-live-subsection');title(editor,'Редактирование записи');
+   showForm(editor,keys,async fields=>{
+     await call('admin/records',{method:'PATCH',body:{collection:type,id:item.id,fields}});
+     await redraw();
+   },item,'Сохранить изменения');
+   host.prepend(editor);
+   editor.scrollIntoView({behavior:'smooth',block:'nearest'});
+ }
+ const records=items.map(item=>{
+   const row=keys.map(([k])=>item[k]??'—');
+   const action=button('Изменить',()=>edit(item));
+   row.push(action);
+   return row;
+ });
+ if(records.length)table(host,[...keys.map(([,label])=>label),'Действие'],records);
+ else message(host,type==='menu_options'?'Меню пока не утверждено — блюда можно добавить после выбора площадки.':
+   type==='budget_lines'?'Фактических платежей пока нет. Предложения площадок ниже не являются расходами.':
    'Подтверждённых записей пока нет');
  const section=$('section','ad-live-subsection');title(section,'Добавить запись');
- showForm(section,keys,async row=>call('admin/records',{method:'POST',body:{collection:type,fields:row}}));
+ showForm(section,keys,async fields=>{
+   await call('admin/records',{method:'POST',body:{collection:type,fields}});
+   await redraw();
+ });
  host.append(section);
 }
 
