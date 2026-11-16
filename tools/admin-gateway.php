@@ -126,6 +126,45 @@ if (!$valid) {
     exit;
 }
 $_SESSION['last_seen'] = time();
+// All wedding media remains outside the webroot. Only authenticated organizers
+// can load a gallery photo or an uploaded guest photo (including pending).
+if(isset($_GET['media'])){
+    if(($_SERVER['REQUEST_METHOD']??'GET')!=='GET'){
+        http_response_code(405);exit;
+    }
+    $kind=(string)$_GET['media'];
+    $id=(string)($_GET['id']??'');
+    if(!in_array($kind,['gallery','guest'],true)||
+       !preg_match('/^[a-f0-9-]{36}$/',$id)){
+        http_response_code(404);exit;
+    }
+    try{
+        require_once $private.'/backend/src/core.php';
+        $db=\Wedding\db();
+        if($kind==='gallery'){
+            $entry=\Wedding\one($db,'SELECT filename FROM gallery_assets WHERE id=?',[$id]);
+            $dir=$private.'/gallery-media';
+        }else{
+            $entry=\Wedding\one($db,'SELECT filename FROM photos WHERE id=?',[$id]);
+            $dir=$private.'/uploads';
+        }
+        if(!$entry||!preg_match('/^[a-f0-9-]{36}\.jpg$/',(string)$entry['filename'])){
+            http_response_code(404);exit;
+        }
+        $path=$dir.'/'.$entry['filename'];
+        if(!is_file($path)||!is_readable($path)){
+            http_response_code(404);exit;
+        }
+        header('Content-Type: image/jpeg');
+        header('Content-Length: '.filesize($path));
+        header('Cache-Control: private, no-store');
+        readfile($path);
+    }catch(Throwable $e){
+        error_log('Wedding protected media error: '.$e->getMessage());
+        http_response_code(503);
+    }
+    exit;
+}
 // Private organizer data API shares this already-authenticated admin session.
 // Guest-facing API remains disabled and is never reachable through this gateway.
 if (isset($_GET['api'])) {
