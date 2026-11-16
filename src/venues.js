@@ -8,7 +8,7 @@
 import {VENUE_RECORDS} from './venues-data.js';
 import {renderVenueNewPage,filteredVenuePhotos,getVenueCover} from './venue-detail-ui.js';
 import {hydrateVenueFiles} from './venue-files-ui.js';
-import {estimateVenue,scoreVenue,PERSONAL_CRITERIA} from './venue-evaluation.js';
+import {estimateVenue,scoreVenue,PERSONAL_CRITERIA,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
 export const PUBLIC_VENUES = [
   {id:'vesenniy',name:'Весенний',region:'city',area:'Обводный канал',website:''},
   {id:'kraft',name:'Крафт — лофт',region:'city',area:'Санкт-Петербург'},
@@ -104,8 +104,8 @@ function row(v){
  return '<tr class="vw-row" data-id="'+h(v.id)+'"><td><div class="vw-venue-cell"><span class="vw-venue-media"><button type="button" class="vw-image-open" data-detail="'+h(v.id)+'" aria-label="Открыть площадку '+h(v.name)+'">'+image+'</button></span><div class="vw-venue-label"><button class="vw-name" data-detail="'+h(v.id)+'" type="button">'+h(v.name)+'</button><small>'+h(v.area)+' · '+(v.region==='country'?'За городом':'Город')+'</small></div></div></td>'+
  '<td><div class="vw-date-list">'+threeDates(v)+'</div></td>'+
  '<td><span class="vw-state '+(v.visited?'vw-seen':'')+'">'+(v.visited?'● Были лично':'○ Не подтверждено')+'</span></td>'+
- '<td class="vw-money">'+(cost.value===null?'—':(cost.partial?'≈ ':'')+rub(cost.value))+'<small>'+(cost.isQuote?'Полученная смета':cost.partial?'Предварительный расчёт':'Ориентир')+(cost.value===null?'':' · '+Math.round(cost.value/state.guestCount).toLocaleString('ru-RU')+' ₽/гость')+'</small></td>'+
- '<td>'+h(v.capacity??'—')+'</td><td class="vw-score"><a class="vw-score-link" href="#/admin/venues/'+encodeURIComponent(v.id)+'/rating" title="Открыть подробную оценку площадки">'+(score.value===null?'Нет баллов':score.value+' баллов')+'</a><small>'+(score.value!==null&&score.provisional?'Предварительно · '+score.complete+'/8 критериев':'Проверено · '+score.complete+'/8 критериев')+'</small></td>'+
+ '<td class="vw-money" title="'+h(cost.note||'')+'">'+(cost.value===null?'—':(cost.partial?'≈ ':'')+rub(cost.value))+'<small>'+(cost.isQuote?'Полученная смета':cost.partial?'Предварительный расчёт':'Ориентир')+(cost.value===null?'':' · '+Math.round(cost.value/state.guestCount).toLocaleString('ru-RU')+' ₽/гость в среднем')+'</small></td>'+
+ '<td>'+h(v.capacity??'—')+'</td><td class="vw-score"><a class="vw-score-link" href="#/admin/venues/'+encodeURIComponent(v.id)+'/rating" title="Открыть баллы и причины оценки">'+(score.value===null?'—':score.value+' / '+RATING_MAX)+'</a><small>'+(score.provisional?'Предварительно':'Проверено')+' · '+score.complete+'/'+RATING_CRITERIA.length+' критериев+'</small></td>'+
  '</tr>';
 }
 function detail(v){
@@ -123,7 +123,7 @@ function detail(v){
  '<div class="vw-detail-block"><h3>Ручная корректировка расчёта</h3><p>Для площадок без сметы: аренда + банкет + техника + прочие расходы + обслуживание. Точная смета имеет приоритет для соответствующего числа гостей.</p><div class="vw-input-grid">'+COSTS.map(([k,label])=>'<label>'+h(label)+'<input type="number" data-venue="'+h(v.id)+'" data-cost="'+k+'" min="0" value="'+h(v.cost[k]??'')+'" placeholder="Неизвестно"></label>').join('')+'</div></div>'+bullets('Исключения / неопределённые позиции',v.excluded);
  if(tab==='terms')content='<div class="vw-detail-grid"><div><div class="vw-detail-block"><h3>Условия и договорённости</h3><p>'+h(v.summary||'Неизвестно')+'</p></div>'+bullets('Входит',v.included)+bullets('Доплаты / ограничения',v.excluded)+'</div><div>'+bullets('Открытые вопросы',v.questions)+
  '<div class="vw-detail-block"><h3>Статус</h3><label>Лично смотрели<select data-venue="'+h(v.id)+'" data-field="visited"><option value="true" '+(v.visited?'selected':'')+'>Да</option><option value="false" '+(!v.visited?'selected':'')+'>Не подтверждено</option></select></label>'+DATE_CHOICES.map(([day,label])=>'<label>'+label+' 2027<select data-venue="'+h(v.id)+'" data-day="'+day+'">'+[['unknown','Неизвестно'],['pending','Уточняется'],['available','Свободно подтверждено'],['unavailable','Занято']].map(([k,title])=>'<option value="'+k+'" '+(dayStatus(v,day)===k?'selected':'')+'>'+title+'</option>').join('')+'</select></label>').join('')+'<label>Вместимость <input type="number" min="0" data-venue="'+h(v.id)+'" data-field="capacity" value="'+h(v.capacity??'')+'"></label><h3>Ваши заметки</h3><textarea rows="7" data-venue="'+h(v.id)+'" data-field="notes">'+h(v.notes||'')+'</textarea></div></div></div>';
- if(tab==='rating')content='<div class="vw-detail-block"><h3>Баллы площадки — максимум 100</h3><p>Подтверждённое 19 июня даёт 40 баллов, 18/20 июня — 24. Загородное расположение +5. Неизвестные значения не оцениваются.</p><div class="vw-rating-result"><strong>'+(s.value===null?'Недостаточно данных':s.value+' баллов из 100')+'</strong><span>'+s.complete+'/8 критериев известны · '+(s.provisional?'предварительно':'проверено')+'</span></div><div class="vw-breakdown">'+s.breakdown.map(x=>'<div><span>'+h(x.label)+' / '+x.maximum+'</span><strong>'+(x.value===null?'Уточнить':x.value+' баллов')+'</strong></div>').join('')+'</div><div class="vw-rating-grid">'+PERSONAL_CRITERIA.map(([key,label])=>'<label>'+h(label)+'<select data-venue="'+h(v.id)+'" data-rating="'+key+'"><option value="">Не оценивали</option>'+[1,2,3,4,5].map(n=>'<option value="'+n+'" '+(Number(v.ratings[key])===n?'selected':'')+'>'+n+' / 5</option>').join('')+'</select></label>').join('')+'</div></div>';
+ if(tab==='rating')content='<div class="vw-detail-block"><h3>Баллы площадки — максимум 100</h3><p>Подтверждённое 19 июня даёт 40 баллов, 18/20 июня — 24. Загородное расположение +10. Неизвестные значения не оцениваются.</p><div class="vw-rating-result"><strong>'+(s.value===null?'Недостаточно данных':s.value+' баллов из '+RATING_MAX)+'</strong><span>'+s.complete+'/'+RATING_CRITERIA.length+' критериев известны · '+(s.provisional?'предварительно':'проверено')+'</span></div><div class="vw-breakdown">'+s.breakdown.map(x=>'<div><span>'+h(x.label)+' / '+x.maximum+'</span><strong>'+(x.value===null?'Уточнить':x.value+' баллов')+'</strong></div>').join('')+'</div><div class="vw-rating-grid">'+PERSONAL_CRITERIA.map(([key,label])=>'<label>'+h(label)+'<select data-venue="'+h(v.id)+'" data-rating="'+key+'"><option value="">Не оценивали</option>'+[1,2,3,4,5].map(n=>'<option value="'+n+'" '+(Number(v.ratings[key])===n?'selected':'')+'>'+n+' / 5</option>').join('')+'</select></label>').join('')+'</div></div>';
  return '<section class="vw-detail"><header class="vw-detail-head"><div><span class="vw-kicker">'+(v.region==='country'?'ЗАГОРОДНАЯ':'ГОРОДСКАЯ')+' ПЛОЩАДКА</span><h2>'+h(v.name)+'</h2><p>'+h(v.area)+' · '+h(status(v))+'</p></div><button class="vw-close" type="button" data-close aria-label="Закрыть">×</button></header>'+
  '<div class="vw-detail-links">'+external(v)+'</div><nav class="vw-detail-tabs">'+tabs.map(([key,title])=>'<button type="button" data-detail-tab="'+key+'" class="'+(key===tab?'selected':'')+'">'+title+'</button>').join('')+'</nav>'+
  '<div class="vw-tab-content">'+content+'</div></section>';
@@ -151,6 +151,17 @@ function sortVenues(rows){
  });
  return rows;
 }
+function visibleVenues(all){
+ return sortVenues(all.filter(v=>{
+  const e=estimate(v);
+  return (ui.kind==='all'||v.region===ui.kind)
+    &&(ui.date==='all'||(ui.chosenDay==='all'?DATE_CHOICES.some(([d])=>dayStatus(v,d)===ui.date):dayStatus(v,ui.chosenDay)===ui.date))
+    &&(ui.visit==='all'||(ui.visit==='yes')===!!v.visited)
+    &&(ui.budget==='all'||e.value!==null&&e.value<=Number(ui.budget))
+    &&(ui.capacity==='all'||v.capacity>=Number(ui.capacity))
+    &&(v.name+' '+v.area).toLowerCase().includes(ui.query.toLowerCase());
+ }));
+}
 function columnHeading(key,label,filters=''){
  const active=ui.sort===key,arrow=!active?'↕':ui.sortDir==='asc'?'↑':'↓';
  return '<th scope="col" aria-sort="'+(active?(ui.sortDir==='asc'?'ascending':'descending'):'none')+'"><button type="button" class="vw-th-sort" data-sort-col="'+key+'" aria-label="Сортировать: '+h(label)+'; '+(active?(ui.sortDir==='asc'?'сейчас по возрастанию':'сейчас по убыванию'):'нажмите для сортировки')+'"><span>'+h(label)+'</span><span class="vw-sort-arrow'+(active?' active':'')+'" aria-hidden="true">'+arrow+'</span></button>'+filters+'</th>';
@@ -164,14 +175,13 @@ export function renderVenueAdmin(){
  const all=PUBLIC_VENUES.map(get);
  const visited=all.filter(v=>v.visited).length;
  const full=all.filter(v=>weighted(v).value!==null&&!weighted(v).provisional).length;
- let list=all.filter(v=>{const e=estimate(v);return (ui.kind==='all'||v.region===ui.kind)&&(ui.date==='all'||(ui.chosenDay==='all'?DATE_CHOICES.some(([d])=>dayStatus(v,d)===ui.date):dayStatus(v,ui.chosenDay)===ui.date))&&(ui.visit==='all'||(ui.visit==='yes')===!!v.visited)&&(ui.budget==='all'||e.value!==null&&e.value<=Number(ui.budget))&&(ui.capacity==='all'||v.capacity>=Number(ui.capacity))&&(v.name+' '+v.area).toLowerCase().includes(ui.query.toLowerCase())});
- sortVenues(list);
+ const list=visibleVenues(all);
  const detailVenue=all.find(v=>v.id===ui.expanded);
  if(match&&detailVenue)return '<div class="vw-page" data-venues-page>'+renderVenueNewPage(detailVenue,{guests:state.guestCount,ui,estimate,extraTotal,dayStatus,dayText,weighted})+'</div>';
  return '<div class="vw-page" data-venues-page><div class="dashboard-heading vw-head"><div><div class="eyebrow">ОРГАНИЗАЦИЯ / ВЫБОР МЕСТА</div><h1>Сравнение площадок</h1><p>Регистрация 17 июня · торжество желательно 19 июня 2027 · город и загород</p></div><div class="vw-count"><strong>'+all.length+'</strong><span>площадок</span></div></div>'+
  '<div class="vw-alert"><strong>Даты свадьбы:</strong> 19 июня — предпочтительно, но 18 и 20 июня также рассматриваем. Занятость 19-го не исключает площадку: проверяйте все три даты и условия каждого предложения. «Весенний» и «Сезоны в парке» сообщили, что 19-е занято. Неизвестный статус не означает свободную дату.</div>'+
  '<div class="vw-stats"><div><strong>'+all.length+'</strong><span>На рассмотрении</span></div><div><strong>'+visited+'</strong><span>Просмотрены</span></div><div><strong>'+full+'</strong><span>С полной оценкой</span></div><div><strong>'+all.filter(v=>DATE_CHOICES.some(([d])=>dayStatus(v,d)==='available')).length+'</strong><span>Подтверждённая дата (18/19/20)</span></div></div>'+
- '<div class="vw-panel"><div class="vw-panel-title vw-table-panel-title"><div><h2>Все площадки</h2><span>'+list.length+' из '+all.length+' · нажмите на заголовок столбца для сортировки</span></div><div class="vw-table-tools"><label class="vw-compact-control">Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+state.guestCount+'" aria-label="Число гостей для пересчёта смет"></label><input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Поиск по названию / району" aria-label="Поиск площадки (Enter)"><button type="button" data-clear-filters>Сбросить фильтры</button></div></div><div class="vw-scroll"><table class="vw-table vw-table-sortable"><thead><tr>'+
+ '<div class="vw-panel"><div class="vw-panel-title vw-table-panel-title"><div><h2>Все площадки</h2><span><b data-venues-visible>'+list.length+'</b> из '+all.length+' · нажмите на заголовок столбца для сортировки</span></div><div class="vw-table-tools"><label class="vw-compact-control">Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+state.guestCount+'" aria-label="Число гостей для пересчёта смет"></label><input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Поиск по названию / району" aria-label="Поиск площадки (Enter)"><button type="button" data-clear-filters>Сбросить фильтры</button></div></div><div class="vw-scroll"><table class="vw-table vw-table-sortable"><thead><tr>'+
  columnHeading('name','Площадка','<div class="vw-head-filter-row">'+headerSelect('kind','Расположение',[['all','Все районы'],['city','Город'],['country','За городом']])+'</div>')+
  columnHeading('date','18 / 19 / 20 июня','<div class="vw-head-filter-row">'+headerSelect('chosenDay','День свадьбы',[['all','Все 3 даты'],['19','19 июня'],['18','18 июня'],['20','20 июня']])+headerSelect('date','Статус даты',[['all','Любой статус'],['available','Свободно'],['unavailable','Занято'],['pending','Уточняется'],['unknown','Нет ответа']])+'</div>')+
  columnHeading('visit','Осмотр',headerSelect('visit','Фильтр по осмотру',[['all','Все'],['yes','Были лично'],['no','Не подтверждено']]))+
@@ -236,6 +246,20 @@ export function activateVenueAdmin(root){
   else if(target.dataset.detail){location.hash='#/admin/venues/'+encodeURIComponent(target.dataset.detail);}else if(target.dataset.detailTab){location.hash='#/admin/venues/'+encodeURIComponent(ui.expanded)+'/'+target.dataset.detailTab;}
   else if(target.hasAttribute('data-close')){location.hash='#/admin/venues';}
   else if(target.dataset.uiToggle){ui.onlyVisited=!ui.onlyVisited;redraw(root);}
+ });
+ // Guest count updates budgets and scores while typing without dropping focus.
+ root.addEventListener('input',event=>{
+  const t=event.target;
+  if(t.dataset.state!=='guestCount')return;
+  const count=Number(t.value);
+  if(!Number.isInteger(count)||count<1||count>300||count===state.guestCount)return;
+  state.guestCount=count;save();
+  const tbody=root.querySelector('.vw-table-sortable tbody');
+  if(!tbody)return;
+  const rows=visibleVenues(PUBLIC_VENUES.map(get));
+  tbody.innerHTML=rows.map(row).join('');
+  const visible=root.querySelector('[data-venues-visible]');
+  if(visible)visible.textContent=String(rows.length);
  });
  root.addEventListener('change',event=>{
   const t=event.target;
