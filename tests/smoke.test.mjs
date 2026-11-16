@@ -198,3 +198,24 @@ test('wedding venue scoring is traceable and stays tentative for missing evidenc
  const unknown={...venue,dateAvailability:{'19':'unknown','18':'unknown','20':'unknown'}};
  assert.equal(scoreVenue(unknown,80,eighty).breakdown.find(x=>x.key==='date').value,null);
 });
+
+
+test('real venue quotes adjust to guest count without converting unsupported extras into confirmed rates',async()=>{
+ const {VENUE_RECORDS}=await import('../src/venues-data.js');
+ const {estimateVenue,scoreVenue}=await import('../src/venue-evaluation.js');
+ const vinity={id:'vinity',region:'city',ratings:{},...(VENUE_RECORDS.vinity||{})};
+ const v80=estimateVenue(vinity,80),v90=estimateVenue(vinity,90);
+ assert.equal(v80.value,863500);
+ assert.ok(v90.value>v80.value);
+ assert.equal(v90.partial,true);
+ assert.match(v90.note,/предварительн|пересчёт/i);
+ const royal={id:'royal',region:'city',ratings:{},...(VENUE_RECORDS.royal||{})};
+ const r80=estimateVenue(royal,80),r90=estimateVenue(royal,90),r100=estimateVenue(royal,100);
+ assert.equal(r80.value,852165);
+ assert.equal(r100.value,1079118);
+ assert.ok(r90.value>r80.value&&r90.value<r100.value);
+ assert.equal(r90.partial,true);
+ const rentOnly={id:'k2',region:'city',ratings:{},capacity:200,cost:{rent:420000},dateAvailability:{'19':'unknown'}};
+ const rated=scoreVenue(rentOnly,80,estimateVenue(rentOnly,80));
+ assert.equal(rated.breakdown.find(x=>x.key==='cost').value,null);
+});
