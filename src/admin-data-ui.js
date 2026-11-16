@@ -490,8 +490,9 @@ export async function activateAdminData(root,section){
    state.csrf=session.csrf;state.role=session.role;
    if(session.role!=='admin'){login(host,section);return}
    await renderSection(host,section);
-   // Switch to live records only after the authenticated request succeeds.
-   if(section!=='venues')for(const el of [...destination.children])if(el!==host)el.hidden=true;
+   // Remove the old placeholder rather than only marking it hidden:
+   // authored CSS may override HTML's hidden attribute, duplicating dashboards.
+   if(section!=='venues')destination.replaceChildren(host);
  }catch(err){
    // Live API is not enabled on this release. Leave the existing authenticated admin tools visible.
    host.remove();
