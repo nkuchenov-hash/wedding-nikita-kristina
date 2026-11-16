@@ -5,6 +5,7 @@ import {VENUE_RECORDS} from './venues-data.js';
 const API='/admin/index.php?api=';
 const $=(tag,cls='',text='')=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=String(text);return el};
 const state={csrf:'',role:'anonymous',busy:false};
+let overviewTimer=null;
 const fields={
   venues:[['name','Площадка'],['area','Район'],['address','Адрес'],['capacity_max','Вместимость'],['quoted_total_rub','Стоимость, ₽'],['notes','Примечания']],
   vendors:[['category','Категория'],['name','Подрядчик'],['contact','Контакт'],['website','Сайт'],['estimate_rub','Оценка, ₽'],['notes','Примечания']],
@@ -44,19 +45,55 @@ function table(parent,headers,rows){
  table.append(tbody);holder.append(table);parent.append(holder);
 }
 async function overview(host){
- const data=await call('admin/overview');
- title(host,'Реальные данные подготовки','Сведения сохранены в закрытой базе REG.RU');
- const metrics=$('div','ad-live-metrics');host.append(metrics);
- metric(metrics,'Гостей',Number(data.guests?.total||0));
- metric(metrics,'Зарегистрировались',Number(data.guests?.registered||0));
- const yes=data.rsvp?.find(x=>x.attendance==='yes')?.total||0;
- metric(metrics,'Ответили «Да»',yes);
- metric(metrics,'Фото на проверке',data.photos_pending||0);
- metric(metrics,'Бюджет (план)',Number(data.budget?.planned||0).toLocaleString('ru-RU')+' ₽');
- metric(metrics,'Задачи',Number(data.tasks?.open||0));
- const p=$('p','ad-live-muted','Личные данные и ответы гостей хранятся только на сервере, а не в GitHub.');
- host.append(p);
+ title(host,'Участие гостей','Данные из закрытой базы REG.RU, автоматическое обновление каждые 15 секунд');
+ const pulse=$('p','ad-live-updated','');
+ const pipeline=$('div','ad-guest-pipeline');pipeline.setAttribute('aria-label','Этапы подтверждения участия');
+ host.append(pipeline,pulse);
+ const cards=$('div','ad-live-metrics');host.append(cards);
+ const detail=$('section','ad-guest-overview-detail');host.append(detail);
+ const steps=[
+   ['total','В списке'],
+   ['prepared','Ссылки подготовлены'],
+   ['sent','Приглашения отправлены'],
+   ['opened','Открыли приглашение'],
+   ['registered','Заполнили анкету'],
+   ['confirmed','Подтвердили участие']
+ ];
+ const load=async()=>{
+   if(!host.isConnected)return;
+   const data=await call('admin/overview');
+   const guests=data.guests||{};
+   pipeline.replaceChildren();
+   for(const [key,label]of steps){
+     const step=$('div','ad-guest-pipeline-step');
+     step.append($('strong','',Number(guests[key]||0).toLocaleString('ru-RU')),$('span','',label));
+     pipeline.append(step);
+   }
+   cards.replaceChildren();
+   const responded=Number(guests.responded||0),total=Number(guests.total||0);
+   metric(cards,'Ответили',responded);
+   metric(cards,'Не ответили',Math.max(0,total-responded));
+   metric(cards,'Отказались',Number(guests.declined||0));
+   metric(cards,'Пока не решили',Number(guests.tentative||0));
+   metric(cards,'Разрешили публикацию',Number(guests.public_visible||0));
+   metric(cards,'Бюджет (план)',Number(data.budget?.planned||0).toLocaleString('ru-RU')+' ₽');
+   metric(cards,'Открытые задачи',Number(data.tasks?.open||0));
+   detail.replaceChildren();
+   const explanation=$('p','ad-guest-privacy-note',
+     'Подтверждённый гость = заполненная анкета и ответ «Да, буду». В гостевом списке показываются только подтвердившие участие и отдельно разрешившие публикацию профиля. Открытие ссылки не считается регистрацией.');
+   const row=$('div','ad-guest-overview-links');
+   row.append(button('Перейти к гостям',()=>{location.hash='#/admin/guests'}));
+   detail.append(explanation,row);
+   pulse.textContent='Последнее обновление: '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ };
+ await load();
+ if(overviewTimer)clearInterval(overviewTimer);
+ overviewTimer=setInterval(()=>{
+   if(!host.isConnected){clearInterval(overviewTimer);overviewTimer=null;return}
+   if(document.visibilityState==='visible')load().catch(()=>{pulse.textContent='Связь с базой прервана — данные показаны на момент последнего обновления';});
+ },15000);
 }
+
 function fieldInput(field,label){
  const wrap=$('label','ad-live-field');wrap.append($('span','',label));
  const inp=$('input');inp.name=field;inp.placeholder=label;inp.type=numeric.has(field)?'number':'text';
@@ -347,6 +384,7 @@ function login(host,section){
  });
 }
 export async function activateAdminData(root,section){
+ if(overviewTimer){clearInterval(overviewTimer);overviewTimer=null;}
  const destination=root.querySelector('.admin-content');if(!destination)return;
  const supported=['overview','venues','budget','tasks','schedule','moderation','menu'];
  if(!supported.includes(section))return;
@@ -358,7 +396,7 @@ export async function activateAdminData(root,section){
    if(session.role!=='admin'){login(host,section);return}
    await renderSection(host,section);
    // Switch to live records only after the authenticated request succeeds.
-   if(!['overview','venues'].includes(section))for(const el of [...destination.children])if(el!==host)el.hidden=true;
+   if(section!=='venues')for(const el of [...destination.children])if(el!==host)el.hidden=true;
  }catch(err){
    // Live API is not enabled on this release. Leave the existing authenticated admin tools visible.
    host.remove();
