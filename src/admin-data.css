@@ -24,3 +24,40 @@
 .ad-live-invite p{font-size:12px;margin:0 0 6px}
 .ad-live-token{display:block;overflow-wrap:anywhere;padding:10px;font:11px ui-monospace,monospace}
 @media(max-width:540px){.ad-live-panel{padding:16px 14px}.ad-live-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Three-day wedding programme — 17–19 June 2027 */
+.ad-wedding-days,.ad-program-days{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:16px;margin:24px 0}
+.ad-day-card,.ad-program-card{min-width:0;background:#fff;border:1px solid #d9e4d9;border-radius:18px;padding:21px 23px;box-shadow:0 3px 18px #24462e0c}
+.ad-day-card{display:grid;grid-template-columns:44px minmax(0,1fr);column-gap:14px;align-content:start}
+.ad-day-number,.ad-program-card-number{width:38px;height:38px;display:grid;place-items:center;background:#eaf2e9;color:#376648;border-radius:11px;font-size:13px;font-weight:750}
+.ad-day-date,.ad-program-card-date{display:flex;flex-direction:column;gap:3px}
+.ad-day-date span,.ad-program-card-date span{font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:#829488}
+.ad-day-date strong,.ad-program-card-date strong{font-size:21px;line-height:1.25;letter-spacing:-.025em;color:#244c34}
+.ad-day-content{grid-column:1/-1;margin-top:24px}
+.ad-day-content h2{font-size:19px;line-height:1.3;color:#244e35;margin:0 0 9px}
+.ad-day-content p{font-size:13px;line-height:1.55;color:#587360;margin:0 0 20px}
+.ad-day-facts{display:flex;gap:8px;flex-wrap:wrap}
+.ad-day-facts span{font-size:12px;font-weight:650;background:#edf4ec;padding:7px 9px;color:#315840;border-radius:7px}
+.ad-program-card-head{display:flex;align-items:center;gap:12px;padding:2px 0 20px;border-bottom:1px solid #e7eee7}
+.ad-program-event{display:grid;grid-template-columns:95px minmax(0,1fr);gap:14px;align-items:start;padding:22px 0;border-bottom:1px solid #ecf0eb}
+.ad-program-event .ad-live-button{grid-column:2;justify-self:start;min-height:31px;background:#eef5ed;color:#2d6140;font-size:11px;padding:7px 10px}
+.ad-program-time{font-size:12px;line-height:1.5;font-weight:700;color:#49745a}
+.ad-program-event-body h3{margin:0 0 6px;font-size:16px;line-height:1.35;color:#264b36}
+.ad-program-event-body p{font-size:13px;color:#546d5b;margin:0}
+.ad-program-event-body small{display:block;font-size:11px;line-height:1.55;color:#869788;margin-top:6px}
+.ad-program-empty{font-size:13px;color:#7a8e7f;line-height:1.5;margin:22px 0}
+.ad-program-add{display:inline-flex;min-height:38px;margin-top:18px;align-items:center;justify-content:center;border:1px solid #cfdfd1;border-radius:10px;background:#f4f8f4;color:#27583a;padding:9px 12px;cursor:pointer;font-weight:650;font-size:12px}
+.ad-program-add:hover,.ad-program-secondary:hover{background:#e4f0e6}
+.ad-program-editor{margin:24px 0;background:white;border:1px solid #cddfce;border-radius:16px;padding:22px}
+.ad-program-editor h2{font-size:19px;margin:0 0 16px}
+.ad-program-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.ad-program-form .ad-live-field{min-width:0}
+.ad-program-form .ad-live-field input,.ad-program-form .ad-live-field select{width:100%;min-height:41px;border:1px solid #d0dfd3;border-radius:9px;padding:9px;font-size:13px;background:#fff;color:#254532}
+.ad-program-actions{display:flex;gap:8px;grid-column:1/-1}
+.ad-program-form>.ad-live-message{grid-column:1/-1}
+.ad-program-secondary{padding:9px 15px;border:1px solid #cfdfd1;background:#f6faf7;border-radius:9px;font-weight:650;cursor:pointer;color:#345b41}
+.ad-program-other{margin-top:20px}
+.ad-program-other h3{margin:0;font-size:16px}
+.ad-program-other .ad-program-event{display:flex;align-items:center;justify-content:space-between}
+@media(max-width:1100px){.ad-wedding-days,.ad-program-days{grid-template-columns:1fr}}
+@media(max-width:620px){.ad-day-card,.ad-program-card{padding:17px}.ad-program-form{grid-template-columns:1fr}.ad-program-event{grid-template-columns:90px minmax(0,1fr)}}
