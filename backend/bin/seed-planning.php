@@ -27,6 +27,10 @@ try {
     foreach($seed['documents']??[] as $item) {
         $insertDoc->execute([$item['id'],$item['category'],$item['label'],$item['reference'],$item['visibility']]);
     }
+    $insertSetting=$db->prepare('INSERT OR IGNORE INTO event_settings(key,value_json) VALUES(?,?)');
+    foreach($seed['event_settings']??[] as $key=>$value){
+        $insertSetting->execute([$key,json_encode($value,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR)]);
+    }
     $db->commit();
 } catch (\Throwable $e) {
     $db->rollBack();
