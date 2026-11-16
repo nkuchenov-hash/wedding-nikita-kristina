@@ -220,5 +220,16 @@
       "reference": "https://docs.google.com/document/d/1qBdkL9J0aQtxTuw0vsSs712MXCIr5YaebYmHXFuAXsU/edit",
       "visibility": "admin"
     }
-  ]
+  ],
+  "event_settings": {
+    "event_date": "2027-06-19",
+    "date_confirmed": false,
+    "place_confirmed": false,
+    "public_notes": "Дата 19 июня 2027 года рассматривается как предпочтительная. Окончательные дата и место ещё не подтверждены.",
+    "guest_rsvp_open": false,
+    "menu_open": false,
+    "directory_open": false,
+    "photos_open": false,
+    "stories_open": false
+  }
 }
