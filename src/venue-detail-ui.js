@@ -107,7 +107,9 @@ const getCost=v=>{
 };
 // The value the organizer sees is also its editor. Never render a second edit-only card.
 function inlineValue(key,value,{label='',kind='text',className='',empty='Нажмите, чтобы добавить'}={}){
- const show=value===null||value===undefined||String(value).trim()===''?empty:String(value);
+ const missing=value===null||value===undefined||String(value).trim()==='';
+ const numeric=Number(value);
+ const show=missing?empty:kind==='number'&&Number.isFinite(numeric)&&/^(?:cost:|extra:)/.test(key)?(key==='cost:service'?numeric.toLocaleString('ru-RU')+'%':money(numeric)):String(value);
  return '<button type="button" class="vdp-inline '+className+'" data-venue-inline="'+h(key)+'" data-inline-kind="'+h(kind)+'" title="Изменить: '+h(label||key)+'" aria-label="Редактировать: '+h(label||key)+'"><span class="vdp-inline-text">'+h(show)+'</span><span class="vdp-inline-pencil" aria-hidden="true">✎</span></button>';
 }
 const lineItems=items=>(items||[]).map(item=>'• '+item).join('\n');
@@ -179,7 +181,7 @@ function infoPane(v,ctx){
  const p=getCost(v);
  return '<div class="vdp-info-grid"><section class="vdp-pane vdp-live-terms"><h2>Условия площадки</h2>'+
  '<p class="vdp-inline-label">Описание</p>'+inlineValue('summary',v.summary,{label:'Условия площадки',kind:'multiline',className:'vdp-inline-block'})+
- (p.summary?'<p class="vdp-source-note"><strong>Из предложения площадки:</strong> '+h(p.summary)+'</p>':'')+
+ '<p class="vdp-inline-label">Пояснение по стоимости из предложения</p>'+inlineValue('costSummary',v.costSummary??p.summary,{label:'Пояснение по смете',kind:'multiline',className:'vdp-inline-block',empty:'Добавить пояснение по стоимости'})+
  '<h3>Даты 18–20 июня</h3>'+dates(v,ctx)+
  '<h3>Вместимость и формат</h3><div class="vdp-inline-facts"><div><small>Максимум гостей</small>'+inlineValue('capacity',v.capacity,{label:'Вместимость',kind:'number'})+'</div><div><small>Формат и рассадка</small>'+inlineValue('capacityNote',v.capacityNote,{label:'Формат и рассадка',kind:'multiline'})+'</div></div>'+
  '<h3>Личный осмотр</h3>'+inlineValue('visited',v.visited?'Да':'Не подтверждено',{label:'Осмотр',kind:'visited'})+
