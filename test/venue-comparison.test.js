@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {estimateVenue, scoreVenue, RATING_CRITERIA, RATING_MAX} from '../src/venue-evaluation.js';
 
 const venue=(overrides={})=>({
- id:'venue-score-test', region:'country',capacity:100,
+ id:'venue-score-test', region:'city',capacity:100,
  dateAvailability:{'18':'unknown','19':'available','20':'unknown'},
  cost:{rent:100000,menu:5000,service:10},
  ratings:{look:5,comfort:5,food:5,travel:5,terrace:5,terms:5},
@@ -16,7 +16,7 @@ test('all criteria sum to 100 with June 19 the highest-weighted criterion',()=>{
  assert.equal(RATING_CRITERIA.reduce((s,[,,p])=>s+p,0),100);
  assert.equal(RATING_CRITERIA[0][0],'date');
  assert.equal(RATING_CRITERIA[0][2],40);
- assert.equal(RATING_CRITERIA.find(([key])=>key==='country')[2],10);
+ assert.equal(RATING_CRITERIA.find(([key])=>key==='city')[2],10);
 });
 
 test('June 19 and all verified criteria yield 100 points',()=>{
@@ -26,7 +26,14 @@ test('June 19 and all verified criteria yield 100 points',()=>{
  assert.equal(score.complete,RATING_CRITERIA.length);
  assert.equal(score.provisional,true); // Formula without confirmed quote is still an estimate.
  assert.equal(score.breakdown.find(x=>x.key==='date').value,40);
- assert.equal(score.breakdown.find(x=>x.key==='country').value,10);
+ assert.equal(score.breakdown.find(x=>x.key==='city').value,10);
+});
+
+test('country venues earn no city bonus even when other scores are perfect',()=>{
+ const v=venue({region:'country'});
+ const score=scoreVenue(v,100);
+ assert.equal(score.breakdown.find(x=>x.key==='city').value,0);
+ assert.equal(score.value,90);
 });
 
 test('alternate date yields 24 date points, not 40',()=>{
