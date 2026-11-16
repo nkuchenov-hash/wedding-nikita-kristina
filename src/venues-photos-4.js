@@ -514,5 +514,163 @@ export const VENUE_PHOTOS_4 = {
       "section": "Залы",
       "folder": "1o2Dt8m63ODangnL1QkSxb4hU9EzD0f8I"
     }
+  ],
+  "zarenkov-gallery": [
+    {
+      "id": "1Z9gUeIP4V3iNa3QPCuGw08YjRvknjWSW",
+      "name": "IMG_20261115_115840_888.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1UnMejhb-VgJADvse882sQvQLTDU4LBGD",
+      "name": "IMG_20261115_115847_483.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1c2HJxSINJ3Nk92fj57RfH3x3hTPhILLg",
+      "name": "IMG_20261115_115856_095.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1nwSdKZQRIOebPVTkdCVVQ2EfBta6UKrr",
+      "name": "IMG_20261115_120008_064.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1TRVejXilPBSo77_teXI9XOgg0bV18PIl",
+      "name": "IMG_20261115_120025_075.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1v7SBXUoCGXDuea3SDqXFzI7C6i5y_IAX",
+      "name": "IMG_20261115_120104_174.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1gDgHDAXk9KPg1_MmXFnHgRy1N3LSJZ0u",
+      "name": "IMG_20261115_120105_631.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1p6zsMPgdUB3GbEylTIL6_HrZh0FkjxAn",
+      "name": "IMG_20261115_120127_711.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1CxrZa35KtnVK6S9KJLiMTd38DGbjIFRN",
+      "name": "IMG_20261115_120216_428.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1Zp4IiAjrAtsYvsNJpLtdgNoKXo6n13-Y",
+      "name": "IMG_20261115_120306_589.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1sKwEt3tX3tC5IyS_YDN9IeAXpWUVaN02",
+      "name": "IMG_20261115_120346_874.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1j_ccH5g7nv7nWmh7uLTlq2HHwoUsB69O",
+      "name": "IMG_20261115_120358_882.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1GKhRlrM3oXyMyfBzzSMID_zqJK9qXXxE",
+      "name": "IMG_20261115_120400_954.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1IrYe9fgnarjtl95BIueLdiBJ-dmSfRKW",
+      "name": "IMG_20261115_120402_149.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1X9zgxBShtg4BMBqJP3O6ruxSrplelfz8",
+      "name": "IMG_20261115_120451_157.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1aTZL-A-Qu9pGCbEX8HkYTMs_54SAmb6F",
+      "name": "IMG_20261115_120531_860.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "12prozXRzXX8Ea7IYZKy5pnoswSiiUuI4",
+      "name": "IMG_20261115_120709_459.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1ELS7Q5eskZmzGGaEv5vEYHJ5VL9Moo7W",
+      "name": "IMG_20261115_120714_376.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1H3-p4aBNrYZiD6uuyYs-G5vMoLSs80SN",
+      "name": "IMG_20261115_120717_700.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1xlgbOZUvXPv27pLMFrBvb9ddwVk_WNKK",
+      "name": "IMG_20261115_120727_663.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "10rCeUwOknJnWynDPpFS0p8mlA_d-DbSh",
+      "name": "IMG_20261115_120755_505.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1VLysrsvMVd1epwQFBM87bF0IkxPrp7M1",
+      "name": "IMG_20261115_120758_173.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1LeHRa6h4Y93_Y8uA_hCf_S05ZFATRO6I",
+      "name": "IMG_20261115_120801_395.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1N6jOy3EVn_A0ZVqGcMexNUkcKvvqc0dJ",
+      "name": "IMG_20261115_121038_962.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1ikVxgjrDWbMirubIw1Znz-drIYIq32g3",
+      "name": "IMG_20261115_121040_107.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    },
+    {
+      "id": "1Qclblcla6P5PB9hUgMpIXPW_rB_Iplk3",
+      "name": "IMG_20261115_122111_906.jpg",
+      "section": "Фото площадки",
+      "folder": "1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6"
+    }
   ]
 };
