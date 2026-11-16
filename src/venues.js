@@ -146,6 +146,11 @@ async function initVenueDatabase(root){
   if(status)status.textContent='Не удалось подключиться к сохранению: '+venueDb.error;
  }finally{venueDb.loading=false}
 }
+let venuePersistQueue=Promise.resolve();
+function queueVenuePersist(id){
+ venuePersistQueue=venuePersistQueue.catch(()=>{}).then(()=>persistVenue(id));
+ return venuePersistQueue;
+}
 async function persistVenue(id){
  if(!venueDb.ready)throw new Error(venueDb.error||'Связь с базой не установлена. Изменения не отправлены на сервер');
  const current=PUBLIC_VENUES.find(v=>v.id===id);
@@ -347,12 +352,20 @@ function redraw(root){
  if(typeof window!=='undefined'&&Number.isFinite(y))window.scrollTo({top:y,behavior:'instant'});
 }
 export function activateVenueAdmin(root){
- if(root.dataset.venuesReady==='yes'){redraw(root);return;}
+ if(root.dataset.venuesReady==='yes'){redraw(root);initVenueDatabase(root);return;}
  root.dataset.venuesReady='yes';
  redraw(root);
+ initVenueDatabase(root);
  root.addEventListener('click',event=>{
-  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close]');if(!target)return;
-  if(target.hasAttribute('data-photo-close')){ui.photoLightbox=false;redraw(root);}
+  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-add-venue-quote],[data-remove-venue-quote]');if(!target)return;
+  if(target.hasAttribute('data-add-venue-quote')){
+    const holder=root.querySelector('[data-venue-edit-quotes]');
+    if(holder)holder.insertAdjacentHTML('beforeend',renderVenueQuoteEditorRow({}));
+   }
+   else if(target.hasAttribute('data-remove-venue-quote')){
+    target.closest('[data-venue-quote-row]')?.remove();
+   }
+   else if(target.hasAttribute('data-photo-close')){ui.photoLightbox=false;redraw(root);}
   else if(target.dataset.photoSection!==undefined){ui.photoSection=target.dataset.photoSection;ui.photoIndex=0;ui.photoLightbox=false;redraw(root);}
   else if(target.dataset.photoView!==undefined){ui.photoView=target.dataset.photoView;ui.photoIndex=0;ui.photoLightbox=false;redraw(root);}
   else if(target.dataset.photoOpen!==undefined){
@@ -385,6 +398,33 @@ export function activateVenueAdmin(root){
   const visible=root.querySelector('[data-venues-visible]');
   if(visible)visible.textContent=String(rows.length);
  });
+ // Save the entire edited venue through the existing authenticated SQLite-backed records API.
+ root.addEventListener('submit',async event=>{
+  const form=event.target.closest('[data-venue-edit]');
+  if(!form)return;
+  event.preventDefault();
+  const feedback=form.querySelector('[data-venue-edit-feedback]');
+  const button=form.querySelector('.vdp-editor-save');
+  if(!feedback||!button)return;
+  button.disabled=true;
+  feedback.textContent='Проверка полей и сохранение…';
+  let changed=null,previous=null;
+  try{
+   changed=collectVenueEdit(form);
+   if(!venueDb.ready)throw new Error(venueDb.error||'Сервер недоступен — правки не сохранены');
+   previous=state.venues[changed.id];
+   state.venues[changed.id]=changed.updates;
+   await queueVenuePersist(changed.id);
+   save();
+   feedback.textContent='Сохранено в базе. Таблица, рейтинг и смета обновлены.';
+   location.hash='#/admin/venues/'+encodeURIComponent(changed.id);
+   redraw(root);
+  }catch(error){
+   if(changed){if(previous===undefined)delete state.venues[changed.id];else state.venues[changed.id]=previous}
+   feedback.textContent='Не сохранено: '+error.message;
+   feedback.setAttribute('role','alert');
+  }finally{button.disabled=false}
+ });
  root.addEventListener('change',event=>{
   const t=event.target;
   if(t.hasAttribute('data-photo-sort')){ui.photoSort=t.value;ui.photoIndex=0;redraw(root);return;}
@@ -400,6 +440,16 @@ export function activateVenueAdmin(root){
     else if(t.dataset.extra){patch(id,'extras',{...(old.extras||{}),[t.dataset.extra]:numbers(t.value)});}
     else if(t.dataset.rating){patch(id,'ratings',{...old.ratings,[t.dataset.rating]:t.value?Number(t.value):null});}
     redraw(root);
+    queueVenuePersist(id).catch(error=>{
+      const card=root.querySelector('.vdp-page');
+      if(card){
+        const notice=document.createElement('p');
+        notice.className='vdp-editor-feedback vdp-sync-error';
+        notice.setAttribute('role','alert');
+        notice.textContent='Изменение осталось в этом браузере, но не сохранено в общей базе: '+error.message;
+        card.prepend(notice);
+      }
+    });
   }
  });
  document.addEventListener('keydown',event=>{
