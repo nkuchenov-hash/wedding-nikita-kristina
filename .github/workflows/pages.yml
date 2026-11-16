@@ -125,7 +125,7 @@ jobs:
             echo "::error::REG.RU admin/index.php checksum mismatch."
             exit 1
           fi
-          for asset in admin-app.js admin-data-ui.js venue-detail-ui.js; do
+          for asset in admin-app.js admin-data-ui.js admin-guests.js admin-guests.css admin-photos.js admin-documents.js venue-detail-ui.js; do
             local_asset_sha=$(sha256sum "_admin-private/src/$asset" | awk '{print $1}')
             remote_asset_sha=$(ssh $SSH_OPTS "$USERNAME@$HOST" "sha256sum '/var/www/u3728035/data/wedding-private/admin-release/src/$asset'" | awk '{print $1}')
             if [[ "$local_asset_sha" != "$remote_asset_sha" ]]; then
