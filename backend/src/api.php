@@ -194,6 +194,25 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         audit($db,'admin',$actor,'create','guest',$id);
         json(['ok'=>true,'id'=>$id],201);
     }
+    if($route==='admin/guest-profile/update' && $method==='PATCH'){
+       $data=payload(4096);
+       $id=strval($data,'id',40,true);
+       if(!one($db,'SELECT guest_id FROM guest_profile_details WHERE guest_id=?',[$id]))
+           fail(404,'guest','Профиль не найден');
+       $fields=[];
+       $params=[];
+       foreach(['name_en','seating_group'] as $key){
+           if(array_key_exists($key,$data)){
+               $fields[]=$key.'=?';
+               $params[]=strval($data,$key,$key==='name_en'?255:120);
+           }
+       }
+       if(!$fields)fail(422,'fields','Нет изменений');
+       $params[]=$id;
+       statement($db,'UPDATE guest_profile_details SET '.implode(',',$fields).",updated_at=datetime('now') WHERE guest_id=?",$params);
+       audit($db,'admin',$actor,'update','guest_profile',$id,['fields'=>array_keys(array_intersect_key($data,array_flip(['name_en','seating_group'])))]);
+       json(['ok'=>true]);
+    }
     if ($route==='admin/guest/update' && $method==='POST') {
         $d=payload(8192);$id=strval($d,'id',40,true);
         if (!one($db,'SELECT id FROM guests WHERE id=?',[$id])) fail(404,'not_found','Гость не найден');
