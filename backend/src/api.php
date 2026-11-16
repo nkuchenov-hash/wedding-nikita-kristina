@@ -197,9 +197,6 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         // Link is intentionally not emailed; delivery and domain TLS must be verified first.
         json(['ok'=>true,'id'=>$id,'token'=>$raw,'expires_at'=>$expires],201);
     }
-    if ($route==='admin/import/guests' && $method==='POST') {
-        adminImportCsv($db,$actor);
-    }
     if ($route==='admin/records' && $method==='GET') {
         $collection=(string)($_GET['collection']??'');
         if (!isset(adminCollections()[$collection]))fail(404,'collection','Коллекция не найдена');
@@ -254,70 +251,6 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
           'stories'=>all($db,"SELECT s.*,g.display_name FROM stories s JOIN guests g ON g.id=s.guest_id WHERE s.status='pending' ORDER BY s.created_at DESC LIMIT 200")]);
     }
     fail(404,'not_found','Неизвестное действие администратора');
-}
-
-function adminImportCsv(PDO $db,string $actor): never {
-    if (!isset($_FILES['file']) || !is_array($_FILES['file']))fail(422,'file','Не указан файл');
-    $f=$_FILES['file'];
-    if (($f['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK)fail(422,'file','Ошибка загрузки');
-    if (($f['size']??0)>2*1024*1024)fail(413,'file_too_large','Максимум 2 МБ');
-    if (!is_uploaded_file((string)$f['tmp_name']))fail(422,'file','Недопустимая загрузка');
-    $fp=fopen((string)$f['tmp_name'],'rb');
-    if($fp===false)fail(422,'file','Невозможно прочитать файл');
-    $first=fgets($fp);if($first===false)fail(422,'empty_file','Пустой файл');
-    $delimiter=substr_count($first,';')>substr_count($first,',')?';':',';
-    rewind($fp);
-    $header=fgetcsv($fp,0,$delimiter);
-    if(!is_array($header)){fclose($fp);fail(422,'header','Некорректный CSV');}
-    $aliases=['имя'=>'first_name','фамилия'=>'last_name','фио'=>'display_name',
-      'полное имя'=>'display_name','имя и фамилия'=>'display_name',
-      'сторона'=>'side','email'=>'email','e-mail'=>'email','телефон'=>'phone',
-      'город'=>'city','степень родства'=>'relationship','отношение'=>'relationship',
-      'дети'=>'children_count','плюс один'=>'plus_one_allowed'];
-    $columns=array_map(function($h)use($aliases){
-        $h=mb_strtolower(trim(preg_replace('/^\\xEF\\xBB\\xBF/','',(string)$h)));
-        return $aliases[$h]??$h;
-    },$header);
-    if(!in_array('first_name',$columns,true) && !in_array('display_name',$columns,true)){
-        fclose($fp);fail(422,'header','Ожидается столбец Имя или ФИО');
-    }
-    $batch=uuid();$count=0;$skipped=0;$db->beginTransaction();
-    try{
-        while(($row=fgetcsv($fp,0,$delimiter))!==false){
-            if($count+$skipped>=1500)throw new RuntimeException('Слишком много строк');
-            if(count($row)===1 && trim((string)$row[0])==='')continue;
-            $d=[];
-            foreach($columns as $i=>$column){
-                if(in_array($column,['first_name','last_name','display_name','side','email','phone','city','relationship'],true))
-                    $d[$column]=trim((string)($row[$i]??''));
-                if($column==='children_count')$d[$column]=(int)($row[$i]??0);
-                if($column==='plus_one_allowed')$d[$column]=in_array(mb_strtolower(trim((string)($row[$i]??''))),['1','да','yes','true'],true);
-            }
-            $name=trim((string)($d['display_name']??''));
-            $first=trim((string)($d['first_name']??''));
-            $last=trim((string)($d['last_name']??''));
-            if($first==='' && $name!==''){$split=preg_split('/\\s+/u',$name,2);$first=$split[0];$last=$split[1]??'';}
-            $name=$name!==''?$name:trim($first.' '.$last);
-            if($name===''||mb_strlen($name)>255){$skipped++;continue;}
-            $email=mb_substr((string)($d['email']??''),0,320);
-            // Import never overwrites existing guests or changes RSVP records.
-            if($email!=='' && one($db,'SELECT id FROM guests WHERE email=?',[$email])){$skipped++;continue;}
-            if(one($db,'SELECT id FROM guests WHERE display_name=? AND side=?',[$name,$d['side']??'other'])){$skipped++;continue;}
-            $side=in_array($d['side']??'other',['bride','groom','both','other'],true)?$d['side']:'other';
-            statement($db,'INSERT INTO guests(id,first_name,last_name,display_name,side,email,phone,city,relationship,children_count,plus_one_allowed) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
-               [uuid(),mb_substr($first,0,120),mb_substr($last,0,120),$name,$side,$email,
-               mb_substr((string)($d['phone']??''),0,64),mb_substr((string)($d['city']??''),0,255),
-               mb_substr((string)($d['relationship']??''),0,255),
-               min(15,max(0,$d['children_count']??0)),($d['plus_one_allowed']??false)?1:0]);
-            $count++;
-        }
-        statement($db,'INSERT INTO import_batches(id,filename,row_count) VALUES(?,?,?)',
-          [$batch,mb_substr(basename((string)($f['name']??'guests.csv')),0,200),$count]);
-        audit($db,'admin',$actor,'import','guests',$batch,['imported'=>$count,'skipped'=>$skipped]);
-        $db->commit();
-    }catch(Throwable $e){$db->rollBack();fclose($fp);throw $e;}
-    fclose($fp);
-    json(['ok'=>true,'batch'=>$batch,'imported'=>$count,'skipped'=>$skipped],201);
 }
 
 function featureOpen(PDO $db,string $key): bool {
