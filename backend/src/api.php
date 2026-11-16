@@ -133,6 +133,19 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         audit($db,'admin',$actor,'create','companion',$id,['guest_id'=>$guestId]);
         json(['ok'=>true,'id'=>$id],201);
     }
+    if($route==='admin/venue-files' && $method==='GET'){
+        $venue=(string)($_GET['venue_id']??'');
+        if($venue!==''&&!preg_match('/^[a-z0-9-]{2,36}$/',$venue))
+            fail(422,'venue_id','Некорректная площадка');
+        if($venue===''){
+            $rows=all($db,"SELECT id,venue_id,title,mime,source_url,type FROM venue_files
+                ORDER BY CASE type WHEN 'document' THEN 0 WHEN 'video' THEN 1 ELSE 2 END, venue_id,title LIMIT 500");
+        }else{
+            $rows=all($db,"SELECT id,venue_id,title,mime,source_url,type FROM venue_files
+                WHERE venue_id=? ORDER BY type,title LIMIT 200",[$venue]);
+        }
+        json(['ok'=>true,'files'=>$rows]);
+    }
     if ($route==='admin/overview' && $method==='GET') {
         $guest=one($db,"SELECT COUNT(*) total,
              SUM(CASE WHEN status='registered' THEN 1 ELSE 0 END) registered FROM guests");
