@@ -93,3 +93,32 @@ jobs:
           grep -Fq 'activateDocumentArchive' /tmp/admin-documents.js
           grep -Fq 'activatePhotoArchive' /tmp/admin-photos.js
           echo 'ADMIN_ALL_ARCHIVE_INTERFACES_ACCESSIBLE'
+
+          curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" \
+            'https://nikitakristina.ru/admin/index.php?api=admin%2Foverview' \
+            -o /tmp/wedding-guest-funnel.json
+          python3 - <<'PY'
+          import json
+          data=json.load(open('/tmp/wedding-guest-funnel.json'))
+          assert data['ok'], 'Overview is not available'
+          guest=data['guests']
+          for key in ('total','prepared','sent','opened','registered','responded','confirmed','declined','tentative','public_visible'):
+              assert key in guest, 'Missing dashboard field '+key
+              assert int(guest[key])>=0
+          assert int(guest['total'])>=114
+          assert int(guest['confirmed'])<=int(guest['registered'])
+          assert int(guest['public_visible'])<=int(guest['confirmed'])
+          assert int(guest['confirmed'])<=int(guest['responded'])
+          print('GUEST_LIFECYCLE_DASHBOARD_OK')
+          PY
+          python3 - <<'PY'
+          import json
+          data=json.load(open('/tmp/wedding-guests.json'))
+          guests=data['guests']
+          assert len(guests)>=114
+          sample=guests[0]
+          for key in ('active_invite_id','invite_prepared_at','invitation_sent_at',
+                     'first_opened_at','profile_completed_at','attendance'):
+              assert key in sample, 'Missing guest stage '+key
+          print('INDIVIDUAL_GUEST_PROGRESS_OK')
+          PY
