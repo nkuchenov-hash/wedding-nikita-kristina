@@ -133,7 +133,7 @@ function requireAdmin(PDO $db): string {
 }
 function requireGuest(PDO $db): string {
     $id=requireRole('guest');
-    if (!one($db,"SELECT id FROM guests WHERE id=? AND status='registered'",[$id])) {
+    if (!one($db,"SELECT id FROM guests WHERE id=? AND status!='archived'",[$id])) {
         unset($_SESSION['guest_id']); fail(401,'login_required','Требуется авторизация');
     }
     return $id;

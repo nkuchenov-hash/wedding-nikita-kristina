@@ -168,3 +168,15 @@ CREATE TABLE IF NOT EXISTS venue_files(
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_venue_files_venue ON venue_files(venue_id,type);
+
+-- Organizer invitation tracking: issued is not sent; opened is not registered.
+-- Consent and the actual RSVP are separate from completing a profile.
+CREATE TABLE IF NOT EXISTS guest_progress (
+  guest_id TEXT PRIMARY KEY REFERENCES guests(id) ON DELETE CASCADE,
+  invitation_sent_at TEXT,
+  first_opened_at TEXT,
+  last_opened_at TEXT,
+  profile_completed_at TEXT,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS guest_progress_profile_completed ON guest_progress(profile_completed_at);

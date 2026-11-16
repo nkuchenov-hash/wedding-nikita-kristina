@@ -56,7 +56,12 @@ function handle(): never {
                  AND g.status!='archived'",[$hash]);
             if (!$invite) fail(401,'invalid_invite','Приглашение недействительно или срок истёк');
             statement($db,"UPDATE invitations SET used_at=COALESCE(used_at,datetime('now')) WHERE id=?",[$invite['id']]);
-            statement($db,"UPDATE guests SET status='registered',invited=1,updated_at=datetime('now') WHERE id=?",[$invite['guest_id']]);
+            // Opening a link is not a completed registration or a confirmed RSVP.
+            statement($db,"INSERT INTO guest_progress(guest_id,first_opened_at,last_opened_at)
+              VALUES(?,datetime('now'),datetime('now'))
+              ON CONFLICT(guest_id) DO UPDATE SET
+                first_opened_at=COALESCE(guest_progress.first_opened_at,excluded.first_opened_at),
+                last_opened_at=excluded.last_opened_at,updated_at=datetime('now')",[$invite['guest_id']]);
             session_regenerate_id(true);
             $_SESSION=['guest_id'=>$invite['guest_id'],'csrf'=>bin2hex(random_bytes(24)),'last_active'=>time()];
             audit($db,'guest',$invite['guest_id'],'login','invitation',$invite['id']);
@@ -147,8 +152,24 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         json(['ok'=>true,'files'=>$rows]);
     }
     if ($route==='admin/overview' && $method==='GET') {
-        $guest=one($db,"SELECT COUNT(*) total,
-             SUM(CASE WHEN status='registered' THEN 1 ELSE 0 END) registered FROM guests");
+        $guest=one($db,"SELECT
+          COUNT(*) total,
+          COALESCE(SUM(CASE WHEN EXISTS(SELECT 1 FROM invitations i
+            WHERE i.guest_id=g.id AND i.revoked_at IS NULL
+            AND (i.expires_at IS NULL OR i.expires_at>datetime('now'))) THEN 1 ELSE 0 END),0) prepared,
+          COALESCE(SUM(CASE WHEN p.invitation_sent_at IS NOT NULL THEN 1 ELSE 0 END),0) sent,
+          COALESCE(SUM(CASE WHEN p.first_opened_at IS NOT NULL THEN 1 ELSE 0 END),0) opened,
+          COALESCE(SUM(CASE WHEN p.profile_completed_at IS NOT NULL THEN 1 ELSE 0 END),0) registered,
+          COALESCE(SUM(CASE WHEN r.guest_id IS NOT NULL THEN 1 ELSE 0 END),0) responded,
+          COALESCE(SUM(CASE WHEN r.attendance='yes' AND p.profile_completed_at IS NOT NULL THEN 1 ELSE 0 END),0) confirmed,
+          COALESCE(SUM(CASE WHEN r.attendance='no' THEN 1 ELSE 0 END),0) declined,
+          COALESCE(SUM(CASE WHEN r.attendance='maybe' THEN 1 ELSE 0 END),0) tentative,
+          COALESCE(SUM(CASE WHEN r.attendance='yes' AND p.profile_completed_at IS NOT NULL
+            AND g.profile_visible=1 AND g.consent_at IS NOT NULL THEN 1 ELSE 0 END),0) public_visible
+          FROM guests g
+          LEFT JOIN guest_progress p ON p.guest_id=g.id
+          LEFT JOIN rsvps r ON r.guest_id=g.id
+          WHERE g.status!='archived'");
         $rsvps=all($db,'SELECT attendance,COUNT(*) AS total FROM rsvps GROUP BY attendance');
         $pendingPhotos=one($db,"SELECT COUNT(*) AS n FROM photos WHERE status='pending'");
         $pendingStories=one($db,"SELECT COUNT(*) AS n FROM stories WHERE status='pending'");
@@ -159,9 +180,17 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
     }
     if ($route==='admin/guests' && $method==='GET') {
         $items=all($db,"SELECT g.*,r.attendance,r.adults,r.children,r.transport_needed,r.dietary_notes,
-            r.other_notes,r.submitted_at,p.source_person_id,p.name_en,p.seating_group,p.decision,p.base_count
+            r.other_notes,r.submitted_at,p.source_person_id,p.name_en,p.seating_group,p.decision,p.base_count,
+            t.invitation_sent_at,t.first_opened_at,t.last_opened_at,t.profile_completed_at,
+            (SELECT i.id FROM invitations i WHERE i.guest_id=g.id AND i.revoked_at IS NULL
+              AND (i.expires_at IS NULL OR i.expires_at>datetime('now'))
+              ORDER BY i.created_at DESC LIMIT 1) AS active_invite_id,
+            (SELECT i.created_at FROM invitations i WHERE i.guest_id=g.id AND i.revoked_at IS NULL
+              AND (i.expires_at IS NULL OR i.expires_at>datetime('now'))
+              ORDER BY i.created_at DESC LIMIT 1) AS invite_prepared_at
             FROM guests g LEFT JOIN rsvps r ON r.guest_id=g.id
             LEFT JOIN guest_profile_details p ON p.guest_id=g.id
+            LEFT JOIN guest_progress t ON t.guest_id=g.id
             ORDER BY g.display_name LIMIT 1500");
         json(['ok'=>true,'guests'=>$items]);
     }
@@ -241,10 +270,34 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $expires=gmdate('Y-m-d H:i:s',time()+60*60*24*90);$id=uuid();
         statement($db,"UPDATE invitations SET revoked_at=datetime('now') WHERE guest_id=? AND revoked_at IS NULL",[$guestId]);
         statement($db,'INSERT INTO invitations(id,guest_id,token_hash,expires_at) VALUES(?,?,?,?)',[$id,$guestId,$hash,$expires]);
-        statement($db,"UPDATE guests SET invited=1,status='invited',updated_at=datetime('now') WHERE id=? AND status='draft'",[$guestId]);
+        // A link is generated, NOT delivered. Never count this as a sent invitation.
+        statement($db,"INSERT INTO guest_progress(guest_id,invitation_sent_at) VALUES(?,NULL)
+          ON CONFLICT(guest_id) DO UPDATE SET invitation_sent_at=NULL,updated_at=datetime('now')",[$guestId]);
         audit($db,'admin',$actor,'issue','invitation',$id,['guest_id'=>$guestId]);
         // Link is intentionally not emailed; delivery and domain TLS must be verified first.
         json(['ok'=>true,'id'=>$id,'token'=>$raw,'expires_at'=>$expires],201);
+    }
+    if ($route==='admin/invitations/sent' && $method==='POST') {
+        $d=payload(4096);
+        $guestId=strval($d,'guest_id',40,true);
+        $sent=boolval($d,'sent');
+        $existing=one($db,'SELECT id FROM guests WHERE id=? AND status!=?',[$guestId,'archived']);
+        if(!$existing)fail(404,'guest','Гость не найден');
+        $active=one($db,"SELECT id FROM invitations WHERE guest_id=? AND revoked_at IS NULL
+          AND (expires_at IS NULL OR expires_at>datetime('now')) ORDER BY created_at DESC LIMIT 1",[$guestId]);
+        if($sent&&!$active)fail(422,'invite_missing','Сначала подготовьте персональную ссылку');
+        statement($db,"INSERT INTO guest_progress(guest_id,invitation_sent_at) VALUES(?,?)
+          ON CONFLICT(guest_id) DO UPDATE SET invitation_sent_at=excluded.invitation_sent_at,updated_at=datetime('now')",
+          [$guestId,$sent?gmdate('Y-m-d H:i:s'):null]);
+        if($sent){
+            statement($db,"UPDATE guests SET invited=1,status=CASE WHEN status='draft' THEN 'invited' ELSE status END,
+              updated_at=datetime('now') WHERE id=?",[$guestId]);
+        }else{
+            statement($db,"UPDATE guests SET invited=0,status=CASE WHEN status='invited' THEN 'draft' ELSE status END,
+              updated_at=datetime('now') WHERE id=?",[$guestId]);
+        }
+        audit($db,'admin',$actor,$sent?'mark_sent':'mark_not_sent','guest',$guestId);
+        json(['ok'=>true,'sent'=>$sent]);
     }
     if ($route==='admin/records' && $method==='GET') {
         $collection=(string)($_GET['collection']??'');
@@ -316,7 +369,8 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
     $isAdmin=isset($_SESSION['admin_id']);
     if ($route==='guest/me' && $method==='GET') {
         if($isAdmin)fail(403,'role','Только для гостей');
-        $guest=one($db,'SELECT id,first_name,last_name,display_name,city,side,about,email,phone,profile_visible,consent_at,plus_one_allowed,children_count FROM guests WHERE id=?',[$actor]);
+        $guest=one($db,'SELECT g.id,g.first_name,g.last_name,g.display_name,g.city,g.side,g.about,g.email,g.phone,g.profile_visible,g.consent_at,g.plus_one_allowed,g.children_count,p.profile_completed_at
+          FROM guests g LEFT JOIN guest_progress p ON p.guest_id=g.id WHERE g.id=?',[$actor]);
         $rsvp=one($db,'SELECT * FROM rsvps WHERE guest_id=?',[$actor]);
         $choices=all($db,'SELECT category,option_id FROM menu_choices WHERE guest_id=?',[$actor]);
         json(['ok'=>true,'guest'=>$guest,'rsvp'=>$rsvp,'choices'=>$choices,'csrf'=>$_SESSION['csrf']]);
@@ -368,9 +422,11 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
     }
     if ($route==='guest/directory' && $method==='GET') {
         requireFeature($db,'directory_open');
-        $guests=all($db,"SELECT id,display_name,city,side,relationship,about FROM guests
-          WHERE profile_visible=1 AND consent_at IS NOT NULL AND status='registered'
-          ORDER BY display_name LIMIT 1000");
+        $guests=all($db,"SELECT g.id,g.display_name,g.city,g.about FROM guests g
+          INNER JOIN rsvps r ON r.guest_id=g.id AND r.attendance='yes'
+          INNER JOIN guest_progress p ON p.guest_id=g.id AND p.profile_completed_at IS NOT NULL
+          WHERE g.profile_visible=1 AND g.consent_at IS NOT NULL AND g.status='registered'
+          ORDER BY g.display_name LIMIT 1000");
         json(['ok'=>true,'guests'=>$guests]);
     }
     if ($route==='guest/menu' && $method==='GET') {
@@ -393,6 +449,12 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
           consent_at=CASE WHEN ?=1 THEN COALESCE(consent_at,datetime('now')) ELSE NULL END,
           updated_at=datetime('now') WHERE id=?",
           [$city,$about,$display,$email,$phone,$visible?1:0,$visible&&$consent?1:0,$actor]);
+        statement($db,"INSERT INTO guest_progress(guest_id,profile_completed_at) VALUES(?,datetime('now'))
+          ON CONFLICT(guest_id) DO UPDATE SET
+            profile_completed_at=COALESCE(guest_progress.profile_completed_at,excluded.profile_completed_at),
+            updated_at=datetime('now')",[$actor]);
+        statement($db,"UPDATE guests SET status='registered',updated_at=datetime('now')
+          WHERE id=? AND status!='archived'",[$actor]);
         audit($db,'guest',$actor,'update','profile',$actor,['visible'=>$visible]);
         json(['ok'=>true]);
     }
@@ -400,6 +462,8 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
         requireFeature($db,'guest_rsvp_open');
         if($isAdmin)fail(403,'role','Только для гостей');
         $d=payload(10000);$att=choice($d,'attendance',['yes','no','maybe'],'maybe');
+        if($att==='yes'&&!one($db,"SELECT guest_id FROM guest_progress WHERE guest_id=? AND profile_completed_at IS NOT NULL",[$actor]))
+            fail(422,'complete_profile','Сначала сохраните карточку гостя');
         $guest=one($db,'SELECT plus_one_allowed,children_count FROM guests WHERE id=?',[$actor]);
         $maxAdults=1+(int)$guest['plus_one_allowed'];
         $adults=intvalField($d,'adults',0,$maxAdults,1);
