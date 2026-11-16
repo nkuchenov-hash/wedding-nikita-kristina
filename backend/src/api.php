@@ -175,8 +175,17 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $pendingStories=one($db,"SELECT COUNT(*) AS n FROM stories WHERE status='pending'");
         $budget=one($db,'SELECT COALESCE(SUM(planned_rub),0) planned,COALESCE(SUM(committed_rub),0) committed,COALESCE(SUM(paid_rub),0) paid FROM budget_lines');
         $tasks=one($db,"SELECT COUNT(*) total,SUM(CASE WHEN status!='done' THEN 1 ELSE 0 END) open FROM tasks");
+        $activity=all($db,"SELECT a.action,a.entity_type,a.actor_type,a.created_at,
+          g.display_name AS guest_name
+          FROM audit_log a
+          LEFT JOIN guests g ON g.id=CASE WHEN a.actor_type='guest' THEN a.actor_id
+            WHEN a.entity_type='guest' THEN a.entity_id ELSE NULL END
+          WHERE (a.actor_type='guest' AND a.action IN ('login','update','submit'))
+            OR (a.actor_type='admin' AND a.action IN ('mark_sent','mark_not_sent'))
+          ORDER BY a.id DESC LIMIT 25");
         json(['ok'=>true,'guests'=>$guest,'rsvp'=>$rsvps,'photos_pending'=>(int)$pendingPhotos['n'],
-          'stories_pending'=>(int)$pendingStories['n'],'budget'=>$budget,'tasks'=>$tasks]);
+          'stories_pending'=>(int)$pendingStories['n'],'budget'=>$budget,'tasks'=>$tasks,
+          'recent_activity'=>$activity]);
     }
     if ($route==='admin/guests' && $method==='GET') {
         $items=all($db,"SELECT g.*,r.attendance,r.adults,r.children,r.transport_needed,r.dietary_notes,
