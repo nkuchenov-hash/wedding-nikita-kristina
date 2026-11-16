@@ -200,8 +200,8 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
           'recent_activity'=>$activity]);
     }
     if ($route==='admin/guests' && $method==='GET') {
-        $items=all($db,"SELECT g.*,r.attendance,r.adults,r.children,r.transport_needed,r.dietary_notes,
-            r.other_notes,r.submitted_at,p.source_person_id,p.name_en,p.relation_to_couple,p.seating_group,p.decision,p.base_count,
+        $items=all($db,"SELECT g.*,r.attendance,r.adults,r.children,r.transport_needed,r.arrival_notes,r.dietary_notes,
+            r.other_notes,r.response_source,r.submitted_at,p.source_person_id,p.name_en,p.relation_to_couple,p.seating_group,p.decision,p.base_count,
             t.invitation_sent_at,t.first_opened_at,t.last_opened_at,t.profile_completed_at,
             (SELECT i.id FROM invitations i WHERE i.guest_id=g.id AND i.revoked_at IS NULL
               AND (i.expires_at IS NULL OR i.expires_at>datetime('now'))
