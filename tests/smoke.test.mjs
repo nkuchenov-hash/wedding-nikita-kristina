@@ -130,3 +130,23 @@ test('wedding budget excludes unaccepted venue quotes and tracks only costs',asy
  const venue=await read('../src/venue-detail-ui.js');
  assert.match(venue,/Полученные сметы и сценарии/);
 });
+
+
+test('approved comprehensive venue comparison is never overlaid by generic database table',async()=>{
+ const admin=await read('../src/admin-app.js');
+ const data=await read('../src/admin-data-ui.js');
+ const venue=await read('../src/venues.js');
+ const css=await read('../src/venues.css');
+ assert.match(admin,/if\(active==='venues'\)return renderVenueAdmin\(\)/);
+ assert.match(admin,/if\(section==='venues'\)activateVenueAdmin\(app\)/);
+ assert.doesNotMatch(data,/collection\(host,'venues'\)/);
+ assert.doesNotMatch(data,/supported=\[[^\]]*'venues'/);
+ for(const heading of ['Площадка','18 / 19 / 20 июня','Осмотр','Бюджет','Вместимость','Рейтинг'])
+   assert.ok(venue.includes(heading),'Missing approved venue comparison column: '+heading);
+ assert.match(venue,/vw-table vw-table-sortable/);
+ assert.match(venue,/data-sort-col/);
+ assert.match(venue,/data-clear-filters/);
+ assert.match(venue,/headerSelect\('chosenDay'/);
+ assert.match(venue,/selectedCompare\(all\)/);
+ assert.match(css,/\.vw-table/);
+});
