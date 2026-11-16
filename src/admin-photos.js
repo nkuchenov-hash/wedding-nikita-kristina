@@ -5,8 +5,13 @@ const safe=(value='')=>String(value??'');
 const node=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=safe(text);return n};
 const thumb=(id,w=900)=>'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w'+w;
 const orig=(id)=>'https://drive.google.com/file/d/'+encodeURIComponent(id)+'/view';
-const albumList=PUBLIC_VENUES.map(v=>({id:v.id,name:v.name,photos:getVenuePhotos(v),drive:v.drive||'',area:v.area||''}));
-const allCount=albumList.reduce((n,a)=>n+a.photos.length,0);
+const ALL_ALBUMS=PUBLIC_VENUES.map(v=>({id:v.id,name:v.name,photos:getVenuePhotos(v),drive:v.drive||'',area:v.area||''}));
+// The only source of truth for the wedding gallery is the approved programme.
+// Other locations remain accessible in their individual venue comparison cards.
+export function approvedVenueIds(items=[]){
+ return new Set(items.filter(item=>item&&Number(item.is_confirmed)===1&&item.venue_id)
+  .map(item=>String(item.venue_id)));
+}
 const categories=(photos)=>['Все фотографии',...new Set(photos.map(p=>p.section||'Разное'))];
 const styleButton=(text,cls='')=>{const b=node('button','ad-photo-button '+cls,text);b.type='button';return b};
 let activeCleanup=null;
@@ -16,17 +21,17 @@ export function activatePhotoArchive(root){
  const host=root.querySelector('.admin-content');if(!host)return;
  host.replaceChildren();
  const ui={venue:'all',section:'Все фотографии',search:'',limit:72,cols:3,view:null};
+ let albumList=[],loaded=false,loadError='',disposed=false;
  const wrap=node('section','ad-photo-archive');
  const eyebrow=node('div','ad-photo-eyebrow','СВАДЬБА  ·  ФОТОАРХИВ');
  const head=node('header','ad-photo-head');
  head.append(eyebrow,node('h1','','Фотографии и альбомы'));
- const lead=node('p','ad-photo-lead',allCount+' фотографий в '+albumList.filter(x=>x.photos.length).length+' альбомах площадок. Выберите площадку, чтобы посмотреть все категории: залы, террасы, помещения, детали и территорию.');
+ const lead=node('p','ad-photo-lead','Загружаем утверждённые площадки из программы свадьбы…');
  head.append(lead);
  wrap.append(head);
  const tools=node('div','ad-photo-toolbar');
  const select=node('select','ad-photo-select');
- const allOption=node('option','','Все площадки');allOption.value='all';select.append(allOption);
- for(const venue of albumList){const option=node('option','',venue.name+' · '+venue.photos.length);option.value=venue.id;select.append(option)}
+ const allOption=node('option','','Все утверждённые площадки');allOption.value='all';select.append(allOption);
  const search=node('input','ad-photo-search');search.type='search';search.placeholder='Поиск по площадкам и фотографиям';search.setAttribute('aria-label','Поиск по фото');
  const density=node('div','ad-photo-density');
  for(const count of [2,3,4]){
@@ -112,7 +117,10 @@ export function activatePhotoArchive(root){
       const link=node('a','ad-photo-drive','Открыть исходный альбом в Google Drive');
       link.href=visible[0].drive;link.rel='noopener noreferrer';link.target='_blank';footer.append(link);
    }
-   if(!count)grid.append(node('p','ad-photo-empty','Для выбранной площадки пока нет индексированных фотографий. Посмотрите исходную папку Google Drive.'));
+   if(!count)grid.append(node('p','ad-photo-empty',
+     loadError || (!loaded?'Загрузка фотографий утверждённых площадок…':
+     !albumList.length?'В программе пока нет утверждённых площадок. Отметьте площадку как утверждённую в разделе «Программа».':
+     'Для выбранных площадок пока нет фотографий в альбомах.')));
    if(ui.view!==null){closeLightbox()}
  }
  select.addEventListener('change',()=>{ui.venue=select.value;ui.section='Все фотографии';ui.limit=72;render()});
@@ -127,7 +135,37 @@ export function activatePhotoArchive(root){
  let touchX=0;
  dialog.addEventListener('touchstart',e=>{touchX=e.changedTouches[0]?.clientX||0},{passive:true});
  dialog.addEventListener('touchend',e=>{const dx=(e.changedTouches[0]?.clientX||0)-touchX;if(Math.abs(dx)>60)nextImage(dx<0?1:-1)},{passive:true});
- activeCleanup=()=>{document.removeEventListener('keydown',key);document.body.classList.remove('ad-photo-lock');activeCleanup=null;};
+ activeCleanup=()=>{disposed=true;document.removeEventListener('keydown',key);document.body.classList.remove('ad-photo-lock');activeCleanup=null;};
+ // Load from the authenticated programme API; do not fall back to unapproved venues.
+ async function loadApprovedProgramme(){
+  try{
+   const response=await fetch('/admin/index.php?api=admin%2Frecords&collection=schedule_items',{
+    headers:{Accept:'application/json'},credentials:'same-origin',cache:'no-store'
+   });
+   const data=await response.json();
+   if(!response.ok||!data.ok||!Array.isArray(data.items))throw new Error(data.message||'Программа недоступна');
+   if(disposed)return;
+   const approved=approvedVenueIds(data.items);
+   albumList=ALL_ALBUMS.filter(album=>approved.has(album.id));
+   const total=albumList.reduce((sum,album)=>sum+album.photos.length,0);
+   select.replaceChildren(allOption);
+   for(const venue of albumList){
+    const option=node('option','',venue.name+' · '+venue.photos.length);
+    option.value=venue.id;select.append(option);
+   }
+   lead.textContent=albumList.length
+    ?total+' фотографий из '+albumList.length+' утверждённых площадок программы. Выберите место или категорию: залы, террасы, территории и помещения.'
+    :'В программе пока не отмечено ни одной утверждённой площадки. После утверждения она появится здесь автоматически.';
+  }catch(error){
+   if(disposed)return;
+   loadError='Не удалось получить утверждённые площадки из программы. Проверьте доступ к базе данных и обновите страницу.';
+   lead.textContent=loadError;
+   albumList=[]; // Fail closed: never show all candidate venues as approved.
+  }
+  loaded=true;
+  if(!disposed)render();
+ }
  render();
+ loadApprovedProgramme();
  return activeCleanup;
 }
