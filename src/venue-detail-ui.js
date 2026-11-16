@@ -93,7 +93,18 @@ const sourceLinks=v=>{
  return all.filter(([l,u])=>{const safe=escUrl(u);if(!safe||seen.has(safe))return false;seen.add(safe);return true;})
   .map(([l,u])=>'<a href="'+h(escUrl(u))+'" target="_blank" rel="noopener noreferrer">'+h(l)+' ↗</a>').join('');
 };
-const getCost=v=>VENUE_PRICING[v.id]||{};
+const getCost=v=>{
+ const base=VENUE_PRICING[v.id]||{};
+ const cost={...base},updates=v.cost||{};
+ // Explicit organizer corrections appear everywhere, not just in the calculator.
+ for(const [source,target] of [['menu','menu'],['rent','rent'],['service','service'],['technical','tech'],['minSpend','deposit']]){
+  const raw=updates[source];
+  if(raw===null||raw===undefined||raw==='')continue;
+  const value=Number(raw);
+  if(Number.isFinite(value)&&value>=0)cost[target]={...(base[target]||{}),value,note:'Указано организатором · '+(base[target]?.note||'')};
+ }
+ return cost;
+};
 function amountCell(entry,unit){
  if(!entry||entry.value===null||entry.value===undefined)return '<span class="vdp-unknown">Нет данных</span>';
  if(typeof entry.value==='string')return '<span class="vdp-included">'+h(entry.value)+'</span>';
@@ -167,15 +178,86 @@ function ratingPane(v,ctx){
  return '<section class="vdp-pane"><h2>Балльная оценка площадки</h2><p>19 июня — максимум 40 баллов; подтверждённые 18/20 июня — 24; город — 10. По остальным критериям выставляются баллы в пределах фактических условий. Отсутствующие сведения не считаются подтверждёнными.</p><div class="vdp-rating-summary"><strong>'+(sc.value===null?'Недостаточно данных':sc.value+' / '+RATING_MAX+' баллов')+'</strong><span>'+sc.complete+' из '+RATING_CRITERIA.length+' критериев оценены · '+(sc.provisional?'неполная оценка':'все учтены')+'</span></div><div class="vdp-rating-breakdown">'+(sc.breakdown||[]).map(x=>'<div title="'+h(x.note||'')+'"><span>'+h(x.label)+' <small>макс. '+x.maximum+'</small></span><strong>'+(x.value===null?'Нет данных':Math.round(x.value*10)/10+' / '+x.maximum)+'</strong></div>').join('')+'</div><h3>Оценка площадки после осмотра</h3><div class="vdp-extra-grid">'+PERSONAL_CRITERIA.map(([key,label])=>'<label>'+h(label)+'<select data-venue="'+h(v.id)+'" data-rating="'+key+'"><option value="">Пока не оценивали</option>'+[1,2,3,4,5].map(n=>'<option value="'+n+'" '+(Number(v.ratings?.[key])===n?'selected':'')+'>'+n+' / 5</option>').join('')+'</select></label>').join('')+'</div></section>';
 }
 
+
+/* Complete inline venue editor. Original PDFs and Google Drive images remain unchanged;
+   organizer overrides are stored separately and can be revised here. */
+const editField=(label,key,value,type='text',extra='')=>
+ '<label>'+h(label)+'<input data-edit-field="'+h(key)+'" type="'+type+'" value="'+h(value??'')+'" '+extra+'></label>';
+const editArea=(label,key,value,rows=3)=>
+ '<label class="vdp-editor-full">'+h(label)+'<textarea data-edit-field="'+h(key)+'" rows="'+rows+'">'+h(value??'')+'</textarea></label>';
+const editSelect=(label,key,value,choices)=>
+ '<label>'+h(label)+'<select data-edit-field="'+h(key)+'">'+choices.map(([id,name])=>'<option value="'+h(id)+'" '+(String(value)===String(id)?'selected':'')+'>'+h(name)+'</option>').join('')+'</select></label>';
+const editAmount=(label,key,value)=>
+ editField(label,key,value??'','number','min="0" step="1" inputmode="decimal"');
+export function renderVenueQuoteEditorRow(q={}){
+ const amount=(k,v)=>'<label>'+h(k)+'<input data-quote-field="'+h(v)+'" type="number" min="0" step="1" value="'+h(q[v]??'')+'"></label>';
+ return '<div class="vdp-editor-quote-row" data-venue-quote-row>'+
+  amount('Гостей','guests')+amount('Сумма сметы, ₽','total')+
+  '<label>Дата предложения<input data-quote-field="date" type="date" value="'+h(q.date||'')+'"></label>'+
+  '<label>Примечание<input data-quote-field="label" type="text" value="'+h(q.label||'')+'" placeholder="Условия и состав предложения"></label>'+
+  '<label>Тип<select data-quote-field="kind">'+[['quote','Подтверждённая смета'],['estimate','Прогноз'],['scenario','Сценарий']].map(([id,label])=>'<option value="'+id+'" '+((q.kind||'quote')===id?'selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
+  '<button data-remove-venue-quote type="button" title="Убрать вариант из расчётов">Убрать</button>'+
+  '</div>';
+}
+function editPane(v,ctx){
+ const editable=Object.assign({},v.cost||{});
+ const statusList=[['unknown','Неизвестно'],['pending','Уточняется'],['available','Свободно подтверждено'],['unavailable','Занято']];
+ const lines=key=>(v[key]||[]).join('\n');
+ return '<form class="vdp-editor" data-venue-edit="'+h(v.id)+'">'+
+  '<section class="vdp-pane vdp-editor-section"><h2>Основные сведения</h2><p>Редактируйте данные непосредственно здесь. Сохранение производится в базе админки, исходные документы и фотографии не изменяются.</p>'+
+   '<div class="vdp-editor-grid">'+
+   editField('Название площадки','name',v.name,'text','required maxlength="180"')+
+   editField('Район / местоположение','area',v.area)+
+   editSelect('Расположение','region',v.region,[['city','В городе'],['country','За городом']])+
+   editAmount('Максимальная вместимость','capacity',v.capacity)+
+   editSelect('Лично смотрели','visited',v.visited?'true':'false',[['true','Да'],['false','Пока не подтверждено']])+
+   editField('Адрес','address',v.address)+
+   editArea('Пояснения по вместимости и рассадке','capacityNote',v.capacityNote,3)+
+   editArea('Описание, выводы после просмотра','summary',v.summary,4)+
+   editArea('Заметки организаторов','notes',v.notes,4)+
+   '</div></section>'+
+  '<section class="vdp-pane vdp-editor-section"><h2>Доступность дат</h2><p>Приоритет — 19 июня. Отмечайте «Свободно» только после подтверждения менеджера.</p>'+
+  '<div class="vdp-editor-dates">'+[['18','18 июня'],['19','19 июня · приоритет'],['20','20 июня']].map(([day,label])=>editSelect(label,'date-'+day,ctx.dayStatus(v,day),statusList)).join('')+'</div></section>'+
+  '<section class="vdp-pane vdp-editor-section"><h2>Стоимость и расчёт</h2><p>Все значения в рублях, сервис — в процентах. При наличии полной сметы на конкретное число гостей она имеет приоритет перед расчётом по строкам.</p>'+
+  '<div class="vdp-editor-grid">'+
+   editAmount('Меню / гость, ₽','cost-menu',editable.menu)+
+   editAmount('Аренда, ₽','cost-rent',editable.rent)+
+   editAmount('Оборудование, ₽','cost-technical',editable.technical)+
+   editAmount('Прочие расходы, ₽','cost-extra',editable.extra)+
+   editAmount('Обслуживание, %','cost-service',editable.service)+
+   editAmount('Минимальная сумма заказа / депозит, ₽','cost-minSpend',editable.minSpend)+
+  '</div></section>'+
+  '<section class="vdp-pane vdp-editor-section"><h2>Сметы от площадки</h2><p>Можно исправить сумму и число гостей или добавить новый расчёт. Исходные документы остаются в разделе «Документы».</p>'+
+  '<div class="vdp-editor-quotes" data-venue-edit-quotes>'+(v.quotes||[]).map(renderVenueQuoteEditorRow).join('')+'</div>'+
+  '<div class="vdp-editor-quote-controls"><button type="button" data-add-venue-quote>+ Добавить вариант сметы</button></div></section>'+
+  '<section class="vdp-pane vdp-editor-section"><h2>Условия и ограничения</h2>'+
+  '<div class="vdp-editor-grid">'+
+   editArea('Что включено (один пункт на строку)','included',lines('included'),6)+
+   editArea('Доплаты / ограничения (один пункт на строку)','excluded',lines('excluded'),6)+
+   editArea('Что ещё уточнить (один пункт на строку)','questions',lines('questions'),6)+
+   '</div></section>'+
+  '<section class="vdp-pane vdp-editor-section"><h2>Ссылки и контакты</h2><div class="vdp-editor-grid">'+
+   editField('Официальный сайт','website',v.website,'url')+
+   editField('Папка площадки на Google Drive','drive',v.drive,'url')+
+   editField('Папка фотографий','photos',v.photos,'url')+
+   editField('Ссылка на предложение / смету','quoteSource',v.quoteSource,'url')+
+   editField('Телефон менеджера','contactPhone',v.contactPhone||v.phone)+
+   editField('Email менеджера','contactEmail',v.contactEmail||v.email,'email')+
+   '</div></section>'+
+  '<div class="vdp-editor-actions"><button type="submit" class="vdp-editor-save">Сохранить изменения</button><a class="vdp-editor-cancel" href="#/admin/venues/'+encodeURIComponent(v.id)+'">Отмена</a><span class="vdp-editor-feedback" data-venue-edit-feedback role="status" aria-live="polite">Изменения не сохранены</span></div>'+
+  '</form>';
+}
+
 export function renderVenueNewPage(v,ctx){
  const tab=ctx.ui.detailTab||'overview',photos=getVenuePhotos(v);
- const tabs=[['overview','Обзор'],['photos','Фотографии'],['budget','Смета'],['documents','Документы'],['terms','Условия'],['rating','Рейтинг']];
+ const tabs=[['overview','Обзор'],['photos','Фотографии'],['budget','Смета'],['documents','Документы'],['terms','Условия'],['rating','Рейтинг'],['edit','Редактировать']];
  let body='';
  if(tab==='photos')body=gallery(v,ctx.ui);
  else if(tab==='budget')body=estimatePane(v,ctx);
  else if(tab==='documents')body=venueDocuments(v);
  else if(tab==='terms')body=infoPane(v,ctx);
  else if(tab==='rating')body=ratingPane(v,ctx);
- else body='<div class="vdp-overview"><section class="vdp-pane"><div class="vdp-row-between"><h2>Фотографии с осмотра</h2><a href="#/admin/venues/'+encodeURIComponent(v.id)+'/photos">Все '+photos.length+' фото →</a></div>'+gallery(v,ctx.ui)+'</section><section class="vdp-pane"><h2>Даты и формат</h2>'+dates(v,ctx)+'<p>'+h(v.summary||'Данных пока мало')+'</p><p class="vdp-note">'+h(v.capacityNote||('Вместимость: '+(v.capacity||'не подтверждена')))+'</p></section><section class="vdp-pane"><h2>Стоимость</h2>'+budget(v,ctx)+'<div class="vdp-key-costs">'+[['menu','Меню'],['rent','Аренда'],['deposit','Депозит'],['sound','Звук'],['light','Свет'],['service','Сервис']].map(([k,l])=>'<div><span>'+l+'</span>'+amountCell(getCost(v)[k],labelMap[k]?.unit||'')+'</div>').join('')+'</div><a class="vdp-primary-link" href="#/admin/venues/'+encodeURIComponent(v.id)+'/budget">Полная смета по строкам →</a><a class="vdp-primary-link vdp-document-entry" href="#/admin/venues/'+encodeURIComponent(v.id)+'/documents">Файлы и предложения площадки →</a></section>'+scopeList(v)+'</div>';
- return '<div class="vdp-page"><a class="vdp-back" href="#/admin/venues">← Все площадки</a>'+hero(v,ctx,photos)+'<div class="vdp-layout"><nav class="vdp-tabs" aria-label="Разделы площадки">'+tabs.map(([id,l])=>'<a href="#/admin/venues/'+encodeURIComponent(v.id)+'/'+id+'" class="'+(id===tab?'selected':'')+'">'+l+'</a>').join('')+'</nav><div class="vdp-content">'+body+'</div><footer class="vdp-foot">Сметы и фотографии — из материалов площадок и Wedding Drive. Неизвестные расходы в итог не включены.</footer></div>'+lightbox(v,ctx.ui)+'</div>';
+  else if(tab==='edit')body=editPane(v,ctx);
+ else body='<div class="vdp-overview"><section class="vdp-pane"><div class="vdp-row-between"><h2>Фотографии с осмотра</h2><a href="#/admin/venues/'+encodeURIComponent(v.id)+'/photos">Все '+photos.length+' фото →</a></div>'+gallery(v,ctx.ui)+'</section><section class="vdp-pane"><h2>Даты и формат</h2>'+dates(v,ctx)+'<p>'+h(v.summary||'Данных пока мало')+'</p><p class="vdp-note">'+h(v.capacityNote||('Вместимость: '+(v.capacity||'не подтверждена')))+'</p></section><section class="vdp-pane"><h2>Стоимость</h2>'+budget(v,ctx)+'<div class="vdp-key-costs">'+[['menu','Меню'],['rent','Аренда'],['deposit','Депозит'],['sound','Звук'],['light','Свет'],['service','Сервис']].map(([k,l])=>'<div><span>'+l+'</span>'+amountCell(getCost(v)[k],labelMap[k]?.unit||'')+'</div>').join('')+'</div><div class="vdp-overview-actions"><a class="vdp-primary-link" href="#/admin/venues/'+encodeURIComponent(v.id)+'/budget">Полная смета по строкам →</a><a class="vdp-primary-link vdp-document-entry" href="#/admin/venues/'+encodeURIComponent(v.id)+'/documents">Файлы и предложения площадки →</a></div></section>'+scopeList(v)+'</div>';
+ return '<div class="vdp-page"><div class="vdp-top-actions"><a class="vdp-back" href="#/admin/venues">← Все площадки</a><a class="vdp-edit-main" href="#/admin/venues/'+encodeURIComponent(v.id)+'/edit">✎ Редактировать данные и смету</a></div>'+hero(v,ctx,photos)+'<div class="vdp-layout"><nav class="vdp-tabs" aria-label="Разделы площадки">'+tabs.map(([id,l])=>'<a href="#/admin/venues/'+encodeURIComponent(v.id)+'/'+id+'" class="'+(id===tab?'selected':'')+'">'+l+'</a>').join('')+'</nav><div class="vdp-content">'+body+'</div><footer class="vdp-foot">Сметы и фотографии — из материалов площадок и Wedding Drive. Неизвестные расходы в итог не включены.</footer></div>'+lightbox(v,ctx.ui)+'</div>';
 }
