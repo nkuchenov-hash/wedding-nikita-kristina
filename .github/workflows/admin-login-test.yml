@@ -1,0 +1,71 @@
+name: Verify real wedding admin login
+on:
+  push:
+    paths: ['.github/workflows/admin-login-test.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run full HTTPS login with disposable test account
+        timeout-minutes: 3
+        shell: bash
+        env:
+          HOST: ${{ secrets.WEDDING_SFTP_HOST }}
+          USERNAME: ${{ secrets.WEDDING_SFTP_USER }}
+          SSH_KEY: ${{ secrets.WEDDING_SFTP_SSH_KEY }}
+          HOST_KEYS: ${{ secrets.WEDDING_SFTP_KNOWN_HOSTS }}
+          PORT: ${{ secrets.WEDDING_SFTP_PORT }}
+        run: |
+          set -euo pipefail
+          : "${PORT:=22}"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/probe_key
+          printf '%s\n' "$HOST_KEYS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/probe_key ~/.ssh/known_hosts
+          SSH_OPTS="-4 -i $HOME/.ssh/probe_key -p $PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15"
+          remote="$USERNAME@$HOST"
+          passfile='/var/www/u3728035/data/wedding-private/.htpasswd'
+          probe_user="probe$(openssl rand -hex 5)"
+          probe_pw="$(openssl rand -hex 24)"
+          probe_hash="$(php -r 'echo password_hash($argv[1], PASSWORD_BCRYPT);' "$probe_pw")"
+          cleanup() {
+            ssh $SSH_OPTS "$remote" "sed -i '/^$probe_user:/d' '$passfile'; chmod 600 '$passfile'" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          printf '%s:%s\n' "$probe_user" "$probe_hash" | \
+            ssh $SSH_OPTS "$remote" "umask 077; cat >> '$passfile'"
+          jar=$(mktemp)
+          # The shared host issues its own first-request browser cookie challenge.
+          curl --fail --silent --show-error --max-time 15 -c "$jar" -b "$jar" \
+            -o /tmp/challenge.html https://nikitakristina.ru/admin/
+          curl --fail --silent --show-error --max-time 15 -c "$jar" -b "$jar" \
+            -o /tmp/login-page.html 'https://nikitakristina.ru/admin/?attempt=1'
+          grep -Fq 'name="csrf"' /tmp/login-page.html
+          echo 'LOGIN_FORM_VISIBLE'
+          csrf=$(sed -n 's/.*name="csrf" value="\([^"]*\)".*/\1/p' /tmp/login-page.html | head -1)
+          test -n "$csrf"
+          code=$(curl --silent --show-error --max-time 15 -c "$jar" -b "$jar" \
+            -o /tmp/login-response.html -D /tmp/login-headers.txt -w '%{http_code}' \
+            --data-urlencode "login=1" \
+            --data-urlencode "csrf=$csrf" \
+            --data-urlencode "username=$probe_user" \
+            --data-urlencode "password=$probe_pw" \
+            'https://nikitakristina.ru/admin/')
+          echo "LOGIN_POST_HTTP=$code"
+          test "$code" = 303
+          page_code=$(curl --silent --show-error --max-time 15 -c "$jar" -b "$jar" \
+            -o /tmp/admin-page.html -w '%{http_code}' https://nikitakristina.ru/admin/)
+          echo "AUTHENTICATED_ADMIN_HTTP=$page_code"
+          test "$page_code" = 200
+          grep -Fq 'index.php?asset=src/admin-app.js' /tmp/admin-page.html
+          asset_code=$(curl --silent --show-error --max-time 15 -c "$jar" -b "$jar" \
+            -o /tmp/admin-app.js -w '%{http_code}' \
+            'https://nikitakristina.ru/admin/index.php?asset=src/admin-app.js')
+          echo "AUTHENTICATED_JS_HTTP=$asset_code"
+          test "$asset_code" = 200
+          grep -Fq 'activateAdminData' /tmp/admin-app.js
+          echo 'ADMIN_END_TO_END_LOGIN_PASSED'
