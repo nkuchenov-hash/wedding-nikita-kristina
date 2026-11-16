@@ -52,3 +52,43 @@ body.ad-gb-lock{overflow:hidden}
 .ad-gb-personal-link input{width:100%;padding:13px 10px;border:1px solid #cddbd1;border-radius:8px;font-size:12px;min-height:44px;box-sizing:border-box}
 .ad-gb-personal-link .ad-gb-view{margin-top:10px}
 .ad-gb-invitation .ad-gb-view:disabled{opacity:.45;cursor:not-allowed}
+
+
+/* Spreadsheet-like inline editor: changes are saved to the private database. */
+.ad-gb-edit-legend{font-size:12px;color:#5d7b65;line-height:1.6;margin:0 0 13px}
+.ad-gb-table{min-width:1120px}
+.ad-gb-table th{white-space:nowrap}
+.ad-gb-table .ad-gb-name{min-width:185px}
+.ad-gb-person-row .ad-gb-stage-date{font-size:11px;line-height:1.4;color:#7f9484;white-space:nowrap}
+.ad-gb-edit-cell{min-width:125px;max-width:310px}
+.ad-gb-edit-cell .ad-gb-cell-edit{display:inline-flex;align-items:center;justify-content:space-between;gap:12px;min-width:100%;max-width:100%;border:1px solid transparent;background:transparent;padding:7px 8px;text-align:left;border-radius:8px;color:#30543a;cursor:text;font:inherit;line-height:1.45}
+.ad-gb-edit-cell .ad-gb-cell-edit:hover{border-color:#bed2c1;background:#f2f8f0}
+.ad-gb-edit-cell .ad-gb-cell-edit:focus-visible{outline:2px solid #4c9563;outline-offset:1px}
+.ad-gb-cell-edit[hidden]{display:none!important}
+.ad-gb-cell-value{overflow-wrap:anywhere;white-space:normal}
+.ad-gb-pencil{color:#819f85;opacity:0;font-size:13px;flex-shrink:0;font-weight:700}
+.ad-gb-cell-edit:hover .ad-gb-pencil,.ad-gb-cell-edit:focus-visible .ad-gb-pencil{opacity:1}
+.ad-gb-cell-input{width:100%;max-width:280px;min-width:120px;padding:9px 10px;background:#fff;color:#254f35;border:1px solid #63a074;border-radius:8px;font:500 13px Manrope,Arial,sans-serif}
+.ad-gb-inline-error{display:block;color:#a1433f;font-size:11px;line-height:1.4;margin-top:5px;max-width:220px}
+.ad-gb-name .ad-gb-english-hint{display:block;font-size:11px;color:#819b87;padding-left:8px;margin-top:3px}
+.ad-gb-expand{padding:10px 12px;border:1px solid #bfd7c4;border-radius:9px;background:#f0f7ee;color:#285a39;cursor:pointer;font-size:12px;font-weight:650;white-space:nowrap}
+.ad-gb-expand:hover{background:#e3f0e2}
+.ad-gb-expanded-row>td{padding:0!important;border-top:0!important}
+.ad-gb-expanded-content{padding:23px 25px 25px;margin:5px 12px 17px;background:#f4f9f3;border:1px solid #d1e2d1;border-radius:13px}
+.ad-gb-expanded-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.ad-gb-expanded-head h3{font:500 21px/1.3 Georgia,serif;color:#254c33;margin:0}
+.ad-gb-expanded-head p{max-width:690px;color:#78907c;font-size:12px;line-height:1.55;margin:0}
+.ad-gb-edit-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.ad-gb-edit-field{min-width:0;display:flex;flex-direction:column;gap:6px;font-size:11px;color:#5f7a65;font-weight:600;line-height:1.45}
+.ad-gb-edit-field>input,.ad-gb-edit-field>select,.ad-gb-edit-field>textarea{min-width:0;width:100%;min-height:43px;padding:10px 11px;border-radius:9px;border:1px solid #c7d9c9;background:white;color:#254634;font:500 13px Manrope,Arial,sans-serif}
+.ad-gb-edit-field>textarea{min-height:68px;resize:vertical}
+.ad-gb-edit-field:has(textarea){grid-column:span 2}
+.ad-gb-edit-actions{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:8px}
+.ad-gb-save-row,.ad-gb-cancel-row{border:0;border-radius:9px;padding:12px 19px;min-height:44px;font:650 13px Manrope,Arial,sans-serif;cursor:pointer}
+.ad-gb-save-row{background:#28593e;color:#fff}
+.ad-gb-save-row:disabled{opacity:.55}
+.ad-gb-cancel-row{background:#e4eee5;color:#315a3d}
+.ad-gb-edit-feedback{color:#35694b;font-size:12px;margin:0}
+@media(max-width:1200px){.ad-gb-edit-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:800px){.ad-gb-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ad-gb-expanded-content{padding:18px;margin:4px 5px 10px}}
+@media(max-width:470px){.ad-gb-edit-grid{grid-template-columns:1fr}.ad-gb-edit-field:has(textarea){grid-column:span 1}.ad-gb-edit-actions{flex-wrap:wrap}.ad-gb-edit-legend{font-size:11px}.ad-gb-expanded-content{padding:14px}}
