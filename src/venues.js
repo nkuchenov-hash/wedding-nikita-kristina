@@ -170,7 +170,7 @@ async function persistVenue(id){
 }
 // One editor per displayed value. No second "Редактирование" section.
 const INLINE_DAYS=['unknown','available','pending','unavailable'];
-const INLINE_FIELD_ALLOW=new Set(['name','area','region','capacity','capacityNote','visited','summary','notes','contactPhone','contactEmail','address','website','drive','photos','quoteSource','included','excluded','questions']);
+const INLINE_FIELD_ALLOW=new Set(['name','area','region','capacity','capacityNote','visited','summary','costSummary','notes','contactPhone','contactEmail','address','website','drive','photos','quoteSource','included','excluded','questions']);
 const INLINE_COST_ALLOW=new Set(['menu','rent','technical','extra','service','minSpend','sound','light','welcome','drinks','cake','corkage','staff','extension']);
 const INLINE_EXTRA_ALLOW=new Set(EXTRAS.map(([key])=>key));
 const PRICING_KEY={technical:'tech',minSpend:'deposit'};
