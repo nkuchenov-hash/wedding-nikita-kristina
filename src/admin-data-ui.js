@@ -1,6 +1,7 @@
 import {weddingDays} from './data.js';
 import {PUBLIC_VENUES} from './venues.js';
 import {VENUE_RECORDS} from './venues-data.js';
+import {getVenuePhotos} from './venue-detail-ui.js';
 // Wedding admin live-data layer. Never stores guest details in browser storage.
 const API='/admin/index.php?api=';
 const $=(tag,cls='',text='')=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=String(text);return el};
@@ -45,67 +46,146 @@ function table(parent,headers,rows){
  table.append(tbody);holder.append(table);parent.append(holder);
 }
 async function overview(host){
- title(host,'Участие гостей','Данные из закрытой базы REG.RU, автоматическое обновление каждые 15 секунд');
- const pulse=$('p','ad-live-updated','');
- const pipeline=$('div','ad-guest-pipeline');pipeline.setAttribute('aria-label','Этапы подтверждения участия');
- host.append(pipeline,pulse);
- const cards=$('div','ad-live-metrics');host.append(cards);
- const detail=$('section','ad-guest-overview-detail');host.append(detail);
- const feed=$('section','ad-guest-activity');
- feed.append($('h3','','Последние действия гостей'));
- const timeline=$('div','ad-guest-activity-list');
- feed.append(timeline);host.append(feed);
- const steps=[
-   ['total','В списке'],
-   ['prepared','Ссылки подготовлены'],
-   ['sent','Приглашения отправлены'],
-   ['opened','Открыли приглашение'],
-   ['registered','Заполнили анкету'],
-   ['confirmed','Подтвердили участие']
- ];
- const load=async()=>{
-   if(!host.isConnected)return;
-   const data=await call('admin/overview');
-   const guests=data.guests||{};
-   pipeline.replaceChildren();
-   for(const [key,label]of steps){
-     const step=$('div','ad-guest-pipeline-step');
-     step.append($('strong','',Number(guests[key]||0).toLocaleString('ru-RU')),$('span','',label));
-     pipeline.append(step);
+ // The home screen is a balanced overview of the whole wedding, not a guest-only funnel.
+ host.classList.add('ad-overview-shell');
+ const page=$('div','ad-overview-dashboard');
+ const head=$('header','ad-overview-heading');
+ const headingText=$('div');
+ headingText.append($('span','ad-overview-kicker','ЦЕНТР ПОДГОТОВКИ СВАДЬБЫ'),
+   $('h1','','Никита и Кристина'),
+   $('p','','Общая картина подготовки · 17–19 июня 2027'));
+ const sync=$('span','ad-overview-sync','Загрузка данных…');
+ head.append(headingText,sync);page.append(head);
+ const plan=$('div','ad-overview-plan');
+ const registry=$('div','ad-overview-plan-day');
+ registry.append($('strong','','17 июня'),$('span','','Регистрация · 14:00 · Марьино'));
+ const event=$('div','ad-overview-plan-day');
+ event.append($('strong','','19 июня'),$('span','','Торжество · площадка выбирается'));
+ plan.append(registry,event);page.append(plan);
+ const stats=$('div','ad-overview-stats');page.append(stats);
+ const content=$('div','ad-overview-sections');page.append(content);
+ function anchor(href,label){
+   const a=$('a','ad-overview-more',label);a.href='#/admin/'+href;return a;
+ }
+ function panel(title,section,label){
+   const block=$('section','ad-overview-card');
+   const cap=$('div','ad-overview-card-head');
+   cap.append($('h2','',title),anchor(section,label||'Подробнее'));
+   block.append(cap);content.append(block);return block;
+ }
+ function statistic(label,value,subtitle,section){
+   const a=$('a','ad-overview-stat');a.href='#/admin/'+section;
+   a.append($('span','ad-overview-stat-label',label),
+     $('strong','ad-overview-stat-value',String(value)),
+     $('small','',subtitle));
+   stats.append(a);
+ }
+ const tasksCard=panel('Задачи и решения','tasks','Все задачи');
+ const taskList=$('div','ad-overview-task-list');tasksCard.append(taskList);
+ const guestsCard=panel('Гости','guests','Управление гостями');
+ const guestStats=$('div','ad-overview-guest-stats');guestsCard.append(guestStats);
+ const guestHint=$('p','ad-overview-help','Отправка приглашений, анкеты и ответы отслеживаются в разделе «Гости».');
+ guestsCard.append(guestHint);
+ const venuesCard=panel('Площадки','venues','Сравнить');
+ const venueBox=$('div','ad-overview-venue-summary');venuesCard.append(venueBox);
+ const financeCard=panel('Бюджет','budget','Смотреть бюджет');
+ const budgetBox=$('div','ad-overview-finance');financeCard.append(budgetBox);
+ const docsCard=panel('Фотографии и документы','documents','Все документы');
+ const docBox=$('div','ad-overview-docs');docsCard.append(docBox);
+ const programCard=panel('Программа свадьбы','schedule','Открыть программу');
+ const schedule=$('div','ad-overview-schedule');
+ const line1=$('div','ad-overview-schedule-line');
+ line1.append($('span','ad-overview-date','17 июня'),$('span','','Регистрация в Марьино · 14:00'));
+ const line2=$('div','ad-overview-schedule-line');
+ line2.append($('span','ad-overview-date','18 июня'),$('span','','Программа уточняется'));
+ const line3=$('div','ad-overview-schedule-line');
+ line3.append($('span','ad-overview-date','19 июня'),$('span','','Свадебное торжество · место выбирается'));
+ schedule.append(line1,line2,line3);programCard.append(schedule);
+ host.append(page);
+ const venueCount=PUBLIC_VENUES.length;
+ const visited=PUBLIC_VENUES.filter(v=>VENUE_RECORDS[v.id]?.visited===true).length;
+ const photoAlbums=PUBLIC_VENUES.map(v=>getVenuePhotos(v));
+ const photoCount=photoAlbums.reduce((sum,photos)=>sum+photos.length,0);
+ const photoVenues=photoAlbums.filter(photos=>photos.length).length;
+ const quoted=PUBLIC_VENUES.filter(v=>(VENUE_RECORDS[v.id]?.quotes||[]).some(q=>Number(q.total)>0)).length;
+ let docsCount=null;
+ let openTasks=null;
+ const renderTasks=()=>{
+   taskList.replaceChildren();
+   if(openTasks===null){taskList.append($('p','ad-overview-muted','Список задач загружается…'));return}
+   if(!openTasks.length){taskList.append($('p','ad-overview-muted','Открытых задач нет.'));return}
+   for(const task of openTasks.slice(0,5)){
+     const a=$('a','ad-overview-task');a.href='#/admin/tasks';
+     const bullet=$('span','ad-overview-task-dot');
+     const content=$('span','ad-overview-task-title',task.title);
+     const meta=$('small','',task.due_at?String(task.due_at).slice(0,10):'Без срока');
+     a.append(bullet,content,meta);taskList.append(a);
    }
-   cards.replaceChildren();
-   const responded=Number(guests.responded||0),total=Number(guests.total||0);
-   metric(cards,'Ответили',responded);
-   metric(cards,'Не ответили',Math.max(0,total-responded));
-   metric(cards,'Отказались',Number(guests.declined||0));
-   metric(cards,'Пока не решили',Number(guests.tentative||0));
-   metric(cards,'Разрешили публикацию',Number(guests.public_visible||0));
-   metric(cards,'Бюджет (план)',Number(data.budget?.planned||0).toLocaleString('ru-RU')+' ₽');
-   metric(cards,'Открытые задачи',Number(data.tasks?.open||0));
-   detail.replaceChildren();
-   const explanation=$('p','ad-guest-privacy-note',
-     'Подтверждённый гость = заполненная анкета и ответ «Да, буду». В гостевом списке показываются только подтвердившие участие и отдельно разрешившие публикацию профиля. Открытие ссылки не считается регистрацией.');
-   const row=$('div','ad-guest-overview-links');
-   row.append(button('Перейти к гостям',()=>{location.hash='#/admin/guests'}));
-   detail.append(explanation,row);
-   timeline.replaceChildren();
-   const actionLabels={login:'Открыл приглашение',mark_sent:'Приглашение отмечено отправленным',
-     mark_not_sent:'Отменена отметка об отправке',submit:'Ответил на приглашение',update:'Изменил данные'};
-   const events=(data.recent_activity||[]).filter(item=>item.guest_name);
-   if(!events.length)timeline.append($('p','ad-live-muted','Пока никто не открыл приглашение и не заполнил анкету.'));
-   else for(const item of events.slice(0,15)){
-     const entry=$('div','ad-guest-activity-item');
-     entry.append($('strong','',item.guest_name),$('span','',actionLabels[item.action]||'Обновил данные'),
-       $('time','',item.created_at||''));
-     timeline.append(entry);
-   }
-   pulse.textContent='Последнее обновление: '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+   if(openTasks.length>5)taskList.append($('p','ad-overview-muted','Ещё '+(openTasks.length-5)+' задач в полном списке'));
  };
- await load();
+ const renderDocs=()=>{
+   docBox.replaceChildren();
+   const photos=$('a','ad-overview-doc-item');photos.href='#/admin/photos';
+   photos.append($('strong','',photoCount),$('span','','фотографий'),$('small','',photoVenues+' альбомов'));
+   const documents=$('a','ad-overview-doc-item');documents.href='#/admin/documents';
+   documents.append($('strong','',docsCount===null?'—':docsCount),
+     $('span','','документов и видео'),$('small','',docsCount===null?'Проверка архива':'Ссылки на оригиналы в Drive'));
+   docBox.append(photos,documents);
+ };
+ const renderVenues=()=>{
+   venueBox.replaceChildren();
+   const main=$('p','ad-overview-venue-line');
+   main.append($('strong','',venueCount),$('span','','площадок в сравнении'));
+   const sub=$('div','ad-overview-pills');
+   sub.append($('span','',visited+' осмотрели'),$('span','',quoted+' смет с итогом'));
+   const note=$('p','ad-overview-muted','Место торжества ещё выбирается. Предложения не означают бронирование.');
+   venueBox.append(main,sub,note);
+ };
+ const renderOverview=data=>{
+   const g=data.guests||{},budget=data.budget||{},tasks=data.tasks||{};
+   const number=(v)=>Number(v||0);
+   const paid=number(budget.paid),planned=number(budget.planned),committed=number(budget.committed);
+   stats.replaceChildren();
+   statistic('Гости',number(g.total),'Подтвердили: '+number(g.confirmed),'guests');
+   statistic('Площадки',venueCount,'Осмотрели: '+visited,'venues');
+   statistic('Задачи',number(tasks.open),'В работе','tasks');
+   statistic('Бюджет',planned>0?planned.toLocaleString('ru-RU')+' ₽':'Не задан',paid>0?'Оплачено: '+paid.toLocaleString('ru-RU')+' ₽':'Суммы из утверждённого плана','budget');
+   guestStats.replaceChildren();
+   for(const [value,label]of [
+     [number(g.total),'В списке'],[number(g.sent),'Пригласили'],
+     [number(g.registered),'Анкеты'],[number(g.confirmed),'Подтвердили']
+   ]){
+     const block=$('div','ad-overview-guest-stat');
+     block.append($('strong','',value),$('span','',label));
+     guestStats.append(block);
+   }
+   budgetBox.replaceChildren();
+   const amount=$('div','ad-overview-budget-value',planned>0?planned.toLocaleString('ru-RU')+' ₽':'Бюджет не утверждён');
+   const note=$('p','ad-overview-muted',committed>0?'Согласовано: '+committed.toLocaleString('ru-RU')+' ₽':'Согласованные расходы ещё не внесены');
+   const paidText=$('p','ad-overview-muted',paid>0?'Оплачено: '+paid.toLocaleString('ru-RU')+' ₽':'Подтверждённых платежей в базе пока нет');
+   const important=$('p','ad-overview-budget-note','Сметы площадок — альтернативные предложения, не общая сумма расходов.');
+   budgetBox.append(amount,note,paidText,important);
+   sync.textContent='Обновлено '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+ };
+ renderVenues();renderDocs();renderTasks();
+ const initial=await call('admin/overview');
+ renderOverview(initial);
+ const [taskResult,docResult]=await Promise.allSettled([
+   call('admin/records?collection=tasks'),call('admin/venue-files')
+ ]);
+ if(taskResult.status==='fulfilled'){
+   openTasks=(taskResult.value.items||[]).filter(t=>!['done','completed','cancelled'].includes(String(t.status||'').toLowerCase()));
+   openTasks.sort((a,b)=>String(a.due_at||'9999').localeCompare(String(b.due_at||'9999')));
+   renderTasks();
+ }else{taskList.replaceChildren($('p','ad-overview-muted','Список задач временно недоступен.'))}
+ if(docResult.status==='fulfilled'){
+   docsCount=(docResult.value.files||[]).length;renderDocs();
+ }
  if(overviewTimer)clearInterval(overviewTimer);
  overviewTimer=setInterval(()=>{
    if(!host.isConnected){clearInterval(overviewTimer);overviewTimer=null;return}
-   if(document.visibilityState==='visible')load().catch(()=>{pulse.textContent='Связь с базой прервана — данные показаны на момент последнего обновления';});
+   if(document.visibilityState==='visible')call('admin/overview').then(renderOverview)
+     .catch(()=>{sync.textContent='Нет связи — показаны последние данные'});
  },15000);
 }
 
