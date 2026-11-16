@@ -1,4 +1,6 @@
 import {weddingDays} from './data.js';
+import {PUBLIC_VENUES} from './venues.js';
+import {VENUE_RECORDS} from './venues-data.js';
 // Wedding admin live-data layer. Never stores guest details in browser storage.
 const API='/admin/index.php?api=';
 const $=(tag,cls='',text='')=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=String(text);return el};
@@ -244,6 +246,46 @@ async function moderation(host){
    host.append(group);
  };
  list(data.photos||[],'photos');list(data.stories||[],'stories');
+}
+function budgetScenario(host){
+ const estimates=[];
+ for(const venue of PUBLIC_VENUES){
+   const record=VENUE_RECORDS[venue.id]||{};
+   const sourceQuotes=Array.isArray(record.quotes)?record.quotes:[];
+   if(sourceQuotes.length){
+     for(const quote of sourceQuotes){
+       if(typeof quote.total!=='number'||!Number.isFinite(quote.total)||quote.total<=0)continue;
+       estimates.push({
+         name:venue.name,date:quote.date||'Не указана',guests:quote.guests||'—',
+         total:quote.total,source:venue.quoteSource||record.quoteSource||''
+       });
+     }
+   }else if(typeof venue.cost?.quoteTotal==='number'&&venue.cost.quoteTotal>0){
+     estimates.push({
+       name:venue.name,date:venue.quoteDate||'Не указана',
+       guests:venue.cost.quoteGuests||'—',total:venue.cost.quoteTotal,
+       source:venue.quoteSource||record.quoteSource||''
+     });
+   }
+ }
+ if(!estimates.length){
+   message(host,'Отдельные сметы площадок доступны в разделе «Документы и сметы».');
+   return;
+ }
+ const section=$('section','ad-live-subsection');title(section,'Полученные предложения площадок',
+   'Это альтернативные варианты банкета, а не совместные расходы. Суммы нельзя складывать между площадками.');
+ const rows=estimates.sort((a,b)=>a.total-b.total).map(item=>{
+   const source=$('a','ad-live-document-link','Документ');
+   try{
+     const uri=new URL(item.source);
+     if(!['https:'].includes(uri.protocol))throw Error('unsafe');
+     source.href=uri.href;source.target='_blank';source.rel='noopener noreferrer';
+   }catch{source.textContent='В архиве';source.removeAttribute('href')}
+   return [item.name,item.date,item.guests,item.total.toLocaleString('ru-RU')+' ₽',source];
+ });
+ table(section,['Площадка','Дата','Гостей','Стоимость предложения','Источник'],rows);
+ section.append($('p','ad-live-muted','Условия, состав услуг и итоговая цена требуют сверки с приложенными сметами. Подтверждённые платежи ведутся отдельно выше.'));
+ host.append(section);
 }
 async function renderSection(host,section){
  if(section==='overview'){await overview(host);return}
