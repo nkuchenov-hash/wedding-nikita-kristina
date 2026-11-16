@@ -198,8 +198,13 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $id=(string)($_GET['guest_id']??'');
         if(!preg_match('/^[a-f0-9-]{36}$/',$id))fail(422,'guest','Неверный ID гостя');
         $item=one($db,"SELECT g.*,p.source_person_id,p.name_en,p.seating_group,p.decision,p.base_count,
-          p.source_people_json,p.source_invitation_json,p.source_profile_json,p.source_english_json
-          FROM guests g LEFT JOIN guest_profile_details p ON p.guest_id=g.id WHERE g.id=?",[$id]);
+          p.source_people_json,p.source_invitation_json,p.source_profile_json,p.source_english_json,
+          t.invitation_sent_at,t.first_opened_at,t.last_opened_at,t.profile_completed_at,
+          (SELECT i.id FROM invitations i WHERE i.guest_id=g.id AND i.revoked_at IS NULL
+            AND (i.expires_at IS NULL OR i.expires_at>datetime('now'))
+            ORDER BY i.created_at DESC LIMIT 1) AS active_invite_id
+          FROM guests g LEFT JOIN guest_profile_details p ON p.guest_id=g.id
+          LEFT JOIN guest_progress t ON t.guest_id=g.id WHERE g.id=?",[$id]);
         if(!$item)fail(404,'guest','Гость не найден');
         foreach(['source_people_json','source_invitation_json','source_profile_json','source_english_json'] as $key)
             $item[$key]=json_decode($item[$key]??'{}',true)?:[];
