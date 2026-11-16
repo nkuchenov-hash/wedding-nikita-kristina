@@ -421,35 +421,8 @@ async function schedule(host){
    host.append(section);
  }
 }
-async function moderation(host){
- const data=await call('admin/moderation');
- title(host,'Модерация фотографий и историй','Ничего не публикуется автоматически.');
- const list=(items,type)=>{const group=$('section','ad-live-subsection');
-   title(group,type==='photos'?'Фотографии на проверке':'Истории на проверке');
-   if(!items.length)message(group,'Новых материалов нет');
-   for(const item of items){
-      const article=$('div','ad-live-review');
-      article.append($('strong','',item.display_name||'Гость'));
-      if(type==='photos'){
-        const link=$('a','ad-live-photo','Открыть фото');link.href='/api/index.php?r=media%2Fphoto&id='+encodeURIComponent(item.id);
-        link.target='_blank';link.rel='noopener noreferrer';article.append(link,$('p','',item.caption||'Без подписи'));
-      }else article.append($('p','',item.content||''));
-      for(const [status,label]of [['approved','Одобрить'],['rejected','Отклонить']]){
-        const b=button(label,async()=>{b.disabled=true;
-          try{await call('admin/review',{method:'POST',body:{type,id:item.id,status}});article.remove()}
-          catch(err){message(article,errorText(err),'error')}finally{b.disabled=false}
-        });
-        article.append(b);
-      }
-      group.append(article);
-   }
-   host.append(group);
- };
- list(data.photos||[],'photos');list(data.stories||[],'stories');
-}
 async function renderSection(host,section){
  if(section==='overview'){await overview(host);return}
- if(section==='moderation'){await moderation(host);return}
  if(section==='menu'){await collection(host,'menu_options');return}
  if(section==='guests'){await guests(host);return}
  if(section==='schedule'){await schedule(host);return}
@@ -477,7 +450,7 @@ export async function activateAdminData(root,section){
  const destination=root.querySelector('.admin-content');if(!destination)return;
  // Venue comparison has its own approved detailed table in venues.js.
  // Never inject a generic database table above it.
- const supported=['overview','budget','tasks','schedule','moderation','menu'];
+ const supported=['overview','budget','tasks','schedule','menu'];
  if(!supported.includes(section))return;
  const host=$('section','ad-live-panel');host.setAttribute('aria-label','Данные свадебной базы');
  destination.prepend(host);
