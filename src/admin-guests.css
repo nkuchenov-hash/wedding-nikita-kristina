@@ -92,3 +92,12 @@ body.ad-gb-lock{overflow:hidden}
 @media(max-width:1200px){.ad-gb-edit-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:800px){.ad-gb-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ad-gb-expanded-content{padding:18px;margin:4px 5px 10px}}
 @media(max-width:470px){.ad-gb-edit-grid{grid-template-columns:1fr}.ad-gb-edit-field:has(textarea){grid-column:span 1}.ad-gb-edit-actions{flex-wrap:wrap}.ad-gb-edit-legend{font-size:11px}.ad-gb-expanded-content{padding:14px}}
+
+
+.ad-gb-response-section{border-top:1px solid #d2e2d1;margin-top:26px;padding-top:22px}
+.ad-gb-response-section h3{font-size:17px;color:#275438;margin:0 0 7px}
+.ad-gb-response-help{font-size:12px;line-height:1.55;color:#748b79;max-width:840px;margin:0 0 17px}
+.ad-gb-rsvp-form{background:#edf5ec;padding:17px 16px;border:1px solid #d8e7d7;border-radius:12px}
+.ad-gb-rsvp-form .ad-gb-edit-field{align-self:start}
+.ad-gb-rsvp-form textarea{min-height:78px}
+@media(max-width:630px){.ad-gb-rsvp-form{padding:12px 10px}}
