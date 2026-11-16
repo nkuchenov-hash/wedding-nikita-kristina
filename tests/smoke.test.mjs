@@ -98,3 +98,22 @@ test('protected guest roster edits any core field inline and separates relations
  assert.match(api,/admin\/guest\/fields/);
  assert.match(api,/admin\/guest\/rsvp/);
 });
+
+test('all venue documents and quotes are embedded in venue cards, not a separate admin section',async()=>{
+ const {adminModules}=await import('../src/data.js');
+ assert.ok(!adminModules.some(section=>section.id==='documents'));
+ assert.ok(adminModules.some(section=>section.id==='venues'));
+ const admin=await read('../src/admin-app.js');
+ assert.ok(!admin.includes('activateDocumentArchive'));
+ const venue=await read('../src/venue-detail-ui.js');
+ assert.match(venue,/\['documents','Документы'\]/);
+ assert.match(venue,/data-venue-files/);
+ assert.match(venue,/data-venue-files-kind/);
+ const renderer=await read('../src/venues.js');
+ assert.match(renderer,/hydrateVenueFiles\(root\)/);
+ const loader=await read('../src/venue-files-ui.js');
+ assert.match(loader,/admin%2Fvenue-files/);
+ assert.match(loader,/f\.venue_id===id/);
+ const gate=await read('../tools/admin-gateway.php');
+ assert.match(gate,/src\/venue-files-ui\.js/);
+});

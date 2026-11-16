@@ -7,6 +7,7 @@
  */
 import {VENUE_RECORDS} from './venues-data.js';
 import {renderVenueNewPage,filteredVenuePhotos,getVenueCover} from './venue-detail-ui.js';
+import {hydrateVenueFiles} from './venue-files-ui.js';
 export const PUBLIC_VENUES = [
   {id:'vesenniy',name:'Весенний',region:'city',area:'Обводный канал',website:''},
   {id:'kraft',name:'Крафт — лофт',region:'city',area:'Санкт-Петербург'},
@@ -221,6 +222,7 @@ function redraw(root){
  const categoryScroll=root.querySelector('.vdp-photo-categories')?.scrollLeft??0;
  const stripScroll=root.querySelector('.vdp-filmstrip')?.scrollLeft??0;
  el.outerHTML=renderVenueAdmin();
+ hydrateVenueFiles(root);
  const n=root.querySelector('[data-state="guestCount"]');if(n)n.value=String(state.guestCount);
  for(const [key,v] of [['kind',ui.kind],['sort',ui.sort],['date',ui.date],['chosenDay',ui.chosenDay],['visit',ui.visit],['materials',ui.materials],['budget',ui.budget],['capacity',ui.capacity]]){
   const x=root.querySelector('[data-ui="'+key+'"]');if(x)x.value=v;

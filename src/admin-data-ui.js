@@ -90,7 +90,7 @@ async function overview(host){
  const venueBox=$('div','ad-overview-venue-summary');venuesCard.append(venueBox);
  const financeCard=panel('Бюджет','budget','Смотреть бюджет');
  const budgetBox=$('div','ad-overview-finance');financeCard.append(budgetBox);
- const docsCard=panel('Фотографии и документы','documents','Все документы');
+ const docsCard=panel('Материалы площадок','venues','Открыть площадки');
  const docBox=$('div','ad-overview-docs');docsCard.append(docBox);
  const programCard=panel('Программа свадьбы','schedule','Открыть программу');
  const schedule=$('div','ad-overview-schedule');
@@ -127,9 +127,9 @@ async function overview(host){
    docBox.replaceChildren();
    const photos=$('a','ad-overview-doc-item');photos.href='#/admin/photos';
    photos.append($('strong','',photoCount),$('span','','фотографий'),$('small','',photoVenues+' альбомов'));
-   const documents=$('a','ad-overview-doc-item');documents.href='#/admin/documents';
+   const documents=$('a','ad-overview-doc-item');documents.href='#/admin/venues';
    documents.append($('strong','',docsCount===null?'—':docsCount),
-     $('span','','документов и видео'),$('small','',docsCount===null?'Проверка архива':'Ссылки на оригиналы в Drive'));
+     $('span','','документов и видео'),$('small','',docsCount===null?'Проверка архива':'В карточках площадок'));
    docBox.append(photos,documents);
  };
  const renderVenues=()=>{

@@ -185,7 +185,7 @@ $types = [
     'src/admin-app.js' => 'text/javascript; charset=UTF-8',
     'src/admin-data-ui.js' => 'text/javascript; charset=UTF-8',
     'src/admin-photos.js' => 'text/javascript; charset=UTF-8',
-    'src/admin-documents.js' => 'text/javascript; charset=UTF-8',
+    'src/venue-files-ui.js' => 'text/javascript; charset=UTF-8',
     'src/admin-guests.js' => 'text/javascript; charset=UTF-8',
     'src/data.js' => 'text/javascript; charset=UTF-8',
     'src/venues.js' => 'text/javascript; charset=UTF-8',
@@ -201,7 +201,7 @@ $types = [
     'src/venue-detail-ui.css' => 'text/css; charset=UTF-8',
     'src/admin-data.css' => 'text/css; charset=UTF-8',
     'src/admin-photos.css' => 'text/css; charset=UTF-8',
-    'src/admin-documents.css' => 'text/css; charset=UTF-8',
+    'src/venue-files-ui.css' => 'text/css; charset=UTF-8',
     'src/admin-guests.css' => 'text/css; charset=UTF-8',
 ];
 $asset = $_GET['asset'] ?? 'index.html';
