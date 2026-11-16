@@ -205,6 +205,42 @@ export function renderVenueQuoteEditorRow(q={}){
   '<button data-remove-venue-quote type="button" title="Убрать вариант из расчётов">Убрать</button>'+
   '</div>';
 }
+
+/* Prioritize decision data over venue research photos on the Overview tab.
+   The gallery stays intact but appears AFTER all costs and conditions. */
+function venueOverview(v,ctx,photos){
+ const sc=ctx.weighted(v),quoted=ctx.estimate(v),extras=ctx.extraTotal(v);
+ const total=quoted.value===null?null:quoted.value+extras;
+ const day19=ctx.dayStatus(v,'19');
+ const score=sc.value===null?'Не оценено':sc.value+' / '+RATING_MAX;
+ const venueStatus=day19==='available'?'Свободно':ctx.dayText(v,'19');
+ const prices=[['menu','Меню'],['rent','Аренда'],['deposit','Депозит'],['sound','Звук'],['light','Свет'],['service','Сервис']];
+ const sourceCost=getCost(v);
+ const metric=(label,main,note='',tone='')=>'<article class="vdp-overview-metric '+tone+'"><span class="vdp-overview-metric-label">'+label+'</span><div class="vdp-overview-metric-value">'+main+'</div>'+(note?'<small>'+note+'</small>':'')+'</article>';
+ const head='<section class="vdp-parameter-dashboard" aria-label="Главные параметры площадки">'+
+  '<div class="vdp-dashboard-title"><div><span class="vdp-dashboard-eyebrow">КРАТКО О ПЛОЩАДКЕ</span><h2>Параметры для выбора</h2></div><label class="vdp-dashboard-guest-count">Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+ctx.guests+'" aria-label="Число гостей для пересчёта сметы площадки"></label></div>'+
+  '<div class="vdp-overview-metrics">'+
+  metric('19 июня · приоритет',inlineValue('date:19',venueStatus,{label:'Доступность 19 июня',kind:'date'}),'Нажмите, чтобы уточнить дату','is-date '+h(day19))+
+  metric('Известный бюджет · '+ctx.guests+' гостей','<strong>'+money(total)+'</strong>',quoted.value===null?'Смета ещё не рассчитана':quoted.partial?'Предварительный расчёт':'По полученной смете','is-budget')+
+  metric('Вместимость',inlineValue('capacity',v.capacity,{label:'Количество гостей',kind:'number',empty:'Уточнить'}),'Человек максимум')+
+  metric('Рейтинг','<a class="vdp-metric-link" href="#/admin/venues/'+encodeURIComponent(v.id)+'/rating">'+h(score)+'</a>',sc.provisional?'Оценка предварительная':'Критерии учтены')+
+  metric('Расположение',inlineValue('region',v.region==='country'?'За городом':'Санкт-Петербург',{label:'Расположение',kind:'region'}),'Город предпочтительнее')+
+  metric('Осмотр',inlineValue('visited',v.visited?'Посмотрели':'Не подтверждён',{label:'Личный осмотр',kind:'visited'}),'Статус посещения')+
+  '</div></section>';
+ const detail='<div class="vdp-dashboard-details">'+
+  '<section class="vdp-pane"><h2>Даты и формат</h2>'+dates(v,ctx)+
+    '<p class="vdp-inline-label">Условия</p>'+inlineValue('summary',v.summary,{label:'Условия',kind:'multiline',className:'vdp-inline-block'})+
+    '<p class="vdp-inline-label">Особенности вместимости и рассадки</p>'+inlineValue('capacityNote',v.capacityNote,{label:'Формат и рассадка',kind:'multiline',className:'vdp-inline-block'})+'</section>'+
+  '<section class="vdp-pane"><h2>Стоимость и условия оплаты</h2>'+budget(v,ctx)+
+    '<div class="vdp-key-costs">'+prices.map(([key,label])=>'<div><span>'+label+'</span>'+
+       inlineValue('cost:'+({deposit:'minSpend'}[key]||key),sourceCost[key]?.value,{label,kind:'number',empty:'Нет данных'})+'</div>').join('')+'</div>'+
+    '<div class="vdp-overview-actions"><a class="vdp-primary-link" href="#/admin/venues/'+encodeURIComponent(v.id)+'/budget">Полная смета по строкам →</a>'+
+      '<a class="vdp-primary-link vdp-document-entry" href="#/admin/venues/'+encodeURIComponent(v.id)+'/documents">Файлы и предложения площадки →</a></div></section>'+
+  '</div>';
+ const gallerySection='<section class="vdp-pane vdp-overview-gallery"><div class="vdp-row-between"><div><h2>Фотографии площадки</h2><p class="vdp-gallery-context">Материалы осмотров для подробного знакомства с площадкой</p></div><a href="#/admin/venues/'+encodeURIComponent(v.id)+'/photos">Все '+photos.length+' фото →</a></div>'+gallery(v,ctx.ui)+'</section>';
+ return '<div class="vdp-overview">'+head+detail+scopeList(v)+gallerySection+'</div>';
+}
+
 export function renderVenueNewPage(v,ctx){
  const tab=ctx.ui.detailTab||'overview',photos=getVenuePhotos(v);
  const tabs=[['overview','Обзор'],['photos','Фотографии'],['budget','Смета'],['documents','Документы'],['terms','Условия'],['rating','Рейтинг']];
@@ -214,8 +250,6 @@ export function renderVenueNewPage(v,ctx){
  else if(tab==='documents')body=venueDocuments(v);
  else if(tab==='terms')body=infoPane(v,ctx);
  else if(tab==='rating')body=ratingPane(v,ctx);
- else body='<div class="vdp-overview"><section class="vdp-pane"><div class="vdp-row-between"><h2>Фотографии с осмотра</h2><a href="#/admin/venues/'+encodeURIComponent(v.id)+'/photos">Все '+photos.length+' фото →</a></div>'+gallery(v,ctx.ui)+'</section>'+
- '<section class="vdp-pane"><h2>Даты и формат</h2>'+dates(v,ctx)+'<p class="vdp-inline-label">Условия</p>'+inlineValue('summary',v.summary,{label:'Условия',kind:'multiline',className:'vdp-inline-block'})+'<p class="vdp-inline-label">Вместимость</p>'+inlineValue('capacity',v.capacity,{label:'Максимум гостей',kind:'number'})+inlineValue('capacityNote',v.capacityNote,{label:'Формат и рассадка',kind:'multiline'})+'</section>'+
- '<section class="vdp-pane"><h2>Стоимость</h2>'+budget(v,ctx)+'<div class="vdp-key-costs">'+[['menu','Меню'],['rent','Аренда'],['deposit','Депозит'],['sound','Звук'],['light','Свет'],['service','Сервис']].map(([k,l])=>'<div><span>'+l+'</span>'+inlineValue('cost:'+({deposit:'minSpend'}[k]||k),getCost(v)[k]?.value,{label:l,kind:'number',empty:'Нет данных'})+'</div>').join('')+'</div><div class="vdp-overview-actions"><a class="vdp-primary-link" href="#/admin/venues/'+encodeURIComponent(v.id)+'/budget">Полная смета по строкам →</a><a class="vdp-primary-link vdp-document-entry" href="#/admin/venues/'+encodeURIComponent(v.id)+'/documents">Файлы и предложения площадки →</a></div></section>'+scopeList(v)+'</div>';
+ else body=venueOverview(v,ctx,photos);
  return '<div class="vdp-page"><div class="vdp-top-actions"><a class="vdp-back" href="#/admin/venues">← Все площадки</a><span class="vdp-inline-hint">Нажмите на значение, чтобы изменить его ✎</span></div>'+(ctx.ui.savedVenue===v.id?'<p class="vdp-save-confirmation" role="status">Изменения сохранены в общей базе. Таблица, рейтинг и смета обновлены.</p>':'')+hero(v,ctx,photos)+'<div class="vdp-layout"><nav class="vdp-tabs" aria-label="Разделы площадки">'+tabs.map(([id,l])=>'<a href="#/admin/venues/'+encodeURIComponent(v.id)+'/'+id+'" class="'+(id===tab?'selected':'')+'">'+l+'</a>').join('')+'</nav><div class="vdp-content">'+body+'</div><footer class="vdp-foot">Сметы и фотографии — из материалов площадок и Wedding Drive. Неизвестные расходы в итог не включены.</footer></div>'+lightbox(v,ctx.ui)+'</div>';
 }
