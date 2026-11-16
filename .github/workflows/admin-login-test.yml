@@ -90,6 +90,8 @@ jobs:
             test -s "/tmp/$asset"
           done
           grep -Fq 'activateGuestDirectory' /tmp/admin-guests.js
+          grep -Fq 'Приглашение отправлено' /tmp/admin-guests.js
+          grep -Fq 'invitations/sent' /tmp/admin-guests.js
           grep -Fq 'activateDocumentArchive' /tmp/admin-documents.js
           grep -Fq 'activatePhotoArchive' /tmp/admin-photos.js
           echo 'ADMIN_ALL_ARCHIVE_INTERFACES_ACCESSIBLE'
@@ -109,6 +111,7 @@ jobs:
           assert int(guest['confirmed'])<=int(guest['registered'])
           assert int(guest['public_visible'])<=int(guest['confirmed'])
           assert int(guest['confirmed'])<=int(guest['responded'])
+          assert isinstance(data.get('recent_activity'), list)
           print('GUEST_LIFECYCLE_DASHBOARD_OK')
           PY
           python3 - <<'PY'
