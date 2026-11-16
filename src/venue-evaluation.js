@@ -109,8 +109,10 @@ export function scoreVenue(v,guests,cost=estimateVenue(v,guests)){
  else if(alternates.includes('available'))add('date',24,true,'Подтверждено 18 или 20 июня, но не 19');
  else if([preferred,...alternates].every(x=>x==='unavailable'))add('date',0,true,'Все рассматриваемые даты заняты');
  else add('date',0,false,'Доступность рассматриваемой даты не подтверждена');
- if(cost.value!==null)add('cost',pricePoints(cost.value),true,cost.partial?'Предварительная стоимость':'Полученная смета');
- else add('cost',0,false,'Полная стоимость неизвестна');
+ // Rent-only information is never a comparable total event quote.
+ const comparableCost=cost.value!==null && !(cost.kind==='minimum'&&perGuestPrice(v)===null);
+ if(comparableCost)add('cost',pricePoints(cost.value),true,cost.partial?'Предварительная стоимость':'Полученная смета');
+ else add('cost',0,false,'Банкет и прочие расходы не рассчитаны');
  const cap=num(v.capacity),n=Math.round(Number(guests)||80);
  if(cap!==null&&cap>0)add('capacity',cap>=n?10:0,true,cap>=n?'Вмещает '+n+' гостей':'Недостаточная вместимость');
  else add('capacity',0,false,'Вместимость не подтверждена');
