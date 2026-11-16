@@ -1,11 +1,25 @@
 # Wedding backend — private database and future guest portal
 
-**Status (2026-11-15):** Code deployed on REG.RU shared hosting into
-`/var/www/u3728035/data/wedding-private/backend`; SQLite database created outside
-`www/`, schema validated, 25 venue records seeded. The runtime config
-`wedding-config.json` deliberately has `enabled: false` and public API routes are
-NOT installed. Do not accept personal data until trusted HTTPS and
-administrative/guest authorization are externally verified.
+**Status (2026-11-16):** Private organiser admin LIVE at
+`https://nikitakristina.ru/admin/`, protected with server-side form
+authentication over trusted HTTPS. Guest invitation main site is still a
+maintenance placeholder; the guest-facing API remains intentionally disabled.
+
+Verified current private SQLite records (server logs):
+- **114 people** from the original Wedding Drive sheet, with 114 full source
+  profiles, draft English variants and **71 relationships**; 8 invitation
+  decisions flagged for review. **No invites sent and no RSVP accepted.**
+- **25 venue records**, **330 venue photographs** indexed with original Drive
+  IDs and room-category labels (linked Drive thumbnails, not binary copies).
+- **51 Drive source references** — 41 documents/estimates, 7 videos, 3
+  overarching archive folders, imported via a server-decrypted encrypted
+  inventory file with no readable Drive IDs in the public Git repository.
+- **12 planning tasks**, **2 schedule events**; no invented payments or
+  approved menu. Unrequested supplier prototype rows were deleted (0 remain).
+
+Source files are served through a password-protected admin-only route.
+The originals remain in Google Drive; image/document bytes are not copied
+to REG.RU. Database, backups and encryption keys remain off webroot.
 
 ## Architecture
 
@@ -17,16 +31,16 @@ administrative/guest authorization are externally verified.
 - **Sessions:** private `wedding-private/sessions`; HttpOnly, Secure and SameSite=Lax.
 - **Secrets:** `wedding-private/wedding-config.json` (0600), random server-side
   invite hashing pepper, and password hashes stored in database. Never commit either.
-- **Migrations and seeds:** `bin/migrate.php`, `bin/seed-venues.php`, `bin/smoke.php`.
+- **Migrations and seeds:** `bin/migrate.php`, `bin/seed-venues.php`, `bin/import-venue-files.php`, `bin/import-guests.php`, `bin/smoke.php`.
   Existing venue edits are never overwritten by the seed process.
 - **Automated deploy:** `.github/workflows/backend.yml` copies backend source only
   to the private directory, backs up the DB before reapplying idempotent migrations,
   tests SQLite constraints, and verifies backend remains disabled.
-- **Source of guests:** a later Excel file; none is currently imported.
+- **Source of guests:** imported five real Google Sheets tabs via an encrypted source reference, with CSV fetched directly by REG.RU into private temporary files and removed after import.
 
 ## Access rules (already implemented in the API)
 
-- Admins have bcrypt password hashes and private server sessions.
+- Live organizer access uses a bcrypt `.htpasswd` credential verified by PHP at `/admin/index.php` with an HttpOnly Secure session. The future API also supports separate admins.
 - Guests enter using high-entropy invitation tokens. Only HMAC-SHA-256 hashes of
   tokens are stored. Tokens can be expired or revoked.
 - Guests can edit their own profile, RSVP, menu choices and accompanying people's
@@ -42,7 +56,13 @@ administrative/guest authorization are externally verified.
 - Login and upload endpoints have rate limits, and input fields have size/type checks.
 - API accepts private operations only over HTTPS **and** when enabled in private config.
 
-## Supported paths (not exposed on the live domain yet)
+## Live organiser routes and future guest routes
+
+Live organizer data are available ONLY after login via
+`/admin/index.php?api=<route>` and the same server-side session as the admin
+HTML/JS/CSS. The guest-facing `/api/index.php?r=<route>` is not published.
+
+### Implemented API routes (public guest API remains disabled)
 
 Routes use `/api/index.php?r=<route>`. Deploy `public/index.php` ONLY once
 the PHP handler works, the Let's Encrypt certificate validates, an admin
@@ -54,13 +74,16 @@ account has been safely provisioned, and authorization tests pass.
 | Admin | auth/admin | POST | Authenticate with login and password |
 | Invited guest | auth/invite | POST | Authenticate using invitation token |
 | Signed-in user | auth/session, auth/logout | GET, POST | Role, CSRF, log out |
-| Admin | admin/overview, admin/guests | GET | Planning overview and full guest list |
-| Admin | admin/guests, admin/guest/update | POST | Create/update invited guests |
+| Admin | admin/overview, admin/guests | GET | Planning overview and 114 imported guests |
+| Admin | admin/guests, admin/guest/update | POST | Create/update organizer-only guest records |
 | Admin | admin/invitations | POST | Generate single-guest invitation token |
 | Admin | admin/import/guests | POST multipart | Import vetted CSV, no overwrite |
-| Admin | admin/records | GET/POST/PATCH | Structured venues, vendors, budgets, tasks, menu and timeline |
-| Admin | admin/settings | GET/POST | Event details and feature release gates |
+| Admin | admin/records | GET/POST/PATCH | Structured venues, budgets, tasks, menu and timeline |
+| Internal | admin/settings | GET/POST | Future guest feature gates; not exposed in admin navigation |
 | Admin | admin/moderation, admin/review | GET, POST | Approve/reject stories/photos |
+| Admin | admin/venue-files | GET | All 51 source document/video/archive references |
+| Admin | admin/guest-profile | GET | Complete original profile and relationships |
+| Admin | admin/guest-profile/update | PATCH | Update English name and seating group |
 | Guest | guest/me, guest/event | GET | Own profile and confirmed event data |
 | Guest | guest/profile | PATCH | Personal card and optional visibility consent |
 | Guest | guest/companions | GET/POST | People attending with the invitee |
@@ -84,25 +107,21 @@ plus-ones and uncertainties. Review possible couples/group entries, unknown
 child counts, and duplicate candidates before submitting the CSV into the
 admin tool. **Import does not constitute sending invitations or confirming RSVP.**
 
-## Additional production steps required
+## Remaining work before guest invitations
 
-1. Validate the domain's DNS and trusted Let's Encrypt certificate (including www).
-2. Confirm `/admin/index.php` is actually executed by PHP (not served as a file
-   or masked by a registrar redirect). Verify unauthenticated requests are rejected.
-3. Create an admin through **interactive** server CLI `php bin/create-admin.php username`;
-   never print a password in CI logs or store it in Git.
-4. Add a safe PHP API entrypoint under `/api/index.php` only after positive
-   handling tests. Enable `wedding-config.json` only after external TLS checks.
-5. Test role isolation, CSRF, private photos, guest invitation expiry and rate limits
-   against the real public domain and real networks from Russia and abroad.
-6. Test full backup restore. Current automatic SQLite snapshots are on the **same**
-   hosting account, not an offsite backup. Arrange encrypted independent backups in
-   an appropriate Russian location before collecting personal data.
-7. Publish a clear privacy policy, retention schedule, withdrawal/deletion process,
-   and verify consents appropriate to the guests' countries and data processing.
-8. Approve the guest-site design separately. Do **not** publish the invitation
-   just because backend and admin features are ready.
+1. Obtain the organizers' approval of the guest-facing site design before
+   publishing anything on the main domain.
+2. Complete testing of guest invitation login, isolation, consent, RSVP,
+   menu choices, media moderation, storage quotas and Russian privacy rules.
+3. Implement a tested independent encrypted off-site backup and restore
+   strategy. Current daily SQLite backups are kept on the same hosting account.
+4. Reconcile unapproved menu, undetermined vendor quotes and actual payments
+   as they arrive. Do not make up these values.
+5. Review Google Drive's own sharing permissions for guest-list materials:
+   securing the website does not change external Drive sharing.
+6. For a fully self-contained archive, copy original document and photo bytes
+   into protected storage and verify capacity/quotas before migration. Current
+   admin indexes and previews all sourced files but retains originals in Drive.
 
-**No additional VPS or PocketBase installation is required for the current shared
-hosting.** PocketBase is a possible later migration option when a VPS with a
-persistent process is available.
+No PocketBase daemon or a second MySQL database is needed for the current
+shared-hosting architecture. Guest publishing remains disabled until approved.
