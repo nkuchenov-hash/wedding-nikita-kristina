@@ -6,6 +6,7 @@
  * Backend authentication is REQUIRED before this can be called a private admin.
  */
 import {VENUE_RECORDS} from './venues-data.js';
+import {VENUE_PRICING} from './venues-pricing.js';
 import {renderVenueNewPage,renderVenueQuoteEditorRow,filteredVenuePhotos,getVenueCover} from './venue-detail-ui.js';
 import {hydrateVenueFiles} from './venue-files-ui.js';
 import {estimateVenue,scoreVenue,PERSONAL_CRITERIA,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
@@ -167,42 +168,138 @@ async function persistVenue(id){
  if(!rowId)venueDb.rows.set(id,saved.id);
  return saved;
 }
-function collectVenueEdit(form){
- const id=form.dataset.venueEdit;
- const current=PUBLIC_VENUES.find(v=>v.id===id);
- if(!current)throw new Error('Неизвестная площадка');
- const v=get(current),old=state.venues[id]||{};
- const pick=key=>form.querySelector('[data-edit-field="'+key+'"]')?.value.trim()??'';
- const numeric=(key)=>formNumber(pick(key),key);
- const name=pick('name');if(!name)throw new Error('Введите название площадки');
- const dateAvailability=Object.assign({},v.dateAvailability||{});
- for(const day of ['18','19','20'])dateAvailability[day]=pick('date-'+day)||'unknown';
- const cost={...(v.cost||{})};
- for(const key of ['menu','rent','technical','extra','service','minSpend'])cost[key]=numeric('cost-'+key);
- if(cost.service!==null&&cost.service>100)throw new Error('Сервисный сбор не должен превышать 100%');
- const quotes=[];
- for(const row of form.querySelectorAll('[data-venue-quote-row]')){
-  const value=field=>row.querySelector('[data-quote-field="'+field+'"]')?.value?.trim()??'';
-  const guests=formNumber(value('guests'),'Гостей в смете');
-  const total=formNumber(value('total'),'Полная сумма сметы');
-  if(guests===null&&total===null&&!value('label'))continue;
-  if(!Number.isInteger(guests)||guests<1||guests>500||total===null)
-   throw new Error('У каждого варианта сметы укажите количество гостей и сумму');
-  quotes.push({guests,total,date:value('date'),label:value('label'),kind:value('kind')||'quote'});
+// One editor per displayed value. No second "Редактирование" section.
+const INLINE_DAYS=['unknown','available','pending','unavailable'];
+const INLINE_FIELD_ALLOW=new Set(['name','area','region','capacity','capacityNote','visited','summary','notes','contactPhone','contactEmail','address','website','drive','photos','quoteSource','included','excluded','questions']);
+const INLINE_COST_ALLOW=new Set(['menu','rent','technical','extra','service','minSpend','sound','light','welcome','drinks','cake','corkage','staff','extension']);
+const INLINE_EXTRA_ALLOW=new Set(EXTRAS.map(([key])=>key));
+const PRICING_KEY={technical:'tech',minSpend:'deposit'};
+function currentInlineValue(v,key){
+ if(key.startsWith('date:'))return dayStatus(v,key.slice(5));
+ if(key.startsWith('cost:')){
+  const field=key.slice(5),current=v.cost?.[field];
+  if(current!==undefined&&current!==null&&current!=='')return String(current);
+  const pricing=VENUE_PRICING[v.id]?.[PRICING_KEY[field]||field];
+  return typeof pricing?.value==='number'?String(pricing.value):'';
  }
- const updates={
-  ...old,name,area:pick('area'),region:pick('region'),address:pick('address'),
-  capacity:numeric('capacity'),capacityNote:pick('capacityNote'),
-  visited:pick('visited')==='true',summary:pick('summary'),notes:pick('notes'),
-  dateAvailability,availability:dateAvailability['19'],cost,quotes,
-  included:formTextLines(pick('included')),
-  excluded:formTextLines(pick('excluded')),
-  questions:formTextLines(pick('questions')),
-  website:pick('website'),drive:pick('drive'),photos:pick('photos'),
-  quoteSource:pick('quoteSource'),
-  contactPhone:pick('contactPhone'),contactEmail:pick('contactEmail')
- };
- return {id,updates};
+ if(key.startsWith('extra:'))return v.extras?.[key.slice(6)]??'';
+ if(['included','excluded','questions'].includes(key))return (v[key]||[]).join('\n');
+ if(key==='visited')return v.visited?'true':'false';
+ return v[key]??'';
+}
+function updateInlineOverrides(id,key,raw){
+ const base=PUBLIC_VENUES.find(x=>x.id===id);
+ if(!base)throw new Error('Площадка не найдена');
+ const v=get(base),old=state.venues[id]||{},text=String(raw??'').trim();
+ const changes={...old};
+ if(key.startsWith('date:')){
+  const day=key.slice(5);
+  if(!['18','19','20'].includes(day)||!INLINE_DAYS.includes(text))throw new Error('Недопустимый статус даты');
+  changes.dateAvailability={...v.dateAvailability,[day]:text};
+  if(day==='19')changes.availability=text;
+ }else if(key.startsWith('cost:')){
+  const field=key.slice(5);
+  if(!INLINE_COST_ALLOW.has(field))throw new Error('Неизвестный расход');
+  const value=formNumber(text,field);
+  if(field==='service'&&value!==null&&value>100)throw new Error('Сервисный сбор должен быть не более 100%');
+  changes.cost={...v.cost,[field]:value};
+ }else if(key.startsWith('extra:')){
+  const field=key.slice(6);
+  if(!INLINE_EXTRA_ALLOW.has(field))throw new Error('Неизвестная доплата');
+  changes.extras={...v.extras,[field]:formNumber(text,field)};
+ }else if(INLINE_FIELD_ALLOW.has(key)){
+  if(key==='capacity'){const n=formNumber(text,'вместимость');if(n!==null&&!Number.isInteger(n))throw new Error('Вместимость должна быть целым числом');changes[key]=n}
+  else if(key==='visited')changes.visited=text==='true';
+  else if(key==='region'){if(!['city','country'].includes(text))throw new Error('Неизвестное расположение');changes.region=text}
+  else if(['included','excluded','questions'].includes(key))changes[key]=formTextLines(text.replace(/^[•\-]\s*/gm,''));
+  else if(key==='name'){if(!text)throw new Error('Название не может быть пустым');changes.name=text}
+  else changes[key]=text;
+ }else throw new Error('Редактирование этого поля запрещено');
+ return changes;
+}
+async function commitInlineChanges(id,updates,root){
+ if(!venueDb.ready)throw new Error(venueDb.error||'Общая база недоступна');
+ const had=Object.prototype.hasOwnProperty.call(state.venues,id);
+ const previous=state.venues[id];
+ state.venues[id]=updates;
+ try{
+  await queueVenuePersist(id);
+  save();ui.savedVenue=id;
+  redraw(root);
+ }catch(error){
+  if(had)state.venues[id]=previous;else delete state.venues[id];
+  save();redraw(root);
+  const node=root.querySelector('.vdp-page');
+  if(node){
+   const alert=document.createElement('p');alert.className='vdp-sync-error';
+   alert.setAttribute('role','alert');
+   alert.textContent='Не сохранено в базе: '+error.message;
+   node.prepend(alert);
+  }
+  throw error;
+ }
+}
+function buildInlineFieldEditor(trigger,v){
+ const key=trigger.dataset.venueInline,kind=trigger.dataset.inlineKind||'text';
+ const form=document.createElement('form');
+ form.className='vdp-inline-form';
+ form.dataset.inlineKey=key;
+ const value=currentInlineValue(v,key);
+ let control;
+ if(kind==='date'||kind==='visited'){
+  control=document.createElement('select');
+  const list=kind==='date'
+   ?[['unknown','Нет подтверждения'],['available','Свободно'],['pending','Уточняется'],['unavailable','Занято']]
+   :[['false','Не подтверждено'],['true','Да, осматривали']];
+  for(const [id,label] of list){const o=document.createElement('option');o.value=id;o.textContent=label;control.add(o)}
+  control.value=String(value);
+ }else if(kind==='multiline'||kind==='lines'){
+  control=document.createElement('textarea');control.rows=kind==='lines'?6:4;control.value=String(value);
+  control.placeholder=kind==='lines'?'По одному пункту на строку':'Введите значение';
+ }else{
+  control=document.createElement('input');control.type=kind==='number'?'number':kind==='email'?'email':'text';
+  if(kind==='number'){control.min='0';control.step='any';control.inputMode='decimal'}
+  control.value=String(value);
+ }
+ control.dataset.inlineControl='yes';control.setAttribute('aria-label','Новое значение');
+ const actions=document.createElement('div');actions.className='vdp-inline-actions';
+ const ok=document.createElement('button');ok.type='submit';ok.textContent='Сохранить';ok.className='vdp-inline-save';
+ const cancel=document.createElement('button');cancel.type='button';cancel.textContent='Отмена';cancel.dataset.cancelInline='';
+ actions.append(ok,cancel);form.append(control,actions);
+ trigger.replaceWith(form);control.focus();if(typeof control.select==='function'&&control.tagName!=='SELECT')control.select();
+ return form;
+}
+function buildInlineQuoteEditor(trigger,v,index){
+ const quotes=v.quotes||[];
+ const quote=quotes[index]||{};
+ const form=document.createElement('form');
+ form.className='vdp-inline-quote-form';
+ form.dataset.inlineQuoteIndex=String(index);
+ form.innerHTML=renderVenueQuoteEditorRow(quote)+
+ '<div class="vdp-inline-actions"><button type="submit" class="vdp-inline-save">Сохранить смету</button>'+
+ '<button type="button" data-cancel-inline>Отмена</button></div>';
+ if(trigger)trigger.replaceWith(form);
+ else{
+  const heading=document.querySelector('[data-add-inline-quote]')?.closest('.vdp-pane');
+  if(heading)heading.append(form);
+ }
+ form.querySelector('[data-quote-field="guests"]')?.focus();
+ return form;
+}
+function collectInlineQuote(form,v){
+ const row=form.querySelector('[data-venue-quote-row]');
+ const val=field=>row?.querySelector('[data-quote-field="'+field+'"]')?.value?.trim()||'';
+ const guests=formNumber(val('guests'),'Гостей в смете');
+ const total=formNumber(val('total'),'Сумма сметы');
+ if(!Number.isInteger(guests)||guests<1||guests>500||total===null)throw new Error('Укажите число гостей и полную сумму сметы');
+ const kind=val('kind')||'quote';
+ if(!['quote','estimate','scenario'].includes(kind))throw new Error('Неизвестный тип расчёта');
+ const quote={guests,total,kind,date:val('date'),label:val('label')};
+ const index=Number(form.dataset.inlineQuoteIndex);
+ const quotes=[...(v.quotes||[])];
+ if(Number.isInteger(index)&&index>=0&&index<quotes.length)quotes[index]=quote;
+ else quotes.push(quote);
+ return quotes;
 }
 
 function estimate(v){return estimateVenue(v,state.guestCount);}
@@ -300,16 +397,13 @@ function headerSelect(id,aria,options){
 }
 export function renderVenueAdmin(){
  const match=(typeof location!=='undefined'?location.hash:'').match(/^#\/admin\/venues\/([^/?]+)(?:\/([^/?]+))?/);
- if(match){const next=decodeURIComponent(match[1]);if(ui.expanded!==next){ui.photoSection='all';ui.photoView='gallery';ui.photoIndex=0;ui.photoLightbox=false;}ui.expanded=next;ui.detailTab=match[2]||'overview';}else{ui.expanded=null;ui.photoLightbox=false;}
+ if(match){const next=decodeURIComponent(match[1]);if(ui.expanded!==next){ui.photoSection='all';ui.photoView='gallery';ui.photoIndex=0;ui.photoLightbox=false;}ui.expanded=next;ui.detailTab=match[2]==='edit'?'terms':(match[2]||'overview');}else{ui.expanded=null;ui.photoLightbox=false;}
  const all=PUBLIC_VENUES.map(get);
  const visited=all.filter(v=>v.visited).length;
  const full=all.filter(v=>weighted(v).value!==null&&!weighted(v).provisional).length;
  const list=visibleVenues(all);
  const detailVenue=all.find(v=>v.id===ui.expanded);
  if(match&&detailVenue){
-   if(ui.detailTab==='edit'&&!venueDb.ready){
-    return '<div class="vw-page" data-venues-page><a class="vdp-back" href="#/admin/venues/'+encodeURIComponent(detailVenue.id)+'">← К площадке</a><section class="vdp-pane vdp-editor-wait"><h2>Подключение редактора</h2><p>'+(venueDb.error?'Нет доступа к общей базе: '+h(venueDb.error)+'. Сохранение недоступно, пока соединение не восстановлено.':'Загружаем актуальные данные площадки из базы. Открывать форму до синхронизации нельзя, чтобы не затереть последние изменения.')+'</p><button type="button" data-retry-venue-db>Повторить подключение</button></section></div>';
-   }
    return '<div class="vw-page" data-venues-page>'+renderVenueNewPage(detailVenue,{guests:state.guestCount,ui,estimate,extraTotal,dayStatus,dayText,weighted})+'</div>';
   }
  return '<div class="vw-page" data-venues-page><div class="dashboard-heading vw-head"><div><div class="eyebrow">ОРГАНИЗАЦИЯ / ВЫБОР МЕСТА</div><h1>Сравнение площадок</h1><p>Регистрация 17 июня · торжество желательно 19 июня 2027 · город и загород</p></div><div class="vw-count"><strong>'+all.length+'</strong><span>площадок</span></div></div>'+
