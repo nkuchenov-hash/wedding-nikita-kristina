@@ -34,6 +34,27 @@ test('overview displays data directly as editable values, without an edit-only p
  assert.doesNotMatch(html,/data-venue-edit=/);
 });
 
+
+test('venue Overview begins with decision KPIs and keeps photo gallery last',()=>{
+ const html=renderVenueNewPage(venue,context('overview'));
+ const dashboard=html.indexOf('class="vdp-parameter-dashboard"');
+ const detail=html.indexOf('class="vdp-dashboard-details"');
+ const terms=html.indexOf('class="vdp-scope-grid"');
+ const gallery=html.indexOf('class="vdp-pane vdp-overview-gallery"');
+ assert.ok(dashboard>=0,'Decision dashboard must exist');
+ assert.ok(detail>dashboard,'Dates and budget must follow dashboard');
+ assert.ok(terms>detail,'Terms follow financial details');
+ assert.ok(gallery>terms,'Photos come after all decision information');
+ for(const key of ['date:19','capacity','region','visited']){
+  assert.ok(html.slice(dashboard,detail).includes('data-venue-inline="'+key+'"'),key+' editable on first screen');
+ }
+ assert.match(html.slice(dashboard,detail),/Рейтинг/);
+ assert.match(html.slice(dashboard,detail),/700 000|700 000|700 000/);
+ assert.match(html.slice(dashboard,detail),/data-state="guestCount"/);
+ assert.ok(!html.slice(dashboard,detail).includes('Фотографии с осмотра'),
+  'Photography must not be the first section');
+});
+
 test('conditions values are clickable in the same cards, no repeated editing section',()=>{
  const html=renderVenueNewPage(venue,context('terms'));
  for(const key of ['summary','capacity','capacityNote','visited','notes',
