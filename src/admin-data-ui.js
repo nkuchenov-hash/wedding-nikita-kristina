@@ -433,7 +433,7 @@ function budgetScenario(host){
    }
  }
  if(!estimates.length){
-   message(host,'Отдельные сметы площадок доступны в разделе «Документы и сметы».');
+   message(host,'Сметы и исходные файлы находятся в карточках соответствующих площадок.');
    return;
  }
  const section=$('section','ad-live-subsection');title(section,'Полученные предложения площадок',
