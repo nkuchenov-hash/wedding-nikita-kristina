@@ -19,9 +19,23 @@ try {
         $insertTask->execute([$task['id'],$task['title'],$task['description'],$task['status'],$task['priority']]);
         $tasks+=$insertTask->rowCount();
     }
-    $insertSchedule=$db->prepare('INSERT OR IGNORE INTO schedule_items(id,title,notes,is_public,sort_order) VALUES(?,?,?,?,?)');
+    // Remove only the six untouched generic draft rows from the original seed.
+    // Never delete an organizer-edited event or an event with an assigned date.
+    $obsolete=[
+        ['draft-schedule-arrival','Сбор гостей','Время и место будут определены после выбора площадки.'],
+        ['draft-schedule-ceremony','Церемония','Дата, время и формат ещё требуют подтверждения.'],
+        ['draft-schedule-welcome','Приветственный фуршет','Согласовать с площадкой и кейтерингом.'],
+        ['draft-schedule-dinner','Свадебный банкет','Время и меню после согласования договора.'],
+        ['draft-schedule-first-dance','Первый танец','Песня и постановка ещё не утверждены.'],
+        ['draft-schedule-final','Завершение вечера','Трансфер, такси и время окончания уточняются.']
+    ];
+    $removeOld=$db->prepare('DELETE FROM schedule_items WHERE id=? AND title=? AND notes=? AND start_at IS NULL AND is_public=0');
+    foreach($obsolete as $row) $removeOld->execute($row);
+    $insertSchedule=$db->prepare('INSERT OR IGNORE INTO schedule_items(id,title,start_at,place,notes,is_public,sort_order) VALUES(?,?,?,?,?,?,?)');
+    $scheduleAdded=0;
     foreach($seed['schedule']??[] as $item) {
-        $insertSchedule->execute([$item['id'],$item['title'],$item['notes'],$item['is_public'],$item['sort_order']]);
+        $insertSchedule->execute([$item['id'],$item['title'],$item['start_at'],$item['place'],$item['notes'],$item['is_public'],$item['sort_order']]);
+        $scheduleAdded+=$insertSchedule->rowCount();
     }
     $insertDoc=$db->prepare('INSERT OR IGNORE INTO documents(id,category,label,reference,visibility) VALUES(?,?,?,?,?)');
     foreach($seed['documents']??[] as $item) {
@@ -36,4 +50,4 @@ try {
     $db->rollBack();
     throw $e;
 }
-echo 'WEDDING_PLANNING_SEED_OK catering='.$vendors.' tasks='.$tasks." (existing edits preserved)\n";
+echo 'WEDDING_PLANNING_SEED_OK schedule_added='.$scheduleAdded.' tasks_added='.$tasks." (existing organizer edits preserved)\n";
