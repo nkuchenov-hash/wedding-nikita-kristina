@@ -82,3 +82,14 @@ jobs:
             'https://nikitakristina.ru/admin/index.php?api=admin%2Fguests' \
             -o /tmp/wedding-guests.json
           python3 -c 'import json;v=json.load(open("/tmp/wedding-guests.json"));g=v.get("guests",[]);assert v.get("ok") and len(g)==114 and "source_person_id" in g[0];print("PRIVATE_GUEST_PROFILES_OK",len(g))'
+
+          for asset in admin-guests.js admin-documents.js admin-photos.js; do
+            code=$(curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" -o "/tmp/$asset" \
+              -w '%{http_code}' "https://nikitakristina.ru/admin/index.php?asset=src/$asset")
+            test "$code" = 200
+            test -s "/tmp/$asset"
+          done
+          grep -Fq 'activateGuestDirectory' /tmp/admin-guests.js
+          grep -Fq 'activateDocumentArchive' /tmp/admin-documents.js
+          grep -Fq 'activatePhotoArchive' /tmp/admin-photos.js
+          echo 'ADMIN_ALL_ARCHIVE_INTERFACES_ACCESSIBLE'
