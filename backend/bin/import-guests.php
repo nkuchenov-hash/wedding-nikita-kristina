@@ -88,12 +88,65 @@ foreach($english as $row){
     $key=$row['Person ID']??'';
     if(preg_match('/^P[0-9]{3,4}$/',$key))$englishById[$key]=$row;
 }
+
+// Reconcile spreadsheet changes with imported values, leaving human-edited fields alone.
+// The *previous* source snapshots make it possible to recognize manual overrides.
+function sourceSide(array $row): string {
+    return match($row['Сторона']??''){
+        'Никита'=>'groom','Кристина'=>'bride','Оба','Общие'=>'both',default=>'other'
+    };
+}
+function sourceGuestFields(array $row): array {
+    return [
+        'first_name'=>mb_substr((string)($row['Имя']??''),0,120),
+        'last_name'=>mb_substr((string)($row['Фамилия']??''),0,120),
+        'display_name'=>trim((string)($row['Отображаемое имя']??'')),
+        'side'=>sourceSide($row),
+        'relationship'=>mb_substr((string)($row['Кем приходится / связи']??''),0,255),
+        'city'=>mb_substr((string)($row['Город / страна']??''),0,255),
+    ];
+}
+function sourceProfileFields(array $invite,array $profile,array $english): array {
+    return [
+        'name_en'=>mb_substr((string)($english['Display name (EN draft)']??$profile['Name EN']??''),0,255),
+        'seating_group'=>(string)($invite['Группа рассадки (черновик)']??''),
+        'decision'=>(string)($invite['Решение о приглашении']??''),
+        'base_count'=>(string)($invite['В базовом подсчёте']??''),
+    ];
+}
+function decodeImportSnapshot(?string $value): array {
+    if(!$value)return [];
+    $decoded=json_decode($value,true);
+    return is_array($decoded)?$decoded:[];
+}
+function syncImportedFields(\PDO $db,string $table,string $id,array $existing,array $before,array $after,int &$preserved): int {
+    $changes=[];
+    foreach($after as $field=>$value){
+        if(!array_key_exists($field,$before))continue;
+        if((string)($existing[$field]??'')===(string)$before[$field]){
+            if((string)($existing[$field]??'')!==(string)$value)$changes[$field]=$value;
+        }elseif((string)($existing[$field]??'')!==(string)$value){
+            $preserved++;
+        }
+    }
+    if(!$changes)return 0;
+    $assignments=array_map(fn($field)=>$field.'=?',array_keys($changes));
+    $column=$table==='guests'?'id':'guest_id';
+    $sql='UPDATE '.$table.' SET '.implode(',',$assignments).",updated_at=datetime('now') WHERE ".$column.'=?';
+    $db->prepare($sql)->execute([...array_values($changes),$id]);
+    return count($changes);
+}
+
 $db->beginTransaction();
-$added=0;$profileRows=0;$linkRows=0;$candidates=0;$preserved=0;
+$added=0;$profileRows=0;$linkRows=0;$candidates=0;$preserved=0;$changed=0;
 try {
     $insertGuest=$db->prepare('INSERT OR IGNORE INTO guests
         (id,first_name,last_name,display_name,side,relationship,city,status,invited)
         VALUES (?,?,?,?,?,?,?,\'draft\',0)');
+    $existingLookup=$db->prepare('SELECT g.first_name,g.last_name,g.display_name,g.side,g.relationship,g.city,
+      p.name_en,p.seating_group,p.decision,p.base_count,
+      p.source_people_json,p.source_invitation_json,p.source_profile_json,p.source_english_json
+      FROM guests g LEFT JOIN guest_profile_details p ON p.guest_id=g.id WHERE g.id=?');
     $insertProfile=$db->prepare('INSERT OR IGNORE INTO guest_profile_details
         (guest_id,source_person_id,name_en,source_people_json,source_invitation_json,
          source_profile_json,source_english_json,seating_group,decision,base_count)
@@ -107,29 +160,47 @@ try {
         if($type==='Организатор')continue;
         $name=trim((string)($row['Отображаемое имя']??''));
         if($name===''||mb_strlen($name)>255)throw new \RuntimeException('Missing guest display name');
-        $first=mb_substr((string)($row['Имя']??''),0,120);
-        $last=mb_substr((string)($row['Фамилия']??''),0,120);
-        $side=match($row['Сторона']??''){
-            'Никита'=>'groom','Кристина'=>'bride','Оба','Общие'=>'both',default=>'other'
-        };
+        $newGuest=sourceGuestFields($row);
         $id=deterministicUuid($person);
         $valid[$person]=$id;
-        $insertGuest->execute([$id,$first,$last,$name,$side,
-          mb_substr((string)($row['Кем приходится / связи']??''),0,255),
-          mb_substr((string)($row['Город / страна']??''),0,255)]);
+        $existingLookup->execute([$id]);
+        $existing=$existingLookup->fetch(\PDO::FETCH_ASSOC)?:null;
+        $insertGuest->execute([$id,$newGuest['first_name'],$newGuest['last_name'],$name,$newGuest['side'],
+          $newGuest['relationship'],$newGuest['city']]);
         $added+=$insertGuest->rowCount();
         $rowInvite=$invites[$person]??[];
         $rowProfile=$profiles[$person]??[];
         $rowEnglish=$englishById[$person]??[];
         $decision=(string)($rowInvite['Решение о приглашении']??'');
         if(mb_stripos($decision,'вопрос')!==false)$candidates++;
+        $newProfile=sourceProfileFields($rowInvite,$rowProfile,$rowEnglish);
         $encode=fn($v)=>json_encode($v,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_THROW_ON_ERROR);
-        $insertProfile->execute([$id,$person,
-          mb_substr((string)($rowEnglish['Display name (EN draft)']??$rowProfile['Name EN']??''),0,255),
+        if($existing){
+            $oldPeople=decodeImportSnapshot($existing['source_people_json']??null);
+            $oldInvite=decodeImportSnapshot($existing['source_invitation_json']??null);
+            $oldProfile=decodeImportSnapshot($existing['source_profile_json']??null);
+            $oldEnglish=decodeImportSnapshot($existing['source_english_json']??null);
+            if($oldPeople){
+                $changed+=syncImportedFields($db,'guests',$id,$existing,
+                    sourceGuestFields($oldPeople),$newGuest,$preserved);
+            }
+            // Missing original source snapshots are not proof that a field is unedited.
+            if($existing['source_people_json']!==null && $oldPeople){
+                $changed+=syncImportedFields($db,'guest_profile_details',$id,$existing,
+                    sourceProfileFields($oldInvite,$oldProfile,$oldEnglish),$newProfile,$preserved);
+            }
+        }
+        $insertProfile->execute([$id,$person,$newProfile['name_en'],
           $encode($row),$encode($rowInvite),$encode($rowProfile),$encode($rowEnglish),
-          (string)($rowInvite['Группа рассадки (черновик)']??''),$decision,
-          (string)($rowInvite['В базовом подсчёте']??'')]);
+          $newProfile['seating_group'],$newProfile['decision'],$newProfile['base_count']]);
         $profileRows+=$insertProfile->rowCount();
+        // Update imported source snapshots on every run; do not overwrite manual fields.
+        if($existing && $existing['source_people_json']!==null){
+            $db->prepare("UPDATE guest_profile_details SET source_people_json=?,
+                source_invitation_json=?,source_profile_json=?,source_english_json=?,
+                updated_at=datetime('now') WHERE guest_id=?")
+              ->execute([$encode($row),$encode($rowInvite),$encode($rowProfile),$encode($rowEnglish),$id]);
+        }
     }
     if(count($valid)<100)throw new \RuntimeException('Insufficient valid people found');
     $insertRelation=$db->prepare('INSERT OR IGNORE INTO guest_relationships
@@ -154,4 +225,4 @@ try {
 $recordCount=(int)$db->query('SELECT COUNT(*) FROM guests')->fetchColumn();
 $relationCount=(int)$db->query('SELECT COUNT(*) FROM guest_relationships')->fetchColumn();
 $profileCount=(int)$db->query('SELECT COUNT(*) FROM guest_profile_details')->fetchColumn();
-echo "PRIVATE_GUEST_IMPORT_OK people=$recordCount profiles=$profileCount relationships=$relationCount inserted=$added potential=$candidates invited_sent=0 rsvp_confirmed=0\n";
+echo "PRIVATE_GUEST_IMPORT_OK people=$recordCount profiles=$profileCount relationships=$relationCount inserted=$added changed_fields=$changed preserved_manual=$preserved potential=$candidates invited_sent=0 rsvp_confirmed=0\n";
