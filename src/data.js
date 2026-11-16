@@ -13,8 +13,15 @@ export const wedding = {
 export const sampleGuests = [
   { id: 'primer', name: 'Гость — пример', city: 'Санкт-Петербург', relation: 'Друг семьи', about: 'Здесь гость сможет рассказать о себе, о знакомстве с парой и добавить свои фотографии.', isSample: true, photos: [] },
 ];
+// Three-day wedding plan as given by the organizers. Do not invent timings for 18/19 June.
+export const weddingDays = [
+  {date:'2027-06-17',label:'17 июня',weekday:'Четверг',title:'Регистрация брака',time:'14:00',place:'Усадьба Марьино',description:'Регистрация в 14:00'},
+  {date:'2027-06-18',label:'18 июня',weekday:'Пятница',title:'Программа уточняется',time:null,place:null,description:'Мероприятия и время не определены'},
+  {date:'2027-06-19',label:'19 июня',weekday:'Суббота',title:'Торжественная часть',time:null,place:'Санкт-Петербург',description:'Место проведения выбирается, время уточняется'}
+];
 export const tentativeSchedule = [
-  { time:'14:00', title:'Регистрация брака', place:'Марьино', note:'Дата, время и место ещё уточняются.', tentative:true },
+  {date:'2027-06-17',time:'14:00',title:'Регистрация брака',place:'Усадьба Марьино',note:'Регистрация в 14:00.',tentative:false},
+  {date:'2027-06-19',time:null,title:'Торжественная часть',place:'Санкт-Петербург',note:'Площадка и время ещё не определены.',tentative:true}
 ];
 export const adminModules = [
   { id:'overview', label:'Обзор', icon:'▦', text:'Общий статус подготовки и ближайшие решения.' },
@@ -24,6 +31,6 @@ export const adminModules = [
   { id:'moderation', label:'Фото и истории', icon:'▧', text:'Проверка материалов гостей перед публикацией.' },
   { id:'settings', label:'Настройки сайта', icon:'⚙', text:'Информация о свадьбе и доступность гостевых функций.' },
   { id:'venues', label:'Площадки', icon:'⌂', text:'Место регистрации, банкетная площадка, договоры и логистика.' },
-  { id:'schedule', label:'Программа', icon:'◷', text:'План свадебного дня и отдельный список задач подготовки.' },
+  { id:'schedule', label:'Программа', icon:'◷', text:'17–19 июня 2027: регистрация в Марьино и торжественная часть в Санкт-Петербурге.' },
   { id:'tasks', label:'Задачи', icon:'✓', text:'Ответственные, сроки и контроль готовности.' },
 ];
