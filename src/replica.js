@@ -73,7 +73,7 @@ function home(){
         '<svg class="w-invite__botanical" aria-hidden="true" viewBox="0 0 180 250" fill="none"><path d="M166 1C124 89 94 167 28 242" stroke="currentColor" stroke-width="1.4"/><path d="M144 49C106 43 93 19 98 3c27 4 44 23 46 46ZM124 92C87 83 75 54 80 36c29 10 44 30 44 56ZM102 134C64 135 49 115 48 91c31 2 51 17 54 43ZM76 173C41 178 22 160 17 138c29-2 52 9 59 35ZM138 64C164 52 175 31 174 15c-28 6-37 21-36 49ZM111 119c27-10 39-32 35-55-25 9-38 26-35 55ZM87 157c25-6 43-23 41-49-28 6-40 21-41 49Z" stroke="currentColor" stroke-width="1.2" fill="currentColor" fill-opacity=".10"/></svg>'+
         '<span class="w-invite__eyebrow">ПРИГЛАШЕНИЕ НА СВАДЬБУ</span>'+
         '<h2 id="w-invite-title" class="w-invite__title">Разделите<br><em>эту историю с нами</em></h2>'+
-        '<p class="w-invite__message">В этом июне нас ждут три особенных дня: от камерной регистрации в усадебном саду до большого праздника в Петербурге. Будем счастливы разделить их с вами.</p>'+
+        '<p class="w-invite__message">В этом июне нас ждут три особенных дня: от регистрации в усадебном саду до большого праздника в Петербурге. Будем счастливы разделить эту историю с вами. Подробности участия в отдельных событиях сообщим лично.</p>'+
         '<div class="w-invite__rule" aria-hidden="true"><i></i><span>✦</span><i></i></div>'+
         '<div class="w-invite__details spb-invite__dates"><div><span>17 ИЮНЯ · ЧЕТВЕРГ</span><strong>17 июня 2027</strong><small>Регистрация · Усадьба Марьино</small></div><div><span>19 ИЮНЯ · СУББОТА</span><strong>19 июня 2027</strong><small>Торжество · Санкт-Петербург</small></div></div>'+
         '<p class="w-invite__tentative">18 июня — свободный день в Санкт-Петербурге. Все детали программы пока предварительные.</p>'+
