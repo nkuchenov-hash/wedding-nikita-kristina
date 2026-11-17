@@ -2,9 +2,9 @@
 // Real guest data, RSVPs, and photos must live behind Supabase RLS / signed URLs.
 export const wedding = {
   couple: ['Никита', 'Кристина'],
-  dateLabel: '17 июня 2027',
+  dateLabel: '17–19 июня 2027',
   time: '14:00',
-  location: 'Марьино',
+  location: 'Марьино / Санкт-Петербург',
   tentative: true,
   // Replace these with approved public image paths; a cutout foreground makes the depth effect possible.
   heroPhotoUrl: null,
