@@ -1,0 +1,49 @@
+/* Public guest pages — Mariyno garden + Saint Petersburg, 17–19 June 2027. */
+/* Isolated from the organizer interface. */
+.r-app .spb-hero-subline{display:block;margin-top:12px;font:500 clamp(10px,2.6cqw,12px)/1.5 'Manrope',Arial,sans-serif;letter-spacing:.11em;color:#eef4e7;text-shadow:0 1px 7px #122b1c}
+.r-home .spb-invite__dates{max-width:480px}
+.r-home .spb-invite__dates>div{padding:0 9px}
+.r-home .spb-invite__dates>div span{font-size:9px;letter-spacing:.12em}
+.r-home .spb-invite__dates>div strong{font-size:clamp(19px,5cqw,25px);white-space:normal}
+.r-home .spb-invite__dates>div small{font-size:clamp(10px,2.7cqw,12px)}
+.r-home .spb-transition{position:relative;overflow:hidden;isolation:isolate;padding:56px 7% 0;text-align:center;color:#224b37;background:linear-gradient(180deg,#eef3ec 0%,#e4ede6 68%,#dce6e1 100%)}
+.r-home .spb-transition:before{content:'';position:absolute;top:0;left:50%;width:104px;height:1px;transform:translateX(-50%);background:#c3ad7d}
+.r-home .spb-transition__eyebrow,.spb-city-venue__eyebrow{display:block;color:#987c52;font:700 10px/1.5 'Manrope',Arial,sans-serif;letter-spacing:.18em}
+.r-home .spb-transition h3,.spb-city-venue h2{margin:15px 0!important;font:500 clamp(42px,10cqw,62px)/1 'Cormorant Garamond',Georgia,serif!important;letter-spacing:-.035em;color:#214934}
+.r-home .spb-transition h3 em,.spb-city-venue h2 em{font-style:italic;color:#587b57}
+.r-home .spb-transition p,.spb-city-venue p{max-width:385px;margin:0 auto!important;font:400 14px/1.7 'Manrope',Arial,sans-serif!important;color:#546d5f}
+.spb-skyline{display:block;width:100%;height:auto;color:#52715e;pointer-events:none}
+.r-home .spb-transition>.spb-skyline{width:calc(100% + 30px);max-width:none;margin:18px -15px -3px;opacity:.9}
+.spb-program{position:relative;padding-bottom:98px!important;background:#f5f6f0}
+.spb-program .r-heading{position:relative;z-index:1;margin-bottom:10px}
+.spb-program .r-heading h1{font-size:clamp(50px,11.7cqw,70px)!important;line-height:.94!important;overflow-wrap:normal}
+.spb-program .r-heading h1 em{font-style:italic;color:#527b59}
+.spb-program__skyline{max-width:460px;margin:0 auto 15px;opacity:.62}
+.spb-program__notice{position:relative;z-index:1;max-width:410px;margin:0 auto 29px!important;padding:14px 17px;border-left:2px solid #b7a275;background:#eaf0e9;font:400 12px/1.7 'Manrope',Arial,sans-serif!important;color:#536e5a!important}
+.spb-days{display:flex;flex-direction:column;gap:16px;max-width:460px;margin:0 auto}
+.spb-day{display:grid;grid-template-columns:76px minmax(0,1fr);gap:15px;padding:25px 19px 24px 18px;background:#fff;border:1px solid #dce5db;border-radius:18px;box-shadow:0 6px 22px rgba(33,66,46,.04)}
+.spb-day--garden{background:linear-gradient(120deg,#eff4ed,#fff)}
+.spb-day--city{background:linear-gradient(120deg,#edf2f2,#fff)}
+.spb-day--celebration{border-color:#b1c9b1;background:linear-gradient(135deg,#e3eee2,#f9fbf6)}
+.spb-day__date{display:flex;gap:5px;flex-direction:column;align-items:flex-start;padding-right:11px;border-right:1px solid #d8e3da}
+.spb-day__date b{font:500 56px/.88 'Cormorant Garamond',Georgia,serif;color:#316041}
+.spb-day__date span{font:700 10px/1.45 'Manrope',Arial,sans-serif;letter-spacing:.1em;color:#7b8f7e}
+.spb-day__kicker{font:700 9px/1.5 'Manrope',Arial,sans-serif;letter-spacing:.12em;color:#9b7c50}
+.spb-day__body{min-width:0}
+.spb-day__body h2{margin:7px 0 9px!important;font:500 clamp(27px,7cqw,36px)/1.03 'Cormorant Garamond',Georgia,serif!important;color:#214632}
+.spb-day__body p{margin:0 0 10px!important;font:400 13px/1.65 'Manrope',Arial,sans-serif!important;color:#4f6554}
+.spb-day__body small{display:block;font:500 11px/1.5 'Manrope',Arial,sans-serif;color:#68816b}
+.spb-city-venue{padding:78px 7% 20px;text-align:center;background:linear-gradient(180deg,#f5f6f0,#e3ece6);color:#214b35;overflow:hidden}
+.spb-city-venue .spb-skyline{margin:24px auto 13px;max-width:460px}
+.spb-city-venue__pending{margin:0 auto;padding:12px 0 21px;max-width:400px;border-top:1px solid #bdd0c1;color:#597561;font:700 10px/1.5 'Manrope',Arial,sans-serif;letter-spacing:.16em}
+@media(max-width:365px){
+ .r-home .spb-transition{padding:43px 6% 0}
+ .r-home .spb-invite__dates>div{padding:0 5px}
+ .r-home .spb-invite__dates>div strong{font-size:18px}
+ .spb-program .r-heading h1{font-size:49px!important}
+ .spb-day{grid-template-columns:64px minmax(0,1fr);gap:12px;padding:20px 13px}
+ .spb-day__date b{font-size:47px}
+ .spb-day__date span{font-size:9px}
+ .spb-day__body h2{font-size:27px!important}
+}
+@media(prefers-reduced-motion:reduce){.spb-skyline{scroll-behavior:auto}}
