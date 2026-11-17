@@ -62,25 +62,27 @@ function bottom(path){return '<nav class="r-tabs" aria-label="Разделы с�
 function flour(){return '<div class="r-ornament" aria-hidden="true"><i></i><b>❧</b><i></i></div>'}
 function leaf(){return '<svg viewBox="0 0 180 210" fill="none" class="r-leaf" aria-hidden="true"><path d="M13 199c44-48 85-87 156-175" stroke="currentColor" stroke-width="1.5"/><path d="M49 156C6 147 7 105 16 93c28 13 38 36 33 63Zm23-27C55 91 78 61 91 58c10 27 3 52-19 71Zm31-38C71 80 72 45 89 33c24 20 26 42 14 58Zm27-36C118 31 135 10 154 8c8 18-1 36-24 47Z" stroke="currentColor" fill="currentColor" fill-opacity=".13"/><path d="M50 158c-21-22-27-43-34-65m56 35 19-70m13 33L89 33m41 21 24-46" stroke="currentColor" stroke-width="1"/></svg>'}
 function heading(top,title,sub=''){return '<div class="r-heading"><span class="r-micro">'+top+'</span><h1>'+title+'</h1>'+(sub?'<p>'+sub+'</p>':'')+'</div>'}
-function footer(){return '<footer class="r-footer">Никита <em>&</em> Кристина<span>Марьино · предварительно</span><small class="r-photo-credit">Фото пары и декора — временные иллюстративные материалы Pexels/Unsplash. На фото не Никита и Кристина. Фотографии Марьино предоставлены сайтом усадьбы; для постоянного использования потребуется разрешение правообладателя.</small></footer>'}
+function footer(){return '<footer class="r-footer">Никита <em>&</em> Кристина<span>Марьино × Санкт-Петербург · 17–19 июня 2027 · предварительно</span><small class="r-photo-credit">Фото пары и декора — временные иллюстративные материалы Pexels/Unsplash. На фото не Никита и Кристина. Фотографии Марьино предоставлены сайтом усадьбы; для постоянного использования потребуется разрешение правообладателя.</small></footer>'}
 function shell(path,body,cls=''){return '<div class="r-app '+cls+'"><div class="r-site">'+body+footer()+'</div>'+bottom(path)+'</div>'}
+const spbMotif="<svg class=\"spb-skyline\" viewBox=\"0 0 900 226\" preserveAspectRatio=\"xMidYMax meet\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\"><g fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 183h878M16 197c110-8 190-8 283 0s188 8 286 0 208-8 299 0M22 210c78-7 145-7 213 0m77 0c74-7 158-7 248 0m58 0c96-7 174-7 246 0\" opacity=\".38\"/><path d=\"M51 182v-48h169v48M46 133h179l-12-13H59zM80 132v50m35-50v50m35-50v50m35-50v50M63 151h145m-146 15h145\"/><path d=\"M290 182v-61h158v61M280 122h177l-14-11H294zM311 121v61m25-61v61m66-61v61m25-61v61M321 109c8-32 27-49 48-49s40 17 48 49M364 60v-16m-6 0h12M301 146h138\"/><path d=\"M519 182V137h141v45M508 137h164l-16-12H522zM540 137v45m39-45v45m39-45v45M579 125V69m-21 0h42l-21-57-21 57zm14-57h14M578 8v-6M544 162h91\"/><path d=\"M704 182v-41h149v41M694 141h171l-17-10H711zM729 141v41m32-41v41m32-41v41m32-41v41M720 159h125\"/></g></svg>";
 function home(){
   return shell('/',
-    '<section class="r-hero r-hero--editorial r-hero--board">'+img('boardPortrait','r-cover-photo','Иллюстративное свадебное фото: пока не фотография пары',true)+'<div class="r-hero-dim"></div><img class="r-hero-bouquet" src="./public/production/invitation-flowers-left.png" alt="" aria-hidden="true" loading="eager"><div class="r-top-label">УСАДЬБА МАРЬИНО</div><div class="r-hero-title"><span>Мы приглашаем вас на нашу свадьбу</span><h1>Никита<br><em>&</em><br>Кристина</h1>'+flour()+'<p>17 ИЮНЯ 2027</p></div><button type="button" class="r-scroll-indicator" data-scroll-welcome aria-label="Перейти к приглашению"><span>⌄</span></button></section>'+
+    '<section class="r-hero r-hero--editorial r-hero--board">'+img('boardPortrait','r-cover-photo','Иллюстративное свадебное фото: пока не фотография пары',true)+'<div class="r-hero-dim"></div><img class="r-hero-bouquet" src="./public/production/invitation-flowers-left.png" alt="" aria-hidden="true" loading="eager"><div class="r-top-label">МАРЬИНО · САНКТ-ПЕТЕРБУРГ</div><div class="r-hero-title"><span>Мы приглашаем вас на нашу свадьбу</span><h1>Никита<br><em>&</em><br>Кристина</h1>'+flour()+'<p>17 — 19 ИЮНЯ 2027</p><small class="spb-hero-subline">Три дня · две локации · одна история</small></div><button type="button" class="r-scroll-indicator" data-scroll-welcome aria-label="Перейти к приглашению"><span>⌄</span></button></section>'+
     '<section class="r-invitation w-invite" id="welcome" aria-labelledby="w-invite-title">'+
       '<div class="w-invite__content">'+
         '<svg class="w-invite__botanical" aria-hidden="true" viewBox="0 0 180 250" fill="none"><path d="M166 1C124 89 94 167 28 242" stroke="currentColor" stroke-width="1.4"/><path d="M144 49C106 43 93 19 98 3c27 4 44 23 46 46ZM124 92C87 83 75 54 80 36c29 10 44 30 44 56ZM102 134C64 135 49 115 48 91c31 2 51 17 54 43ZM76 173C41 178 22 160 17 138c29-2 52 9 59 35ZM138 64C164 52 175 31 174 15c-28 6-37 21-36 49ZM111 119c27-10 39-32 35-55-25 9-38 26-35 55ZM87 157c25-6 43-23 41-49-28 6-40 21-41 49Z" stroke="currentColor" stroke-width="1.2" fill="currentColor" fill-opacity=".10"/></svg>'+
         '<span class="w-invite__eyebrow">ПРИГЛАШЕНИЕ НА СВАДЬБУ</span>'+
-        '<h2 id="w-invite-title" class="w-invite__title">Разделите<br><em>этот день с нами</em></h2>'+
-        '<p class="w-invite__message">Будем счастливы видеть вас рядом в один из самых важных дней нашей жизни. Хотим провести его с теми, кто нам дорог.</p>'+
+        '<h2 id="w-invite-title" class="w-invite__title">Разделите<br><em>эту историю с нами</em></h2>'+
+        '<p class="w-invite__message">В этом июне нас ждут три особенных дня: от камерной регистрации в усадебном саду до большого праздника в Петербурге. Будем счастливы разделить их с вами.</p>'+
         '<div class="w-invite__rule" aria-hidden="true"><i></i><span>✦</span><i></i></div>'+
-        '<div class="w-invite__details"><div><span>КОГДА</span><strong>17 июня 2027</strong><small>Начало в 14:00</small></div><div><span>ГДЕ</span><strong>Усадьба Марьино</strong><small>Ленинградская область</small></div></div>'+
-        '<p class="w-invite__tentative">Дата, время и площадка пока предварительные.</p>'+
+        '<div class="w-invite__details spb-invite__dates"><div><span>17 ИЮНЯ · ЧЕТВЕРГ</span><strong>17 июня 2027</strong><small>Регистрация · Усадьба Марьино</small></div><div><span>19 ИЮНЯ · СУББОТА</span><strong>19 июня 2027</strong><small>Торжество · Санкт-Петербург</small></div></div>'+
+        '<p class="w-invite__tentative">18 июня — свободный день в Санкт-Петербурге. Все детали программы пока предварительные.</p>'+
       '</div>'+
-      '<figure class="w-invite__photo"><img src="./public/photos/estate.jpg" alt="Усадьба Марьино, исторический усадебный комплекс и парк" loading="lazy" decoding="async"><figcaption>Марьино · место нашей встречи</figcaption></figure>'+
+      '<figure class="w-invite__photo"><img src="./public/photos/estate.jpg" alt="Усадьба Марьино, исторический усадебный комплекс и парк" loading="lazy" decoding="async"><figcaption>Марьино · начало нашей истории</figcaption></figure>'+
+      '<div class="spb-transition"><span class="spb-transition__eyebrow">ОТ УСАДЕБНОГО САДА К НАБЕРЕЖНЫМ</span><h3>И дальше — <em>Петербург</em></h3><p>Каналы, летняя зелень и особенная атмосфера белых ночей. 18 июня оставляем для свободных прогулок, а 19-го собираемся на большой праздник.</p>'+spbMotif+'</div>'+
     '</section>'+
     '<section class="w-rsvp" id="rsvp" aria-labelledby="w-rsvp-title">'+
-      '<div class="w-rsvp__intro"><span class="w-rsvp__eyebrow">ВАШ ОТВЕТ</span><h2 id="w-rsvp-title">Будете <em>с нами?</em></h2><p>Пожалуйста, сообщите, сможете ли вы разделить с нами этот день.</p></div>'+
+      '<div class="w-rsvp__intro"><span class="w-rsvp__eyebrow">ВАШ ОТВЕТ</span><h2 id="w-rsvp-title">Будете <em>с нами?</em></h2><p>Пожалуйста, сообщите, сможете ли вы присоединиться к празднику. Участие в отдельных событиях 17 и 19 июня уточним после утверждения программы.</p></div>'+
       '<form data-rsvp class="w-rsvp__form">'+
         '<fieldset class="w-rsvp__choices"><legend>Планируете присутствовать?</legend>'+
           '<label class="w-rsvp__choice"><input type="radio" name="yesno" value="yes" checked><span>Да, с радостью!</span><span class="w-rsvp__check" aria-hidden="true">✓</span></label>'+
@@ -89,25 +91,24 @@ function home(){
         '<label class="w-rsvp__name">Ваше имя<input name="name" type="text" maxlength="100" autocomplete="name" placeholder="Как к вам обращаться" required></label>'+
         '<button type="submit" class="w-rsvp__submit">ПОСМОТРЕТЬ ОТВЕТ <span aria-hidden="true">→</span></button>'+
         '<output role="status" aria-live="polite"></output>'+
-        '<p class="w-rsvp__notice">Анкета пока работает в режиме предварительного просмотра: ответ не отправляется и не сохраняется. Отправка откроется после подключения защищённой регистрации.</p>'+
+        '<p class="w-rsvp__notice">Анкета пока только для просмотра: ответ не отправляется и не сохраняется. Подтверждение по отдельным дням появится в личном приглашении после утверждения программы.</p>'+
       '</form>'+
     '</section>'+
-    '<section class="r-home-links">'+heading('НАШ ПРАЗДНИК','Всё, что нужно знать')+'<a href="#/schedule">'+ic('schedule')+'Программа дня <b>↗</b></a><a href="#/info">'+ic('pin')+'Усадьба Марьино <b>↗</b></a><a href="#/guests">'+ic('guests')+'Наши близкие <b>↗</b></a><a href="#/gallery">'+ic('gallery')+'Фотографии <b>↗</b></a></section>',
+    '<section class="r-home-links">'+heading('НАШ ПРАЗДНИК','Всё, что нужно знать')+'<a href="#/schedule">'+ic('schedule')+'Программа трёх дней <b>↗</b></a><a href="#/info">'+ic('pin')+'Марьино и Петербург <b>↗</b></a><a href="#/guests">'+ic('guests')+'Наши близкие <b>↗</b></a><a href="#/gallery">'+ic('gallery')+'Фотографии <b>↗</b></a></section>',
     'r-home');
 }
-const items=[['Уточняется','Сбор гостей','Встреча и общение в усадьбе','glass'],['14:00','Регистрация','Самый важный момент нашего дня','rings'],['Уточняется','Праздничный ужин','Ужин, тосты, музыка и танцы','dish'],['Уточняется','Вечер','Продолжение праздника с близкими','music']];
 function schedule(){
  return shell('/schedule',
- '<section class="r-photo-head r-schedule-head r-cinematic-photo">'+img('boardTable','','Праздничный стол с цветами и свечами в зелёном саду',true)+'</section>'+
- '<section class="r-curve-content r-program"><svg class="r-section-wave" viewBox="0 0 500 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 4 C160 12 323 37 500 55 L500 60 H0Z" fill="currentColor"/></svg>'+
- heading('ПРОГРАММА ДНЯ','Как всё будет')+
- '<div class="r-program-modes" role="group" aria-label="Вариант свадебной программы"><button type="button" data-program-mode="one" aria-pressed="true">Один день</button><button type="button" data-program-mode="three" aria-pressed="false">Три дня</button></div>'+
- '<div class="r-program-one"><div class="r-timeline">'+items.map(item=>'<div class="r-time-item"><div class="r-time-icon">'+ic(item[3])+'</div><div class="r-time-line"><i></i></div><div class="r-time-description"><b>'+item[0]+'</b><h3>'+item[1]+'</h3><p>'+item[2]+'</p></div></div>').join('')+'</div></div>'+
- '<div class="r-program-three" hidden><p class="r-program-note">Альтернативный вариант на три дня. Программа не утверждена.</p>'+
- '<div class="r-day-card"><span>ЧЕТВЕРГ · 17 ИЮНЯ</span><h3>День 1 — встреча</h3><p>Приезд и неформальное знакомство с близкими. Время уточняется.</p></div>'+
- '<div class="r-day-card"><span>ПЯТНИЦА · 18 ИЮНЯ</span><h3>День 2 — накануне</h3><p>Прогулки, свободное время и вечерняя встреча. Детали уточняются.</p></div>'+
- '<div class="r-day-card r-day-card--main"><span>СУББОТА · 19 ИЮНЯ</span><h3>День 3 — торжество</h3><p><strong>14:00</strong> — церемония, затем ужин и праздничная вечеринка.</p></div></div>'+
- '</section>',
+ '<section class="r-photo-head r-schedule-head r-cinematic-photo">'+img('boardTable','','Иллюстративная фотография праздничного ужина',true)+'</section>'+
+ '<section class="r-curve-content r-program spb-program">'+
+ heading('17 — 19 ИЮНЯ 2027','Три дня.<br><em>Одна история.</em>','Планируем провести регистрацию в усадьбе Марьино, а большое торжество — в Санкт-Петербурге.')+
+ '<div class="spb-program__skyline">'+spbMotif+'</div>'+
+ '<p class="spb-program__notice">Это предварительная программа. Точное время, состав участников и адрес торжества 19 июня появятся после подтверждения.</p>'+
+ '<div class="spb-days" aria-label="Предварительная программа по дням">'+
+ '<article class="spb-day spb-day--garden"><div class="spb-day__date"><b>17</b><span>ИЮНЯ<br>ЧЕТВЕРГ</span></div><div class="spb-day__body"><span class="spb-day__kicker">ДЕНЬ ПЕРВЫЙ · МАРЬИНО</span><h2>Официальная регистрация</h2><p>Торжественная регистрация в усадьбе Марьино, среди старинной архитектуры и летнего парка.</p><small>14:00 — предварительно; детали и состав гостей уточняются</small></div></article>'+
+ '<article class="spb-day spb-day--city"><div class="spb-day__date"><b>18</b><span>ИЮНЯ<br>ПЯТНИЦА</span></div><div class="spb-day__body"><span class="spb-day__kicker">ДЕНЬ ВТОРОЙ · ПЕТЕРБУРГ</span><h2>Свободный день</h2><p>Никаких обязательных мероприятий: прогулки по каналам, встречи и белые ночи — каждый выбирает свой маршрут.</p><small>Свободная программа, без официального сбора</small></div></article>'+
+ '<article class="spb-day spb-day--celebration"><div class="spb-day__date"><b>19</b><span>ИЮНЯ<br>СУББОТА</span></div><div class="spb-day__body"><span class="spb-day__kicker">ДЕНЬ ТРЕТИЙ · ПЕТЕРБУРГ</span><h2>Большой праздник</h2><p>Торжественная часть, праздничный ужин, музыка и танцы с нашими близкими.</p><small>Место в Санкт-Петербурге и время начала уточняются</small></div></article>'+
+ '</div></section>',
  'r-schedule');
 }
 function guests(){
@@ -144,6 +145,9 @@ function venue(){
   '<div class="v2-venue-thumbnails"><figure>'+venueAsset('venue-left-hi.jpg','Самостоятельная фотоплитка: балюстрада и скульптура в зелёном саду')+'</figure><figure>'+venueAsset('venue-right-hi.jpg','Самостоятельная фотоплитка: белая скульптура среди деревьев')+'</figure></div>'+
   '</section>';
 }
+function cityCelebration(){
+ return '<section class="spb-city-venue" aria-labelledby="spb-city-title"><div class="spb-city-venue__eyebrow">19 ИЮНЯ · САНКТ-ПЕТЕРБУРГ</div><h2 id="spb-city-title">Продолжение — <em>в городе</em></h2><p>Вторая часть свадебной истории пройдёт в Петербурге. Выбираем площадку для торжественного вечера, а точный адрес сообщим позже.</p>'+spbMotif+'<div class="spb-city-venue__pending">ПЛОЩАДКА И ВРЕМЯ УТОЧНЯЮТСЯ</div></section>';
+}
 function dress(){
  return '<section class="r-dress"><div class="r-dress-statue">'+img('boardStatue','r-dress-bg','Классическая белая садовая скульптура')+'</div><div class="r-dress-leaves" aria-hidden="true"><img src="./public/production/dress-flowers.png" alt=""></div>'+
  '<div class="r-dress-content">'+heading('ДРЕСС-КОД','Вдохновение<br>в деталях','Мы будем рады, если в своих образах вы поддержите эстетику нашего дня.')+
@@ -152,7 +156,7 @@ function dress(){
  '<div class="r-dress-collage"><figure>'+img('boardOutfit1','','Тёмный костюм для торжественного приёма')+'</figure><figure>'+img('boardOutfit2','','Платье насыщенного зелёного оттенка')+'</figure><figure>'+img('boardOutfit3','','Элегантный костюм с бутоньеркой')+'</figure></div></div></section>';
 }
 function rsvp(){
- return '<section class="r-rsvp" id="rsvp">'+heading('ПОДТВЕРЖДЕНИЕ','Будем рады<br>вашему ответу','Анкета приглашения — пока демонстрация без сохранения данных.')+
+ return '<section class="r-rsvp" id="rsvp">'+heading('ПОДТВЕРЖДЕНИЕ','Будем рады<br>вашему ответу','Это предварительная форма без отправки. Участие по дням уточним в личных приглашениях.')+
  '<form data-rsvp><div class="r-rsvp-options"><label><input type="radio" name="yesno" value="yes" checked>'+ic('check')+' Я буду</label><label><input type="radio" name="yesno" value="no">'+ic('check')+' К сожалению, не смогу</label></div>'+
  '<label class="r-form-label">Имена гостей<input name="name" maxlength="100" autocomplete="off" placeholder="Например: Анна и Сергей"></label>'+
  '<label class="r-form-label">Особые пожелания<textarea maxlength="500" placeholder="Например: аллергии, пожелания по рассадке"></textarea></label>'+
@@ -161,14 +165,14 @@ function rsvp(){
 }
 function details(){return '<section class="r-details">'+heading('КОНТАКТЫ И ВАЖНОЕ','Полезная<br>информация')+
  '<div class="r-map r-map--illustration"><img src="./public/board/08-info/map-art-reference.webp" alt="Декоративная схема расположения усадьбы Марьино. Это не навигационная карта."></div><a class="r-map-real-link" href="https://yandex.ru/maps/?text=%D1%83%D1%81%D0%B0%D0%B4%D1%8C%D0%B1%D0%B0%20%D0%9C%D0%B0%D1%80%D1%8C%D0%B8%D0%BD%D0%BE%20%D0%90%D0%BD%D0%B4%D1%80%D0%B8%D0%B0%D0%BD%D0%BE%D0%B2%D0%BE" target="_blank" rel="noopener noreferrer">Открыть реальную карту и маршрут ↗</a>'+
- '<p>Ленинградская область,<br>Тосненский район, д. Андрианово</p>'+
+ '<p><strong>17 июня:</strong> Усадьба Марьино, Ленинградская область, Тосненский район, д. Андрианово.<br><strong>19 июня:</strong> Санкт-Петербург; адрес торжества уточняется.</p>'+
  '<div class="r-accordion">'+[
  ['pin','Как добраться','Адрес и маршрут можно посмотреть в Яндекс Картах. Площадка предварительная.'],
  ['stay','Проживание','Рекомендации и варианты размещения добавим после подтверждения деталей праздника.'],
  ['gift','Подарки','Пожелания пары пока уточняются.'],
  ['info','Будут вопросы?','Контакты организаторов появятся перед отправкой приглашений.']].map(([ico,title,body])=>'<details><summary>'+ic(ico)+'<span>'+title+'</span><b>⌄</b></summary><p>'+body+'</p></details>').join('')+'</div>'+
  '<div class="r-details-bottom">'+img('lake','','Летний усадебный парк и пруд')+'</div></section>'}
-function info(){return shell('/info',venue()+dress()+rsvp()+details(),'r-info')}
+function info(){return shell('/info',venue()+cityCelebration()+dress()+rsvp()+details(),'r-info')}
 export function renderGuest(path){
  if(path==='/')return home();
  if(path==='/schedule')return schedule();
