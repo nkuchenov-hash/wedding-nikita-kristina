@@ -17,7 +17,7 @@ function obj(string $raw): array {
     $x=json_decode($raw,true);
     return is_array($x)?$x:[];
 }
-function safe(string $text,int $length=1900): string {
+function safe(string $text,int $length=12000): string {
     return mb_substr(trim($text),0,$length);
 }
 $db->beginTransaction();
