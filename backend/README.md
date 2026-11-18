@@ -134,3 +134,13 @@ shared-hosting architecture. Guest publishing remains disabled until approved.
 - Relation editing uses permanent guest IDs; removing a link does not delete either person. Companion records are managed separately from individual guests. Guest exclusions are reversible archives, not destructive deletes.
 - The organiser CSV export contains current database data. The Wedding Drive Google Sheet contains **exactly one tab `Гости`** as a historical snapshot, while the full 13-tab source workbook is preserved in the separate archive. Google Sheets edits do **not** automatically update SQLite; do not present spreadsheet RSVP or invitation statuses as live.
 - Publishing actual guests to the public website remains subject to explicit visibility consent. Preparing a token never means an invitation was sent.
+
+## Live guest planning controls — 18 November 2026
+
+- Organiser path: `https://nikitakristina.ru/admin/#/admin/guests`. No public guest directory or spreadsheet-based mutable state.
+- `guests.planning_status` is `main` or `reserve`, independent from invitation/login `status`. Moving to reserve does not delete the guest, historic invitation, profile, relationships, companion records or RSVP. Reserve guests do not count as active and cannot open guest invitations or submit positive RSVP until moved back.
+- `guests.age_group` explicitly records `unknown`, `adult`, `child` or `infant`. A one-time private migration marks **14 child candidates** whose imported relationship consists exclusively of explicit son/daughter-to-parent entries; this is a planning inference **not verified age** and should be reviewed in the organiser UI. No names are committed to public Git.
+- SQLite `event_settings.children_enabled` is the persistent global switch, default on. Turning it off excludes classified child/infant guest rows and child companion counts from effective planning totals; invited guests cannot newly register children. Old child RSVP/companion values remain stored for re-enabling, with the effective count shown separately.
+- The organiser can sort the directory by any displayed column or the extended field selector, edit key fields inline or all profile data in a single detail card, and export a current CSV from the SQLite API.
+- The page checks the lightweight `admin/guests/revision` endpoint every 12 seconds while visible, and reloads on focus. All writes require the authenticated organiser session and CSRF token; there is no browser-local source of truth.
+- SQLite migrations run idempotently on protected server storage; the backend deployment validates PHP, backs up SQLite and activates the new PHP release only after integrity checks pass.
