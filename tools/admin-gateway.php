@@ -20,6 +20,8 @@ if (!is_dir($sessionDir) && !@mkdir($sessionDir, 0700, true) && !is_dir($session
     exit('Administrative session storage unavailable');
 }
 ini_set('session.save_path', $sessionDir);
+// Keep PHP's session garbage collection in sync with the 12-hour admin idle timeout.
+ini_set('session.gc_maxlifetime', '43200');
 ini_set('session.use_strict_mode', '1');
 ini_set('session.use_only_cookies', '1');
 ini_set('session.cookie_httponly', '1');
@@ -33,6 +35,16 @@ session_set_cookie_params([
 session_start();
 if (empty($_SESSION['csrf'])) {
     $_SESSION['csrf'] = bin2hex(random_bytes(24));
+}
+// An already-open login tab may outlive its PHP session. Let the same-origin
+// form retrieve a fresh token immediately before posting, without weakening
+// CSRF enforcement on login or on authenticated data changes.
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' &&
+    isset($_GET['refresh_login_csrf'])) {
+    header('Content-Type: application/json; charset=UTF-8', true);
+    echo json_encode(['ok'=>true, 'csrf'=>(string)$_SESSION['csrf']],
+      JSON_THROW_ON_ERROR);
+    exit;
 }
 
 $rows = @file($usersPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -122,7 +134,11 @@ if (!$valid) {
     echo '<form method="post" action="/admin/" autocomplete="on"><input type="hidden" name="csrf" value="'.$csrf.'">';
     echo '<input type="hidden" name="login" value="1"><label>Логин<input name="username" value="wedding-admin" autocomplete="username" required maxlength="100"></label>';
     echo '<label>Пароль<input name="password" type="password" autocomplete="current-password" required maxlength="512"></label>';
-    echo '<button type="submit">Войти в админку</button></form></main></body></html>';
+    echo '<button type="submit">Войти в админку</button></form>';
+    // Prevent a long-idle mobile tab from submitting an expired session token.
+    // If the preflight fails, a standard HTML form submission still works.
+    echo '<script>(function(){const f=document.querySelector("form");let busy=false;f.addEventListener("submit",async function(e){if(busy)return;e.preventDefault();busy=true;const b=f.querySelector("button");b.disabled=true;try{const r=await fetch("/admin/?refresh_login_csrf=1",{credentials:"same-origin",cache:"no-store",headers:{"Accept":"application/json"}});if(r.ok){const x=await r.json();if(x&&typeof x.csrf==="string"&&/^[a-f0-9]{48}$/.test(x.csrf))f.elements.csrf.value=x.csrf;}}catch(_e){}f.submit();});})();</script>';
+    echo '</main></body></html>';
     exit;
 }
 $_SESSION['last_seen'] = time();
