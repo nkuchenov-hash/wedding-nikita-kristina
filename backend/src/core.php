@@ -131,9 +131,14 @@ function requireAdmin(PDO $db): string {
     }
     return $id;
 }
+function childrenEnabled(PDO $db): bool {
+    $row=one($db,"SELECT value_json FROM event_settings WHERE key='children_enabled'");
+    return $row === null || json_decode((string)$row['value_json'],true) !== false;
+}
 function requireGuest(PDO $db): string {
     $id=requireRole('guest');
-    if (!one($db,"SELECT id FROM guests WHERE id=? AND status!='archived'",[$id])) {
+    $guest=one($db,"SELECT id,age_group FROM guests WHERE id=? AND status!='archived' AND planning_status='main'",[$id]);
+    if (!$guest || (!childrenEnabled($db) && in_array($guest['age_group'],['child','infant'],true))) {
         unset($_SESSION['guest_id']); fail(401,'login_required','Требуется авторизация');
     }
     return $id;
