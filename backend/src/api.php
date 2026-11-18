@@ -265,7 +265,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $guest['children_total']=(int)$db->query("SELECT COUNT(*) FROM guests WHERE status!='archived' AND age_group IN ('child','infant')")->fetchColumn();
         $guest['children_enabled']=childrenEnabled($db);
         $guest['confirmed_adults']=(int)$db->query("SELECT COALESCE(SUM(r.adults),0) FROM rsvps r JOIN guests g ON g.id=r.guest_id WHERE r.attendance='yes' AND g.status!='archived' AND g.planning_status='main' AND g.age_group NOT IN ('child','infant')")->fetchColumn();
-        $guest['confirmed_children']=childrenEnabled($db) ? (int)$db->query("SELECT COALESCE(SUM(r.children),0) FROM rsvps r JOIN guests g ON g.id=r.guest_id WHERE r.attendance='yes' AND g.status!='archived' AND g.planning_status='main'")->fetchColumn() : 0;
+        $guest['confirmed_children']=childrenEnabled($db) ? (int)$db->query("SELECT COALESCE(SUM(CASE WHEN g.age_group IN ('child','infant') THEN 1 ELSE r.children END),0) FROM rsvps r JOIN guests g ON g.id=r.guest_id WHERE r.attendance='yes' AND g.status!='archived' AND g.planning_status='main'")->fetchColumn() : 0;
         $rsvps=all($db,'SELECT attendance,COUNT(*) AS total FROM rsvps GROUP BY attendance');
         $pendingPhotos=one($db,"SELECT COUNT(*) AS n FROM photos WHERE status='pending'");
         $pendingStories=one($db,"SELECT COUNT(*) AS n FROM stories WHERE status='pending'");
@@ -283,6 +283,12 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
           'stories_pending'=>(int)$pendingStories['n'],'budget'=>$budget,'tasks'=>$tasks,
           'recent_activity'=>$activity]);
     }
+    // Lightweight revision check lets open organiser pages follow other devices
+    // without refetching 114 private guest records on every heartbeat.
+    if ($route==='admin/guests/revision' && $method==='GET') {
+        $revision=(int)$db->query('SELECT COALESCE(MAX(id),0) FROM audit_log')->fetchColumn();
+        json(['ok'=>true,'revision'=>$revision]);
+    }
     if ($route==='admin/guests' && $method==='GET') {
         $items=all($db,"SELECT g.*,r.attendance,r.adults,r.children,r.transport_needed,r.arrival_notes,r.dietary_notes,
             r.other_notes,r.response_source,r.submitted_at,p.source_person_id,p.name_en,p.relation_to_couple,p.seating_group,p.decision,p.base_count,
@@ -297,7 +303,8 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
             LEFT JOIN guest_profile_details p ON p.guest_id=g.id
             LEFT JOIN guest_progress t ON t.guest_id=g.id
             ORDER BY g.display_name LIMIT 1500");
-        json(['ok'=>true,'guests'=>$items,'children_enabled'=>childrenEnabled($db)]);
+        json(['ok'=>true,'guests'=>$items,'children_enabled'=>childrenEnabled($db),
+           'revision'=>(int)$db->query('SELECT COALESCE(MAX(id),0) FROM audit_log')->fetchColumn()]);
     }
     if($route==='admin/guest-profile' && $method==='GET'){
         $id=(string)($_GET['guest_id']??'');
