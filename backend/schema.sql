@@ -12,13 +12,17 @@ CREATE TABLE IF NOT EXISTS guests (
   display_name TEXT NOT NULL, side TEXT NOT NULL DEFAULT 'other',
   relationship TEXT NOT NULL DEFAULT '', city TEXT NOT NULL DEFAULT '',
   email TEXT, phone TEXT, language TEXT NOT NULL DEFAULT 'ru',
-  about TEXT NOT NULL DEFAULT '', about_en TEXT NOT NULL DEFAULT '', community TEXT NOT NULL DEFAULT '', private_notes TEXT NOT NULL DEFAULT '', profile_visible INTEGER NOT NULL DEFAULT 0,
+  about TEXT NOT NULL DEFAULT '', about_en TEXT NOT NULL DEFAULT '', community TEXT NOT NULL DEFAULT '', private_notes TEXT NOT NULL DEFAULT '',
+  planning_status TEXT NOT NULL DEFAULT 'main' CHECK(planning_status IN ('main','reserve')),
+  age_group TEXT NOT NULL DEFAULT 'unknown' CHECK(age_group IN ('unknown','adult','child','infant')),
+  profile_visible INTEGER NOT NULL DEFAULT 0,
   consent_at TEXT, invited INTEGER NOT NULL DEFAULT 0,
   status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','invited','registered','archived')),
   plus_one_allowed INTEGER NOT NULL DEFAULT 0, children_count INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_guests_side ON guests(side);
+CREATE INDEX IF NOT EXISTS idx_guests_planning_age ON guests(planning_status,age_group);
 CREATE INDEX IF NOT EXISTS idx_guests_name ON guests(display_name);
 CREATE TABLE IF NOT EXISTS invitations (
   id TEXT PRIMARY KEY, guest_id TEXT NOT NULL REFERENCES guests(id) ON DELETE CASCADE,
