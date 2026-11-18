@@ -131,9 +131,10 @@ function parseOverrides(row){
 }
 async function initVenueDatabase(root,force=false){
  if(venueDb.loading||(venueDb.ready&&!force))return;
+ const background=venueDb.ready&&force;
+ let changed=false;
  venueDb.loading=true;
- venueDb.ready=false;
- redraw(root);
+ if(!background){venueDb.ready=false;redraw(root);}
  try{
   const [session,data,availability]=await Promise.all([
    venueApi('auth/session'),venueApi('admin/records?collection=venues'),venueApi('admin/venue-dates')
@@ -163,7 +164,10 @@ async function initVenueDatabase(root,force=false){
    if(['18','19','20'].some(d=>!dates.get(venue.id)?.[d]))
     throw new Error('Не загружены статусы дат для '+venue.name);
   }
-  // Only server responses populate the venue state. The browser stores guestCount only.
+  // Revalidate silently: other-device edits redraw only when data has changed.
+  changed=JSON.stringify(state.venues)!==JSON.stringify(incoming)||
+    JSON.stringify([...venueDb.dates].sort())!==JSON.stringify([...dates].sort());
+  // Only server responses populate venue state. Browser caches guestCount only.
   state.venues=incoming;
   venueDb.rows=rows;
   venueDb.dates=dates;
@@ -171,9 +175,10 @@ async function initVenueDatabase(root,force=false){
   venueDb.error='';
  }catch(error){
   venueDb.error=error.message;
+  if(!background)venueDb.ready=false;
  }finally{
   venueDb.loading=false;
-  if(root.querySelector('[data-venues-page]'))redraw(root);
+  if(root.querySelector('[data-venues-page]')&&(!background||changed))redraw(root);
  }
 }
 async function commitVenueDate(id,day,status,root){
@@ -517,7 +522,27 @@ function redraw(root){
  }
  if(typeof window!=='undefined'&&Number.isFinite(y))window.scrollTo({top:y,behavior:'instant'});
 }
+let stopVenueAutoSync=null;
 export function activateVenueAdmin(root){
+ stopVenueAutoSync?.();
+ const refresh=()=>{
+  if(document.visibilityState!=='visible'||!root.querySelector('[data-venues-page]')||!venueDb.ready)return;
+  // Never replace an inline editor or an unfinished save from another refresh.
+  if(root.querySelector('.vdp-inline-form,.vdp-inline-quote-form,.vdp-inline-quote-editor'))return;
+  const active=document.activeElement;
+  if(active&&root.contains(active)&&active.matches('input,select,textarea,[contenteditable]'))return;
+  initVenueDatabase(root,true);
+ };
+ const interval=setInterval(()=>{
+  if(!root.querySelector('[data-venues-page]'))return;
+  refresh();
+ },30000);
+ const focus=()=>refresh();
+ const visible=()=>{if(document.visibilityState==='visible')refresh();};
+ window.addEventListener('focus',focus);
+ document.addEventListener('visibilitychange',visible);
+ stopVenueAutoSync=()=>{clearInterval(interval);window.removeEventListener('focus',focus);document.removeEventListener('visibilitychange',visible);};
+
  if(root.dataset.venuesReady==='yes'){redraw(root);initVenueDatabase(root,true);return;}
  root.dataset.venuesReady='yes';
  redraw(root);
