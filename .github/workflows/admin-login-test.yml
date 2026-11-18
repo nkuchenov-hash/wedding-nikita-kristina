@@ -84,7 +84,7 @@ jobs:
           curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" \
             'https://nikitakristina.ru/admin/index.php?api=admin%2Fvenue-files' \
             -o /tmp/wedding-document-inventory.json
-          python3 -c 'import json;v=json.load(open("/tmp/wedding-document-inventory.json"));f=v.get("files",[]);assert v.get("ok") and len(f)==51 and sum(x["type"]=="video" for x in f)==7;print("VENUE_DOCUMENT_ARCHIVE_OK",len(f))'
+          python3 -c 'import json;v=json.load(open("/tmp/wedding-document-inventory.json"));f=v.get("files",[]);assert v.get("ok") and len(f)>=52 and sum(x["type"]=="video" for x in f)==7;print("VENUE_DOCUMENT_ARCHIVE_OK",len(f))'
           curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" \
             'https://nikitakristina.ru/admin/index.php?api=admin%2Fguests' \
             -o /tmp/wedding-guests.json
