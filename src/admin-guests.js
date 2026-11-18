@@ -121,7 +121,7 @@ export async function activateGuestDirectory(root){
      if(filter.value==='maybe'&&p.attendance!=='maybe')return false;
      if(filter.value==='no'&&p.attendance!=='no')return false;
      if(filter.value==='unsent'&&p.invitation_sent_at)return false;
-     return !query||[p.display_name,p.name_en,p.relationship,p.relation_to_couple,p.seating_group,p.city,p.email,p.phone,p.source_person_id].some(v=>s(v).toLocaleLowerCase('ru').includes(query));
+     return !query||[p.display_name,p.name_en,p.relationship,p.relation_to_couple,p.seating_group,p.community,p.city,p.email,p.phone,p.source_person_id].some(v=>s(v).toLocaleLowerCase('ru').includes(query));
    }).sort((a,b)=>display(a).localeCompare(display(b),'ru'));
    list.replaceChildren();
    const holder=mk('div','ad-gb-scroll'),table=mk('table','ad-gb-table'),
@@ -183,7 +183,9 @@ export async function activateGuestDirectory(root){
        ['children_count','Допустимое число детей','number'],
        ['city','Город','text'],['phone','Телефон','tel'],['email','Email','email'],
        ['language','Язык','select',LANGUAGES],
-       ['about','О человеке / история','textarea'],['private_notes','Заметки организаторов','textarea']
+       ['community','Круг / сообщество','text'],
+       ['about','О человеке / история на русском','textarea'],
+       ['about_en','О человеке на английском','textarea'],['private_notes','Заметки организаторов','textarea']
      ];
      for(const [key,label,type,items]of fields)controls[key]=field(form,label,key,g[key],type,items||null);
      const submit=mk('button','ad-gb-primary','Сохранить изменения');submit.type='submit';
@@ -363,7 +365,7 @@ export async function activateGuestDirectory(root){
      ['decision','Решение'],['base_count','Основной список'],['invitation_sent_at','Отправлено'],
      ['attendance','RSVP'],['adults','Взрослые'],['children','Дети'],['plus_one_allowed','Можно +1'],
      ['children_count','Дети разрешены'],['city','Город'],['phone','Телефон'],['email','Email'],
-     ['about','О человеке'],['private_notes','Заметки']];
+     ['community','Круг'],['about','О человеке'],['about_en','О человеке EN'],['private_notes','Заметки']];
    const safe=v=>{let t=s(v);if(/^[=+\-@\t\r]/.test(t))t="'"+t;return '"'+t.replace(/"/g,'""')+'"';};
    const contents='\uFEFF'+[fields.map(x=>safe(x[1])).join(';'),...people.map(p=>fields.map(([k])=>safe(p[k])).join(';'))].join('\r\n');
    const url=URL.createObjectURL(new Blob([contents],{type:'text/csv;charset=utf-8'}));
