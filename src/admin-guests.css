@@ -103,3 +103,9 @@ body.ad-gb-lock{overflow:hidden}
  .ad-gb-top-actions{justify-content:flex-start}
  .ad-gb-top-actions .ad-gb-children-toggle{flex:1 1 100%}
 }
+
+/* Keep the guest name visible while scrolling wide comparison columns. */
+.ad-gb-table th:first-child{position:sticky;left:0;z-index:4;background:#ecf3ec;box-shadow:1px 0 #dbe7dc}
+.ad-gb-table tbody td:first-child{position:sticky;left:0;z-index:1;background:#fff;box-shadow:1px 0 #e1eae3}
+.ad-gb-table tbody .ad-gb-reserve-row td:first-child{background:#f6f7f5}
+.ad-gb-table tbody .ad-gb-child-off-row td:first-child{background:#fff8f2}
