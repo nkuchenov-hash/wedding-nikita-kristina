@@ -21,6 +21,26 @@ $appliedDates=0;
 $appliedRows=0;
 $db->beginTransaction();
 try{
+ // Import newly supplied Harmony PDF as an actual venue document once.
+ $documentMarker='venue_document:2026-11-18-harmony-presentation-v1';
+ $pdfCheck=$db->prepare('SELECT value_json FROM event_settings WHERE key=?');
+ $pdfCheck->execute([$documentMarker]);
+ if($pdfCheck->fetchColumn()===false){
+  $fileId='1PjAw62irJgQ6JgJ16Y9C1VHdz4jaXHUm';
+  $docId=substr(hash('sha256','venue-drive-file-'.$fileId),0,36);
+  $pdfUrl='https://drive.google.com/file/d/'.$fileId.'/view';
+  $db->prepare('INSERT OR IGNORE INTO venue_files
+      (id,venue_id,title,mime,file_id,source_url,type)
+      VALUES(?,?,?,?,?,?,?)')
+    ->execute([$docId,'harmony','Harmony — презентация площадки и меню 2026','pdf',
+        $fileId,$pdfUrl,'document']);
+  $found=$db->prepare('SELECT id FROM venue_files WHERE file_id=? AND venue_id=?');
+  $found->execute([$fileId,'harmony']);
+  if($found->fetchColumn()===false)throw new \\RuntimeException('Harmony PDF inventory insert failed');
+  $db->prepare('INSERT INTO event_settings(key,value_json) VALUES(?,?)')
+    ->execute([$documentMarker,json_encode(['file_id'=>$fileId],JSON_THROW_ON_ERROR)]);
+  echo "HARMONY_PDF_SOURCE_REGISTERED\\n";
+ }
  $once=$db->prepare('SELECT value_json FROM event_settings WHERE key=?');
  $once->execute([$marker]);
  if($once->fetchColumn()!==false){
