@@ -347,9 +347,12 @@ function extraTotal(v){return EXTRAS.reduce((s,[k])=>s+(numbers(v.extras?.[k])??
 // The comparison table and its cost score use the same total as the venue budget page.
 function totalEstimate(v){
  const base=estimate(v),extra=extraTotal(v);
- if(base.value===null||extra===0)return base;
- return {...base,value:base.value+extra,partial:true,isQuote:false,kind:'scenario',
-  note:base.note+'; добавлены указанные организаторами доплаты: '+rub(extra)};
+ if(extra===0)return base;
+ if(base.value===null)return {...base,knownSubtotal:(base.knownSubtotal??0)+extra,
+  note:base.note+'; также внесены дополнительные расходы: '+rub(extra)};
+ return {...base,value:base.value+extra,basedOnQuote:base.isQuote===true&&!base.partial,
+  partial:true,isQuote:false,kind:'scenario',
+  note:base.note+'; добавлены расходы организаторов: '+rub(extra)};
 }
 function weighted(v){return scoreVenue(v,state.guestCount,totalEstimate(v));}
 function sourceThumb(g){if(!g)return '';const id=encodeURIComponent(g.id);return '<a href="https://drive.google.com/file/d/'+id+'/view" target="_blank" rel="noopener noreferrer" class="vw-photo"><img loading="lazy" src="https://drive.google.com/thumbnail?id='+id+'&sz=w800" alt="'+h(g.label)+'"><span>'+h(g.label)+'</span></a>'}
@@ -364,14 +367,27 @@ function status(v){
  const status=v.availability||'unknown';
  return {available:'19 июня — подтверждено',unavailable:'19 июня — занято',pending:'19 июня — уточняется',unknown:'19 июня — неизвестно'}[status]||'19 июня — неизвестно';
 }
+function tableDateControls(v){
+ return '<div class="vw-date-list">'+DATE_CHOICES.map(([day])=>{
+  const st=dayStatus(v,day);
+  const opts=[['unknown','?'],['available','Свободно'],['pending','Уточнить'],['unavailable','Занято']];
+  return '<label class="vw-date-edit vw-day-'+h(st)+'"><span>'+day+'.06</span><select data-list-date="'+day+'" data-venue-id="'+h(v.id)+'" aria-label="'+h(v.name)+' — '+day+' июня 2027">'+opts.map(([value,label])=>'<option value="'+value+'" '+(st===value?'selected':'')+'>'+label+'</option>').join('')+'</select></label>';
+ }).join('')+'</div>';
+}
 function row(v){
  const score=weighted(v),cost=totalEstimate(v),pic=getVenueCover(v);
  const offer=v.offerNote?'<small class="vw-offer-note">'+h(v.offerNote)+'</small>':'';
  const image=pic?'<img loading="lazy" class="vw-row-thumb" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(pic.id)+'&sz=w240" alt="Фото площадки: '+h(v.name)+'">':'<span class="vw-row-thumb vw-no-image"></span>';
+ const complete=cost.value!==null&&!cost.partial;
+ const amount=cost.value===null?'Не рассчитано':(complete?rub(cost.value):'от '+rub(cost.value));
+ const known=cost.value===null&&cost.knownSubtotal>0?'Известно: '+rub(cost.knownSubtotal)+' (не итог)':'';
+ const type=cost.value===null?'Нет полной цены':complete?'Смета':'Неполный расчёт';
+ const missing=cost.missing?.length?'Нет: '+cost.missing.join(', '):'';
+ const hint=[known,missing].filter(Boolean).join(' · ')||((cost.quoteDate&&complete)?'На '+cost.quoteDate.slice(8,10)+'.06':'');
  return '<tr class="vw-row" data-id="'+h(v.id)+'"><td><div class="vw-venue-cell"><span class="vw-venue-media"><button type="button" class="vw-image-open" data-detail="'+h(v.id)+'" aria-label="Открыть площадку '+h(v.name)+'">'+image+'</button></span><div class="vw-venue-label"><button class="vw-name" data-detail="'+h(v.id)+'" type="button">'+h(v.name)+'</button><small>'+h(v.area)+' · '+(v.region==='country'?'За городом':'Город')+'</small></div></div></td>'+
- '<td><div class="vw-date-list">'+threeDates(v)+'</div></td>'+
+ '<td>'+tableDateControls(v)+'</td>'+
  '<td><span class="vw-state '+(v.visited?'vw-seen':'')+'">'+(v.visited?'● Были лично':'○ Не подтверждено')+'</span></td>'+
- '<td class="vw-money" title="'+h(cost.note||'')+'">'+(cost.value===null?'—':(cost.partial?'≈ ':'')+rub(cost.value))+'<small>'+(cost.isQuote?'Полученная смета':cost.partial?'Предварительный расчёт':'Ориентир')+(cost.value===null?'':' · '+Math.round(cost.value/state.guestCount).toLocaleString('ru-RU')+' ₽/гость в среднем')+'</small>'+offer+'</td>'+
+ '<td class="vw-money'+(complete?' vw-complete':' vw-incomplete')+'" title="'+h(cost.note||'')+'"><strong>'+h(amount)+'</strong><small>'+h(type)+(cost.value!==null?' · '+state.guestCount+' гостей':'')+'</small>'+(hint?'<small class="vw-cost-gap">'+h(hint)+'</small>':'')+offer+'</td>'+
  '<td>'+h(v.capacity??'—')+'</td><td class="vw-score"><a class="vw-score-link" href="#/admin/venues/'+encodeURIComponent(v.id)+'/rating" title="Открыть баллы и причины оценки">'+(score.value===null?'—':score.value+' / '+RATING_MAX)+'</a><small>'+(score.provisional?'Предварительно':'Проверено')+' · '+score.complete+'/'+RATING_CRITERIA.length+' критериев</small></td>'+
  '</tr>';
 }
@@ -402,7 +418,10 @@ function sortVenues(rows){
  function key(v){
   if(ui.sort==='name')return v.name;
   if(ui.sort==='visit')return v.visited?0:1;
-  if(ui.sort==='price')return totalEstimate(v).value;
+  if(ui.sort==='price'){
+   const e=totalEstimate(v);
+   return e.value!==null&&(e.isQuote||e.basedOnQuote)?e.value:null;
+  }
   if(ui.sort==='capacity')return numbers(v.capacity);
   if(ui.sort==='score')return weighted(v).value;
   if(ui.sort==='date')return ui.chosenDay==='all'?datePriority(v):(ordinal[dayStatus(v,ui.chosenDay)]??2);
