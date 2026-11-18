@@ -36,6 +36,9 @@ if(!in_array('relation_to_couple',array_column($cols,'name'),true))
 $columns=$database->query('PRAGMA table_info(rsvps)')->fetchAll(PDO::FETCH_ASSOC);
 if(!in_array('response_source',array_column($columns,'name'),true))
     $database->exec("ALTER TABLE rsvps ADD COLUMN response_source TEXT NOT NULL DEFAULT 'guest'");
+$guestColumns=$database->query('PRAGMA table_info(guests)')->fetchAll(PDO::FETCH_ASSOC);
+if(!in_array('private_notes',array_column($guestColumns,'name'),true))
+    $database->exec("ALTER TABLE guests ADD COLUMN private_notes TEXT NOT NULL DEFAULT ''");
 $scheduleColumns=$database->query('PRAGMA table_info(schedule_items)')->fetchAll(PDO::FETCH_ASSOC);
 if(!in_array('venue_id',array_column($scheduleColumns,'name'),true))
     $database->exec("ALTER TABLE schedule_items ADD COLUMN venue_id TEXT NOT NULL DEFAULT ''");
