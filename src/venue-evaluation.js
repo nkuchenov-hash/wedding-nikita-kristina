@@ -38,7 +38,9 @@ function marginalPrice(v){
  const note=String(price.service?.note||'');
  const menuService=menu!==null&&service!==null&&/меню/i.test(note)&&!/(только с дополнительн)/i.test(note)
    ?menu*service/100:0;
- return lines.reduce((a,b)=>a+b,0)+menuService;
+ const welcomeService=welcome!==null&&service!==null&&/фуршетн|welcome/i.test(note)&&!/(только с дополнительн)/i.test(note)
+   ?welcome*service/100:0;
+ return lines.reduce((a,b)=>a+b,0)+menuService+welcomeService;
 }
 export function estimateVenue(v,guests){
  const count=Math.max(1,Math.min(300,Math.round(Number(guests)||80)));
