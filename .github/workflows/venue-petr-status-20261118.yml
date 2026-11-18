@@ -1,0 +1,82 @@
+name: Apply Petr venue availability to SQLite
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/venue-petr-status-20261118.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  update-petr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Update only Petr June 18-20 availability in live SQLite
+        shell: bash
+        env:
+          HOST: ${{ secrets.WEDDING_SFTP_HOST }}
+          USERNAME: ${{ secrets.WEDDING_SFTP_USER }}
+          SSH_KEY: ${{ secrets.WEDDING_SFTP_SSH_KEY }}
+          HOST_KEYS: ${{ secrets.WEDDING_SFTP_KNOWN_HOSTS }}
+          PORT: ${{ secrets.WEDDING_SFTP_PORT }}
+        run: |
+          set -euo pipefail
+          test -n "$HOST" && test -n "$USERNAME" && test -n "$SSH_KEY" && test -n "$HOST_KEYS"
+          : "${PORT:=22}"
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/venue_petr_key"
+          printf '%s\n' "$HOST_KEYS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/venue_petr_key" "$HOME/.ssh/known_hosts"
+          SSH_OPTS="-4 -i $HOME/.ssh/venue_petr_key -p $PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15"
+          ssh $SSH_OPTS "$USERNAME@$HOST" 'php' <<'PHP'
+          <?php
+          declare(strict_types=1);
+          require_once '/var/www/u3728035/data/wedding-private/backend/src/core.php';
+          $db=\Wedding\db();
+          $id='petr';
+          $updates=['2027-06-18'=>'available','2027-06-19'=>'unavailable','2027-06-20'=>'unavailable'];
+          $marker='venue_petr_20261118_one_time';
+          $db->exec('BEGIN IMMEDIATE');
+          try {
+              $seen=$db->prepare('SELECT key FROM event_settings WHERE key=?');
+              $seen->execute([$marker]);
+              if(!$seen->fetchColumn()){
+                  $exists=$db->prepare('SELECT status FROM venue_date_status WHERE venue_id=? AND day=?');
+                  $update=$db->prepare("UPDATE venue_date_status SET status=?,updated_at=datetime('now') WHERE venue_id=? AND day=?");
+                  foreach($updates as $day=>$status){
+                      $exists->execute([$id,$day]);
+                      if($exists->fetchColumn()===false)throw new RuntimeException('Missing venue date '.$day);
+                      $update->execute([$status,$id,$day]);
+                  }
+                  $rows=$db->query('SELECT id,details_json FROM venues')->fetchAll(PDO::FETCH_ASSOC);
+                  $write=$db->prepare("UPDATE venues SET details_json=?,updated_at=datetime('now') WHERE id=?");
+                  $count=0;
+                  foreach($rows as $row){
+                      $details=json_decode((string)($row['details_json']??'{}'),true,512,JSON_THROW_ON_ERROR);
+                      if(!is_array($details))continue;
+                      $venueId=$details['wedding_comparison_id']??($details['public']['id']??$row['id']);
+                      if($venueId!==$id)continue;
+                      $edit=$details['overrides']??[];
+                      if(!is_array($edit))throw new RuntimeException('Invalid venue editor state');
+                      $edit['dateNote']='По сообщению Кристины от 18.11.2026: свободно только 18 июня 2027; 19 и 20 июня занято.';
+                      $edit['summary']='Банкетный зал «Петръ»: доступны только 18 июня 2027, 19 и 20 июня заняты. Два разделённых зала, банкет от 4 500 ₽/гость, обслуживание 10%, оборудование от 35 000 ₽. Депозит 250 000 ₽ засчитывается в услуги.';
+                      $details['overrides']=$edit;
+                      $write->execute([json_encode($details,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_THROW_ON_ERROR),$row['id']]);
+                      $count++;
+                  }
+                  if($count<1)throw new RuntimeException('Petr venue record missing');
+                  $db->prepare('INSERT INTO event_settings(key,value_json) VALUES(?,?)')
+                    ->execute([$marker,json_encode($updates,JSON_THROW_ON_ERROR)]);
+              }
+              $db->commit();
+          }catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}
+          $rows=$db->prepare('SELECT day,status FROM venue_date_status WHERE venue_id=? ORDER BY day');
+          $rows->execute([$id]);
+          $result=$rows->fetchAll(PDO::FETCH_KEY_PAIR);
+          foreach($updates as $day=>$expected){
+              if(($result[$day]??null)!==$expected)throw new RuntimeException('Verification failure '.$day);
+          }
+          echo "PETR_LIVE_SQLITE_VERIFIED: 18 available, 19 unavailable, 20 unavailable\n";
+          PHP
