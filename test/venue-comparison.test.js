@@ -129,8 +129,9 @@ test('Royal Beach June 19 is unavailable; June 18/20 remain unconfirmed',()=>{
  assert.equal(royal.dateAvailability['20'],undefined);
  assert.equal(VENUE_RECORDS['alex-park'].dateAvailability['18'],'unavailable');
  assert.equal(VENUE_RECORDS['alex-park'].dateAvailability['20'],'available');
- const js=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');
- assert.match(js,/_royalDateRevision:'2026-11-18'/);
+ const exporter=readFileSync(new URL('../tools/export-wedding-venues.mjs',import.meta.url),'utf8');
+ assert.match(exporter,/venue-dates\.json/);
+ assert.match(exporter,/source\.dateAvailability/);
 });
 
 test('date status is an atomic authenticated SQLite operation rather than a site rebuild',()=>{
