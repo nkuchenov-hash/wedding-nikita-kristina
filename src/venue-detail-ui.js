@@ -41,7 +41,8 @@ const FEATURED_COVERS={
  'putilov':'1Yo4j6ZhK_ycH38ZeHXKCGnaMmQfcHme4',       // ceremonial grand hall
  'repino-riviera':'1PCv5jMFTatJ21kuaUD2RaPx7JFXYsfPM', // building and bay
  'panorama':'1PwrAgzMU1kmK772YRhQWuQNGrfaU1d0X',     // building from outside
- 'harmony':'1giLTNx8i-okBCfyiZChmaC0I3MTVsaAe'       // wide main event hall
+ 'harmony':'1giLTNx8i-okBCfyiZChmaC0I3MTVsaAe',      // wide main event hall
+ 'palma':'1NoeveNL-VYzPILfXxUiC4nzBcgV_4BSp'        // full panoramic view of the 256 m² ceremonial hall supplied via Telegram
 };
 // In the current Maryino phone album there is no qualifying building or
 // banquet-hall photograph. A neutral hero is preferable to a painting/close-up.
