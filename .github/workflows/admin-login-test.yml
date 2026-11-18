@@ -151,3 +151,30 @@ jobs:
               assert key in sample, 'Missing editable guest field '+key
           print('COUPLE_RELATIONS_AND_GUEST_FIELDS_OK',relation_count)
           PY
+
+          # Verify the real live SQLite values without changing any records.
+          curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" \
+            'https://nikitakristina.ru/admin/index.php?api=admin%2Fvenue-dates' \
+            -o /tmp/wedding-venue-dates-live.json
+          python3 - <<'PY'
+          import json
+          payload=json.load(open('/tmp/wedding-venue-dates-live.json'))
+          assert payload.get('ok') is True
+          actual={(v['venue_id'],v['day']):v['status'] for v in payload.get('dates',[])}
+          for venue,day in [('eva','18'),('eva','20'),('putilov','20'),
+                            ('harmony','18'),('harmony','19'),('harmony','20')]:
+              assert actual.get((venue,'2027-06-'+day))=='available', (venue,day,actual.get((venue,'2027-06-'+day)))
+          print('LIVE_VENUE_DATES_CONFIRMED',6)
+          data=json.load(open('/tmp/wedding-venues.json'))
+          matches=[]
+          for row in data.get('items',[]):
+              detail=json.loads(row.get('details_json') or '{}')
+              venue_id=detail.get('wedding_comparison_id') or (detail.get('public') or {}).get('id')
+              if venue_id=='harmony':
+                  matches.append(detail.get('overrides') or {})
+          assert any(v.get('cost',{}).get('rent')==170000
+                     and v.get('cost',{}).get('menu')==5500
+                     and any(q.get('total')==764000 and q.get('kind')=='estimate'
+                             for q in v.get('quotes',[])) for v in matches), matches
+          print('LIVE_HARMONY_OFFER_CONFIRMED')
+          PY
