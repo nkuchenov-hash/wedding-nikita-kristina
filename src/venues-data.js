@@ -106,7 +106,7 @@ export const VENUE_RECORDS = {
     "drive": "https://drive.google.com/drive/folders/1tin6wY30qUKW99HDSUL6iM-0EEjIAZlT",
     "photos": "https://drive.google.com/drive/folders/1DJiP1K7jqvMLUkBJRFh3tPaNkPzT-QIe",
     "quoteSource": "https://drive.google.com/file/d/11RCk-vnXc93O5iRFFkyhjqcUpG5aeR-H/view",
-    "summary": "Павильон у воды с террасой. Предложение на 80 и 100 гостей. Дата 19 июня в Excel не заполнена, бронь не подтверждена.",
+    "summary": "Павильон у воды с террасой. Предложения на 80 и 100 гостей. 19 июня 2027 занято; 18 и 20 июня пока уточняются. Наличие сметы не означает свободную дату.",
     "quotes": [
       {
         "guests": 80,
@@ -162,7 +162,7 @@ export const VENUE_RECORDS = {
       "Сбор за свой торт по презентации — 5 000 ₽, если не берём торт ресторана"
     ],
     "questions": [
-      "Подтвердить доступность 19.06.2027 и фиксированность цен",
+      "Уточнить доступность 18 и 20 июня 2027 (19 июня занято)",
       "Уточнить отдельные технические доплаты и включение террасы",
       "Проверить итог при выборе алкогольного пакета ресторана"
     ],
@@ -182,7 +182,12 @@ export const VENUE_RECORDS = {
         "label": "Санузлы",
         "folder": "125vV_bjdlgUIShZHIlJmNxvMg3eHG-mE"
       }
-    ]
+    ],
+    "dateAvailability": {
+      "19": "unavailable"
+    },
+    "availability": "unavailable",
+    "dateNote": "По сообщению организаторов от 18.11.2026 Royal Beach занят 19 июня 2027. Доступность 18 и 20 июня пока не подтверждена."
   },
   "alex-park": {
     "visited": true,
@@ -292,7 +297,7 @@ export const VENUE_RECORDS = {
       "19": "unavailable",
       "20": "available"
     },
-    "dateNote": "По уточнению 17.11.2026 доступна только дата 20 июня 2027. 18 и 19 июня уже заняты. На 20 июня стоимость ниже пятничной на 25 000 ₽ (687 760 ₽ вместо 712 760 ₽ для 80 гостей).",
+    "dateNote": "18 и 19 июня 2027 заняты, доступно только 20 июня — повторно подтверждено организаторами 18.11.2026. Смета для 80 гостей на 20 июня 687 760 ₽, на 25 000 ₽ ниже исторического пятничного расчёта.",
     "availability": "unavailable",
     "cost": {
       "quoteTotal": 687760,
