@@ -817,6 +817,7 @@ export const VENUE_RECORDS = {
   },
   "palma": {
     "drive": "https://drive.google.com/drive/folders/1D9nUXVXR29JjlkM2KzV9aLm_HnoMoZp6",
+    "photos": "https://drive.google.com/drive/folders/1kt7XLaOZ8KYSzBTMhEkdc2oFI014zkp5",
     "summary": "Площадка в центре, пока только адрес и контактная карточка.",
     "contactName": "Татьяна Агуреева — менеджер Парадного зала",
     "capacityNote": "Парадный зал 256 м², welcome-зона 86 м², 180 стульев и 15 круглых столов по 1,5 м без текстиля. Максимальная банкетная вместимость не подтверждена.",
