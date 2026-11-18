@@ -80,7 +80,7 @@ export async function activateGuestDirectory(root){
    btn.addEventListener('click',()=>{
      if(editing)return;
      editing=true;btn.hidden=true;
-     const opts=options?[[raw,labels[raw]||raw],...options.filter(([v])=>v!==raw)]:null;
+     const opts=options?[[raw,labels[raw]||raw||placeholder],...options.filter(([v])=>v!==raw)]:null;
      const input=opts?select(opts,raw):mk('input','ad-gb-cell-input');
      input.className='ad-gb-cell-input';
      if(!opts){input.type='text';input.value=raw;input.maxLength=key==='relation_to_couple'?320:255}
