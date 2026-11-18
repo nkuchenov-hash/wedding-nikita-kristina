@@ -36,10 +36,10 @@ try{
         $fileId,$pdfUrl,'document']);
   $found=$db->prepare('SELECT id FROM venue_files WHERE file_id=? AND venue_id=?');
   $found->execute([$fileId,'harmony']);
-  if($found->fetchColumn()===false)throw new \\RuntimeException('Harmony PDF inventory insert failed');
+  if($found->fetchColumn()===false)throw new \RuntimeException('Harmony PDF inventory insert failed');
   $db->prepare('INSERT INTO event_settings(key,value_json) VALUES(?,?)')
     ->execute([$documentMarker,json_encode(['file_id'=>$fileId],JSON_THROW_ON_ERROR)]);
-  echo "HARMONY_PDF_SOURCE_REGISTERED\\n";
+  echo "HARMONY_PDF_SOURCE_REGISTERED\n";
  }
  $once=$db->prepare('SELECT value_json FROM event_settings WHERE key=?');
  $once->execute([$marker]);
