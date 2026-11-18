@@ -171,6 +171,51 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         audit($db,'admin',$actor,'create','companion',$id,['guest_id'=>$guestId]);
         json(['ok'=>true,'id'=>$id],201);
     }
+    // A companion belongs to exactly one invitation group. Delete never affects a guest record.
+    if ($route==='admin/companions' && $method==='DELETE') {
+        $d=payload(2048);$id=strval($d,'id',40,true);$guestId=strval($d,'guest_id',40,true);
+        if(!one($db,'SELECT id FROM guest_companions WHERE id=? AND guest_id=?',[$id,$guestId]))
+            fail(404,'companion','Сопровождающий не найден');
+        statement($db,'DELETE FROM guest_companions WHERE id=? AND guest_id=?',[$id,$guestId]);
+        audit($db,'admin',$actor,'delete','companion',$id,['guest_id'=>$guestId]);
+        json(['ok'=>true]);
+    }
+    // Organiser-editable relationships are linked by stable guest IDs, never by names.
+    if ($route==='admin/guest/connections' && $method==='POST') {
+        $d=payload(4096);
+        $a=strval($d,'guest_id',40,true);$b=strval($d,'other_guest_id',40,true);
+        if($a===$b)fail(422,'relation','Нельзя связать человека с самим собой');
+        foreach([$a,$b] as $id)if(!one($db,"SELECT id FROM guests WHERE id=? AND status!='archived'",[$id]))
+            fail(404,'guest','Гость не найден');
+        $before=one($db,'SELECT id FROM guest_relationships WHERE (guest_id_1=? AND guest_id_2=?) OR (guest_id_1=? AND guest_id_2=?)',[$a,$b,$b,$a]);
+        if($before)fail(409,'relation_exists','Эта связь уже есть. Измените существующую.');
+        $forward=strval($d,'relation_to_other',120,true);
+        $reverse=strval($d,'other_relation_to_guest',120);
+        $type=choice($d,'relation_type',['family','couple','friend','other'],'other');
+        $id=uuid();
+        statement($db,'INSERT INTO guest_relationships(id,guest_id_1,guest_id_2,relation_1_to_2,relation_2_to_1,relation_type,source_json) VALUES(?,?,?,?,?,?,?)',
+          [$id,$a,$b,$forward,$reverse,$type,'{}']);
+        audit($db,'admin',$actor,'create','guest_relationship',$id,['guest_id'=>$a,'other_guest_id'=>$b]);
+        json(['ok'=>true,'id'=>$id],201);
+    }
+    if ($route==='admin/guest/connections' && $method==='PATCH') {
+        $d=payload(4096);$id=strval($d,'id',40,true);
+        if(!one($db,'SELECT id FROM guest_relationships WHERE id=?',[$id]))
+            fail(404,'relation','Связь не найдена');
+        $forward=strval($d,'relation_1_to_2',120,true);
+        $reverse=strval($d,'relation_2_to_1',120);
+        statement($db,'UPDATE guest_relationships SET relation_1_to_2=?,relation_2_to_1=? WHERE id=?',[$forward,$reverse,$id]);
+        audit($db,'admin',$actor,'update','guest_relationship',$id);
+        json(['ok'=>true]);
+    }
+    if ($route==='admin/guest/connections' && $method==='DELETE') {
+        $d=payload(2048);$id=strval($d,'id',40,true);
+        if(!one($db,'SELECT id FROM guest_relationships WHERE id=?',[$id]))
+            fail(404,'relation','Связь не найдена');
+        statement($db,'DELETE FROM guest_relationships WHERE id=?',[$id]);
+        audit($db,'admin',$actor,'delete','guest_relationship',$id);
+        json(['ok'=>true]);
+    }
     // Small, atomic, authenticated changes; no site build and no rewrite of venue JSON.
     if($route==='admin/venue-dates' && $method==='GET'){
         $rows=all($db,'SELECT venue_id,day,status,updated_at
@@ -248,8 +293,10 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
           (SELECT i.id FROM invitations i WHERE i.guest_id=g.id AND i.revoked_at IS NULL
             AND (i.expires_at IS NULL OR i.expires_at>datetime('now'))
             ORDER BY i.created_at DESC LIMIT 1) AS active_invite_id
+          ,r.attendance,r.adults,r.children,r.transport_needed,r.arrival_notes,r.dietary_notes,r.other_notes,r.response_source
           FROM guests g LEFT JOIN guest_profile_details p ON p.guest_id=g.id
-          LEFT JOIN guest_progress t ON t.guest_id=g.id WHERE g.id=?",[$id]);
+          LEFT JOIN guest_progress t ON t.guest_id=g.id
+          LEFT JOIN rsvps r ON r.guest_id=g.id WHERE g.id=?",[$id]);
         if(!$item)fail(404,'guest','Гость не найден');
         foreach(['source_people_json','source_invitation_json','source_profile_json','source_english_json'] as $key)
             $item[$key]=json_decode($item[$key]??'{}',true)?:[];
