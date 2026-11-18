@@ -224,33 +224,6 @@ function showForm(host,config,submit,defaults=null,actionLabel='Сохранит
  });
  host.append(form);
 }
-async function guests(host){
- const data=await call('admin/guests');
- title(host,'Гости — защищённый реестр','Контакты, RSVP и особые пожелания видны только организаторам');
- message(host,'Гостей в базе: '+data.guests.length);
-
- const rows=data.guests.map(g=>{
-   const action=button('Приглашение',async b=>{
-     if(!window.confirm('Создать новый персональный токен? Старый токен этого гостя станет недействительным.'))return;
-     b.disabled=true;
-     try{
-       const r=await call('admin/invitations',{method:'POST',body:{guest_id:g.id}});
-       const token=$('code','ad-live-token',r.token);
-       const p=$('div','ad-live-invite');
-       p.append($('p','', 'Токен создан, но приглашение не отправлено. Сохраните его для отправки после запуска гостевого сайта.'),token);
-       host.prepend(p);
-     }catch(e){message(host,errorText(e),'error')}finally{b.disabled=false}
-   });
-   return [g.display_name,g.side,g.email||'—',g.attendance||'Не ответил',g.adults??'—',g.children??'—',action];
- });
- table(host,['Имя','Сторона','Email','RSVP','Взрослые','Дети','Действие'],rows);
- const add=$('section','ad-live-subsection');title(add,'Добавить гостя');
- showForm(add,[['first_name','Имя'],['last_name','Фамилия'],['display_name','Имя для отображения'],['city','Город'],['email','Email'],['phone','Телефон']],async d=>{
-   await call('admin/guests',{method:'POST',body:d});
- });
- host.append(add);
-
-}
 async function collection(host,type){
  const data=await call('admin/records?collection='+encodeURIComponent(type));
  const heading=({venues:'Сравнение площадок',budget_lines:'Бюджет',tasks:'Задачи',menu_options:'Меню',schedule_items:'Программа'})[type]||type;
@@ -424,7 +397,6 @@ async function schedule(host){
 async function renderSection(host,section){
  if(section==='overview'){await overview(host);return}
  if(section==='menu'){await collection(host,'menu_options');return}
- if(section==='guests'){await guests(host);return}
  if(section==='schedule'){await schedule(host);return}
  if(mapSection[section]){
    await collection(host,mapSection[section]);
