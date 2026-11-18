@@ -325,7 +325,6 @@ export async function activateGuestDirectory(root){
          sent.textContent=value?'Отменить отметку об отправке':'Отметить отправленным';render();
        }catch(err){notice(err.message,true)}finally{sent.disabled=false}
      });
-     const origin=g.source_people_json||{},originalInv=g.source_invitation_json||{},originalProf=g.source_profile_json||{};
      const archiveSection=section('Учёт записи');
      const archiveButton=mk('button','ad-gb-light',g.status==='archived'?'Восстановить в списке':'Убрать из рабочего списка');
      archiveButton.type='button';archiveSection.append(archiveButton);
@@ -338,15 +337,7 @@ export async function activateGuestDirectory(root){
          archiveButton.textContent=next==='archived'?'Восстановить в списке':'Убрать из рабочего списка';render()}
        catch(err){notice(err.message,true)}finally{archiveButton.disabled=false}
      });
-     const sourceNotes=[
-       ['Исходные заметки',origin['Приватные заметки']],['Примечание к приглашению',originalInv['Примечание']],
-       ['Круг / сообщество',origin['Теги']],['Первоначальный профиль',originalProf['Короткое описание RU']],
-       ['Контакт / обстоятельства',originalProf['Текущее общение RU']]
-     ].filter(([,v])=>s(v));
-     if(sourceNotes.length){
-       const original=section('Исходные сведения (архив, только чтение)');
-       for(const [label,value] of sourceNotes){const line=mk('p','ad-gb-source-line');line.append(mk('strong','',label+': '),document.createTextNode(s(value)));original.append(line)}
-     }
+
    }catch(err){detail.replaceChildren(mk('p','ad-gb-error','Не удалось открыть карточку: '+err.message))}
  }
  async function reloadData(){
