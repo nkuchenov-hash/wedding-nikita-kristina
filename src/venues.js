@@ -80,6 +80,18 @@ function migrateVenueOverrides(venues={}){
   }
   result[id]=edit;
  }
+ // Royal Beach's June 19 status was clarified on 18 Nov. Preserve edits to
+ // unrelated dates, costs and notes when discarding obsolete browser/server status.
+ const royal=result.royal;
+ if(royal&&royal._royalDateRevision!=='2026-11-18'){
+  const edit={...royal,_royalDateRevision:'2026-11-18'};
+  delete edit.availability;
+  if(edit.dateAvailability){
+   edit.dateAvailability={...edit.dateAvailability};
+   delete edit.dateAvailability['19'];
+  }
+  result.royal=edit;
+ }
  return result;
 }
 function read(){
