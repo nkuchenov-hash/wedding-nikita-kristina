@@ -72,3 +72,34 @@ body.ad-gb-lock{overflow:hidden}
 @media(max-width:1180px){.ad-gb-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:720px){.ad-gb-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ad-gb-top-actions{width:100%}.ad-gb-top-actions button{flex:1 1 auto}.ad-gb-edit-grid{grid-template-columns:1fr}.ad-gb-panel{width:100%}.ad-gb-table{min-width:1000px}.ad-gb-input{flex-basis:100%}.ad-gb-select{flex:1 1 130px}}
 @media(prefers-reduced-motion:reduce){.ad-gb-guestbook *{scroll-behavior:auto}}
+
+/* Dynamic roster controls and unambiguous reserve/child states. */
+.ad-gb-top-actions{justify-content:flex-end}
+.ad-gb-children-toggle{min-width:160px;background:#e8f4ea;border-color:#a4cbb0;color:#175c35}
+.ad-gb-children-toggle.ad-gb-children-off{background:#fff2e8;border-color:#e1ba93;color:#8b5428}
+.ad-gb-bar{align-items:center}
+.ad-gb-sort-select{flex:1 1 210px}
+.ad-gb-sort-direction{min-height:46px;min-width:86px;padding:10px 13px;border:1px solid #c2d8c8;border-radius:10px;background:white;color:#2c5e3f;font-size:13px;font-weight:700;cursor:pointer}
+.ad-gb-th-sort{appearance:none;border:0;background:transparent;color:inherit;cursor:pointer;font:inherit;font-weight:700;padding:2px 1px;text-align:left;white-space:nowrap}
+.ad-gb-th-sort:hover{text-decoration:underline;color:#185d34}
+.ad-gb-table{min-width:1420px}
+.ad-gb-table th{padding:12px 11px;font-size:12px}
+.ad-gb-table td{padding:9px 10px}
+.ad-gb-table .ad-gb-name{min-width:185px}
+.ad-gb-table .ad-gb-edit-cell{min-width:104px;max-width:265px}
+.ad-gb-table th:nth-child(5),.ad-gb-table td:nth-child(5){min-width:185px}
+.ad-gb-reserve-row{background:#f6f7f5}
+.ad-gb-reserve-cell .ad-gb-cell-edit{color:#8b622c;font-weight:700}
+.ad-gb-child-off-row{background:#fff8f2}
+.ad-gb-child-off-cell .ad-gb-cell-edit{color:#a16c30}
+.ad-gb-child-off-row .ad-gb-stage{margin-top:6px;background:#ffebd7;color:#915625;white-space:normal}
+.ad-gb-metrics{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media(max-width:1390px){.ad-gb-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:720px){
+ .ad-gb-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ad-gb-bar .ad-gb-input{flex-basis:100%}
+ .ad-gb-bar .ad-gb-select{flex:1 1 145px}
+ .ad-gb-sort-direction{flex:0 0 auto}
+ .ad-gb-top-actions{justify-content:flex-start}
+ .ad-gb-top-actions .ad-gb-children-toggle{flex:1 1 100%}
+}
