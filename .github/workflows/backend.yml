@@ -34,6 +34,7 @@ jobs:
         run: |
           node tools/export-wedding-venues.mjs
           test -s backend/seed/venues.json
+          test -s backend/seed/venue-dates.json
       - name: Install on REG.RU outside document root
         timeout-minutes: 4
         shell: bash
@@ -69,6 +70,7 @@ jobs:
             if test -f '$PRIVATE/wedding.sqlite3'; then php bin/backup.php; fi
             php bin/migrate.php
             php bin/seed-venues.php
+            php bin/seed-venue-dates.php
             php bin/import-venue-files.php
             php bin/seed-planning.php
             php bin/backfill-couple-relation.php
