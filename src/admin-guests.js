@@ -324,7 +324,7 @@ export async function activateGuestDirectory(root){
        try{await request('admin/invitations/sent',{method:'POST',csrf,body:{guest_id:id,sent:value}});
          g.invitation_sent_at=value?new Date().toISOString():null;
          const p=byId(id);if(p)p.invitation_sent_at=g.invitation_sent_at;
-         inviteInfo.textContent=value?'Отправлено (отмечено организатором)':'Пока не отправлено';
+         inviteInfo.textContent=value?'Приглашение отправлено (отмечено организатором)':'Пока не отправлено';
          sent.textContent=value?'Отменить отметку об отправке':'Отметить отправленным';render();
        }catch(err){notice(err.message,true)}finally{sent.disabled=false}
      });
