@@ -58,7 +58,7 @@ export async function activateGuestDirectory(root){
  actions.append(add,childrenToggle,exportBtn,reload);head.append(heading,actions);page.append(head);
  const metrics=mk('div','ad-gb-metrics');page.append(metrics);
  const bar=mk('div','ad-gb-bar'),search=mk('input','ad-gb-input'),side=select(SIDES,'all'),
-       filter=select([['all','Все гости'],['base','В основном списке'],['question','Под вопросом'],['no-name','Нет имени'],['duplicates','Возможные дубли'],['reserve','Резерв'],['kids','Дети'],['yes','Будут'],['maybe','Не решили'],['no','Не придут'],['unsent','Не отправлено'],['archived','Исключённые']],'all');
+       filter=select([['all','Все гости'],['base','В основном списке'],['question','Под вопросом'],['no-name','Нет имени'],['duplicates','Возможные дубли'],['reserve','Резерв'],['kids','Дети'],['yes','Будут'],['maybe','Не решили'],['no','Не придут'],['unsent','Не отправлено'],['archived','Архив']],'all');
  search.type='search';search.placeholder='Поиск по имени, связям, группе, контактам';search.setAttribute('aria-label','Найти гостя');
  side.className=filter.className='ad-gb-select';
  const sort=select(SORT_FIELDS,'display_name'),direction=mk('button','ad-gb-sort-direction','А → Я');
@@ -155,7 +155,7 @@ export async function activateGuestDirectory(root){
    metric('Детей в базе',children.length);
    metric('Будут',actual.filter(p=>p.attendance==='yes').length);
    metric('Под вопросом',actual.filter(isQuestion).length);
-   metric('Не уточнён возраст',current.filter(p=>!s(p.age_group)||p.age_group==='unknown').length);
+   metric('Всего записей',people.length);
    updateChildrenButton();
    const query=s(search.value).toLocaleLowerCase('ru');
    const duplicateCounts=new Map();
