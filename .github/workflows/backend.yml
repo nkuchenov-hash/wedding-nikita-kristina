@@ -89,6 +89,7 @@ jobs:
             php bin/seed-venues.php
             php bin/seed-venue-dates.php
             php bin/apply-venue-confirmations-20261118.php
+            php bin/supplement-telegram-20261118.php
             php bin/import-venue-files.php
             php bin/seed-planning.php
             php bin/backfill-couple-relation.php
