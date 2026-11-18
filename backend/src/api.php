@@ -53,8 +53,10 @@ function handle(): never {
                JOIN guests g ON g.id=i.guest_id
                WHERE i.token_hash=? AND i.revoked_at IS NULL
                  AND (i.expires_at IS NULL OR i.expires_at>datetime('now'))
-                 AND g.status!='archived'",[$hash]);
+                 AND g.status!='archived' AND g.planning_status='main'",[$hash]);
             if (!$invite) fail(401,'invalid_invite','Приглашение недействительно или срок истёк');
+            if(!childrenEnabled($db) && one($db,"SELECT id FROM guests WHERE id=? AND age_group IN ('child','infant')",[$invite['guest_id']]))
+                fail(403,'children_disabled','Участие детей временно отключено организаторами');
             statement($db,"UPDATE invitations SET used_at=COALESCE(used_at,datetime('now')) WHERE id=?",[$invite['id']]);
             // Opening a link is not a completed registration or a confirmed RSVP.
             statement($db,"INSERT INTO guest_progress(guest_id,first_opened_at,last_opened_at)
@@ -89,6 +91,8 @@ function handle(): never {
 }
 
 function guestLifecycleCounts(PDO $db): array {
+    $eligible="g.status!='archived' AND g.planning_status='main'";
+    if(!childrenEnabled($db))$eligible.=" AND g.age_group NOT IN ('child','infant')";
     return one($db,"SELECT
           COUNT(*) total,
           COALESCE(SUM(CASE WHEN EXISTS(SELECT 1 FROM invitations i
@@ -110,7 +114,7 @@ function guestLifecycleCounts(PDO $db): array {
           LEFT JOIN guest_progress p ON p.guest_id=g.id
           LEFT JOIN rsvps r ON r.guest_id=g.id
           LEFT JOIN guest_profile_details pd ON pd.guest_id=g.id
-          WHERE g.status!='archived'");
+          WHERE ".$eligible);
 }
 
 function confirmedGuestDirectory(PDO $db): array {
@@ -118,6 +122,7 @@ function confirmedGuestDirectory(PDO $db): array {
           INNER JOIN rsvps r ON r.guest_id=g.id AND r.attendance='yes'
           INNER JOIN guest_progress p ON p.guest_id=g.id AND p.profile_completed_at IS NOT NULL
           WHERE g.profile_visible=1 AND g.consent_at IS NOT NULL AND g.status='registered'
+          AND g.planning_status='main'".(childrenEnabled($db)?'':" AND g.age_group NOT IN ('child','infant')")."
           ORDER BY g.display_name LIMIT 1000");
 }
 
@@ -147,11 +152,12 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $d=payload(16384);
         $allowed=['event_date','event_time','event_venue','venue_address','rsvp_deadline',
           'dress_code','transport_info','public_notes','menu_open','directory_open',
-          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed'];
+          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled'];
         $key=choice($d,'key',$allowed,'');
         if(!array_key_exists('value',$d) || (!is_scalar($d['value']) && $d['value']!==null))
             fail(422,'field','Значение настройки недопустимо');
         $value=$d['value'];
+        if($key==='children_enabled' && !is_bool($value))fail(422,'field','Участие детей должно быть включено или выключено');
         if(is_string($value)&&mb_strlen($value)>5000)fail(422,'field','Слишком длинное значение');
         $encoded=json_encode($value,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
         statement($db,"INSERT INTO event_settings(key,value_json) VALUES(?,?)
@@ -255,6 +261,11 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
     }
     if ($route==='admin/overview' && $method==='GET') {
         $guest=guestLifecycleCounts($db);
+        $guest['reserved']=(int)$db->query("SELECT COUNT(*) FROM guests WHERE status!='archived' AND planning_status='reserve'")->fetchColumn();
+        $guest['children_total']=(int)$db->query("SELECT COUNT(*) FROM guests WHERE status!='archived' AND age_group IN ('child','infant')")->fetchColumn();
+        $guest['children_enabled']=childrenEnabled($db);
+        $guest['confirmed_adults']=(int)$db->query("SELECT COALESCE(SUM(r.adults),0) FROM rsvps r JOIN guests g ON g.id=r.guest_id WHERE r.attendance='yes' AND g.status!='archived' AND g.planning_status='main' AND g.age_group NOT IN ('child','infant')")->fetchColumn();
+        $guest['confirmed_children']=childrenEnabled($db) ? (int)$db->query("SELECT COALESCE(SUM(r.children),0) FROM rsvps r JOIN guests g ON g.id=r.guest_id WHERE r.attendance='yes' AND g.status!='archived' AND g.planning_status='main'")->fetchColumn() : 0;
         $rsvps=all($db,'SELECT attendance,COUNT(*) AS total FROM rsvps GROUP BY attendance');
         $pendingPhotos=one($db,"SELECT COUNT(*) AS n FROM photos WHERE status='pending'");
         $pendingStories=one($db,"SELECT COUNT(*) AS n FROM stories WHERE status='pending'");
@@ -286,7 +297,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
             LEFT JOIN guest_profile_details p ON p.guest_id=g.id
             LEFT JOIN guest_progress t ON t.guest_id=g.id
             ORDER BY g.display_name LIMIT 1500");
-        json(['ok'=>true,'guests'=>$items]);
+        json(['ok'=>true,'guests'=>$items,'children_enabled'=>childrenEnabled($db)]);
     }
     if($route==='admin/guest-profile' && $method==='GET'){
         $id=(string)($_GET['guest_id']??'');
@@ -316,11 +327,13 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $last=strval($d,'last_name',120);
         $name=strval($d,'display_name',255) ?: trim($first.' '.$last);
         $side=choice($d,'side',['bride','groom','both','other'],'other');
+        $planning=choice($d,'planning_status',['main','reserve'],'main');
+        $age=choice($d,'age_group',['unknown','adult','child','infant'],'unknown');
         $id=uuid();
-        statement($db,'INSERT INTO guests(id,first_name,last_name,display_name,side,relationship,city,email,phone,plus_one_allowed,children_count) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
+        statement($db,'INSERT INTO guests(id,first_name,last_name,display_name,side,relationship,city,email,phone,plus_one_allowed,children_count,planning_status,age_group) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
           [$id,$first,$last,$name,$side,strval($d,'relationship',255),strval($d,'city',255),
            strval($d,'email',320),strval($d,'phone',64),
-           boolval($d,'plus_one_allowed')?1:0,intvalField($d,'children_count',0,15)]);
+           boolval($d,'plus_one_allowed')?1:0,intvalField($d,'children_count',0,15),$planning,$age]);
         audit($db,'admin',$actor,'create','guest',$id);
         json(['ok'=>true,'id'=>$id],201);
     }
@@ -353,7 +366,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
             fail(404,'guest','Гость не найден');
         $profileFields=['name_en','relation_to_couple','seating_group','decision','base_count'];
         $guestFields=['first_name','last_name','display_name','side','relationship','city',
-            'email','phone','language','about','about_en','community','private_notes','plus_one_allowed','children_count'];
+            'email','phone','language','about','about_en','community','private_notes','plus_one_allowed','children_count','planning_status','age_group'];
         $setGuest=[];$argsGuest=[];$setProfile=[];$argsProfile=[];
         foreach($values as $key=>$value){
             if(!is_string($key)||!in_array($key,array_merge($guestFields,$profileFields),true))
@@ -361,6 +374,10 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
             if(is_bool($value))$value=$value?1:0;
             if(!is_string($value)&&!is_numeric($value))
                 fail(422,'field','Недопустимый тип значения');
+            if($key==='planning_status'&&!in_array($value,['main','reserve'],true))
+                fail(422,'field','Список: основной или резерв');
+            if($key==='age_group'&&!in_array($value,['unknown','adult','child','infant'],true))
+                fail(422,'field','Возрастная категория не поддерживается');
             if($key==='side'&&!in_array($value,['groom','bride','both','other'],true))
                 fail(422,'field','Некорректная сторона');
             if($key==='children_count' && (!preg_match('/^\d{1,2}$/',(string)$value)||
@@ -409,16 +426,20 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
     if($route==='admin/guest/rsvp' && $method==='PATCH'){
         $d=payload(8192);
         $id=strval($d,'id',40,true);
-        $g=one($db,'SELECT id,plus_one_allowed,children_count FROM guests WHERE id=?',[$id]);
+        $g=one($db,'SELECT id,plus_one_allowed,children_count,planning_status,age_group FROM guests WHERE id=?',[$id]);
         if(!$g)fail(404,'guest','Гость не найден');
         $attendance=choice($d,'attendance',['yes','no','maybe',''],'');
+        if(in_array($attendance,['yes','maybe'],true) && $g['planning_status']!=='main')
+            fail(422,'reserve','Гость в резерве. Сначала перенесите его в основной список');
+        if(in_array($attendance,['yes','maybe'],true) && !childrenEnabled($db) && in_array($g['age_group'],['child','infant'],true))
+            fail(422,'children_disabled','Участие детей отключено');
         if($attendance===''){
             statement($db,'DELETE FROM rsvps WHERE guest_id=?',[$id]);
             audit($db,'admin',$actor,'clear','rsvp',$id,['manual'=>true]);
             json(['ok'=>true,'attendance'=>null]);
         }
         $adults=intvalField($d,'adults',0,1+(int)$g['plus_one_allowed'],1);
-        $children=intvalField($d,'children',0,(int)$g['children_count'],0);
+        $children=intvalField($d,'children',0,childrenEnabled($db)?(int)$g['children_count']:0,0);
         if($attendance==='no'){$adults=0;$children=0;}
         $transport=boolval($d,'transport_needed')?1:0;
         $diet=strval($d,'dietary_notes',1000);
@@ -458,8 +479,11 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
     }
     if ($route==='admin/invitations' && $method==='POST') {
         $d=payload(4096);$guestId=strval($d,'guest_id',40,true);
-        if (!one($db,"SELECT id FROM guests WHERE id=? AND status!='archived'",[$guestId]))
-            fail(404,'not_found','Гость не найден');
+        $candidate=one($db,"SELECT id,age_group FROM guests WHERE id=? AND status!='archived' AND planning_status='main'",[$guestId]);
+        if (!$candidate)
+            fail(422,'reserve','Нельзя подготовить приглашение гостю из резерва');
+        if(!childrenEnabled($db) && in_array($candidate['age_group'],['child','infant'],true))
+            fail(422,'children_disabled','Участие детей отключено');
         $raw=bin2hex(random_bytes(32));$hash=tokenHash($raw,$cfg);
         $expires=gmdate('Y-m-d H:i:s',time()+60*60*24*365);$id=uuid();
         statement($db,"UPDATE invitations SET revoked_at=datetime('now') WHERE guest_id=? AND revoked_at IS NULL",[$guestId]);
@@ -475,7 +499,10 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $d=payload(4096);
         $guestId=strval($d,'guest_id',40,true);
         $sent=boolval($d,'sent');
-        $existing=one($db,'SELECT id FROM guests WHERE id=? AND status!=?',[$guestId,'archived']);
+        $existing=one($db,'SELECT id,planning_status,age_group FROM guests WHERE id=? AND status!=?',[$guestId,'archived']);
+        if($sent && $existing && $existing['planning_status']!=='main')fail(422,'reserve','Нельзя отправить приглашение гостю из резерва');
+        if($sent && $existing && !childrenEnabled($db) && in_array($existing['age_group'],['child','infant'],true))
+            fail(422,'children_disabled','Участие детей отключено');
         if(!$existing)fail(404,'guest','Гость не найден');
         $active=one($db,"SELECT id FROM invitations WHERE guest_id=? AND revoked_at IS NULL
           AND (expires_at IS NULL OR expires_at>datetime('now')) ORDER BY created_at DESC LIMIT 1",[$guestId]);
@@ -567,11 +594,11 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
           FROM guests g LEFT JOIN guest_progress p ON p.guest_id=g.id WHERE g.id=?',[$actor]);
         $rsvp=one($db,'SELECT * FROM rsvps WHERE guest_id=?',[$actor]);
         $choices=all($db,'SELECT category,option_id FROM menu_choices WHERE guest_id=?',[$actor]);
-        json(['ok'=>true,'guest'=>$guest,'rsvp'=>$rsvp,'choices'=>$choices,'csrf'=>$_SESSION['csrf']]);
+        json(['ok'=>true,'guest'=>$guest,'rsvp'=>$rsvp,'choices'=>$choices,'children_enabled'=>childrenEnabled($db),'csrf'=>$_SESSION['csrf']]);
     }
     if ($route==='guest/event' && $method==='GET') {
         $keys=['event_date','event_time','event_venue','venue_address','rsvp_deadline',
-               'dress_code','transport_info','public_notes','date_confirmed','place_confirmed'];
+               'dress_code','transport_info','public_notes','date_confirmed','place_confirmed','children_enabled'];
         $rows=all($db,'SELECT key,value_json FROM event_settings WHERE key IN ('.
           implode(',',array_fill(0,count($keys),'?')).')',$keys);
         $public=[];
@@ -590,7 +617,7 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
         if(!is_array($items)||!array_is_list($items)||count($items)>16)
             fail(422,'companions','Некорректный список сопровождающих');
         $g=one($db,'SELECT plus_one_allowed,children_count FROM guests WHERE id=?',[$actor]);
-        $maxAdults=(int)$g['plus_one_allowed'];$maxChildren=(int)$g['children_count'];
+        $maxAdults=(int)$g['plus_one_allowed'];$maxChildren=childrenEnabled($db)?(int)$g['children_count']:0;
         $adultCount=0;$childCount=0;$valid=[];
         foreach($items as $item){
             if(!is_array($item))fail(422,'companion','Неверная запись');
@@ -657,7 +684,7 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
         $guest=one($db,'SELECT plus_one_allowed,children_count FROM guests WHERE id=?',[$actor]);
         $maxAdults=1+(int)$guest['plus_one_allowed'];
         $adults=intvalField($d,'adults',0,$maxAdults,1);
-        $children=intvalField($d,'children',0,(int)$guest['children_count'],0);
+        $children=intvalField($d,'children',0,childrenEnabled($db)?(int)$guest['children_count']:0,0);
         if($att==='no'){$adults=0;$children=0;}
         statement($db,"INSERT INTO rsvps(guest_id,attendance,adults,children,transport_needed,arrival_notes,dietary_notes,other_notes)
          VALUES(?,?,?,?,?,?,?,?)
