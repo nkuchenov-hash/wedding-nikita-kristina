@@ -143,14 +143,14 @@ async function overview(host){
    const number=(v)=>Number(v||0);
    const paid=number(budget.paid),planned=number(budget.planned),committed=number(budget.committed);
    stats.replaceChildren();
-   statistic('Гости',number(g.total),'Подтвердили: '+number(g.confirmed),'guests');
+   statistic('Гости',number(g.total),'Ответили «буду»: '+number(g.attending),'guests');
    statistic('Площадки',venueCount,'Осмотрели: '+visited,'venues');
    statistic('Задачи',number(tasks.open),'В работе','tasks');
    statistic('Бюджет',planned>0?planned.toLocaleString('ru-RU')+' ₽':'Не задан',paid>0?'Оплачено: '+paid.toLocaleString('ru-RU')+' ₽':'Суммы из утверждённого плана','budget');
    guestStats.replaceChildren();
    for(const [value,label]of [
      [number(g.total),'В списке'],[number(g.sent),'Пригласили'],
-     [number(g.registered),'Анкеты'],[number(g.confirmed),'Подтвердили']
+     [number(g.attending),'Будут'],[number(g.undecided_invitation),'Под вопросом']
    ]){
      const block=$('div','ad-overview-guest-stat');
      block.append($('strong','',value),$('span','',label));
