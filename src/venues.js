@@ -236,12 +236,7 @@ function updateInlineOverrides(id,key,raw){
  if(!base)throw new Error('Площадка не найдена');
  const v=get(base),old=state.venues[id]||{},text=String(raw??'').trim();
  const changes={...old};
- if(key.startsWith('date:')){
-  const day=key.slice(5);
-  if(!['18','19','20'].includes(day)||!INLINE_DAYS.includes(text))throw new Error('Недопустимый статус даты');
-  changes.dateAvailability={...v.dateAvailability,[day]:text};
-  if(day==='19')changes.availability=text;
- }else if(key.startsWith('cost:')){
+ if(key.startsWith('cost:')){
   const field=key.slice(5);
   if(!INLINE_COST_ALLOW.has(field))throw new Error('Неизвестный расход');
   const value=formNumber(text,field);
@@ -391,7 +386,7 @@ function detail(v){
  if(tab==='budget')content='<div class="vw-detail-block"><h3>Итоговая стоимость для '+state.guestCount+' гостей</h3>'+budgetTotal(v)+'</div>'+
  (qs.length?'<div class="vw-detail-block"><h3>Все полученные варианты сметы</h3><div class="vw-quote-grid">'+qs.map(q=>'<div><span>'+h(q.guests)+' гостей · '+h(q.date||'Дата не установлена')+'</span><strong>'+rub(q.total)+'</strong><small>'+h(q.label||'')+(q.kind==='scenario'?' · сценарий, не смета':'')+'</small></div>').join('')+'</div></div>':'')+
  (v.budgetItems?.length?'<div class="vw-detail-block"><h3>Позиции по исходным материалам</h3><div class="vw-breakdown">'+v.budgetItems.map(([name,value])=>'<div><span>'+h(name)+'</span><strong>'+rub(value)+'</strong></div>').join('')+'</div><p>Некоторые строки относятся к разным вариантам условий; их не всегда следует суммировать.</p></div>':'')+
- '<div class="vw-detail-block"><h3>Дополнительные расходы свадьбы</h3><p>Заполняйте только то, чего ещё нет в смете. Данные сохраняются в этом браузере.</p><div class="vw-input-grid">'+EXTRAS.map(([k,label])=>'<label>'+h(label)+'<input type="number" data-venue="'+h(v.id)+'" data-extra="'+k+'" min="0" value="'+h(v.extras?.[k]??'')+'" placeholder="Не рассчитано"></label>').join('')+'</div></div>'+
+ '<div class="vw-detail-block"><h3>Дополнительные расходы свадьбы</h3><p>Заполняйте только то, чего ещё нет в смете. Изменения сохраняются в общей базе, доступной на всех устройствах.</p><div class="vw-input-grid">'+EXTRAS.map(([k,label])=>'<label>'+h(label)+'<input type="number" data-venue="'+h(v.id)+'" data-extra="'+k+'" min="0" value="'+h(v.extras?.[k]??'')+'" placeholder="Не рассчитано"></label>').join('')+'</div></div>'+
  '<div class="vw-detail-block"><h3>Ручная корректировка расчёта</h3><p>Для площадок без сметы: аренда + банкет + техника + прочие расходы + обслуживание. Точная смета имеет приоритет для соответствующего числа гостей.</p><div class="vw-input-grid">'+COSTS.map(([k,label])=>'<label>'+h(label)+'<input type="number" data-venue="'+h(v.id)+'" data-cost="'+k+'" min="0" value="'+h(v.cost[k]??'')+'" placeholder="Неизвестно"></label>').join('')+'</div></div>'+bullets('Исключения / неопределённые позиции',v.excluded);
  if(tab==='terms')content='<div class="vw-detail-grid"><div><div class="vw-detail-block"><h3>Условия и договорённости</h3><p>'+h(v.summary||'Неизвестно')+'</p></div>'+bullets('Входит',v.included)+bullets('Доплаты / ограничения',v.excluded)+'</div><div>'+bullets('Открытые вопросы',v.questions)+
  '<div class="vw-detail-block"><h3>Статус</h3><label>Лично смотрели<select data-venue="'+h(v.id)+'" data-field="visited"><option value="true" '+(v.visited?'selected':'')+'>Да</option><option value="false" '+(!v.visited?'selected':'')+'>Не подтверждено</option></select></label>'+DATE_CHOICES.map(([day,label])=>'<label>'+label+' 2027<select data-venue="'+h(v.id)+'" data-day="'+day+'">'+[['unknown','Неизвестно'],['pending','Уточняется'],['available','Свободно подтверждено'],['unavailable','Занято']].map(([k,title])=>'<option value="'+k+'" '+(dayStatus(v,day)===k?'selected':'')+'>'+title+'</option>').join('')+'</select></label>').join('')+'<label>Вместимость <input type="number" min="0" data-venue="'+h(v.id)+'" data-field="capacity" value="'+h(v.capacity??'')+'"></label><h3>Ваши заметки</h3><textarea rows="7" data-venue="'+h(v.id)+'" data-field="notes">'+h(v.notes||'')+'</textarea></div></div></div>';
@@ -442,6 +437,11 @@ function headerSelect(id,aria,options){
  return '<select class="vw-head-filter" aria-label="'+h(aria)+'" data-ui="'+h(id)+'">'+options.map(([value,label])=>'<option value="'+h(value)+'" '+(ui[id]===value?'selected':'')+'>'+h(label)+'</option>').join('')+'</select>';
 }
 export function renderVenueAdmin(){
+ if(!venueDb.ready){
+  const feedback=venueDb.error?'Не удалось загрузить данные из базы: '+h(venueDb.error):'Загрузка данных площадок из базы…';
+  return '<div class="vw-page" data-venues-page><div class="vw-panel" role="status" aria-live="polite"><h2>Сравнение площадок</h2><p>'+feedback+'</p><button type="button" data-venue-retry>Повторить загрузку</button></div></div>';
+ }
+
  const match=(typeof location!=='undefined'?location.hash:'').match(/^#\/admin\/venues\/([^/?]+)(?:\/([^/?]+))?/);
  if(match){const next=decodeURIComponent(match[1]);if(ui.expanded!==next){ui.photoSection='all';ui.photoView='gallery';ui.photoIndex=0;ui.photoLightbox=false;}ui.expanded=next;ui.detailTab=match[2]==='edit'?'terms':(match[2]||'overview');}else{ui.expanded=null;ui.photoLightbox=false;}
  const all=PUBLIC_VENUES.map(get);
@@ -497,18 +497,19 @@ function redraw(root){
  if(typeof window!=='undefined'&&Number.isFinite(y))window.scrollTo({top:y,behavior:'instant'});
 }
 export function activateVenueAdmin(root){
- if(root.dataset.venuesReady==='yes'){redraw(root);initVenueDatabase(root);return;}
+ if(root.dataset.venuesReady==='yes'){redraw(root);initVenueDatabase(root,true);return;}
  root.dataset.venuesReady='yes';
  redraw(root);
  initVenueDatabase(root);
  root.addEventListener('click',event=>{
-  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-venue-inline],[data-inline-quote],[data-add-inline-quote],[data-cancel-inline],[data-remove-venue-quote]');if(!target)return;
+  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-venue-inline],[data-inline-quote],[data-add-inline-quote],[data-cancel-inline],[data-remove-venue-quote],[data-venue-retry]');if(!target)return;
   const venueBase=PUBLIC_VENUES.find(x=>x.id===ui.expanded);
   const showError=message=>{
    const page=root.querySelector('.vdp-page');if(!page)return;
    const alert=document.createElement('p');alert.className='vdp-sync-error';alert.setAttribute('role','alert');alert.textContent=message;page.prepend(alert);
   };
-  if(target.hasAttribute('data-cancel-inline')){redraw(root);}
+  if(target.hasAttribute('data-venue-retry')){initVenueDatabase(root,true);}
+  else if(target.hasAttribute('data-cancel-inline')){redraw(root);}
   else if(target.hasAttribute('data-venue-inline')){
    if(!venueDb.ready){showError('Общая база недоступна. Редактирование не открывается: '+(venueDb.error||'нет соединения'));return}
    if(!venueBase)return;
@@ -579,10 +580,14 @@ export function activateVenueAdmin(root){
    const id=base.id,current=get(base);
    let updates;
    if(form.hasAttribute('data-inline-key')){
-    const key=form.dataset.inlineKey,value=form.querySelector('[data-inline-control]')?.value;
-    updates=updateInlineOverrides(id,key,value);
-   }else updates={...(state.venues[id]||{}),quotes:collectInlineQuote(form,current)};
-   await commitInlineChanges(id,updates,root);
+     const key=form.dataset.inlineKey,value=form.querySelector('[data-inline-control]')?.value;
+     if(key.startsWith('date:')){
+      await commitVenueDate(id,key.slice(5),value,root);
+      return;
+     }
+     updates=updateInlineOverrides(id,key,value);
+    }else updates={...(state.venues[id]||{}),quotes:collectInlineQuote(form,current)};
+    await commitInlineChanges(id,updates,root);
   }catch(error){
    if(form.isConnected){
     let notice=form.querySelector('.vdp-inline-error');
@@ -591,32 +596,40 @@ export function activateVenueAdmin(root){
    }
   }finally{form.dataset.saving='';if(button&&button.isConnected)button.disabled=false}
  });
- root.addEventListener('change',event=>{
+ root.addEventListener('change',async event=>{
   const t=event.target;
   if(t.hasAttribute('data-photo-sort')){ui.photoSort=t.value;ui.photoIndex=0;redraw(root);return;}
   if(t.matches('select[data-inline-control]')){t.closest('form')?.requestSubmit();return;}
   if(t.dataset.state==='guestCount'){state.guestCount=Math.max(1,Math.min(300,Number(t.value)||80));save();redraw(root);return;}
   if(t.dataset.ui){ui[t.dataset.ui]=t.value;redraw(root);return;}
   if(t.dataset.venue){
-    const id=t.dataset.venue,old=state.venues[id]||{};
+   const id=t.dataset.venue,old=state.venues[id]||{};
+   if(!venueDb.ready){redraw(root);return;}
+   t.disabled=true;
+   try{
+    if(t.dataset.day){
+     await commitVenueDate(id,t.dataset.day,t.value,root);
+     return;
+    }
+    let changes={...old};
     if(t.dataset.field){
-      const val=t.dataset.field==='visited'?t.value==='true':t.dataset.field==='capacity'?numbers(t.value):t.value;
-      patch(id,t.dataset.field,val);
-    }else if(t.dataset.cost){patch(id,'cost',{...old.cost,[t.dataset.cost]:numbers(t.value)});}
-    else if(t.dataset.day){patch(id,'dateAvailability',{...(old.dateAvailability||{}),[t.dataset.day]:t.value});if(t.dataset.day==='19')patch(id,'availability',t.value);}
-    else if(t.dataset.extra){patch(id,'extras',{...(old.extras||{}),[t.dataset.extra]:numbers(t.value)});}
-    else if(t.dataset.rating){patch(id,'ratings',{...old.ratings,[t.dataset.rating]:t.value?Number(t.value):null});}
+     const val=t.dataset.field==='visited'?t.value==='true':t.dataset.field==='capacity'?numbers(t.value):t.value;
+     changes[t.dataset.field]=val;
+    }else if(t.dataset.cost){changes.cost={...old.cost,[t.dataset.cost]:numbers(t.value)};}
+    else if(t.dataset.extra){changes.extras={...old.extras,[t.dataset.extra]:numbers(t.value)};}
+    else if(t.dataset.rating){changes.ratings={...old.ratings,[t.dataset.rating]:t.value?Number(t.value):null};}
+    else return;
+    await commitInlineChanges(id,changes,root);
+   }catch(error){
     redraw(root);
-    queueVenuePersist(id).catch(error=>{
-      const card=root.querySelector('.vdp-page');
-      if(card){
-        const notice=document.createElement('p');
-        notice.className='vdp-editor-feedback vdp-sync-error';
-        notice.setAttribute('role','alert');
-        notice.textContent='Изменение осталось в этом браузере, но не сохранено в общей базе: '+error.message;
-        card.prepend(notice);
-      }
-    });
+    const card=root.querySelector('.vdp-page')||root.querySelector('.vw-page');
+    if(card){
+     const notice=document.createElement('p');notice.className='vdp-editor-feedback vdp-sync-error';
+     notice.setAttribute('role','alert');
+     notice.textContent='Не сохранено в общей базе: '+error.message;
+     card.prepend(notice);
+    }
+   }finally{if(t.isConnected)t.disabled=false;}
   }
  });
  document.addEventListener('keydown',event=>{
