@@ -1,5 +1,49 @@
 /* Venue photos from Wedding Drive categories. */
 export const VENUE_PHOTOS_4 = {
+  "palma": [
+    {
+      "id": "1NoeveNL-VYzPILfXxUiC4nzBcgV_4BSp",
+      "name": "Парадный зал — панорамный вид с люстрами.jpg",
+      "section": "Залы",
+      "folder": "1kt7XLaOZ8KYSzBTMhEkdc2oFI014zkp5"
+    },
+    {
+      "id": "1ZlNwGBZL2XEfe82Npgr4ATWDiDx-qbPZ",
+      "name": "Парадный зал — общий вид сцены.jpg",
+      "section": "Залы",
+      "folder": "1kt7XLaOZ8KYSzBTMhEkdc2oFI014zkp5"
+    },
+    {
+      "id": "12jCf2VIo023FeyWRH9mRPo5kzbEyb-ZZ",
+      "name": "Парадный зал — общий вид со стороны сцены.jpg",
+      "section": "Залы",
+      "folder": "1kt7XLaOZ8KYSzBTMhEkdc2oFI014zkp5"
+    },
+    {
+      "id": "1IUSKaxLQHdf2VppcLxQnVojrUHjpaa2N",
+      "name": "Парадный зал — вид на окна и люстру.jpg",
+      "section": "Залы",
+      "folder": "1kt7XLaOZ8KYSzBTMhEkdc2oFI014zkp5"
+    },
+    {
+      "id": "1K0guOOeT86QmIFez69qxBHUqOhojFOq8",
+      "name": "Welcome-зона — общий вид.jpg",
+      "section": "Welcome-зона",
+      "folder": "1kt7XLaOZ8KYSzBTMhEkdc2oFI014zkp5"
+    },
+    {
+      "id": "1mg-rBjT9jgUylxNsO_3k4vRSVKfOyKjq",
+      "name": "Welcome-зона — второй общий вид.jpg",
+      "section": "Welcome-зона",
+      "folder": "1kt7XLaOZ8KYSzBTMhEkdc2oFI014zkp5"
+    },
+    {
+      "id": "1E0YTBytgJQCkupz2HF2ZpwWnFr16CD-3",
+      "name": "Welcome-зона — деталь люстр.jpg",
+      "section": "Welcome-зона",
+      "folder": "1kt7XLaOZ8KYSzBTMhEkdc2oFI014zkp5"
+    }
+  ],
   "roof18": [],
   "repino-riviera": [
     {
