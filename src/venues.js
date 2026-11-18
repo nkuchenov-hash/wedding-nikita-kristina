@@ -93,7 +93,7 @@ const numbers=(v)=>Number.isFinite(Number(v))&&v!==''&&v!==null?Math.max(0,Numbe
 function save(){try{localStorage.setItem(STORE,JSON.stringify({version:2,guestCount:state.guestCount}));}catch{}}
 // Durable organizer edits use the existing authenticated wedding admin SQLite API.
 // Static venue facts and original source materials remain untouched.
-const venueDb={rows:new Map(),csrf:'',ready:false,loading:false,error:''};
+const venueDb={rows:new Map(),dates:new Map(),csrf:'',ready:false,loading:false,error:''};
 const formNumber=(raw,label)=>{
  const text=String(raw??'').trim();
  if(!text)return null;
@@ -121,37 +121,75 @@ async function venueApi(route,{method='GET',body}={}){
 function parseOverrides(row){
  try{
   const data=JSON.parse(row.details_json||'{}');
-  if(data&&PUBLIC_VENUES.some(x=>x.id===data.wedding_comparison_id)&&data.overrides&&typeof data.overrides==='object'){
-   return {venueId:data.wedding_comparison_id,overrides:data.overrides};
+  const venueId=data.wedding_comparison_id||data.public?.id||row.id;
+  if(PUBLIC_VENUES.some(x=>x.id===venueId)){
+   return {venueId,overrides:data.overrides&&typeof data.overrides==='object'&&!Array.isArray(data.overrides)?data.overrides:{},
+    priority:data.wedding_comparison_id?1:0};
   }
  }catch{}
  return null;
 }
-async function initVenueDatabase(root){
- if(venueDb.loading||venueDb.ready)return;
+async function initVenueDatabase(root,force=false){
+ if(venueDb.loading||(venueDb.ready&&!force))return;
  venueDb.loading=true;
+ venueDb.ready=false;
+ redraw(root);
  try{
-  const [session,data]=await Promise.all([venueApi('auth/session'),venueApi('admin/records?collection=venues')]);
-  venueDb.csrf=session.csrf||'';
-  const incoming={};
+  const [session,data,availability]=await Promise.all([
+   venueApi('auth/session'),venueApi('admin/records?collection=venues'),venueApi('admin/venue-dates')
+  ]);
+  if(session.role!=='admin'||!session.csrf)throw new Error('Требуется вход администратора');
+  venueDb.csrf=session.csrf;
+  const incoming={},rows=new Map(),priorities=new Map(),dates=new Map();
   for(const row of data.items||[]){
    const item=parseOverrides(row);
    if(!item)continue;
-   venueDb.rows.set(item.venueId,row.id);
+   const prev=priorities.get(item.venueId);
+   if(prev!==undefined&&prev>=item.priority)continue;
+   rows.set(item.venueId,row.id);
    incoming[item.venueId]=item.overrides;
+   priorities.set(item.venueId,item.priority);
   }
-  // The database is authoritative across devices. Existing browser-only edits
-  // remain visible unless the server already has a newer override for that venue.
-  state.venues={...state.venues,...migrateVenueOverrides(incoming)};
-  save();
+  const accepted=new Set(['unknown','pending','available','unavailable']);
+  for(const item of availability.dates||[]){
+   if(!PUBLIC_VENUES.some(v=>v.id===item.venue_id))continue;
+   if(!/^2027-06-(18|19|20)$/.test(item.day)||!accepted.has(item.status))
+    throw new Error('Некорректные статусы дат в базе');
+   const current=dates.get(item.venue_id)||{};
+   current[item.day.slice(-2)]=item.status;
+   dates.set(item.venue_id,current);
+  }
+  for(const venue of PUBLIC_VENUES){
+   if(['18','19','20'].some(d=>!dates.get(venue.id)?.[d]))
+    throw new Error('Не загружены статусы дат для '+venue.name);
+  }
+  // Only server responses populate the venue state. The browser stores guestCount only.
+  state.venues=incoming;
+  venueDb.rows=rows;
+  venueDb.dates=dates;
   venueDb.ready=true;
   venueDb.error='';
-  if(root.querySelector('[data-venues-page]'))redraw(root);
  }catch(error){
   venueDb.error=error.message;
-  const status=root.querySelector('[data-venue-edit-feedback]');
-  if(status)status.textContent='Не удалось подключиться к сохранению: '+venueDb.error;
- }finally{venueDb.loading=false}
+ }finally{
+  venueDb.loading=false;
+  if(root.querySelector('[data-venues-page]'))redraw(root);
+ }
+}
+async function commitVenueDate(id,day,status,root){
+ if(!venueDb.ready)throw new Error('Общая база недоступна');
+ if(!['18','19','20'].includes(day)||!['unknown','pending','available','unavailable'].includes(status))
+  throw new Error('Недопустимый статус даты');
+ const saved=await venueApi('admin/venue-dates',{
+  method:'PATCH',body:{venue_id:id,day:'2027-06-'+day,status}
+ });
+ if(saved.venue_id!==id||saved.day!=='2027-06-'+day||saved.status!==status)
+  throw new Error('Сервер вернул неожиданный результат');
+ const current={...(venueDb.dates.get(id)||{})};
+ current[day]=status;
+ venueDb.dates.set(id,current);
+ ui.savedVenue=id;
+ redraw(root);
 }
 let venuePersistQueue=Promise.resolve();
 function queueVenuePersist(id){
