@@ -61,7 +61,10 @@ export function estimateVenue(v,guests){
  }
  if(quotes.length){
    const base=[...quotes].sort((a,b)=>Math.abs(a.guests-count)-Math.abs(b.guests-count))[0];
-   const marginal=marginalPrice(v);
+   // Venue-specific 2027 offers may have a different variable menu rate from a
+   // previously published catalogue. Preserve the catalogue while recomputing
+   // the selected offer at other guest counts.
+   const marginal=num(base.marginalPerGuest)??marginalPrice(v);
    if(marginal===null)return {value:null,partial:true,isQuote:false,kind:'unknown',
      note:'Есть исходная смета на '+base.guests+' гостей, но без расшифровки её нельзя честно пересчитать на '+count};
    const total=Math.max(0,Number(base.total)+(count-Number(base.guests))*marginal);
