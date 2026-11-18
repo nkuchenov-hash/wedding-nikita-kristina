@@ -70,6 +70,7 @@ jobs:
             if test -f '$PRIVATE/wedding.sqlite3'; then php bin/backup.php; fi
             php bin/migrate.php
             php bin/backfill-guest-profiles.php
+            php bin/test-unified-guests.php
             php bin/seed-venues.php
             php bin/seed-venue-dates.php
             php bin/apply-venue-confirmations-20261118.php
