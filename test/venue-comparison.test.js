@@ -213,3 +213,17 @@ test('Palma menu tiers produce a dynamic, explicitly provisional 80 and 100 pers
  assert.equal(VENUE_RECORDS.palma.cateringMenus.length,3);
  assert.equal(VENUE_RECORDS.palma.quotes.length,3);
 });
+
+
+test('Putilov personal quote adds a 2027 scenario without replacing original catalogue fields',()=>{
+ const source=VENUE_RECORDS.putilov;
+ assert.equal(source.cost.rent,190000);
+ assert.equal(source.cost.menu,6000);
+ assert.equal(source.quotes[0].kind,'estimate');
+ assert.equal(source.quotes[0].total,1200000);
+ const v={id:'putilov',region:'city',cost:source.cost,quotes:source.quotes,dateAvailability:{'20':'available'},ratings:{}};
+ assert.equal(estimateVenue(v,80).value,1200000);
+ assert.equal(estimateVenue(v,100).value,1350000);
+ assert.equal(estimateVenue(v,80).partial,true);
+ assert.equal(source.cateringMenus.length,4);
+});
