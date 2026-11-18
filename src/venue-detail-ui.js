@@ -137,13 +137,12 @@ function budget(v,ctx){
  const guests=ctx.guests,e=ctx.estimate(v),extra=ctx.extraTotal(v);
  const total=e.value===null?null:e.value+extra;
  const base=e.value===null?'Не рассчитано':money(e.value);
- const known=e.knownSubtotal>0?money(e.knownSubtotal):'—';
- const label=e.value===null?'Нужны цены на банкет и условия':e.isQuote&&!e.partial?'Полученная смета':e.kind==='minimum'?'Минимум по известным строкам':'Предварительный сценарий';
- const missing=e.missing?.length?'<p class="vdp-cost-missing"><strong>Не хватает:</strong> '+h(e.missing.join(', '))+'</p>':'';
- return '<div class="vdp-budget-header"><div><small>Бюджет площадки · '+h(guests)+' гостей</small><strong>'+base+'</strong><span>'+h(label)+'</span></div>'+
- '<div><small>Известные расходы</small><strong>'+known+'</strong><span>Не означают полную стоимость</span></div>'+
- '<div><small>Доплаты сверх сметы</small><strong>'+money(extra)+'</strong><span>Внесены организатором</span></div></div>'+missing+
- (total!==null?'<p class="vdp-cost-total">С учётом внесённых доплат: <strong>'+(e.partial?'от ':'')+money(total)+'</strong></p>':'');
+ const basis=e.value===null?'Нет цены банкета или аренды':e.isQuote&&!e.partial?'Полученная смета':'Неполный расчёт';
+ const missing=e.missing?.length?'<p class="vdp-cost-missing"><strong>Нужно уточнить:</strong> '+h(e.missing.join(', '))+'</p>':'';
+ const known=e.value===null&&e.knownSubtotal>0?'<p class="vdp-cost-known">Сейчас известно: '+money(e.knownSubtotal)+' — это не итоговая стоимость.</p>':'';
+ return '<div class="vdp-budget-header"><div><small>Смета / оценка · '+h(guests)+' гостей</small><strong>'+base+'</strong><span>'+basis+'</span></div>'+
+ '<div><small>Дополнительные расходы</small><strong>'+money(extra)+'</strong><span>Поверх стоимости площадки</span></div>'+
+ '<div><small>Итого с доплатами</small><strong>'+(total===null?'Не рассчитано':(e.partial?'от ':'')+money(total))+'</strong><span>'+(e.partial?'Только известные суммы':'На основании полученной сметы')+'</span></div></div>'+known+missing;
 }
 function dates(v,ctx){
  return '<div class="vdp-dates">'+[['18','18 июня'],['19','19 июня'],['20','20 июня']].map(([n,label])=>{const status=ctx.dayStatus(v,n),txt=ctx.dayText(v,n);return '<button type="button" data-venue-inline="date:'+n+'" data-inline-kind="date" class="vdp-date vdp-date-editable '+h(status)+'" aria-label="Изменить доступность '+label+'"><span>'+label+(n==='19'?' · приоритет':'')+'</span><strong>'+h(txt)+' <span class="vdp-inline-pencil" aria-hidden="true">✎</span></strong></button>'}).join('')+'</div>';
