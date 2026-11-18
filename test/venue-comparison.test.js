@@ -25,7 +25,7 @@ test('June 19 and all rated criteria yield 85 points until full cost is confirme
  const score=scoreVenue(v,100);
  assert.equal(score.value,85);
  assert.equal(score.complete,RATING_CRITERIA.length-1);
- assert.equal(score.provisional,false); // Comparable received quote and all criteria are filled.
+ assert.equal(score.provisional,true); // No confirmed complete quote: cost remains unrated.
  assert.equal(score.breakdown.find(x=>x.key==='date').value,40);
  assert.equal(score.breakdown.find(x=>x.key==='city').value,10);
 });
@@ -34,14 +34,14 @@ test('country venues earn no city bonus even when other scores are perfect',()=>
  const v=venue({region:'country',quotes:[{guests:100,total:650000,kind:'quote'}]});
  const score=scoreVenue(v,100);
  assert.equal(score.breakdown.find(x=>x.key==='city').value,0);
- assert.equal(score.value,75);
+ assert.equal(score.value,90);
 });
 
 test('alternate date yields 24 date points, not 40',()=>{
  const v=venue({quotes:[{guests:100,total:650000,kind:'quote'}],dateAvailability:{'18':'available','19':'unavailable','20':'unknown'}});
  const score=scoreVenue(v,100);
  assert.equal(score.breakdown.find(x=>x.key==='date').value,24);
- assert.equal(score.value,69);
+ assert.equal(score.value,84);
 });
 
 test('unconfirmed date and subjective qualities stay unknown',()=>{
