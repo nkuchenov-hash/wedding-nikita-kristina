@@ -259,3 +259,52 @@
  .vw-page .vw-table-sortable{min-width:820px}
  .vw-page .vw-scroll:focus-visible{outline:2px solid #528369;outline-offset:-2px}
 }
+
+/* Decision-first venue workspace: content and controls precede research notes. */
+.vw-control-board{width:100%;min-width:0}
+.vw-control-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0 0 14px}
+.vw-control-head h1{font-size:clamp(23px,2.5vw,32px);line-height:1.16;letter-spacing:-.035em;margin:0 0 5px}
+.vw-control-head h1 span{display:inline-flex;align-items:center;justify-content:center;font-size:13px;line-height:1.4;color:#41664f;background:#e6efe7;border-radius:18px;min-width:28px;padding:2px 7px;vertical-align:middle;letter-spacing:0}
+.vw-control-head p{font-size:12px;color:#708374;margin:0}
+.vw-control-facts{display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-end}
+.vw-control-facts span{font-size:12px;color:#41664f;padding:7px 10px;border:1px solid #d9e5da;border-radius:9px;background:#fff;white-space:nowrap}
+.vw-control-board .vw-table-panel{margin:0;border-radius:13px}
+.vw-control-board .vw-table-panel-title{padding:12px 15px}
+.vw-control-board .vw-table-panel-title h2{font-size:15px}
+.vw-control-board .vw-table-panel-title span{font-size:12px}
+.vw-control-board .vw-shortcuts{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:8px 14px;border-bottom:1px solid #e6eee8}
+.vw-control-board .vw-shortcuts button{border-radius:18px;padding:7px 12px;font-weight:700;font-size:12px;color:#42674d;background:#f5f8f5;border:1px solid #dce7de}
+.vw-control-board .vw-shortcuts button.active{color:white;background:#2d6042;border-color:#2d6042}
+.vw-control-board .vw-shortcuts>span{margin-left:auto;font-size:11px;color:#7a8b7d}
+.vw-control-board .vw-date-edit{width:100%;display:flex;align-items:center;gap:6px;border:1px solid #d9e6dc;border-radius:7px;padding:3px 5px;background:#f5f7f5}
+.vw-control-board .vw-date-edit>span{width:37px;flex:0 0 37px;font-size:11px;font-weight:700;color:inherit}
+.vw-control-board .vw-date-edit select{width:100%;min-width:0;max-width:100%;height:29px;min-height:29px;padding:3px 18px 3px 5px!important;border:1px solid transparent;border-radius:6px;background:transparent;font-size:11px!important;font-weight:750!important;color:inherit}
+.vw-control-board .vw-date-edit select:focus-visible{outline:2px solid #87b998}
+.vw-control-board .vw-date-edit.vw-day-available{background:#edf9ee;border-color:#b6dcbf;color:#1f6938}
+.vw-control-board .vw-date-edit.vw-day-unavailable{background:#fcf2f2;border-color:#e9cdcd;color:#a04343}
+.vw-control-board .vw-date-edit.vw-day-pending{background:#fff8e9;border-color:#e6dbba;color:#7b5a24}
+.vw-control-board .vw-money strong{font-size:13px;line-height:1.35;font-weight:800}
+.vw-control-board .vw-money.vw-incomplete strong{color:#8a5d2d}
+.vw-control-board .vw-money.vw-complete strong{color:#225e3c}
+.vw-control-board .vw-money .vw-cost-gap{color:#8b6c47;font-size:11px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}
+.vw-save-error{padding:10px 14px;background:#fff0ed;color:#902f2f;margin:0;border-bottom:1px solid #e9c7c7;font-weight:650}
+@media(max-width:740px){
+ .vw-control-head{align-items:flex-start;gap:8px;flex-direction:column;margin-bottom:10px}
+ .vw-control-head h1{font-size:25px}
+ .vw-control-facts{justify-content:flex-start;gap:6px}
+ .vw-control-facts span{padding:5px 8px;font-size:11px}
+ .vw-control-board .vw-table-panel-title{gap:8px;padding:10px 12px}
+ .vw-control-board .vw-table-tools{gap:7px}
+ .vw-control-board .vw-table-tools>input{flex:1;min-width:100px}
+ .vw-control-board .vw-shortcuts{padding:9px 10px;gap:6px}
+ .vw-control-board .vw-shortcuts>span{display:none}
+ .vw-control-board .vw-table-sortable{min-width:950px}
+ .vw-control-board .vw-table-sortable th:first-child{width:23%}
+ .vw-control-board .vw-table-sortable th:nth-child(2){width:19%}
+ .vw-control-board .vw-table-sortable th:nth-child(4){width:20%}
+ .vw-control-board .vw-table-sortable td:first-child,
+ .vw-control-board .vw-table-sortable th:first-child{position:sticky;left:0;z-index:2;background:#fff;box-shadow:1px 0 0 #e0e9df}
+ .vw-control-board .vw-table-sortable th:first-child{background:#f4f8f4;z-index:3}
+ .vw-control-board .vw-venue-media,.vw-control-board .vw-image-open{flex-basis:43px;width:43px;height:45px}
+ .vw-control-board .vw-image-open>.vw-row-thumb{width:43px;height:45px}
+}
