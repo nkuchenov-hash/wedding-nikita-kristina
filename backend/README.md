@@ -31,12 +31,12 @@ to REG.RU. Database, backups and encryption keys remain off webroot.
 - **Sessions:** private `wedding-private/sessions`; HttpOnly, Secure and SameSite=Lax.
 - **Secrets:** `wedding-private/wedding-config.json` (0600), random server-side
   invite hashing pepper, and password hashes stored in database. Never commit either.
-- **Migrations and seeds:** `bin/migrate.php`, `bin/seed-venues.php`, `bin/import-venue-files.php`, `bin/import-guests.php`, `bin/smoke.php`.
+- **Migrations and seeds:** `bin/migrate.php`, `bin/backfill-guest-profiles.php`, `bin/seed-venues.php`, `bin/import-venue-files.php`, `bin/import-guests.php`, `bin/smoke.php`.
   Existing venue edits are never overwritten by the seed process.
 - **Automated deploy:** `.github/workflows/backend.yml` copies backend source only
   to the private directory, backs up the DB before reapplying idempotent migrations,
   tests SQLite constraints, and verifies backend remains disabled.
-- **Source of guests:** imported five real Google Sheets tabs via an encrypted source reference, with CSV fetched directly by REG.RU into private temporary files and removed after import.
+- **Source of truth for guests:** the protected SQLite database. The original five-tab import is retained only in a separate private Wedding Drive archive. The one-tab Google Sheets document is a dated backup/reference, **not a second editable live database**; the admin CSV export produces current data on demand.
 
 ## Access rules (already implemented in the API)
 
@@ -125,3 +125,12 @@ admin tool. **Import does not constitute sending invitations or confirming RSVP.
 
 No PocketBase daemon or a second MySQL database is needed for the current
 shared-hosting architecture. Guest publishing remains disabled until approved.
+
+## Unified guest workspace (18 Nov 2026)
+
+- One private organiser page at `/admin/#/admin/guests` for the entire guest list. It reads and writes the same SQLite `guests`, `guest_profile_details`, `guest_relationships`, `guest_companions`, `guest_progress`, `invitations` and `rsvps` tables.
+- No secondary guest spreadsheet widget or duplicate edit table is rendered. Names, side, decision, family context, seating and RSVP can be edited from the directory; the single guest card handles all other editable fields.
+- Private notes, community, Russian and English bio are stored as editable database fields. Idempotent, one-time backfill takes them from private original source snapshots only if the destination is empty and never invents missing names.
+- Relation editing uses permanent guest IDs; removing a link does not delete either person. Companion records are managed separately from individual guests. Guest exclusions are reversible archives, not destructive deletes.
+- The organiser CSV export contains current database data. The Wedding Drive Google Sheet contains **exactly one tab `Гости`** as a historical snapshot, while the full 13-tab source workbook is preserved in the separate archive. Google Sheets edits do **not** automatically update SQLite; do not present spreadsheet RSVP or invitation statuses as live.
+- Publishing actual guests to the public website remains subject to explicit visibility consent. Preparing a token never means an invitation was sent.
