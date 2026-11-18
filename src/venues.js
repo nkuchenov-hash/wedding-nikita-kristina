@@ -55,47 +55,18 @@ const COSTS=[
  ['service','Сервисный сбор, %'],['minSpend','Минимальный депозит / заказ, ₽']
 ];
 const STORE='nk-wedding-venues-comparison-v2';
-const INITIAL=()=>({version:2,guestCount:80,venues:{},updated:null});
-// Earlier browser and server overrides may carry outdated June date/quote fields.
-// Migrate only the affected fields once; keep personal ratings, notes and costs.
-const FACTS_REVISION='2026-11-17-dates-v1';
-const CORRECTED_IDS=new Set(['vesenniy','k2','ermolinsky','alex-park','vinity','maryino']);
-function migrateVenueOverrides(venues={}){
- const result={...venues};
- for(const id of CORRECTED_IDS){
-  const prior=result[id];
-  if(!prior||prior._factsRevision===FACTS_REVISION)continue;
-  const edit={...prior,_factsRevision:FACTS_REVISION};
-  delete edit.dateAvailability;
-  delete edit.availability;
-  delete edit.dateNote;
-  delete edit.offerNote;
-  if(id==='alex-park'||id==='vinity'){
-   delete edit.quotes;
-   if(id==='alex-park'&&edit.cost){
-    edit.cost={...edit.cost};
-    delete edit.cost.quoteTotal;
-    delete edit.cost.quoteGuests;
-   }
-  }
-  result[id]=edit;
- }
- // Royal Beach's June 19 status was clarified on 18 Nov. Preserve edits to
- // unrelated dates, costs and notes when discarding obsolete browser/server status.
- const royal=result.royal;
- if(royal&&royal._royalDateRevision!=='2026-11-18'){
-  const edit={...royal,_royalDateRevision:'2026-11-18'};
-  delete edit.availability;
-  if(edit.dateAvailability){
-   edit.dateAvailability={...edit.dateAvailability};
-   delete edit.dateAvailability['19'];
-  }
-  result.royal=edit;
- }
- return result;
-}
+const INITIAL=()=>({version:2,guestCount:80,venues:{}});
+// Only the personal guest-count preference is cached in the browser.
+// All venue changes and date statuses are read from the authenticated database.
 function read(){
- try {const v=JSON.parse(localStorage.getItem(STORE)||'null');if(v&&v.version===2&&v.venues&&typeof v.venues==='object')return {...INITIAL(),...v,venues:migrateVenueOverrides(v.venues)};}catch{}
+ try {
+  const cached=JSON.parse(localStorage.getItem(STORE)||'null');
+  if(cached&&cached.version===2){
+   const guestCount=Number(cached.guestCount);
+   if(Number.isInteger(guestCount)&&guestCount>=1&&guestCount<=300)
+    return {...INITIAL(),guestCount};
+  }
+ }catch{}
  return INITIAL();
 }
 let state=read();
@@ -103,20 +74,23 @@ let ui={kind:'all',query:'',sort:'date',sortDir:'asc',expanded:null,detailTab:'o
 const h=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rub=(v)=>typeof v==='number'&&Number.isFinite(v)?Math.round(v).toLocaleString('ru-RU')+' ₽':'—';
 const safeUrl=(v)=>{try{const u=new URL(String(v));return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
-const get=(base)=>{const d=VENUE_RECORDS[base.id]||{},edit=state.venues[base.id]||{};return {...base,...d,...edit,cost:{...(base.publiclyAdvertised||{}),...(base.cost||{}),...(d.cost||{}),...(edit.cost||{})},ratings:{...(edit.ratings||{})},extras:{...(edit.extras||{})},quotes:edit.quotes??d.quotes??[],gallery:d.gallery||[],dateAvailability:{'18':'unknown','19':edit.availability||d.availability||base.availability||'unknown','20':'unknown',...(d.dateAvailability||{}),...(edit.dateAvailability||{}),...(edit.availability?{'19':edit.availability}:{})}};};
-const dayStatus=(v,day)=>v.dateAvailability?.[String(day)]||(String(day)==='19'?(v.availability||'unknown'):'unknown');
+const get=(base)=>{
+ const d=VENUE_RECORDS[base.id]||{},edit=state.venues[base.id]||{};
+ const dates=venueDb.dates.get(base.id)||{};
+ const dateAvailability=Object.fromEntries(['18','19','20'].map(day=>[day,dates[day]||'unknown']));
+ return {...base,...d,...edit,cost:{...(base.publiclyAdvertised||{}),...(base.cost||{}),...(d.cost||{}),...(edit.cost||{})},
+  ratings:{...(edit.ratings||{})},extras:{...(edit.extras||{})},
+  quotes:edit.quotes??d.quotes??[],gallery:d.gallery||[],
+  dateAvailability,availability:dateAvailability['19']};
+};
+const dayStatus=(v,day)=>v.dateAvailability?.[String(day)]||'unknown';
 const dayText=(v,day)=>({available:'Свободно',unavailable:'Занято',pending:'Уточняется',unknown:'Нет подтверждения'}[dayStatus(v,day)]||'Нет подтверждения');
 const datePriority=v=>dayStatus(v,'19')==='available'?0:(dayStatus(v,'18')==='available'||dayStatus(v,'20')==='available')?1:(DATE_CHOICES.some(([d])=>dayStatus(v,d)==='pending'))?2:(DATE_CHOICES.some(([d])=>dayStatus(v,d)==='unknown'))?3:4;
 const bestAvailable=v=>dayStatus(v,'19')==='available'?'19':(dayStatus(v,'18')==='available'?'18':(dayStatus(v,'20')==='available'?'20':null));
 const threeDates=v=>DATE_CHOICES.map(([day])=>'<span class="vw-date-chip vw-day-'+dayStatus(v,day)+'"><b>'+day+'.06</b> '+h(dayText(v,day))+'</span>').join('');
 
 const numbers=(v)=>Number.isFinite(Number(v))&&v!==''&&v!==null?Math.max(0,Number(v)):null;
-function save(){state.updated=new Date().toISOString();try{localStorage.setItem(STORE,JSON.stringify(state));}catch{}}
-function patch(id,key,value){
- const old=state.venues[id]||{};
- state.venues[id]={...old,[key]:value};save();
-}
-
+function save(){try{localStorage.setItem(STORE,JSON.stringify({version:2,guestCount:state.guestCount}));}catch{}}
 // Durable organizer edits use the existing authenticated wedding admin SQLite API.
 // Static venue facts and original source materials remain untouched.
 const venueDb={rows:new Map(),csrf:'',ready:false,loading:false,error:''};
