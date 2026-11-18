@@ -37,6 +37,10 @@ $columns=$database->query('PRAGMA table_info(rsvps)')->fetchAll(PDO::FETCH_ASSOC
 if(!in_array('response_source',array_column($columns,'name'),true))
     $database->exec("ALTER TABLE rsvps ADD COLUMN response_source TEXT NOT NULL DEFAULT 'guest'");
 $guestColumns=$database->query('PRAGMA table_info(guests)')->fetchAll(PDO::FETCH_ASSOC);
+if(!in_array('about_en',array_column($guestColumns,'name'),true))
+    $database->exec("ALTER TABLE guests ADD COLUMN about_en TEXT NOT NULL DEFAULT ''");
+if(!in_array('community',array_column($guestColumns,'name'),true))
+    $database->exec("ALTER TABLE guests ADD COLUMN community TEXT NOT NULL DEFAULT ''");
 if(!in_array('private_notes',array_column($guestColumns,'name'),true))
     $database->exec("ALTER TABLE guests ADD COLUMN private_notes TEXT NOT NULL DEFAULT ''");
 $scheduleColumns=$database->query('PRAGMA table_info(schedule_items)')->fetchAll(PDO::FETCH_ASSOC);
