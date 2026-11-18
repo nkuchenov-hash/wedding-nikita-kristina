@@ -116,7 +116,10 @@ test('shortlist excludes six dismissed venues but retains archived records',()=>
  for(const id of ['vinity','vesenniy','k2','alex-park','ermolinsky','maryino','harmony','putilov']){
   assert.match(list,new RegExp("id:'"+id+"'"));
  }
- assert.match(source,/FACTS_REVISION='2026-11-17-dates-v1'/);
+ assert.match(source,/venueApi\('admin\/venue-dates'\)/);
+ assert.match(source,/state\.venues=incoming/);
+ assert.doesNotMatch(source,/function patch\(/);
+ assert.match(source,/guestCount:state\.guestCount/);
 });
 
 test('Royal Beach June 19 is unavailable; June 18/20 remain unconfirmed',()=>{
@@ -128,4 +131,22 @@ test('Royal Beach June 19 is unavailable; June 18/20 remain unconfirmed',()=>{
  assert.equal(VENUE_RECORDS['alex-park'].dateAvailability['20'],'available');
  const js=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');
  assert.match(js,/_royalDateRevision:'2026-11-18'/);
+});
+
+test('date status is an atomic authenticated SQLite operation rather than a site rebuild',()=>{
+ const api=readFileSync(new URL('../backend/src/api.php',import.meta.url),'utf8');
+ const schema=readFileSync(new URL('../backend/schema.sql',import.meta.url),'utf8');
+ const seeder=readFileSync(new URL('../backend/bin/seed-venue-dates.php',import.meta.url),'utf8');
+ const frontend=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');
+ assert.match(schema,/CREATE TABLE IF NOT EXISTS venue_date_status/);
+ assert.match(schema,/PRIMARY KEY \(venue_id,day\)/);
+ assert.match(api,/admin\/venue-dates' && \$method==='PATCH'/);
+ assert.match(api,/UPDATE venue_date_status SET status=\?/);
+ assert.match(api,/WHERE venue_id=\? AND day=\?/);
+ assert.match(seeder,/INSERT OR IGNORE INTO venue_date_status/);
+ assert.match(frontend,/await commitVenueDate\(id,t\.dataset\.day,t\.value,root\)/);
+ assert.match(frontend,/venueApi\('admin\/venue-dates'/);
+ assert.match(frontend,/const dateAvailability=Object\.fromEntries/);
+ assert.match(frontend,/if\(!venueDb\.ready\)/);
+ assert.doesNotMatch(frontend,/patch\(id,'dateAvailability'/);
 });
