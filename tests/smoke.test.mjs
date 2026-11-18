@@ -66,9 +66,9 @@ test('one protected gallery only: pair, registration, approved programme places,
 });
 
 test('guest records use authenticated database CRUD without file import UI',async()=>{
- const ui=await read('../src/admin-data-ui.js');
- assert.match(ui,/call\('admin\/guests'\)/);
- assert.match(ui,/call\('admin\/guests',\{method:'POST'/);
+ const ui=await read('../src/admin-guests.js');
+ assert.match(ui,/request\('admin\/guests'\)/);
+ assert.match(ui,/request\('admin\/guests',\{method:'POST'/);
  for(const term of ['Импорт гостей','Загрузить CSV','admin/import/guests','documents(host)','section===\'documents\''])
   assert.ok(!ui.includes(term),'Removed UI still references '+term);
 });
@@ -97,7 +97,7 @@ test('three-day wedding itinerary contains only organizer-confirmed events',asyn
 
 test('protected guest roster edits any core field inline and separates relationship to the couple',async()=>{
  const ui=await read('../src/admin-guests.js');
- assert.match(ui,/Кем приходится нам/);
+ assert.match(ui,/Кем приходится Никите и Кристине/);
  assert.match(ui,/relation_to_couple/);
  assert.match(ui,/admin\/guest\/fields/);
  assert.match(ui,/ad-gb-expanded-row/);
