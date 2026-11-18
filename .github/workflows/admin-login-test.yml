@@ -2,11 +2,15 @@ name: Verify real wedding admin login
 on:
   push:
     paths: ['.github/workflows/admin-login-test.yml', 'tools/admin-gateway.php']
+  workflow_run:
+    workflows: ['Install private wedding database backend', 'Publish admin-only wedding site']
+    types: [completed]
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   verify:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Run full HTTPS login with disposable test account
@@ -97,7 +101,10 @@ jobs:
             test -s "/tmp/$asset"
           done
           grep -Fq 'activateGuestDirectory' /tmp/admin-guests.js
-          grep -Fq 'Приглашение отправлено' /tmp/admin-guests.js
+          grep -Fq 'Дети: участвуют' /tmp/admin-guests.js
+          grep -Fq 'Перевести в резерв' /tmp/admin-guests.js
+          grep -Fq 'SORT_FIELDS' /tmp/admin-guests.js
+          grep -Fq 'admin/guests/revision' /tmp/admin-guests.js
           grep -Fq 'invitations/sent' /tmp/admin-guests.js
           grep -Fq 'hydrateVenueFiles' /tmp/venue-files-ui.js
           grep -Fq 'data-venue-files' /tmp/venue-detail-ui.js
@@ -127,7 +134,10 @@ jobs:
           for key in ('total','prepared','sent','opened','registered','responded','confirmed','declined','tentative','public_visible'):
               assert key in guest, 'Missing dashboard field '+key
               assert int(guest[key])>=0
-          assert int(guest['total'])>=114
+          assert 0 <= int(guest['total']) <= 114
+          assert int(guest['reserved'])>=0
+          assert isinstance(guest['children_enabled'],bool)
+          assert int(guest['children_total'])>=12
           assert int(guest['confirmed'])<=int(guest['registered'])
           assert int(guest['public_visible'])<=int(guest['confirmed'])
           assert int(guest['confirmed'])<=int(guest['responded'])
@@ -139,6 +149,10 @@ jobs:
           data=json.load(open('/tmp/wedding-guests.json'))
           guests=data['guests']
           assert len(guests)>=114
+          assert data.get('children_enabled') in (True,False)
+          assert isinstance(data.get('revision'),int)
+          assert sum(g.get('age_group') in ('child','infant') for g in guests)>=12
+          assert all(g.get('planning_status') in ('main','reserve') for g in guests)
           sample=guests[0]
           for key in ('active_invite_id','invite_prepared_at','invitation_sent_at',
                      'first_opened_at','profile_completed_at','attendance'):
@@ -147,7 +161,7 @@ jobs:
 
           relation_count=sum(bool(g.get('relation_to_couple')) for g in guests)
           assert relation_count>=35, ('Couple relations not backfilled',relation_count)
-          for key in ('relation_to_couple','relationship','name_en','seating_group','response_source','dietary_notes'):
+          for key in ('relation_to_couple','relationship','name_en','seating_group','response_source','dietary_notes','planning_status','age_group'):
               assert key in sample, 'Missing editable guest field '+key
           print('COUPLE_RELATIONS_AND_GUEST_FIELDS_OK',relation_count)
           PY
