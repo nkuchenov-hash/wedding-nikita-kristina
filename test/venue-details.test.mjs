@@ -29,10 +29,13 @@ test('All 25 venues have the same 13 price rows, even when price is unknown',()=
   assert.match(html,/Неизвестные суммы указаны отдельно/);
  }
 });
-test('Photo archive includes all 330 indexed photographs in source room categories',()=>{
+test('Photo archive includes all 337 indexed photographs in source room categories',()=>{
  const total=allIds.reduce((s,id)=>s+getVenuePhotos(venue(id)).length,0);
- assert.equal(total,330);
+ assert.equal(total,337);
  assert.equal(getVenuePhotos(venue('vinity')).length,24);
+ assert.equal(getVenuePhotos(venue('palma')).length,7,'all seven original Telegram photos must be displayed');
+ assert.equal(getVenuePhotos(venue('palma')).filter(p=>p.section==='Залы').length,4);
+ assert.equal(getVenuePhotos(venue('palma')).filter(p=>p.section==='Welcome-зона').length,3);
  assert.ok(getVenuePhotos(venue('royal')).some(f=>f.section==='Террасы и виды'));
  assert.ok(getVenuePhotos(venue('alex-park')).some(f=>f.section==='Санузлы'));
  // A venue hero must never start with a restroom or utility-room photo.
@@ -44,7 +47,8 @@ test('Main covers use banquet halls or building facades; technical photos sort l
   'putilov':'1Yo4j6ZhK_ycH38ZeHXKCGnaMmQfcHme4',
   'repino-riviera':'1PCv5jMFTatJ21kuaUD2RaPx7JFXYsfPM',
   'panorama':'1PwrAgzMU1kmK772YRhQWuQNGrfaU1d0X',
-  'harmony':'1giLTNx8i-okBCfyiZChmaC0I3MTVsaAe'
+  'harmony':'1giLTNx8i-okBCfyiZChmaC0I3MTVsaAe',
+  'palma':'1NoeveNL-VYzPILfXxUiC4nzBcgV_4BSp'
  };
  for(const [id,photoId] of Object.entries(expected))assert.equal(getVenueCover(venue(id)).id,photoId,id+' cover');
  assert.equal(getVenueCover(venue('maryino')),null,'Maryino lacks a suitable owned hall/facade photo');
