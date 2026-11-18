@@ -199,3 +199,17 @@ test('new manager dates and Harmony wedding offer are not mistaken for 2027 fixe
  assert.ok(source.questions.some(x=>x.includes('10%')));
  assert.ok(source.documents.some(x=>x.url.includes('1PjAw62irJgQ6JgJ16Y9C1VHdz4jaXHUm')));
 });
+
+
+test('Palma menu tiers produce a dynamic, explicitly provisional 80 and 100 person budget',()=>{
+ const v={id:'palma',region:'city',capacity:null,dateAvailability:{'19':'available'},
+   cost:VENUE_RECORDS.palma.cost,quotes:VENUE_RECORDS.palma.quotes,ratings:{}};
+ assert.equal(VENUE_PRICING.palma.menu.value,4700);
+ assert.equal(estimateVenue(v,80).value,773600);
+ assert.equal(estimateVenue(v,100).value,877000);
+ assert.equal(estimateVenue(v,80).partial,true);
+ assert.equal(estimateVenue(v,80).missing.length,0);
+ assert.equal(estimateVenue({...v,cost:{...v.cost,menu:5900}},80).value,879200);
+ assert.equal(VENUE_RECORDS.palma.cateringMenus.length,3);
+ assert.equal(VENUE_RECORDS.palma.quotes.length,3);
+});
