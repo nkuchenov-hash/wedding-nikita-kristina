@@ -125,7 +125,7 @@ function costSchedule(v){
   const included=typeof value==='string'&&/включено|входит/i.test(value);
   const current=(value===null||value===undefined)?'unknown':included?'included':'priced';
   const field='cost:'+({deposit:'minSpend',tech:'technical'}[k]||k);
-  return '<div class="vdp-cost-row vdp-cost-'+current+'"><div><b>'+h(f.title)+'</b>'+(e?.note?'<details class="vdp-cost-note"><summary>Условия</summary><p>'+h(e.note)+'</p></details>':'')+'</div><div>'+inlineValue(field,value,{label:f.title,kind:'number',empty:'Не рассчитано'})+(f.unit&&typeof value==='number'?'<small class="vdp-cost-unit">'+h(f.unit)+'</small>':'')+'</div></div>';
+  return '<div class="vdp-cost-row vdp-cost-'+current+'"><div><b>'+h(f.title)+'</b>'+(e?.note?'<details class="vdp-cost-note"><summary>Условия</summary><p>'+h(e.note)+'</p></details>':'')+'</div><div>'+inlineValue(field,value,{label:f.title,kind:'number',empty:'Не рассчитано'})+((e?.unit||f.unit)&&typeof value==='number'?'<small class="vdp-cost-unit">'+h(e?.unit||f.unit)+'</small>':'')+'</div></div>';
  }).join('')+'</div></section>').join('');
 }
 function quoteCards(v,guests){
