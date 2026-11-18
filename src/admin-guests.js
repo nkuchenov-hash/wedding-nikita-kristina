@@ -164,7 +164,7 @@ export async function activateGuestDirectory(root){
      if(side.value!=='all'&&p.side!==side.value)return false;
      if(filter.value==='archived')return p.status==='archived';
      if(p.status==='archived')return false;
-     if(filter.value==='base'&&(!isBase(p)||!eligible(p)))return false;
+     if(filter.value==='base'&&!eligible(p))return false;
      if(filter.value==='reserve'&&!isReserve(p))return false;
      if(filter.value==='kids'&&!isChild(p))return false;
      if(filter.value==='question'&&!isQuestion(p))return false;
