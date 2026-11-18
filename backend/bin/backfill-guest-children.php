@@ -25,7 +25,7 @@ try{
         // "сын [person]" or "дочь [person]" segments are selected.
         // Adult kinship entries with spouses, siblings, cousins are not selected.
         if($relation!=='' &&
-           preg_match('/^(?:(?:сын|дочь)\\s+[^;]+)(?:;\\s*(?:сын|дочь)\\s+[^;]+)*$/u',$relation)===1){
+           preg_match('/^(?:(?:сын|дочь)\s+[^;]+)(?:;\\s*(?:сын|дочь)\s+[^;]+)*$/u',$relation)===1){
             $update->execute([$row['id']]);
             $changes+=$update->rowCount();
         }
