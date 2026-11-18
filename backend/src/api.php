@@ -344,7 +344,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
        json(['ok'=>true]);
     }
     if($route==='admin/guest/fields' && $method==='PATCH'){
-        $data=payload(10000);
+        $data=payload(40000);
         $id=strval($data,'id',40,true);
         $values=$data['fields']??null;
         if(!is_array($values)||array_is_list($values)||!count($values)||count($values)>24)
@@ -373,7 +373,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
                 fail(422,'language','Язык должен быть ru, en, de или other');
             if($key==='display_name' && trim((string)$value)==='')
                 fail(422,'name','Имя не может быть пустым');
-            $max=in_array($key,['about','about_en','private_notes'],true)?2000:(in_array($key,['email','name_en','display_name','relationship','relation_to_couple','city'],true)?320:($key==='phone'?64:($key==='seating_group'?160:320)));
+            $max=$key==='private_notes'?12000:(in_array($key,['about','about_en'],true)?5000:(in_array($key,['email','name_en','display_name','relationship','relation_to_couple','city'],true)?320:($key==='phone'?64:($key==='seating_group'?160:320)));
             if(mb_strlen((string)$value)>$max)fail(422,'field','Слишком длинное значение');
             if(in_array($key,['plus_one_allowed','children_count'],true))$value=(int)$value;
             if(in_array($key,$guestFields,true)){
