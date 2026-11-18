@@ -34,7 +34,9 @@ try{
         $community=(string)$row['community'];
         $private=(string)$row['private_notes'];
         if(trim($ru)===''){
-            $candidate=safe((string)($person['Информация о человеке']??$profile['Короткое описание RU']??''));
+            $raw=trim((string)($person['Информация о человеке']??''));
+            if($raw==='')$raw=(string)($profile['Короткое описание RU']??'');
+            $candidate=safe($raw);
             if($candidate!==''){$ru=$candidate;$profiles++;}
         }
         if(trim($en)===''){
