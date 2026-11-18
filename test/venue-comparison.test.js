@@ -25,20 +25,20 @@ test('June 19 and all rated criteria yield 85 points until full cost is confirme
  const score=scoreVenue(v,100);
  assert.equal(score.value,85);
  assert.equal(score.complete,RATING_CRITERIA.length-1);
- assert.equal(score.provisional,true); // Formula without confirmed quote is still an estimate.
+ assert.equal(score.provisional,false); // Comparable received quote and all criteria are filled.
  assert.equal(score.breakdown.find(x=>x.key==='date').value,40);
  assert.equal(score.breakdown.find(x=>x.key==='city').value,10);
 });
 
 test('country venues earn no city bonus even when other scores are perfect',()=>{
- const v=venue({region:'country'});
+ const v=venue({region:'country',quotes:[{guests:100,total:650000,kind:'quote'}]});
  const score=scoreVenue(v,100);
  assert.equal(score.breakdown.find(x=>x.key==='city').value,0);
  assert.equal(score.value,75);
 });
 
 test('alternate date yields 24 date points, not 40',()=>{
- const v=venue({dateAvailability:{'18':'available','19':'unavailable','20':'unknown'}});
+ const v=venue({quotes:[{guests:100,total:650000,kind:'quote'}],dateAvailability:{'18':'available','19':'unavailable','20':'unknown'}});
  const score=scoreVenue(v,100);
  assert.equal(score.breakdown.find(x=>x.key==='date').value,24);
  assert.equal(score.value,69);
@@ -150,4 +150,29 @@ test('date status is an atomic authenticated SQLite operation rather than a site
  assert.match(frontend,/const dateAvailability=Object\.fromEntries/);
  assert.match(frontend,/if\(!venueDb\.ready\)/);
  assert.doesNotMatch(frontend,/patch\(id,'dateAvailability'/);
+});
+
+test('K2 rent-only 420k is never presented as the wedding budget or price score',()=>{
+ const v={id:'k2',region:'city',capacity:200,dateAvailability:{'19':'available'},
+  cost:VENUE_RECORDS.k2.cost,ratings:{}};
+ const estimate=estimateVenue(v,80);
+ assert.equal(estimate.value,null);
+ assert.equal(estimate.knownSubtotal,420000);
+ assert.equal(estimate.kind,'incomplete');
+ assert.ok(estimate.missing.includes('банкет'));
+ assert.equal(scoreVenue(v,80,estimate).breakdown.find(x=>x.key==='cost').value,null);
+});
+test('every venue has the same cost schema and table indicates missing quotes',()=>{
+ const pricing=readFileSync(new URL('../src/venues-pricing.js',import.meta.url),'utf8');
+ const detail=readFileSync(new URL('../src/venue-detail-ui.js',import.meta.url),'utf8');
+ const list=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');
+ assert.match(pricing,/VENUE_COST_LABELS/);
+ for(const label of ['menu','rent','sound','light','tech','service','welcome','drinks','corkage','staff','extension']){
+  assert.ok(pricing.includes('"'+label+'"'),label);
+ }
+ assert.match(detail,/rowGroups\.map/);
+ assert.match(detail,/vdp-cost-missing/);
+ assert.match(list,/Нет полной цены/);
+ assert.match(list,/data-list-date/);
+ assert.doesNotMatch(list,/Сезоны в парке.*сообщили о занятости 19-го/);
 });
