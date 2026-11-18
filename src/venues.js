@@ -443,7 +443,7 @@ function visibleVenues(all){
   return (ui.kind==='all'||v.region===ui.kind)
     &&(ui.date==='all'||(ui.chosenDay==='all'?DATE_CHOICES.some(([d])=>dayStatus(v,d)===ui.date):dayStatus(v,ui.chosenDay)===ui.date))
     &&(ui.visit==='all'||(ui.visit==='yes')===!!v.visited)
-    &&(ui.budget==='all'||e.value!==null&&e.value<=Number(ui.budget))
+    &&(ui.budget==='all'||(e.isQuote||e.basedOnQuote)&&e.value!==null&&e.value<=Number(ui.budget))
     &&(ui.capacity==='all'||v.capacity>=Number(ui.capacity))
     &&(v.name+' '+v.area).toLowerCase().includes(ui.query.toLowerCase());
  }));
