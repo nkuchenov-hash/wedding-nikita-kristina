@@ -821,7 +821,22 @@ export const VENUE_RECORDS = {
     "summary": "Площадка в центре, пока только адрес и контактная карточка.",
     "contactName": "Татьяна Агуреева — менеджер Парадного зала",
     "capacityNote": "Парадный зал 256 м², welcome-зона 86 м², 180 стульев и 15 круглых столов по 1,5 м без текстиля. Максимальная банкетная вместимость не подтверждена.",
-    "cost": {"rent": 360000, "service": 10, "extension": 35000},
+    "cost": {"rent": 360000, "menu": 4700, "service": 10, "extension": 35000},
+    "quotes": [
+      {"guests": 80, "total": 773600, "kind": "estimate", "label": "Сценарий Eat Catering: аренда 360 000 ₽ + банкет №1 4 700 ₽ × 80 + 10% сервис 37 600 ₽. Без фуршета, алкоголя, пробкового сбора, декора и возможных расходов на персонал. Уточнить окончательную смету."},
+      {"guests": 80, "total": 879200, "kind": "scenario", "label": "Сценарий FurChef: аренда 360 000 ₽ + банкет №1 5 900 ₽ × 80 + 10% сервис 47 200 ₽. Официанты от 8 000 ₽/чел., фуршет, пробковый сбор и доставка отдельно."},
+      {"guests": 80, "total": 844000, "kind": "scenario", "label": "Сценарий Royal Catering: аренда 360 000 ₽ + банкет №1 5 500 ₽ × 80 + 10% сервис 44 000 ₽. Цена меню указана без НДС, поэтому итог 844 000 ₽ НЕ учитывает НДС и прочие дополнительные расходы."}
+    ],
+    "cateringMenus": [
+      {"partner": "Eat Catering", "banquetPerGuest": [4700, 5700, 6700, 7700], "welcomePerGuest": [2700, 3500, 4200, 5000, 5700], "currency": "RUB"},
+      {"partner": "FurChef", "banquetPerGuest": [5900, 6900, 8900], "welcomePerGuest": [1500, 2200, 3300], "extraWaiterFrom": 8000, "corkagePerGuest": 300, "minimumOrder": 150000, "currency": "RUB"},
+      {"partner": "Royal Catering", "banquetPerGuest": [5500, 6700, 8600, 9600], "banquetPricesExcludeVAT": true, "welcomeCocktailPerGuest": [850, 950, 1350, 1600], "servicePercent": 10, "currency": "RUB"}
+    ],
+    "telegramLinks": [
+      {"label": "Фотографии парадного зала — предложение менеджера", "url": "https://disk.360.yandex.ru/d/Va_izspseXnIXw"},
+      {"label": "Техническое оснащение и план зала", "url": "https://disk.yandex.ru/d/aUK527uFDGg4Yg"},
+      {"label": "Меню кейтерингов — предложение менеджера", "url": "https://disk.yandex.ru/d/xQ9twydE4B-JBw"}
+    ],
     "costSummary": "19 июня 2027 (суббота): аренда 360 000 ₽, с 09:00 до 23:00 и два часа демонтажа. Для ВС–ЧТ указана аренда 290 000 ₽. В аренду входят сцена, свет, звук и технический персонал до 8 часов. Кейтеринг и 10% обслуживания — отдельно. Полной сметы на выбранное число гостей нет.",
     "included": [
       "Парадный зал 256 м² и welcome-зона 86 м²",
