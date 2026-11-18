@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {VENUE_RECORDS} from '../src/venues-data.js';
 import {estimateVenue, scoreVenue, RATING_CRITERIA, RATING_MAX} from '../src/venue-evaluation.js';
+import {VENUE_PRICING} from '../src/venues-pricing.js';
 
 const venue=(overrides={})=>({
  id:'venue-score-test', region:'city',capacity:100,
@@ -175,4 +176,26 @@ test('every venue has the same cost schema and table indicates missing quotes',(
  assert.match(list,/Нет полной цены/);
  assert.match(list,/data-list-date/);
  assert.doesNotMatch(list,/Сезоны в парке.*сообщили о занятости 19-го/);
+});
+
+test('new manager dates and Harmony wedding offer are not mistaken for 2027 fixed catering rates',()=>{
+ assert.equal(VENUE_RECORDS.eva.dateAvailability['18'],'available');
+ assert.equal(VENUE_RECORDS.eva.dateAvailability['20'],'available');
+ assert.equal(VENUE_RECORDS.eva.dateAvailability['19'],undefined);
+ assert.equal(VENUE_RECORDS.putilov.dateAvailability['20'],'available');
+ assert.deepEqual(VENUE_RECORDS.harmony.dateAvailability,{'18':'available','19':'available','20':'available'});
+ assert.equal(VENUE_RECORDS.harmony.capacity,170);
+ assert.equal(VENUE_RECORDS.harmony.quotes[0].kind,'estimate');
+ assert.equal(VENUE_RECORDS.harmony.quotes[1].total,720000);
+ const source=VENUE_RECORDS.harmony;
+ const exact=estimateVenue({id:'harmony',...source},80);
+ assert.equal(exact.value,764000);
+ assert.equal(exact.partial,true);
+ const extrapolated=estimateVenue({id:'harmony',...source},100);
+ assert.equal(extrapolated.value,912500);
+ assert.equal(extrapolated.partial,true);
+ assert.equal(VENUE_PRICING.harmony.corkage.unit,'/бут.');
+ assert.equal(VENUE_PRICING.harmony.corkage.value,700);
+ assert.ok(source.questions.some(x=>x.includes('10%')));
+ assert.ok(source.documents.some(x=>x.url.includes('1PjAw62irJgQ6JgJ16Y9C1VHdz4jaXHUm')));
 });
