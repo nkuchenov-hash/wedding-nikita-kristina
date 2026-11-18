@@ -21,7 +21,10 @@ async function request(route,opts={}){
  if(!response.ok||!data.ok)throw Error(data.message||'Не удалось сохранить изменение');
  return data;
 }
+let cleanupPreviousGuestView=null;
 export async function activateGuestDirectory(root){
+ cleanupPreviousGuestView?.();
+
  const destination=root.querySelector('.admin-content');
  if(!destination)return;
  destination.replaceChildren();
@@ -46,7 +49,7 @@ export async function activateGuestDirectory(root){
  const panel=mk('section','ad-gb-panel'),close=mk('button','ad-gb-close','Закрыть ×');close.type='button';
  const detail=mk('div','ad-gb-details');panel.append(close,detail);overlay.append(panel);page.append(overlay);
  destination.append(page);
- let people=[],csrf='',activeId=null,editing=false;
+ let people=[],csrf='',activeId=null,editing=false,lastSnapshot='',refreshing=false;
  const notice=(message,error=false)=>{alert.textContent=message;alert.hidden=!message;alert.className='ad-gb-notice'+(error?' ad-gb-error':'')};
  const byId=id=>people.find(p=>p.id===id);
  const status=p=>p.attendance==='yes'?'Будет':p.attendance==='no'?'Не придёт':p.attendance==='maybe'?'Не решил':'Нет ответа';
@@ -340,8 +343,13 @@ export async function activateGuestDirectory(root){
 
    }catch(err){detail.replaceChildren(mk('p','ad-gb-error','Не удалось открыть карточку: '+err.message))}
  }
- async function reloadData(){
-   const data=await request('admin/guests');people=data.guests||[];
+ async function reloadData(quiet=false){
+   const data=await request('admin/guests');
+   const next=data.guests||[];
+   const fingerprint=JSON.stringify(next);
+   if(quiet&&fingerprint===lastSnapshot)return;
+   people=next;
+   lastSnapshot=fingerprint;
    render();
  }
  async function createGuest(){
@@ -386,5 +394,28 @@ export async function activateGuestDirectory(root){
  document.addEventListener('keydown',onKey);
  try{const [session]=await Promise.all([request('auth/session')]);csrf=session.csrf;if(session.role!=='admin')throw Error('Требуется вход организатора');await reloadData()}
  catch(err){list.replaceChildren(mk('p','ad-gb-error','Не удалось открыть базу: '+err.message))}
- return ()=>{document.removeEventListener('keydown',onKey);closeGuest()};
+ const updateFromServer=async()=>{
+   if(!page.isConnected){cleanupPreviousGuestView?.();return;}
+   if(document.visibilityState!=='visible'||editing||!overlay.hidden||refreshing)return;
+   const focused=document.activeElement;
+   if(focused&&page.contains(focused)&&focused.matches('input,select,textarea,[contenteditable]'))return;
+   refreshing=true;
+   try{await reloadData(true)}
+   catch(err){notice('Нет связи с сервером. Последние загруженные данные сохранены.',true)}
+   finally{refreshing=false}
+ };
+ const timer=setInterval(updateFromServer,30000);
+ const onFocus=()=>updateFromServer();
+ const onVisible=()=>{if(document.visibilityState==='visible')updateFromServer();};
+ window.addEventListener('focus',onFocus);
+ document.addEventListener('visibilitychange',onVisible);
+ cleanupPreviousGuestView=()=>{
+   clearInterval(timer);
+   window.removeEventListener('focus',onFocus);
+   document.removeEventListener('visibilitychange',onVisible);
+   document.removeEventListener('keydown',onKey);
+   if(page.isConnected)closeGuest();
+   cleanupPreviousGuestView=null;
+ };
+ return cleanupPreviousGuestView;
 }
