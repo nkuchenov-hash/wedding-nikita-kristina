@@ -67,17 +67,39 @@ export function estimateVenue(v,guests){
      note:'Предварительный пересчёт сметы на '+base.guests+' гостей: только известные переменные строки. Итог необходимо подтвердить'};
  }
  const cost=v.cost||{},pricing=VENUE_PRICING[v.id]||{};
+ // A venue rental on its own is not the cost of a wedding.
  const menu=perGuestPrice(v);
- const rent=num(cost.rent)??num(pricing.rent?.value);
- const tech=num(cost.technical);
+ const included=key=>/^(?:включено|входит)/i.test(String(pricing[key]?.value||''));
+ const entry=key=>num(cost[key])??num(pricing[key]?.value);
+ const rent=entry('rent'),rentKnown=rent!==null||included('rent');
+ const tech=num(cost.technical)??num(pricing.tech?.value);
+ const sound=entry('sound'),light=entry('light');
+ // A combined equipment package is a single charge, not sound + light again.
+ const equipment=tech!==null?tech:(sound??0)+(light??0);
+ const knownTechnology=tech!==null||sound!==null||light!==null;
  const extra=num(cost.extra);
- const service=num(cost.service)??num(pricing.service?.value);
  const minimum=num(cost.minSpend)??num(pricing.deposit?.value);
- if(menu===null&&rent===null)return {value:null,partial:true,isQuote:false,kind:'unknown',note:'Нет достаточных данных для расчёта'};
- const spend=menu===null?0:Math.max(menu*count,minimum??0);
- const value=(rent??0)+spend+(tech??0)+(extra??0)+(menu!==null?spend*(service??0)/100:0);
- return {value:money(value),partial:true,isQuote:false,kind:'minimum',
-   note:menu===null?'Посчитана только известная аренда — банкет и услуги не включены':'Нижняя граница по известным строкам; дополнительные услуги не учтены'};
+ const service=entry('service');
+ const serviceNote=String(pricing.service?.note||'');
+ const serviceOnMenu=service!==null&&!included('service')&&!/только.*дополнительн/i.test(serviceNote);
+ const spend=menu===null?null:Math.max(menu*count,minimum??0);
+ const menuCharge=spend===null?0:spend;
+ const serviceCharge=spend!==null&&serviceOnMenu?spend*service/100:0;
+ const knownSubtotal=money((rent??0)+menuCharge+equipment+(extra??0)+serviceCharge);
+ const missing=[];
+ if(menu===null)missing.push('банкет');
+ if(!rentKnown)missing.push('аренда');
+ if(!knownTechnology&&!included('sound')&&!included('light')&&!included('tech'))missing.push('звук и свет');
+ if(service===null&&!included('service'))missing.push('обслуживание');
+ if(menu===null||!rentKnown){
+  return {value:null,knownSubtotal,partial:true,isQuote:false,kind:'incomplete',missing,
+    note:'Полный бюджет не рассчитан: '+missing.join(', ')+'. Известные суммы нельзя считать окончательной ценой'};
+ }
+ // Known charges from a catalogue give only an indicative *lower bound*.
+ // Unpriced food, equipment or service remain explicit missing components.
+ return {value:knownSubtotal,knownSubtotal,partial:true,isQuote:false,kind:'minimum',missing,
+   note:'Минимум по известным позициям, без неподтверждённых услуг'+(missing.length?': '+missing.join(', '):'')};
+
 }
 
 /* 100-point decision score: the desired 19 June is the strongest single criterion.
@@ -115,7 +137,7 @@ export function scoreVenue(v,guests,cost=estimateVenue(v,guests)){
  else if([preferred,...alternates].every(x=>x==='unavailable'))add('date',0,true,'Все рассматриваемые даты заняты');
  else add('date',0,false,'Доступность рассматриваемой даты не подтверждена');
  // Rent-only information is never a comparable total event quote.
- const comparableCost=cost.value!==null && !(cost.kind==='minimum'&&perGuestPrice(v)===null);
+ const comparableCost=cost.value!==null && ((cost.isQuote&&!cost.partial)||cost.basedOnQuote===true);
  if(comparableCost)add('cost',pricePoints(cost.value),true,cost.partial?'Предварительная стоимость':'Полученная смета');
  else add('cost',0,false,'Банкет и прочие расходы не рассчитаны');
  const cap=num(v.capacity),n=Math.round(Number(guests)||80);
