@@ -36,3 +36,16 @@ if(ids.size!==rows.length)throw Error('Duplicate venue IDs');
 mkdirSync('backend/seed',{recursive:true});
 writeFileSync('backend/seed/venues.json',JSON.stringify(rows,null,2)+'\n','utf8');
 console.log('VENUE_SEED_PREPARED count='+rows.length);
+
+const permittedStatus=new Set(['unknown','pending','available','unavailable']);
+const dates=['18','19','20'];
+const dateRows=PUBLIC_VENUES.flatMap(v=>{
+ const source=VENUE_RECORDS[v.id]||{};
+ return dates.map(day=>{
+  const status=source.dateAvailability?.[day]||(day==='19'?(source.availability||v.availability):null)||'unknown';
+  if(!permittedStatus.has(status))throw Error('Invalid venue date status for '+v.id+' '+day);
+  return {venue_id:v.id,day:'2027-06-'+day,status};
+ });
+});
+writeFileSync('backend/seed/venue-dates.json',JSON.stringify(dateRows,null,2)+'\n','utf8');
+console.log('VENUE_DATES_SEED_PREPARED count='+dateRows.length);
