@@ -35,6 +35,15 @@ jobs:
           node tools/export-wedding-venues.mjs
           test -s backend/seed/venues.json
           test -s backend/seed/venue-dates.json
+      - name: Verify every PHP file before touching live backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          for phpfile in backend/src/*.php backend/bin/*.php backend/public/*.php; do
+            php -l "$phpfile"
+          done
+          php backend/bin/smoke.php
+          php backend/bin/test-guest-progress.php
       - name: Install on REG.RU outside document root
         timeout-minutes: 4
         shell: bash
@@ -55,19 +64,24 @@ jobs:
           chmod 600 "$HOME/.ssh/wedding_backend_key" "$HOME/.ssh/known_hosts"
           SSH_OPTS="-4 -i $HOME/.ssh/wedding_backend_key -p $PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15"
           PRIVATE="/var/www/u3728035/data/wedding-private"
-          ssh $SSH_OPTS "$USERNAME@$HOST" "umask 077; mkdir -p '$PRIVATE/backend'"
+          SHORT_SHA=$(printf '%.12s' "$GITHUB_SHA")
+          RELEASE="$PRIVATE/backend-release-$SHORT_SHA"
+          ssh $SSH_OPTS "$USERNAME@$HOST" "set -eu; umask 077; mkdir -p '$RELEASE'"
+          # Upload into an inactive release; incomplete transfers never touch live PHP.
           rsync --archive --delete --no-perms --omit-dir-times --timeout=90 \
             --rsh "ssh $SSH_OPTS" \
-            backend/ "$USERNAME@$HOST:$PRIVATE/backend/"
+            backend/ "$USERNAME@$HOST:$RELEASE/"
           ssh $SSH_OPTS "$USERNAME@$HOST" "
             set -eu
-            cd '$PRIVATE/backend'
+            cd '$RELEASE'
+            # Validate exact transferred PHP bytes before replacing any working API.
             for phpfile in src/*.php bin/*.php public/*.php; do
-              php -l \"\$phpfile\" >/dev/null || exit 1
+              php -l \"\$phpfile\" >/dev/null
             done
             php bin/smoke.php
             php bin/test-guest-progress.php
             if test -f '$PRIVATE/wedding.sqlite3'; then php bin/backup.php; fi
+            # Idempotent migrations and seed while the previous API is still live.
             php bin/migrate.php
             php bin/backfill-guest-profiles.php
             php bin/test-unified-guests.php
@@ -81,4 +95,20 @@ jobs:
             test -f '$PRIVATE/wedding.sqlite3'
             test -f '$PRIVATE/wedding-config.json'
             php bin/status.php
+            # Only a verified release can become the active PHP backend.
+            NEXT='$PRIVATE/backend-next-$SHORT_SHA'
+            ln -s '$RELEASE' \"\$NEXT\"
+            if test -L '$PRIVATE/backend'; then
+              mv -Tf \"\$NEXT\" '$PRIVATE/backend'
+            else
+              LEGACY='$PRIVATE/backend-legacy-$SHORT_SHA'
+              mv '$PRIVATE/backend' \"\$LEGACY\"
+              if ! mv -T \"\$NEXT\" '$PRIVATE/backend'; then
+                mv \"\$LEGACY\" '$PRIVATE/backend'
+                exit 1
+              fi
+            fi
+            test -f '$PRIVATE/backend/src/api.php'
+            php -l '$PRIVATE/backend/src/api.php'
+            echo BACKEND_VERIFIED_RELEASE_ACTIVE
           "
