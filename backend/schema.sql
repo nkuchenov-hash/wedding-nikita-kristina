@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS guests (
   created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_guests_side ON guests(side);
-CREATE INDEX IF NOT EXISTS idx_guests_planning_age ON guests(planning_status,age_group);
+-- idx_guests_planning_age is created by migrate.php after older guest tables gain both columns.
 CREATE INDEX IF NOT EXISTS idx_guests_name ON guests(display_name);
 CREATE TABLE IF NOT EXISTS invitations (
   id TEXT PRIMARY KEY, guest_id TEXT NOT NULL REFERENCES guests(id) ON DELETE CASCADE,
