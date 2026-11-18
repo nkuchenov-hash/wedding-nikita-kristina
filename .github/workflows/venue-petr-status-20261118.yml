@@ -38,7 +38,7 @@ jobs:
           $id='petr';
           $updates=['2027-06-18'=>'available','2027-06-19'=>'unavailable','2027-06-20'=>'unavailable'];
           $marker='venue_petr_20261118_one_time';
-          $db->exec('BEGIN IMMEDIATE');
+          $db->beginTransaction();
           try {
               $seen=$db->prepare('SELECT key FROM event_settings WHERE key=?');
               $seen->execute([$marker]);
