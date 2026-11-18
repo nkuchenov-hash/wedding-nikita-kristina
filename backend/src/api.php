@@ -447,6 +447,11 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         }
         $adults=intvalField($d,'adults',0,1+(int)$g['plus_one_allowed'],1);
         $children=intvalField($d,'children',0,childrenEnabled($db)?(int)$g['children_count']:0,0);
+        // Disabling children excludes them from current counts; never erase a prior RSVP.
+        if(!childrenEnabled($db)){
+            $previous=one($db,'SELECT children FROM rsvps WHERE guest_id=?',[$id]);
+            $children=(int)($previous['children']??0);
+        }
         if($attendance==='no'){$adults=0;$children=0;}
         $transport=boolval($d,'transport_needed')?1:0;
         $diet=strval($d,'dietary_notes',1000);
@@ -638,7 +643,9 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
             fail(422,'companions','Число сопровождающих превышает количество в приглашении');
         $db->beginTransaction();
         try{
-            statement($db,'DELETE FROM guest_companions WHERE guest_id=?',[$actor]);
+            // Keep earlier child companions if the global children switch is off.
+            if(childrenEnabled($db))statement($db,'DELETE FROM guest_companions WHERE guest_id=?',[$actor]);
+            else statement($db,"DELETE FROM guest_companions WHERE guest_id=? AND age_group='adult'",[$actor]);
             foreach($valid as [$name,$age,$attendance]){
                 statement($db,'INSERT INTO guest_companions(id,guest_id,display_name,age_group,attendance) VALUES(?,?,?,?,?)',
                   [uuid(),$actor,$name,$age,$attendance]);
@@ -692,6 +699,10 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
         $maxAdults=1+(int)$guest['plus_one_allowed'];
         $adults=intvalField($d,'adults',0,$maxAdults,1);
         $children=intvalField($d,'children',0,childrenEnabled($db)?(int)$guest['children_count']:0,0);
+        if(!childrenEnabled($db)){
+            $previous=one($db,'SELECT children FROM rsvps WHERE guest_id=?',[$actor]);
+            $children=(int)($previous['children']??0);
+        }
         if($att==='no'){$adults=0;$children=0;}
         statement($db,"INSERT INTO rsvps(guest_id,attendance,adults,children,transport_needed,arrival_notes,dietary_notes,other_notes)
          VALUES(?,?,?,?,?,?,?,?)
