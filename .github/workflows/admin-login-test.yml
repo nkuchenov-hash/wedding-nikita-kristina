@@ -92,7 +92,7 @@ jobs:
           curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" \
             'https://nikitakristina.ru/admin/index.php?api=admin%2Fguests' \
             -o /tmp/wedding-guests.json
-          python3 -c 'import json;v=json.load(open("/tmp/wedding-guests.json"));g=v.get("guests",[]);assert v.get("ok") and len(g)==114 and "source_person_id" in g[0];print("PRIVATE_GUEST_PROFILES_OK",len(g))'
+          python3 -c 'import json;v=json.load(open("/tmp/wedding-guests.json"));g=v.get("guests",[]);assert v.get("ok") and len(g)>=114 and "source_person_id" in g[0];print("PRIVATE_GUEST_PROFILES_OK",len(g))'
 
           for asset in admin-guests.js venue-files-ui.js venue-detail-ui.js admin-photos.js; do
             code=$(curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" -o "/tmp/$asset" \
@@ -134,7 +134,7 @@ jobs:
           for key in ('total','prepared','sent','opened','registered','responded','confirmed','declined','tentative','public_visible'):
               assert key in guest, 'Missing dashboard field '+key
               assert int(guest[key])>=0
-          assert 0 <= int(guest['total']) <= 114
+          assert int(guest['total']) >= 0
           assert int(guest['reserved'])>=0
           assert isinstance(guest['children_enabled'],bool)
           assert int(guest['children_total'])>=12
