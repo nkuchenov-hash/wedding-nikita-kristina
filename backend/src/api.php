@@ -349,7 +349,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
             fail(404,'guest','Гость не найден');
         $profileFields=['name_en','relation_to_couple','seating_group','decision','base_count'];
         $guestFields=['first_name','last_name','display_name','side','relationship','city',
-            'email','phone','language','about','plus_one_allowed','children_count'];
+            'email','phone','language','about','private_notes','plus_one_allowed','children_count'];
         $setGuest=[];$argsGuest=[];$setProfile=[];$argsProfile=[];
         foreach($values as $key=>$value){
             if(!is_string($key)||!in_array($key,array_merge($guestFields,$profileFields),true))
@@ -369,7 +369,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
                 fail(422,'language','Язык должен быть ru, en, de или other');
             if($key==='display_name' && trim((string)$value)==='')
                 fail(422,'name','Имя не может быть пустым');
-            $max=$key==='about'?1200:(in_array($key,['email','name_en','display_name','relationship','relation_to_couple','city'],true)?320:($key==='phone'?64:($key==='seating_group'?160:320)));
+            $max=in_array($key,['about','private_notes'],true)?2000:(in_array($key,['email','name_en','display_name','relationship','relation_to_couple','city'],true)?320:($key==='phone'?64:($key==='seating_group'?160:320)));
             if(mb_strlen((string)$value)>$max)fail(422,'field','Слишком длинное значение');
             if(in_array($key,['plus_one_allowed','children_count'],true))$value=(int)$value;
             if(in_array($key,$guestFields,true)){
