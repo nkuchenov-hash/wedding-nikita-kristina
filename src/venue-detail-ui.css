@@ -375,3 +375,25 @@
 @container(min-width:1500px){.vdp-dashboard-details{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @container(max-width:1040px){.vdp-overview-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @container(max-width:600px){.vdp-overview-metrics,.vdp-dashboard-details{grid-template-columns:minmax(0,1fr)}.vdp-dashboard-title{align-items:flex-start}.vdp-overview-metric{min-height:112px;padding:16px 18px}.vdp-parameter-dashboard{padding:18px}}
+
+/* Detailed venue cards keep one comparable budget schema without overwhelming notes. */
+.vdp-cost-row{align-items:center;gap:12px}
+.vdp-cost-row.vdp-cost-unknown{background:#fcfaf5}
+.vdp-cost-row.vdp-cost-included{background:#f5fbf6}
+.vdp-cost-row .vdp-cost-unit{display:block;text-align:right;color:#718978;font-size:11px}
+.vdp-cost-note{font-size:11px;color:#667e69;margin-top:5px}
+.vdp-cost-note summary,.vdp-budget-context summary,.vdp-optional-notes summary{cursor:pointer;color:#41684c;font-weight:700;font-size:12px;line-height:1.5}
+.vdp-cost-note p{margin:5px 0 0;max-width:420px;line-height:1.55;color:#526f5b;font-size:11px}
+.vdp-budget-context,.vdp-optional-notes{background:#f7faf6;border:1px solid #dde9df;border-radius:9px;padding:11px 13px;margin-top:10px}
+.vdp-budget-context p{margin:10px 0 0;color:#5b7562;line-height:1.6;font-size:12px}
+.vdp-optional-notes>.vdp-inline{display:block;margin-top:10px;width:100%}
+.vdp-cost-missing,.vdp-cost-known{margin:11px 0;color:#7b5d36;background:#fffbf2;border-left:3px solid #d8be80;border-radius:4px;padding:10px 13px;font-size:12px;line-height:1.5}
+.vdp-cost-missing strong{color:#78552f}
+.vdp-budget-header>div:first-child:has(strong:first-of-type){min-width:0}
+@media(max-width:600px){
+ .vdp-budget-header{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .vdp-budget-header>div{padding:13px 12px}
+ .vdp-budget-header>div:first-child{grid-column:1/-1}
+ .vdp-budget-header>div:last-child{grid-column:auto}
+ .vdp-budget-header strong{font-size:20px}
+}
