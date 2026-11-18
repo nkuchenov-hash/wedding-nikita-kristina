@@ -1,7 +1,7 @@
 name: Verify real wedding admin login
 on:
   push:
-    paths: ['.github/workflows/admin-login-test.yml']
+    paths: ['.github/workflows/admin-login-test.yml', 'tools/admin-gateway.php']
   workflow_dispatch:
 permissions:
   contents: read
@@ -48,6 +48,13 @@ jobs:
           echo 'LOGIN_FORM_VISIBLE'
           csrf=$(sed -n 's/.*name="csrf" value="\([^"]*\)".*/\1/p' /tmp/login-page.html | head -1)
           test -n "$csrf"
+          # A mobile tab may be stale after PHP session garbage collection.
+          # The page refreshes its CSRF token immediately before submitting.
+          curl --fail --silent --show-error --max-time 15 -c "$jar" -b "$jar" \
+            -o /tmp/login-csrf-refresh.json \
+            'https://nikitakristina.ru/admin/?refresh_login_csrf=1'
+          csrf=$(python3 -c 'import json; v=json.load(open("/tmp/login-csrf-refresh.json")); assert v.get("ok") is True; t=v.get("csrf",""); assert len(t)==48 and all(c in "0123456789abcdef" for c in t); print(t)')
+          echo 'LOGIN_CSRF_REFRESH_OK'
           code=$(curl --silent --show-error --max-time 15 -c "$jar" -b "$jar" \
             -o /tmp/login-response.html -D /tmp/login-headers.txt -w '%{http_code}' \
             --data-urlencode "login=1" \
