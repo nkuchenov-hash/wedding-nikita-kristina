@@ -20,11 +20,11 @@ test('all criteria sum to 100 with June 19 the highest-weighted criterion',()=>{
  assert.equal(RATING_CRITERIA.find(([key])=>key==='city')[2],10);
 });
 
-test('June 19 and all verified criteria yield 100 points',()=>{
+test('June 19 and all rated criteria yield 85 points until full cost is confirmed',()=>{
  const v=venue();
  const score=scoreVenue(v,100);
- assert.equal(score.value,100);
- assert.equal(score.complete,RATING_CRITERIA.length);
+ assert.equal(score.value,85);
+ assert.equal(score.complete,RATING_CRITERIA.length-1);
  assert.equal(score.provisional,true); // Formula without confirmed quote is still an estimate.
  assert.equal(score.breakdown.find(x=>x.key==='date').value,40);
  assert.equal(score.breakdown.find(x=>x.key==='city').value,10);
@@ -34,14 +34,14 @@ test('country venues earn no city bonus even when other scores are perfect',()=>
  const v=venue({region:'country'});
  const score=scoreVenue(v,100);
  assert.equal(score.breakdown.find(x=>x.key==='city').value,0);
- assert.equal(score.value,90);
+ assert.equal(score.value,75);
 });
 
 test('alternate date yields 24 date points, not 40',()=>{
  const v=venue({dateAvailability:{'18':'available','19':'unavailable','20':'unknown'}});
  const score=scoreVenue(v,100);
  assert.equal(score.breakdown.find(x=>x.key==='date').value,24);
- assert.equal(score.value,84);
+ assert.equal(score.value,69);
 });
 
 test('unconfirmed date and subjective qualities stay unknown',()=>{
