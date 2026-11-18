@@ -19,7 +19,11 @@ const SORT_FIELDS=[
  ['children_count','Детей разрешено'],['plus_one_allowed','Можно +1'],
  ['city','Город'],['phone','Телефон'],['email','Email'],['language','Язык'],
  ['about','Профиль RU'],['about_en','Профиль EN'],['source_person_id','ID'],
- ['created_at','Создан'],['updated_at','Обновлён']
+ ['created_at','Создан'],['updated_at','Обновлён'],['response_source','Источник RSVP'],
+ ['profile_completed_at','Анкета заполнена'],['first_opened_at','Первое открытие'],
+ ['last_opened_at','Последнее открытие'],['invite_prepared_at','Ссылка создана'],
+ ['private_notes','Личные заметки'],['dietary_notes','Питание'],['arrival_notes','Прибытие'],
+ ['other_notes','Другие пожелания'],['status','Статус профиля']
 ];
 const SIDENAME=Object.fromEntries(SIDES);
 function option(value,title){const o=mk('option','',title);o.value=value;return o}
@@ -67,7 +71,7 @@ export async function activateGuestDirectory(root){
  const panel=mk('section','ad-gb-panel'),close=mk('button','ad-gb-close','Закрыть ×');close.type='button';
  const detail=mk('div','ad-gb-details');panel.append(close,detail);overlay.append(panel);page.append(overlay);
  destination.append(page);
- let people=[],csrf='',activeId=null,editing=false,lastSnapshot='',refreshing=false,childrenEnabled=true,descending=false;
+ let people=[],csrf='',activeId=null,editing=false,lastSnapshot='',lastRevision=0,refreshing=false,childrenEnabled=true,descending=false;
  const notice=(message,error=false)=>{alert.textContent=message;alert.hidden=!message;alert.className='ad-gb-notice'+(error?' ad-gb-error':'')};
  const byId=id=>people.find(p=>p.id===id);
  const status=p=>p.attendance==='yes'?'Будет':p.attendance==='no'?'Не придёт':p.attendance==='maybe'?'Не решил':'Нет ответа';
@@ -417,6 +421,7 @@ export async function activateGuestDirectory(root){
    const data=await request('admin/guests');
    const next=data.guests||[];
    const fingerprint=JSON.stringify({guests:next,children_enabled:data.children_enabled});
+   lastRevision=Number(data.revision||0);
    if(quiet&&fingerprint===lastSnapshot)return;
    people=next;
    childrenEnabled=data.children_enabled!==false;
@@ -487,12 +492,12 @@ export async function activateGuestDirectory(root){
    const focused=document.activeElement;
    if(focused&&page.contains(focused)&&focused.matches('input,select,textarea,[contenteditable]'))return;
    refreshing=true;
-   try{await reloadData(true)}
+   try{const change=await request('admin/guests/revision');if(Number(change.revision)!==lastRevision)await reloadData(true)}
    catch(err){notice('Нет связи с сервером. Последние загруженные данные сохранены.',true)}
    finally{refreshing=false}
  };
- const timer=setInterval(updateFromServer,30000);
- const onFocus=()=>updateFromServer();
+ const timer=setInterval(updateFromServer,12000);
+ const onFocus=()=>{if(!refreshing&&!editing&&overlay.hidden)reloadData(true).catch(err=>notice(err.message,true))};
  const onVisible=()=>{if(document.visibilityState==='visible')updateFromServer();};
  window.addEventListener('focus',onFocus);
  document.addEventListener('visibilitychange',onVisible);
