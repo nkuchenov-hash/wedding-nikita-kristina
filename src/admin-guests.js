@@ -7,6 +7,20 @@ const SIDES=[['all','Все стороны'],['groom','Никита'],['bride','
 const DECISIONS=['Черновик','Решили пригласить','Под вопросом','Не приглашать'];
 const ANSWERS=[['','Не ответил'],['yes','Буду'],['maybe','Пока не знаю'],['no','Не приду']];
 const LANGUAGES=[['ru','Русский'],['en','English'],['de','Deutsch'],['other','Другой']];
+const PLANNING=[['main','Основной'],['reserve','Резерв']];
+const AGE=[['unknown','Не уточнено'],['adult','Взрослый'],['child','Ребёнок'],['infant','Младенец']];
+const SORT_FIELDS=[
+ ['display_name','Имя'],['first_name','Имя (отдельно)'],['last_name','Фамилия'],['name_en','Имя EN'],
+ ['planning_status','Список / резерв'],['age_group','Возрастная категория'],['side','Сторона'],
+ ['relation_to_couple','Кем приходится'],['relationship','Другие связи'],['community','Круг'],
+ ['seating_group','Рассадка'],['decision','Решение о приглашении'],['base_count','В базовом составе'],
+ ['invitation_sent_at','Дата отправки приглашения'],['attendance','Ответ RSVP'],
+ ['adults','Взрослые (RSVP)'],['children','Дети (RSVP)'],
+ ['children_count','Детей разрешено'],['plus_one_allowed','Можно +1'],
+ ['city','Город'],['phone','Телефон'],['email','Email'],['language','Язык'],
+ ['about','Профиль RU'],['about_en','Профиль EN'],['source_person_id','ID'],
+ ['created_at','Создан'],['updated_at','Обновлён']
+];
 const SIDENAME=Object.fromEntries(SIDES);
 function option(value,title){const o=mk('option','',title);o.value=value;return o}
 function select(items,value){const x=mk('select');for(const [a,b] of items)x.append(option(a,b));x.value=s(value);return x}
@@ -35,44 +49,67 @@ export async function activateGuestDirectory(root){
  const actions=mk('div','ad-gb-top-actions');
  const add=mk('button','ad-gb-primary','+ Добавить гостя'),reload=mk('button','ad-gb-light','Обновить');
  const exportBtn=mk('button','ad-gb-light','Экспорт CSV');
+ const childrenToggle=mk('button','ad-gb-light ad-gb-children-toggle','Дети: загрузка…');childrenToggle.type='button';childrenToggle.disabled=true;
  for(const b of [add,reload,exportBtn])b.type='button';
- actions.append(add,exportBtn,reload);head.append(heading,actions);page.append(head);
+ actions.append(add,childrenToggle,exportBtn,reload);head.append(heading,actions);page.append(head);
  const metrics=mk('div','ad-gb-metrics');page.append(metrics);
  const bar=mk('div','ad-gb-bar'),search=mk('input','ad-gb-input'),side=select(SIDES,'all'),
-       filter=select([['all','Все гости'],['base','В основном списке'],['question','Под вопросом'],['no-name','Нет имени'],['duplicates','Возможные дубли'],['yes','Будут'],['maybe','Не решили'],['no','Не придут'],['unsent','Не отправлено'],['archived','Исключённые']],'all');
+       filter=select([['all','Все гости'],['base','В основном списке'],['question','Под вопросом'],['no-name','Нет имени'],['duplicates','Возможные дубли'],['reserve','Резерв'],['kids','Дети'],['yes','Будут'],['maybe','Не решили'],['no','Не придут'],['unsent','Не отправлено'],['archived','Исключённые']],'all');
  search.type='search';search.placeholder='Поиск по имени, связям, группе, контактам';search.setAttribute('aria-label','Найти гостя');
  side.className=filter.className='ad-gb-select';
- bar.append(search,side,filter);page.append(bar);
+ const sort=select(SORT_FIELDS,'display_name'),direction=mk('button','ad-gb-sort-direction','А → Я');
+ sort.className='ad-gb-select ad-gb-sort-select';sort.setAttribute('aria-label','Сортировать по полю');
+ direction.type='button';direction.title='Изменить направление сортировки';
+ bar.append(search,side,filter,sort,direction);page.append(bar);
  const alert=mk('p','ad-gb-notice');alert.hidden=true;page.append(alert);
  const list=mk('div','ad-gb-list');page.append(list);
  const overlay=mk('div','ad-gb-shade');overlay.hidden=true;overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
  const panel=mk('section','ad-gb-panel'),close=mk('button','ad-gb-close','Закрыть ×');close.type='button';
  const detail=mk('div','ad-gb-details');panel.append(close,detail);overlay.append(panel);page.append(overlay);
  destination.append(page);
- let people=[],csrf='',activeId=null,editing=false,lastSnapshot='',refreshing=false;
+ let people=[],csrf='',activeId=null,editing=false,lastSnapshot='',refreshing=false,childrenEnabled=true,descending=false;
  const notice=(message,error=false)=>{alert.textContent=message;alert.hidden=!message;alert.className='ad-gb-notice'+(error?' ad-gb-error':'')};
  const byId=id=>people.find(p=>p.id===id);
  const status=p=>p.attendance==='yes'?'Будет':p.attendance==='no'?'Не придёт':p.attendance==='maybe'?'Не решил':'Нет ответа';
  const display=p=>s(p.display_name)||'[Имя не указано]';
  const isQuestion=p=>/вопрос|уточн/i.test(s(p.decision));
  const isBase=p=>/^(да|yes|1)$/i.test(s(p.base_count));
+ const isChild=p=>['child','infant'].includes(p.age_group);
+ const isReserve=p=>p.planning_status==='reserve';
+ const eligible=p=>p.status!=='archived'&&!isReserve(p)&&(childrenEnabled||!isChild(p));
+ const sortingValue=(p,key)=>key==='planning_status'?s(p.planning_status||'main'):p[key];
+ function compareRows(a,b,key){
+   const x=sortingValue(a,key),y=sortingValue(b,key),empty=v=>v===null||v===undefined||s(v)==='';
+   if(empty(x)&&!empty(y))return 1;
+   if(empty(y)&&!empty(x))return -1;
+   const numeric=['adults','children','children_count','plus_one_allowed'].includes(key);
+   const result=numeric?(Number(x||0)-Number(y||0)):
+     s(x).localeCompare(s(y),'ru',{numeric:true,sensitivity:'base'});
+   return (descending?-result:result)||display(a).localeCompare(display(b),'ru')||s(a.id).localeCompare(s(b.id));
+ }
+ function updateChildrenButton(){
+   childrenToggle.disabled=!csrf;
+   childrenToggle.textContent=childrenEnabled?'Дети: участвуют':'Дети: отключены';
+   childrenToggle.classList.toggle('ad-gb-children-off',!childrenEnabled);
+   childrenToggle.setAttribute('aria-pressed',String(!childrenEnabled));
+ }
  function metric(label,value){const card=mk('div','ad-gb-metric');card.append(mk('strong','',value),mk('span','',label));metrics.append(card)}
  function badge(text,kind=''){return mk('span','ad-gb-stage'+(kind?' ad-gb-stage-'+kind:''),text)}
  async function saveFields(p,fields){
    await request('admin/guest/fields',{method:'PATCH',csrf,body:{id:p.id,fields}});
-   Object.assign(p,fields);notice('Сохранено в базе');render();
+   await reloadData();notice('Изменение сохранено в базе');
  }
  async function saveAnswer(p,val){
    if(val===''&&p.attendance&&!confirm('Очистить ранее сохранённый ответ?'))return;
    const attending=val==='yes'||val==='maybe';
    const adults=attending?Math.max(1,Math.min(Number(p.adults)||1,1+Number(p.plus_one_allowed||0))):0;
-   const children=attending?Math.min(Number(p.children||0),Number(p.children_count||0)):0;
+   const children=attending&&childrenEnabled?Math.min(Number(p.children||0),Number(p.children_count||0)):0;
    const result=await request('admin/guest/rsvp',{method:'PATCH',csrf,body:{
      id:p.id,attendance:val,adults,children,transport_needed:!!Number(p.transport_needed||0),
      arrival_notes:s(p.arrival_notes),dietary_notes:s(p.dietary_notes),other_notes:s(p.other_notes)
    }});
-   Object.assign(p,{attendance:result.attendance,adults:val?adults:null,children:val?children:null,response_source:val?'admin':null});
-   notice('Ответ сохранён с пометкой «внесено организатором»');render();
+   await reloadData();
+   notice('Ответ сохранён в базе с пометкой «внесено организатором»');
  }
  function editCell(p,key,placeholder,options=null){
    const td=mk('td','ad-gb-edit-cell'),btn=mk('button','ad-gb-cell-edit');
@@ -86,7 +123,7 @@ export async function activateGuestDirectory(root){
      const opts=options?[[raw,labels[raw]||raw||placeholder],...options.filter(([v])=>v!==raw)]:null;
      const input=opts?select(opts,raw):mk('input','ad-gb-cell-input');
      input.className='ad-gb-cell-input';
-     if(!opts){input.type='text';input.value=raw;input.maxLength=key==='relation_to_couple'?320:255}
+     if(!opts){input.type=key==='children_count'?'number':'text';input.value=raw;input.maxLength=key==='relation_to_couple'?320:255;if(key==='children_count'){input.min='0';input.max='15'}}
      td.append(input);input.focus();if(!opts)input.select();
      let finished=false;
      const restore=()=>{if(finished)return;finished=true;editing=false;input.remove();btn.hidden=false};
@@ -107,12 +144,15 @@ export async function activateGuestDirectory(root){
  function render(){
    metrics.replaceChildren();
    const current=people.filter(p=>p.status!=='archived');
-   metric('Человек в списке',current.length);
-   metric('В основном составе',current.filter(isBase).length);
-   metric('Под вопросом',current.filter(isQuestion).length);
-   metric('Уточнить имя',current.filter(p=>!s(p.first_name)).length);
-   metric('Ответили «буду»',current.filter(p=>p.attendance==='yes').length);
-   metric('Не отправлено',current.filter(p=>!p.invitation_sent_at).length);
+   const actual=current.filter(eligible);
+   const children=current.filter(isChild);
+   metric('Основной состав',actual.length);
+   metric('Резерв',current.filter(isReserve).length);
+   metric('Детей в базе',children.length);
+   metric('Будут',actual.filter(p=>p.attendance==='yes').length);
+   metric('Под вопросом',actual.filter(isQuestion).length);
+   metric('Не уточнён возраст',current.filter(p=>!s(p.age_group)||p.age_group==='unknown').length);
+   updateChildrenButton();
    const query=s(search.value).toLocaleLowerCase('ru');
    const duplicateCounts=new Map();
    for(const p of current){const key=display(p).toLocaleLowerCase('ru').replace(/\s+/g,' ').trim();duplicateCounts.set(key,(duplicateCounts.get(key)||0)+1)}
@@ -120,7 +160,9 @@ export async function activateGuestDirectory(root){
      if(side.value!=='all'&&p.side!==side.value)return false;
      if(filter.value==='archived')return p.status==='archived';
      if(p.status==='archived')return false;
-     if(filter.value==='base'&&!isBase(p))return false;
+     if(filter.value==='base'&&(!isBase(p)||!eligible(p)))return false;
+     if(filter.value==='reserve'&&!isReserve(p))return false;
+     if(filter.value==='kids'&&!isChild(p))return false;
      if(filter.value==='question'&&!isQuestion(p))return false;
      if(filter.value==='no-name'&&s(p.first_name))return false;
      if(filter.value==='duplicates'&&(duplicateCounts.get(display(p).toLocaleLowerCase('ru').replace(/\s+/g,' ').trim())||0)<2)return false;
@@ -129,11 +171,23 @@ export async function activateGuestDirectory(root){
      if(filter.value==='no'&&p.attendance!=='no')return false;
      if(filter.value==='unsent'&&p.invitation_sent_at)return false;
      return !query||[p.display_name,p.name_en,p.relationship,p.relation_to_couple,p.seating_group,p.community,p.city,p.email,p.phone,p.source_person_id].some(v=>s(v).toLocaleLowerCase('ru').includes(query));
-   }).sort((a,b)=>display(a).localeCompare(display(b),'ru'));
+   }).sort((a,b)=>compareRows(a,b,sort.value));
    list.replaceChildren();
    const holder=mk('div','ad-gb-scroll'),table=mk('table','ad-gb-table'),
      thead=mk('thead'),tr=mk('tr');
-   for(const name of ['Гость','Сторона','Кем приходится','Рассадка','Решение','Приглашение','Ответ'])tr.append(mk('th','',name));
+   const headings=[
+    ['Гость','display_name'],['Список','planning_status'],['Возраст','age_group'],
+    ['Сторона','side'],['Кем приходится','relation_to_couple'],
+    ['Рассадка','seating_group'],['Решение','decision'],['Приглашение','invitation_sent_at'],
+    ['Ответ','attendance'],['Детей +','children_count']
+   ];
+   for(const [name,key]of headings){
+     const th=mk('th'),button=mk('button','ad-gb-th-sort',name+(sort.value===key?(descending?' ↓':' ↑'):''));
+     button.type='button';button.title='Сортировать: '+name;button.addEventListener('click',()=>{
+       if(sort.value===key)descending=!descending;else{sort.value=key;descending=false}
+       direction.textContent=descending?'Я → А':'А → Я';render();
+     });th.append(button);tr.append(th);
+   }
    thead.append(tr);table.append(thead);
    const body=mk('tbody');
    for(const p of chosen){
@@ -142,22 +196,30 @@ export async function activateGuestDirectory(root){
      nameCell.append(name,mk('small','',p.name_en||(!s(p.first_name)?'Требуется уточнить имя':' ')));
      const decisionChoices=[...new Set([s(p.decision),...DECISIONS])].filter(Boolean).map(v=>[v,v]);
      const sent=mk('td');sent.append(p.invitation_sent_at?badge('Отправлено','sent'):badge('Не отправлено','draft'));
-     row.append(nameCell,editCell(p,'side','Уточнить',SIDES.filter(([v])=>v!=='all')),
+     const planning=editCell(p,'planning_status','Основной',PLANNING);
+     if(isReserve(p))planning.classList.add('ad-gb-reserve-cell');
+     const age=editCell(p,'age_group','Уточнить',AGE);
+     if(!childrenEnabled&&isChild(p))age.classList.add('ad-gb-child-off-cell');
+     row.classList.toggle('ad-gb-reserve-row',isReserve(p));
+     row.classList.toggle('ad-gb-child-off-row',!childrenEnabled&&isChild(p));
+     row.append(nameCell,planning,age,editCell(p,'side','Уточнить',SIDES.filter(([v])=>v!=='all')),
        editCell(p,'relation_to_couple','Уточнить'),
-       editCell(p,'seating_group','Не указана'),
-       editCell(p,'decision','Не решено',decisionChoices),
-       sent,editCell(p,'attendance','Не ответил',ANSWERS));
+       editCell(p,'seating_group','Не указана'),editCell(p,'decision','Не решено',decisionChoices),
+       sent,editCell(p,'attendance','Не ответил',ANSWERS),
+       editCell(p,'children_count','0',Array.from({length:16},(_,i)=>[String(i),String(i)])));
+     if(!childrenEnabled&&isChild(p))nameCell.append(badge('Дети отключены','draft'));
      body.append(row);
    }
    table.append(body);holder.append(table);list.append(holder);
-   list.append(mk('p','ad-gb-count','Показано '+chosen.length+' из '+people.length+' · Нажмите на имя, чтобы открыть всю карточку. Поля таблицы редактируются нажатием.'));
+   list.append(mk('p','ad-gb-count','Показано '+chosen.length+' из '+people.length+
+     ' · Любой заголовок сортирует столбец. Для остальных полей используйте «Сортировать по». Все изменения сохраняются на сервере.'));
  }
  function closeGuest(){activeId=null;overlay.hidden=true;document.body.classList.remove('ad-gb-lock');detail.replaceChildren()}
  function field(parent,label,key,value,type='text',items=null){
    const wrapper=mk('label','ad-gb-edit-field');wrapper.append(mk('span','',label));
    const input=items?select(items,value):type==='textarea'?mk('textarea'):mk('input');
-   if(!items&&type!=='textarea'){input.type=type;input.maxLength=key==='private_notes'?2000:320}
-   if(type==='textarea')input.rows=2;
+   if(!items&&type!=='textarea'){input.type=type;input.maxLength=320}
+   if(type==='textarea'){input.rows=2;input.maxLength=key==='private_notes'?12000:5000}
    if(type==='number'){input.min='0';input.max='15'}
    if(!items)input.value=s(value);
    input.name=key;wrapper.append(input);parent.append(wrapper);return input;
@@ -178,6 +240,8 @@ export async function activateGuestDirectory(root){
      const profile=section('Данные гостя');
      const form=mk('form','ad-gb-edit-grid');const controls={};
      const fields=[
+       ['planning_status','Список','select',PLANNING],
+       ['age_group','Категория возраста','select',AGE],
        ['display_name','Имя в списке','text'],['name_en','Имя на английском','text'],
        ['first_name','Имя','text'],['last_name','Фамилия','text'],
        ['side','Сторона','select',SIDES.filter(([v])=>v!=='all')],
@@ -285,13 +349,15 @@ export async function activateGuestDirectory(root){
      r.other_notes=field(rsp,'Другие пожелания','other_notes',g.other_notes||'','textarea');
      const saveR=mk('button','ad-gb-primary','Сохранить ответ'),msgR=mk('span','ad-gb-feedback');
      saveR.type='submit';const f=mk('div','ad-gb-edit-actions');f.append(saveR,msgR);rsp.append(f);response.append(rsp);
-     response.append(mk('p','ad-gb-note','Ответ, внесённый вручную, помечается как ответ со слов гостя. Он не означает, что гость заполнил анкету на сайте.'));
+     response.append(mk('p','ad-gb-note',childrenEnabled
+       ?'Ручной ответ отмечается как внесённый организатором. Он не равен заполненной анкете.'
+       :'Дети отключены общим переключателем. Их существующие ответы сохранены; новые ответы с детьми не принимаются.'));
      rsp.addEventListener('submit',async ev=>{
        ev.preventDefault();saveR.disabled=true;msgR.textContent='Сохраняю…';
        const val=r.attendance.value;
        if(val===''&&g.attendance&&!confirm('Удалить сохранённый ответ?')){saveR.disabled=false;msgR.textContent='';return}
        try{const data=await request('admin/guest/rsvp',{method:'PATCH',csrf,body:{
-         id,attendance:val,adults:Number(r.adults.value),children:Number(r.children.value),
+         id,attendance:val,adults:Number(r.adults.value),children:childrenEnabled?Number(r.children.value):0,
          transport_needed:r.transport_needed.value==='1',dietary_notes:s(r.dietary_notes.value),
          arrival_notes:s(r.arrival_notes.value),other_notes:s(r.other_notes.value)
        }});Object.assign(g,{attendance:data.attendance});await reloadData();msgR.textContent='Сохранено в базе'}
@@ -328,17 +394,21 @@ export async function activateGuestDirectory(root){
          sent.textContent=value?'Отменить отметку об отправке':'Отметить отправленным';render();
        }catch(err){notice(err.message,true)}finally{sent.disabled=false}
      });
-     const archiveSection=section('Учёт записи');
-     const archiveButton=mk('button','ad-gb-light',g.status==='archived'?'Восстановить в списке':'Убрать из рабочего списка');
+     const archiveSection=section('Положение в списке');
+     const archiveButton=mk('button','ad-gb-light',g.status==='archived'?'Восстановить в основной список':g.planning_status==='reserve'?'Вернуть в основной список':'Перевести в резерв');
      archiveButton.type='button';archiveSection.append(archiveButton);
-     archiveSection.append(mk('p','ad-gb-note','Запись не удаляется из базы. Приглашения и семейные связи сохраняются. Исключённые доступны через фильтр.'));
+     archiveSection.append(mk('p','ad-gb-note','Резерв — временный статус. История, связи, контакты и ответы остаются в базе. Участие в расчётах отключается до возврата в основной список.'));
      archiveButton.addEventListener('click',async()=>{
-       const next=g.status==='archived'?'draft':'archived';
-       if(next==='archived'&&!confirm('Исключить человека из рабочего списка? Данные сохранятся.'))return;
+       const restore=g.status==='archived';
+       const next=restore?'main':g.planning_status==='reserve'?'main':'reserve';
        archiveButton.disabled=true;
-       try{await request('admin/guest/update',{method:'POST',csrf,body:{id,status:next}});g.status=next;const p=byId(id);if(p)p.status=next;
-         archiveButton.textContent=next==='archived'?'Восстановить в списке':'Убрать из рабочего списка';render()}
-       catch(err){notice(err.message,true)}finally{archiveButton.disabled=false}
+       try{
+         if(restore)await request('admin/guest/update',{method:'POST',csrf,body:{id,status:'draft'}});
+         await request('admin/guest/fields',{method:'PATCH',csrf,body:{id,fields:{planning_status:next}}});
+         g.status=restore?'draft':g.status;g.planning_status=next;
+         await reloadData();archiveButton.textContent=next==='reserve'?'Вернуть в основной список':'Перевести в резерв';
+         notice(next==='reserve'?'Гость перенесён в резерв':'Гость возвращён в основной список');
+       }catch(err){notice(err.message,true)}finally{archiveButton.disabled=false}
      });
 
    }catch(err){detail.replaceChildren(mk('p','ad-gb-error','Не удалось открыть карточку: '+err.message))}
@@ -346,9 +416,10 @@ export async function activateGuestDirectory(root){
  async function reloadData(quiet=false){
    const data=await request('admin/guests');
    const next=data.guests||[];
-   const fingerprint=JSON.stringify(next);
+   const fingerprint=JSON.stringify({guests:next,children_enabled:data.children_enabled});
    if(quiet&&fingerprint===lastSnapshot)return;
    people=next;
+   childrenEnabled=data.children_enabled!==false;
    lastSnapshot=fingerprint;
    render();
  }
@@ -360,6 +431,8 @@ export async function activateGuestDirectory(root){
    const family=field(form,'Фамилия','last_name','','text');
    const display=field(form,'Отображаемое имя','display_name','','text');
    const side=field(form,'Сторона','side','other','select',SIDES.filter(([v])=>v!=='all'));
+   const age=field(form,'Возраст','age_group','unknown','select',AGE);
+   const planning=field(form,'Список','planning_status','main','select',PLANNING);
    const btn=mk('button','ad-gb-primary','Добавить в базу');btn.type='submit';
    const feedback=mk('span','ad-gb-feedback');const actions=mk('div','ad-gb-edit-actions');actions.append(btn,feedback);form.append(actions);detail.append(form);
    name.required=true;
@@ -367,7 +440,8 @@ export async function activateGuestDirectory(root){
      ev.preventDefault();btn.disabled=true;feedback.textContent='Сохраняю…';
      try{
        const data=await request('admin/guests',{method:'POST',csrf,body:{
-         first_name:s(name.value),last_name:s(family.value),display_name:s(display.value)||s([name.value,family.value].join(' ')),side:side.value
+         first_name:s(name.value),last_name:s(family.value),display_name:s(display.value)||s([name.value,family.value].join(' ')),side:side.value,
+         age_group:age.value,planning_status:planning.value
        }});
        await reloadData();await openGuest(data.id);
      }catch(err){feedback.textContent=err.message}finally{btn.disabled=false}
@@ -375,7 +449,7 @@ export async function activateGuestDirectory(root){
  }
  function exportCsv(){
    if(!people.length)return;
-   const fields=[['source_person_id','ID'],['display_name','Гость'],['name_en','Имя EN'],['side','Сторона'],
+   const fields=[['source_person_id','ID'],['display_name','Гость'],['name_en','Имя EN'],['planning_status','Список'],['age_group','Возраст'],['side','Сторона'],
      ['relation_to_couple','Кем приходится'],['relationship','Связи'],['seating_group','Рассадка'],
      ['decision','Решение'],['base_count','Основной список'],['invitation_sent_at','Отправлено'],
      ['attendance','RSVP'],['adults','Взрослые'],['children','Дети'],['plus_one_allowed','Можно +1'],
@@ -386,7 +460,20 @@ export async function activateGuestDirectory(root){
    const url=URL.createObjectURL(new Blob([contents],{type:'text/csv;charset=utf-8'}));
    const a=mk('a');a.href=url;a.download='wedding-guests-export.csv';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
  }
- for(const x of [search,side,filter])x.addEventListener(x===search?'input':'change',render);
+ for(const x of [search,side,filter,sort])x.addEventListener(x===search?'input':'change',render);
+ direction.addEventListener('click',()=>{descending=!descending;direction.textContent=descending?'Я → А':'А → Я';render()});
+ childrenToggle.addEventListener('click',async()=>{
+   if(!csrf)return;
+   const next=!childrenEnabled;
+   const message=next?'Включить детей обратно в расчёты и анкеты?':
+     'Отключить детей во всех активных приглашениях и расчётах? Данные детей сохранятся.';
+   if(!confirm(message))return;
+   childrenToggle.disabled=true;
+   try{
+     await request('admin/settings',{method:'POST',csrf,body:{key:'children_enabled',value:next}});
+     await reloadData();notice(next?'Участие детей включено':'Участие детей отключено. Записи сохранены.');
+   }catch(err){notice(err.message,true)}finally{childrenToggle.disabled=false}
+ });
  add.addEventListener('click',createGuest);reload.addEventListener('click',async()=>{try{await reloadData();notice('Данные обновлены')}catch(err){notice(err.message,true)}});
  exportBtn.addEventListener('click',exportCsv);
  close.addEventListener('click',closeGuest);overlay.addEventListener('click',ev=>{if(ev.target===overlay)closeGuest()});
