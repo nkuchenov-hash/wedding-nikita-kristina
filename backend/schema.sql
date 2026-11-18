@@ -84,6 +84,16 @@ CREATE TABLE IF NOT EXISTS venues (
   details_json TEXT NOT NULL DEFAULT '{}', photo_refs_json TEXT NOT NULL DEFAULT '[]',
   created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+-- Authoritative availability: one row per venue and calendar day.
+-- Never overwrite these organizer-edited rows during source-code deployment.
+CREATE TABLE IF NOT EXISTS venue_date_status (
+  venue_id TEXT NOT NULL,
+  day TEXT NOT NULL CHECK(day IN ('2027-06-18','2027-06-19','2027-06-20')),
+  status TEXT NOT NULL DEFAULT 'unknown'
+    CHECK(status IN ('unknown','pending','available','unavailable')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (venue_id,day)
+);
 CREATE TABLE IF NOT EXISTS vendors (
   id TEXT PRIMARY KEY, category TEXT NOT NULL, name TEXT NOT NULL,
   contact TEXT NOT NULL DEFAULT '', website TEXT NOT NULL DEFAULT '',
