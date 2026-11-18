@@ -36,7 +36,7 @@ export async function activateGuestDirectory(root){
  actions.append(add,exportBtn,reload);head.append(heading,actions);page.append(head);
  const metrics=mk('div','ad-gb-metrics');page.append(metrics);
  const bar=mk('div','ad-gb-bar'),search=mk('input','ad-gb-input'),side=select(SIDES,'all'),
-       filter=select([['all','Все гости'],['base','В основном списке'],['question','Под вопросом'],['no-name','Нет имени'],['yes','Будут'],['maybe','Не решили'],['no','Не придут'],['unsent','Не отправлено'],['archived','Исключённые']],'all');
+       filter=select([['all','Все гости'],['base','В основном списке'],['question','Под вопросом'],['no-name','Нет имени'],['duplicates','Возможные дубли'],['yes','Будут'],['maybe','Не решили'],['no','Не придут'],['unsent','Не отправлено'],['archived','Исключённые']],'all');
  search.type='search';search.placeholder='Поиск по имени, связям, группе, контактам';search.setAttribute('aria-label','Найти гостя');
  side.className=filter.className='ad-gb-select';
  bar.append(search,side,filter);page.append(bar);
@@ -107,9 +107,12 @@ export async function activateGuestDirectory(root){
    metric('Человек в списке',current.length);
    metric('В основном составе',current.filter(isBase).length);
    metric('Под вопросом',current.filter(isQuestion).length);
+   metric('Уточнить имя',current.filter(p=>!s(p.first_name)).length);
    metric('Ответили «буду»',current.filter(p=>p.attendance==='yes').length);
    metric('Не отправлено',current.filter(p=>!p.invitation_sent_at).length);
    const query=s(search.value).toLocaleLowerCase('ru');
+   const duplicateCounts=new Map();
+   for(const p of current){const key=display(p).toLocaleLowerCase('ru').replace(/\s+/g,' ').trim();duplicateCounts.set(key,(duplicateCounts.get(key)||0)+1)}
    const chosen=people.filter(p=>{
      if(side.value!=='all'&&p.side!==side.value)return false;
      if(filter.value==='archived')return p.status==='archived';
@@ -117,6 +120,7 @@ export async function activateGuestDirectory(root){
      if(filter.value==='base'&&!isBase(p))return false;
      if(filter.value==='question'&&!isQuestion(p))return false;
      if(filter.value==='no-name'&&s(p.first_name))return false;
+     if(filter.value==='duplicates'&&(duplicateCounts.get(display(p).toLocaleLowerCase('ru').replace(/\s+/g,' ').trim())||0)<2)return false;
      if(filter.value==='yes'&&p.attendance!=='yes')return false;
      if(filter.value==='maybe'&&p.attendance!=='maybe')return false;
      if(filter.value==='no'&&p.attendance!=='no')return false;
@@ -233,7 +237,7 @@ export async function activateGuestDirectory(root){
      await refreshRel();household.append(relList);
      const addRel=mk('form','ad-gb-relation-form');
      const linkSelect=select(people.filter(x=>x.id!==id&&x.status!=='archived').map(x=>[x.id,display(x)]).sort((a,b)=>a[1].localeCompare(b[1],'ru')),'');
-     const relText=mk('input');relText.placeholder='Кем приходится этому гостю';relText.required=true;relText.maxLength=120;
+     const relText=mk('input');relText.placeholder='Кем этот гость приходится выбранному';relText.required=true;relText.maxLength=120;
      const relBack=mk('input');relBack.placeholder='Обратная связь (если известна)';relBack.maxLength=120;
      const linkBtn=mk('button','ad-gb-light','Добавить связь');linkBtn.type='submit';
      addRel.append(linkSelect,relText,relBack,linkBtn);household.append(addRel);
@@ -322,6 +326,18 @@ export async function activateGuestDirectory(root){
        }catch(err){notice(err.message,true)}finally{sent.disabled=false}
      });
      const origin=g.source_people_json||{},originalInv=g.source_invitation_json||{},originalProf=g.source_profile_json||{};
+     const archiveSection=section('Учёт записи');
+     const archiveButton=mk('button','ad-gb-light',g.status==='archived'?'Восстановить в списке':'Убрать из рабочего списка');
+     archiveButton.type='button';archiveSection.append(archiveButton);
+     archiveSection.append(mk('p','ad-gb-note','Запись не удаляется из базы. Приглашения и семейные связи сохраняются. Исключённые доступны через фильтр.'));
+     archiveButton.addEventListener('click',async()=>{
+       const next=g.status==='archived'?'draft':'archived';
+       if(next==='archived'&&!confirm('Исключить человека из рабочего списка? Данные сохранятся.'))return;
+       archiveButton.disabled=true;
+       try{await request('admin/guest/update',{method:'POST',csrf,body:{id,status:next}});g.status=next;const p=byId(id);if(p)p.status=next;
+         archiveButton.textContent=next==='archived'?'Восстановить в списке':'Убрать из рабочего списка';render()}
+       catch(err){notice(err.message,true)}finally{archiveButton.disabled=false}
+     });
      const sourceNotes=[
        ['Исходные заметки',origin['Приватные заметки']],['Примечание к приглашению',originalInv['Примечание']],
        ['Круг / сообщество',origin['Теги']],['Первоначальный профиль',originalProf['Короткое описание RU']],
