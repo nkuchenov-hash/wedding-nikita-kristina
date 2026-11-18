@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {wedding,adminModules,sampleGuests} from '../src/data.js';
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
-test('wedding details remain tentative',()=>{assert.equal(wedding.tentative,true);assert.equal(wedding.location,'Марьино');});
+test('wedding details remain tentative',()=>{assert.equal(wedding.tentative,true);assert.match(wedding.location,/Марьино/);assert.match(wedding.location,/Санкт-Петербург/);});
 test('required organizer modules are present',()=>{
  const ids=new Set(adminModules.map(x=>x.id));
  for(const id of ['guests','budget','venues','photos','tasks','schedule'])assert.ok(ids.has(id));
@@ -23,7 +23,7 @@ test('every guest view renders through editorial route, admin stays separate',as
 test('guest editorial code is retained but excluded from live admin release',async()=>{const workflow=await read('../.github/workflows/pages.yml');assert.doesNotMatch(workflow,/cp src\/editorial\.js/);assert.match(workflow,/tools\/prepare-admin-release\.mjs/);});
 
 test('app references the screenshot-matched guest UI',async()=>{const app=await read('../src/app.js');assert.match(app,/from '.\/replica\.js'/);});
-test('all screenshot sections have real, separate HTML',async()=>{const ui=await read('../src/replica.js');for(const key of ['r-hero','r-invitation','r-timeline','v2-venue-thumbnails','r-dress-collage','r-rsvp-options','r-masonry','r-map','r-tabs'])assert.ok(ui.includes(key),key);});
+test('all screenshot sections have real, separate HTML',async()=>{const ui=await read('../src/replica.js');for(const key of ['r-hero','r-invitation','r-schedule','v2-venue-thumbnails','r-dress-collage','r-rsvp-options','r-masonry','r-map','r-tabs'])assert.ok(ui.includes(key),key);});
 test('replica is retained in draft source and withheld from production admin',async()=>{const html=await read('../index.html'),yaml=await read('../.github/workflows/pages.yml');assert.match(html,/src\/replica\.css/);assert.doesNotMatch(yaml,/cp src\/replica\.js/);});
 
 test('protected wedding admin has no development warnings or demo badges',async()=>{
