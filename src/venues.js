@@ -471,27 +471,29 @@ export function renderVenueAdmin(){
  if(match&&detailVenue){
    return '<div class="vw-page" data-venues-page>'+renderVenueNewPage(detailVenue,{guests:state.guestCount,ui,estimate,extraTotal,dayStatus,dayText,weighted})+'</div>';
   }
- return '<div class="vw-page" data-venues-page><div class="dashboard-heading vw-head"><div><div class="eyebrow">ОРГАНИЗАЦИЯ / ВЫБОР МЕСТА</div><h1>Сравнение площадок</h1><p>Регистрация 17 июня · торжество желательно 19 июня 2027 · город и загород</p></div><div class="vw-count"><strong>'+all.length+'</strong><span>площадок</span></div></div>'+
- '<div class="vw-alert"><strong>Даты свадьбы:</strong> 19 июня — предпочтительно, но 18 и 20 июня также рассматриваем. Занятость 19-го не исключает площадку: проверяйте все три даты и условия каждого предложения. «Весенний» и «Особняк Ермолинского» свободны только 18-го, «Александровский парк» — только 20-го. «Сезоны в парке» сообщили о занятости 19-го. Неизвестный статус не означает свободную дату.</div>'+
- '<div class="vw-stats"><div><strong>'+all.length+'</strong><span>На рассмотрении</span></div><div><strong>'+visited+'</strong><span>Просмотрены</span></div><div><strong>'+full+'</strong><span>С полной оценкой</span></div><div><strong>'+all.filter(v=>DATE_CHOICES.some(([d])=>dayStatus(v,d)==='available')).length+'</strong><span>Подтверждённая дата (18/19/20)</span></div></div>'+
- '<div class="vw-panel"><div class="vw-panel-title vw-table-panel-title"><div><h2>Все площадки</h2><span><b data-venues-visible>'+list.length+'</b> из '+all.length+' · нажмите на заголовок столбца для сортировки</span></div><div class="vw-table-tools"><label class="vw-compact-control">Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+state.guestCount+'" aria-label="Число гостей для пересчёта смет"></label><input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Поиск по названию / району" aria-label="Поиск площадки (Enter)"><button type="button" data-clear-filters>Сбросить фильтры</button></div></div><div class="vw-scroll"><table class="vw-table vw-table-sortable"><thead><tr>'+
- columnHeading('name','Площадка','<div class="vw-head-filter-row">'+headerSelect('kind','Расположение',[['all','Все районы'],['city','Город'],['country','За городом']])+'</div>')+
- columnHeading('date','18 / 19 / 20 июня','<div class="vw-head-filter-row">'+headerSelect('chosenDay','День свадьбы',[['all','Все 3 даты'],['19','19 июня'],['18','18 июня'],['20','20 июня']])+headerSelect('date','Статус даты',[['all','Любой статус'],['available','Свободно'],['unavailable','Занято'],['pending','Уточняется'],['unknown','Нет ответа']])+'</div>')+
- columnHeading('visit','Осмотр',headerSelect('visit','Фильтр по осмотру',[['all','Все'],['yes','Были лично'],['no','Не подтверждено']]))+
- columnHeading('price','Бюджет',headerSelect('budget','Верхняя граница бюджета',[['all','Любой бюджет'],['650000','До 650 тыс.'],['800000','До 800 тыс.'],['1000000','До 1 млн'],['1200000','До 1,2 млн']]))+
- columnHeading('capacity','Вместимость',headerSelect('capacity','Минимальная вместимость',[['all','Все'],['80','80+ гостей'],['100','100+ гостей']]))+
- columnHeading('score','Рейтинг')+
- '</tr></thead><tbody>'+
- list.map(row).join('')+'</tbody></table></div>'+(list.length?'':'<p class="vw-empty">По выбранным фильтрам площадок нет. Измените условия или нажмите «Сбросить фильтры».</p>')+'</div>'+
- '</div>';
+ return '<div class="vw-page vw-control-board" data-venues-page>'+
+  '<div class="vw-control-head"><div><h1>Площадки <span>'+all.length+'</span></h1><p>19 июня — приоритет · 18 и 20 июня — альтернативы</p></div><div class="vw-control-facts"><span>'+visited+' осмотрено</span><span>'+all.filter(v=>DATE_CHOICES.some(([d])=>dayStatus(v,d)==='available')).length+' со свободной датой</span></div></div>'+
+  '<div class="vw-panel vw-table-panel"><div class="vw-panel-title vw-table-panel-title"><div><h2>Управление площадками</h2><span><b data-venues-visible>'+list.length+'</b> из '+all.length+'</span></div><div class="vw-table-tools"><label class="vw-compact-control">Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+state.guestCount+'" aria-label="Число гостей для пересчёта смет"></label><input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Найти площадку" aria-label="Поиск площадки (Enter)"><button type="button" data-clear-filters>Сбросить</button></div></div>'+
+  '<div class="vw-shortcuts"><button type="button" class="'+(ui.chosenDay==='19'&&ui.date==='available'?'active':'')+'" data-quick-filter="available19">Свободны 19.06</button><button type="button" class="'+(ui.chosenDay==='all'&&ui.date==='all'?'active':'')+'" data-quick-filter="all">Все даты</button><span>Статусы дат можно менять прямо в таблице</span></div>'+
+  '<div class="vw-scroll" role="region" tabindex="0" aria-label="Таблица площадок, прокрутка по горизонтали"><table class="vw-table vw-table-sortable"><thead><tr>'+
+  columnHeading('name','Площадка','<div class="vw-head-filter-row">'+headerSelect('kind','Расположение',[['all','Все районы'],['city','Город'],['country','За городом']])+'</div>')+
+  columnHeading('date','18 / 19 / 20 июня','<div class="vw-head-filter-row">'+headerSelect('chosenDay','День свадьбы',[['all','Все 3 даты'],['19','19 июня'],['18','18 июня'],['20','20 июня']])+headerSelect('date','Статус даты',[['all','Любой статус'],['available','Свободно'],['unavailable','Занято'],['pending','Уточняется'],['unknown','Нет ответа']])+'</div>')+
+  columnHeading('visit','Осмотр',headerSelect('visit','Фильтр по осмотру',[['all','Все'],['yes','Были лично'],['no','Не подтверждено']]))+
+  columnHeading('price','Бюджет',headerSelect('budget','Верхняя граница бюджета',[['all','Любой бюджет'],['650000','До 650 тыс.'],['800000','До 800 тыс.'],['1000000','До 1 млн'],['1200000','До 1,2 млн']]))+
+  columnHeading('capacity','Вместимость',headerSelect('capacity','Минимальная вместимость',[['all','Все'],['80','80+ гостей'],['100','100+ гостей']]))+
+  columnHeading('score','Рейтинг')+
+  '</tr></thead><tbody>'+list.map(row).join('')+'</tbody></table></div>'+(list.length?'':'<p class="vw-empty">Нет площадок по выбранным фильтрам.</p>')+'</div>'+
+  '</div>';
 }
 function redraw(root){
  const el=root.querySelector('[data-venues-page]');if(!el)return;
  const y=typeof window!=='undefined'?window.scrollY:0;
+ const tableScroll=root.querySelector('.vw-scroll')?.scrollLeft??0;
  const categoryScroll=root.querySelector('.vdp-photo-categories')?.scrollLeft??0;
  const stripScroll=root.querySelector('.vdp-filmstrip')?.scrollLeft??0;
  el.outerHTML=renderVenueAdmin();
  hydrateVenueFiles(root);
+ const boardScroll=root.querySelector('.vw-scroll');if(boardScroll)boardScroll.scrollLeft=tableScroll;
  const n=root.querySelector('[data-state="guestCount"]');if(n)n.value=String(state.guestCount);
  for(const [key,v] of [['kind',ui.kind],['sort',ui.sort],['date',ui.date],['chosenDay',ui.chosenDay],['visit',ui.visit],['budget',ui.budget],['capacity',ui.capacity]]){
   const x=root.querySelector('[data-ui="'+key+'"]');if(x)x.value=v;
@@ -521,7 +523,7 @@ export function activateVenueAdmin(root){
  redraw(root);
  initVenueDatabase(root);
  root.addEventListener('click',event=>{
-  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-venue-inline],[data-inline-quote],[data-add-inline-quote],[data-cancel-inline],[data-remove-venue-quote],[data-venue-retry]');if(!target)return;
+  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-venue-inline],[data-inline-quote],[data-add-inline-quote],[data-cancel-inline],[data-remove-venue-quote],[data-venue-retry],[data-quick-filter]');if(!target)return;
   const venueBase=PUBLIC_VENUES.find(x=>x.id===ui.expanded);
   const showError=message=>{
    const page=root.querySelector('.vdp-page');if(!page)return;
@@ -566,6 +568,11 @@ export function activateVenueAdmin(root){
     if(photos.length){ui.photoIndex=(ui.photoIndex+Number(target.dataset.photoStep)+photos.length)%photos.length;redraw(root);}
   }
   else if(target.dataset.sortCol){const key=target.dataset.sortCol;if(ui.sort===key)ui.sortDir=ui.sortDir==='asc'?'desc':'asc';else{ui.sort=key;ui.sortDir=SORT_DEFAULTS[key]||'asc';}redraw(root);}
+  else if(target.dataset.quickFilter){
+   if(target.dataset.quickFilter==='available19'){ui.chosenDay='19';ui.date='available';}
+   else{ui.chosenDay='all';ui.date='all';}
+   redraw(root);
+  }
   else if(target.hasAttribute('data-clear-filters')){Object.assign(ui,{kind:'all',query:'',date:'all',chosenDay:'all',budget:'all',visit:'all',capacity:'all'});redraw(root);}
   else if(target.dataset.detail){location.hash='#/admin/venues/'+encodeURIComponent(target.dataset.detail);}else if(target.dataset.detailTab){location.hash='#/admin/venues/'+encodeURIComponent(ui.expanded)+'/'+target.dataset.detailTab;}
   else if(target.hasAttribute('data-close')){location.hash='#/admin/venues';}
@@ -617,6 +624,13 @@ export function activateVenueAdmin(root){
  });
  root.addEventListener('change',async event=>{
   const t=event.target;
+  if(t.dataset.listDate){
+   t.disabled=true;
+   try{await commitVenueDate(t.dataset.venueId,t.dataset.listDate,t.value,root);}
+   catch(error){redraw(root);const board=root.querySelector('.vw-panel');if(board){const alert=document.createElement('p');alert.className='vw-save-error';alert.setAttribute('role','alert');alert.textContent='Не сохранено: '+error.message;board.prepend(alert);}}
+   finally{if(t.isConnected)t.disabled=false;}
+   return;
+  }
   if(t.hasAttribute('data-photo-sort')){ui.photoSort=t.value;ui.photoIndex=0;redraw(root);return;}
   if(t.matches('select[data-inline-control]')){t.closest('form')?.requestSubmit();return;}
   if(t.dataset.state==='guestCount'){state.guestCount=Math.max(1,Math.min(300,Number(t.value)||80));save();redraw(root);return;}
