@@ -171,6 +171,26 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         audit($db,'admin',$actor,'create','companion',$id,['guest_id'=>$guestId]);
         json(['ok'=>true,'id'=>$id],201);
     }
+    // Small, atomic, authenticated changes; no site build and no rewrite of venue JSON.
+    if($route==='admin/venue-dates' && $method==='GET'){
+        $rows=all($db,'SELECT venue_id,day,status,updated_at
+            FROM venue_date_status ORDER BY venue_id,day LIMIT 1000');
+        json(['ok'=>true,'dates'=>$rows]);
+    }
+    if($route==='admin/venue-dates' && $method==='PATCH'){
+        $d=payload(1024);
+        $id=strval($d,'venue_id',40,true);
+        if(!preg_match('/^[a-z0-9-]{2,36}$/',$id))
+            fail(422,'venue_id','Некорректная площадка');
+        $day=choice($d,'day',['2027-06-18','2027-06-19','2027-06-20'],'');
+        $status=choice($d,'status',['unknown','pending','available','unavailable'],'');
+        $existing=one($db,'SELECT status FROM venue_date_status WHERE venue_id=? AND day=?',[$id,$day]);
+        if(!$existing)fail(404,'venue_day','Дата площадки не найдена в базе');
+        statement($db,"UPDATE venue_date_status SET status=?,updated_at=datetime('now')
+           WHERE venue_id=? AND day=?",[$status,$id,$day]);
+        audit($db,'admin',$actor,'update','venue_date_status',$id,['day'=>$day,'previous'=>$existing['status'],'status'=>$status]);
+        json(['ok'=>true,'venue_id'=>$id,'day'=>$day,'status'=>$status]);
+    }
     if($route==='admin/venue-files' && $method==='GET'){
         $venue=(string)($_GET['venue_id']??'');
         if($venue!==''&&!preg_match('/^[a-z0-9-]{2,36}$/',$venue))
