@@ -42,8 +42,8 @@ export const PUBLIC_VENUES = [
   {id:'eva',name:'Шатёр Eva — Летний',region:'country',area:'Большая Купальная, 28'},
   {id:'maryino',name:'Усадьба Марьино — Белый зал',region:'country',area:'Андрианово, Тосненский район',website:'https://usadbamaryino.ru/rental/halls',capacity:80,
     publiclyAdvertised:{rent:250000,menu:6500,extension:35000},publicNote:'Белый зал предпочтителен. Вместимость до 80 по официальному сайту, в сторонних каталогах есть противоречия. Меню от 6 500 ₽/чел. — ориентир из каталога, не смета на июнь 2027.'},
-  {id:'harmony',name:'Harmony Hall — Гармония',region:'country',area:'Солнечное, Приморское ш., 380И',website:'https://harmony-hall.ru/',capacity:200,
-    publiclyAdvertised:{menu:4500},publicNote:'Конгресс-холл и ресторан имеют разные условия; аренда указана по-разному в каталогах. 4 500 ₽/чел. — рекламный ориентир, не предложение на июнь 2027.'}
+  {id:'harmony',name:'Harmony Hall — Гармония',region:'country',area:'Солнечное, Приморское ш., 380И',website:'https://harmony-hall.ru/',capacity:170,
+    publicNote:'Конгресс-холл: банкет до 170 гостей; предложение менеджера на июнь 2027 — аренда 170 000 ₽. Питание по ставкам 2026, расчёт уточняется.'}
 ];
 const DATE_CHOICES=[['18','18 июня'],['19','19 июня'],['20','20 июня']];
 
