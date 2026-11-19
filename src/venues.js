@@ -8,7 +8,7 @@
 import {VENUE_RECORDS} from './venues-data.js';
 import {VENUE_PRICING} from './venues-pricing.js';
 import {transcriptAddonTotal} from './venue-transcript-costs.js';
-import {renderVenueNewPage,renderVenueQuoteEditorRow,filteredVenuePhotos,getVenueCover} from './venue-detail-ui.js';
+import {renderVenueNewPage,renderVenueQuoteEditorRow,filteredVenuePhotos,getVenuePhotos,getVenueCover} from './venue-detail-ui.js';
 import {hydrateVenueFiles} from './venue-files-ui.js';
 import {estimateVenue,scoreVenue,PERSONAL_CRITERIA,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
 export const PUBLIC_VENUES = [
@@ -383,7 +383,9 @@ function tableDateControls(v){
 function row(v){
  const score=weighted(v),cost=totalEstimate(v),pic=getVenueCover(v);
  const offer=v.offerNote?'<small class="vw-offer-note">'+h(v.offerNote)+'</small>':'';
- const image=pic?'<img loading="lazy" class="vw-row-thumb" src="'+h(pic.src?safeUrl(pic.src):'https://drive.google.com/thumbnail?id='+encodeURIComponent(pic.id)+'&sz=w240')+'" alt="Фото площадки: '+h(v.name)+'">':'<span class="vw-row-thumb vw-no-image"></span>';
+ const alternate=getVenuePhotos(v).find(p=>p.id!==pic?.id);
+ const fallback=alternate?(alternate.src?safeUrl(alternate.src):'https://drive.google.com/thumbnail?id='+encodeURIComponent(alternate.id)+'&sz=w240'):'';
+ const image=pic?'<img loading="lazy" class="vw-row-thumb" referrerpolicy="no-referrer" src="'+h(pic.src?safeUrl(pic.src):'https://drive.google.com/thumbnail?id='+encodeURIComponent(pic.id)+'&sz=w240')+'" data-fallback-cover="'+h(fallback)+'" alt="Фото площадки: '+h(v.name)+'">':'<span class="vw-row-thumb vw-no-image"></span>';
  const complete=cost.value!==null&&!cost.partial;
  const amount=cost.value===null?'Не рассчитано':(cost.kind==='planning'?'≈ '+rub(cost.value):complete?rub(cost.value):'от '+rub(cost.value));
  const known=cost.value===null&&cost.knownSubtotal>0?'Известно: '+rub(cost.knownSubtotal)+' (не итог)':'';
@@ -603,6 +605,19 @@ export function activateVenueAdmin(root){
   else if(target.hasAttribute('data-close')){location.hash='#/admin/venues';}
   else if(target.dataset.uiToggle){ui.onlyVisited=!ui.onlyVisited;redraw(root);}
  });
+ // Retry a second photograph of the same venue if the image CDN blocks hotlinking.
+ // A permanent image failure displays a neutral tile, never browser broken-image text.
+ root.addEventListener('error',event=>{
+  const img=event.target;
+  if(!(img instanceof HTMLImageElement)||!img.classList.contains('vw-row-thumb'))return;
+  if(img.dataset.coverRetry!=='1'&&img.dataset.fallbackCover){
+   img.dataset.coverRetry='1';
+   img.src=img.dataset.fallbackCover;
+   return;
+  }
+  img.hidden=true;
+  img.closest('.vw-image-open')?.classList.add('vw-photo-unavailable');
+ },true);
  // Guest count updates budgets and scores while typing without dropping focus.
  root.addEventListener('input',event=>{
   const t=event.target;
