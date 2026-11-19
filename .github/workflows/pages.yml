@@ -5,6 +5,7 @@ on:
     paths:
       - 'src/**'
       - 'tools/prepare-admin-release.mjs'
+      - 'tools/stage-guest-online.mjs'
       - 'tools/admin-gateway.php'
       - '.github/workflows/pages.yml'
       - 'tests/**'
@@ -62,6 +63,17 @@ jobs:
           test ! -e _site/public/photos
           grep -Fq 'Сайт готовится' _site/index.html
           grep -Fq 'password_verify' _site/admin/index.php
+      - name: Stage guest browser preview at /preview with no private admin sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tools/stage-guest-online.mjs
+          test -s _site/preview/index.html
+          test -s _pages/preview/index.html
+          test -s _site/preview/src/guest-online-entry.js
+          test ! -e _site/preview/src/admin-app.js
+          test ! -e _site/preview/backend
+          grep -Fq 'src/guest-online-entry.js' _pages/preview/index.html
       - name: Package website for purchased hosting
         uses: actions/upload-artifact@v4
         with:
@@ -133,6 +145,13 @@ jobs:
               exit 1
             fi
           done
+          preview_sha=$(sha256sum _site/preview/index.html | awk '{print $1}')
+          remote_preview_sha=$(ssh $SSH_OPTS "$USERNAME@$HOST" "sha256sum '$DESTINATION/preview/index.html'" | awk '{print $1}')
+          if [[ "$preview_sha" != "$remote_preview_sha" ]]; then
+            echo "::error::REG.RU preview index checksum mismatch."
+            exit 1
+          fi
+          echo "Guest browser preview uploaded to REG.RU at /preview/."
           echo "REG.RU protected admin JavaScript bundle matches this release."
           echo "REG.RU admin-only deployment confirmed by remote checksums."
       - uses: actions/configure-pages@v5
