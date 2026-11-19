@@ -29,13 +29,17 @@ test('All 25 venues have the same 13 price rows, even when price is unknown',()=
   assert.match(html,/Неизвестные суммы указаны отдельно/);
  }
 });
-test('Photo archive includes all 337 indexed photographs in source room categories',()=>{
+test('Photo archive includes all 365 indexed photographs in source room categories',()=>{
  const total=allIds.reduce((s,id)=>s+getVenuePhotos(venue(id)).length,0);
- assert.equal(total,337);
+ assert.equal(total,365);
  assert.equal(getVenuePhotos(venue('vinity')).length,24);
  assert.equal(getVenuePhotos(venue('palma')).length,7,'all seven original Telegram photos must be displayed');
  assert.equal(getVenuePhotos(venue('palma')).filter(p=>p.section==='Залы').length,4);
  assert.equal(getVenuePhotos(venue('palma')).filter(p=>p.section==='Welcome-зона').length,3);
+ assert.equal(getVenuePhotos(venue('maryino')).length,36,'all unique Maryino visit photos must appear');
+ assert.equal(new Set(getVenuePhotos(venue('maryino')).map(p=>p.name)).size,36,'duplicates from Drive must not appear twice');
+ assert.equal(venue('maryino').gallery.length,36,'legacy gallery uses the same unique archive');
+ assert.ok(getVenuePhotos(venue('maryino')).some(p=>p.name==='IMG_20261031_144633_996.jpg'));
  assert.ok(getVenuePhotos(venue('royal')).some(f=>f.section==='Террасы и виды'));
  assert.ok(getVenuePhotos(venue('alex-park')).some(f=>f.section==='Санузлы'));
  // A venue hero must never start with a restroom or utility-room photo.
