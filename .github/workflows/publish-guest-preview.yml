@@ -6,6 +6,8 @@ on:
       - 'src/replica.js'
       - 'src/guest-online-entry.js'
       - 'src/wedding-reference-2026.css'
+      - 'src/wedding-info-responsive.css'
+      - 'index.html'
       - 'src/petersburg-story.css'
       - 'public/production/**'
       - 'tools/stage-guest-online.mjs'
