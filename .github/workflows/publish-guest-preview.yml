@@ -1,0 +1,94 @@
+name: Publish guest wedding preview independently
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/replica.js'
+      - 'src/guest-online-entry.js'
+      - 'src/wedding-reference-2026.css'
+      - 'src/petersburg-story.css'
+      - 'public/production/**'
+      - 'tools/stage-guest-online.mjs'
+      - '.github/workflows/publish-guest-preview.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: wedding-guest-preview-only
+  cancel-in-progress: true
+jobs:
+  guest-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate public UI independent of unrelated admin tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/replica.js
+          node --check src/guest-online-entry.js
+          node --test tests/public-three-day.test.js
+      - name: Stage public-only browser preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site _pages
+          node tools/stage-guest-online.mjs
+          cat > _pages/index.html <<'EOF'
+          <!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><title>Сайт готовится</title></head><body>Сайт готовится</body></html>
+          EOF
+          printf '{"revision":"%s"}\n' "${GITHUB_SHA:0:12}" > _pages/build-info.json
+          touch _pages/.nojekyll
+          test ! -e _site/preview/src/admin-app.js
+          test ! -e _site/preview/backend
+      - name: Upload only /preview to wedding hosting (never touch admin or root)
+        shell: bash
+        timeout-minutes: 5
+        env:
+          HOST: ${{ secrets.WEDDING_SFTP_HOST }}
+          USERNAME: ${{ secrets.WEDDING_SFTP_USER }}
+          SSH_KEY: ${{ secrets.WEDDING_SFTP_SSH_KEY }}
+          HOST_KEYS: ${{ secrets.WEDDING_SFTP_KNOWN_HOSTS }}
+          DESTINATION: ${{ secrets.WEDDING_SFTP_PATH }}
+          PORT: ${{ secrets.WEDDING_SFTP_PORT }}
+        run: |
+          set -euo pipefail
+          test -n "$HOST" && test -n "$USERNAME" && test -n "$SSH_KEY" && test -n "$HOST_KEYS" && test -n "$DESTINATION"
+          [[ "$DESTINATION" == /var/www/* ]]
+          [[ "$DESTINATION" != "/" ]]
+          [[ -n "$PORT" ]] || PORT=22
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/wedding_deploy_key"
+          printf '%s\n' "$HOST_KEYS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/wedding_deploy_key" "$HOME/.ssh/known_hosts"
+          SSH_OPTS="-4 -i $HOME/.ssh/wedding_deploy_key -p $PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15"
+          ssh $SSH_OPTS "$USERNAME@$HOST" "mkdir -p '$DESTINATION/preview'"
+          rsync --archive --delete --no-perms --omit-dir-times --timeout=120 --rsh "ssh $SSH_OPTS" _site/preview/ "$USERNAME@$HOST:$DESTINATION/preview/"
+          local_sha=$(sha256sum _site/preview/index.html | awk '{print $1}')
+          remote_sha=$(ssh $SSH_OPTS "$USERNAME@$HOST" "sha256sum '$DESTINATION/preview/index.html'" | awk '{print $1}')
+          test "$local_sha" = "$remote_sha"
+          echo "WEDDING_DOMAIN_PREVIEW_DEPLOYED"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _pages
+      - uses: actions/deploy-pages@v4
+      - name: Verify both public browser preview URLs
+        shell: bash
+        run: |
+          set -euo pipefail
+          for url in "https://nikitakristina.ru/preview/" "https://nkuchenov-hash.github.io/wedding-nikita-kristina/preview/"; do
+            success=0
+            for try in 1 2 3 4 5 6; do
+              if curl -fsSL --max-time 15 "$url?revision=${GITHUB_SHA:0:12}" | grep -q 'src/guest-online-entry.js'; then
+                success=1;break
+              fi
+              sleep 5
+            done
+            test "$success" -eq 1 || { echo "::error::Missing public preview: $url";exit 1; }
+            echo "VERIFIED_BROWSER_URL: $url"
+          done
