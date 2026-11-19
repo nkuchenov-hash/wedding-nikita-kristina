@@ -26,7 +26,7 @@ async function inspect(page,route,selector){
  }));
  assert.ok(info.scrollWidth<=info.viewport+2,route+': horizontal overflow '+JSON.stringify(info));
  // Externally hosted temporary imagery may fail; the text and internal navigation must still work.
- if(info.images.length)console.warn('Unresolved illustrative photos',route,info.images);
+ assert.deepEqual(info.images,[],route+': guest photo assets must all load without fallback placeholders');
  return info;
 }
 try{
