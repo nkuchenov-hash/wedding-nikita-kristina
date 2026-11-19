@@ -128,3 +128,20 @@ test('HTML escapes user-supplied venue descriptions',()=>{
  assert.ok(!html.includes('<script>alert'));
  assert.ok(!html.includes('<img src=x onerror'));
 });
+
+
+test('Visit transcript insights are additive editable fields on seven correctly mapped venue cards',()=>{
+ const venueIds=['putilov','ermolinsky','vinity','petr','vesenniy','seasons','zarenkov-gallery'];
+ for(const id of venueIds){
+  const item=venue(id);
+  assert.ok(item.visitTranscriptNotes?.length>100,id+' should have detailed original meeting notes');
+  assert.match(item.visitTranscriptSource,/^https:\/\/drive\.google\.com\/file\/d\//);
+  const overview=renderVenueNewPage(item,context('overview'));
+  assert.match(overview,/Из расшифровки встречи/);
+  assert.match(overview,/data-venue-inline="visitTranscriptNotes"/);
+  assert.match(overview,/Исходная расшифровка/);
+ }
+ // A transcript of the separate Balinskogo mansion is not mixed with Bali.
+ assert.equal(VENUE_RECORDS.bali.visitTranscriptNotes,undefined);
+ assert.equal(VENUE_RECORDS.k2.visitTranscriptNotes,undefined);
+});
