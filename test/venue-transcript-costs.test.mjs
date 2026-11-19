@@ -39,7 +39,7 @@ test('Transcript scenarios illustrate K2 catering without changing the authorita
  assert.deepEqual(eighty.map(x=>x.indicativeTotal).sort((a,b)=>a-b),[820000,1300000]);
  assert.deepEqual(transcriptMenuScenarios(k2,100).map(x=>x.indicativeTotal).sort((a,b)=>a-b),[920000,1520000]);
  const html=renderVenueNewPage(k2,context());
- assert.match(html,/Варианты меню из разговора/);
+ assert.match(html,/Плановые сметы К2/);
  assert.match(html,/1\\s?558\\s?000|1 558 000/);
  assert.match(html,/1\\s?030\\s?000|1 030 000/);
  assert.match(html,/Техника в аренду 420/);
