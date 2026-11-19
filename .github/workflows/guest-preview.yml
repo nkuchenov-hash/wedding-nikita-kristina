@@ -1,0 +1,42 @@
+name: Preview guest wedding website (not a public launch)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/replica.js'
+      - 'src/wedding-reference-2026.css'
+      - 'src/petersburg-story.css'
+      - 'index.html'
+      - 'tools/guest-visual-preview.mjs'
+      - '.github/workflows/guest-preview.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  visual-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate the actual source
+        run: npm run check
+      - name: Stage an isolated guest website (no private data)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _guest-preview
+          cp index.html _guest-preview/
+          cp -a public src _guest-preview/
+          test ! -e _guest-preview/backend
+      - name: Install screenshot browser driver
+        run: npm install --no-save --no-package-lock puppeteer-core@24
+      - name: Verify mobile and desktop pages in headless Chrome
+        run: node tools/guest-visual-preview.mjs
+      - name: Save actual rendered HTML screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wedding-public-site-real-screenshots
+          path: _guest-preview/screenshots/
+          if-no-files-found: warn
+          retention-days: 14
