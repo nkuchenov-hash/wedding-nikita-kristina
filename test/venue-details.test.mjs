@@ -29,11 +29,17 @@ test('All 25 venues have the same 13 price rows, even when price is unknown',()=
   assert.match(html,/Неизвестные суммы указаны отдельно/);
  }
 });
-test('Photo archive includes all 367 indexed photographs in source room categories',()=>{
+test('Photo archive includes all 378 indexed photographs in source room categories',()=>{
  const total=allIds.reduce((s,id)=>s+getVenuePhotos(venue(id)).length,0);
- assert.equal(total,367);
+ assert.equal(total,378);
  assert.equal(getVenuePhotos(venue('vinity')).length,24);
  assert.equal(getVenuePhotos(venue('palma')).length,7,'all seven original Telegram photos must be displayed');
+ for(const id of ['360','kraft','roof18','bali','ambassador','english-roof','eva','zhemchuzhny']){
+  const photos=getVenuePhotos(venue(id));
+  assert.ok(photos.length>0,id+' should show a verified venue image');
+  assert.ok(photos.every(x=>x.src?.startsWith('https://')&&x.sourceUrl?.startsWith('https://')),id+' has a source link');
+  assert.ok(getVenueCover(venue(id))?.src,id+' hero must not be empty');
+ }
  assert.equal(getVenuePhotos(venue('palma')).filter(p=>p.section==='Залы').length,4);
  assert.equal(getVenuePhotos(venue('palma')).filter(p=>p.section==='Welcome-зона').length,3);
  assert.equal(getVenuePhotos(venue('maryino')).length,38,'36 unique Maryino visit photos and two hall photos must appear');
