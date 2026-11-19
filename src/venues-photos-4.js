@@ -49,7 +49,7 @@ export const VENUE_PHOTOS_4 = {
       "id": "web-roof18-1",
       "name": "Крыша 18 — панорамный зал",
       "section": "Залы",
-      "src": "https://img.restoclub.ru/uploads/place/e/c/a/0/eca09ef22c9b9ea4bfc76991019e8e0a_w1200_h630.webp",
+      "src": "https://s4.afisha.ru/mediastorage/a6/cc/7280312d5f434f41969550cfcca6.jpeg",
       "sourceUrl": "https://www.restoclub.ru/spb/place/krysha-18"
     },
     {
@@ -273,7 +273,7 @@ export const VENUE_PHOTOS_4 = {
       "id": "web-bali-1",
       "name": "Bali — банкетный зал",
       "section": "Залы",
-      "src": "https://www.fabrika-horeca.ru/images/mebel/restoran-bali--g--sankt-peterburg--ul--savushkina--98-1200x800-20207.jpg",
+      "src": "https://img.birthday-place.ru/wEnN1RVIH_q_zTTDQfqEYsU4nH_407LZmVGsVmYLSJJ_PdaRST8kiMSFrpryZBohT6cbu8hzrr5iIswuU_3PNJ6XM0-vaKeZdkCl%3Dw800-h600-l100",
       "sourceUrl": "https://www.fabrika-horeca.ru/portfolio/restoran-bali-g-sanktpeterburg-ul-savushkina-98.html"
     },
     {
