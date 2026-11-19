@@ -1,6 +1,7 @@
 /* Private organizer venue cost & scoring rules.
    Never invent a quote. Partial calculations are explicitly labelled as such. */
 import {VENUE_PRICING} from './venues-pricing.js';
+import {planningEstimate} from './venue-budget-coverage.js';
 
 const num=value=>value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value))?Number(value):null;
 const money=x=>x===null?null:Math.round(x);
@@ -71,6 +72,10 @@ export function estimateVenue(v,guests){
    return {value:money(total),partial:true,isQuote:false,kind:'scenario',
      note:'Предварительный пересчёт сметы на '+base.guests+' гостей: только известные переменные строки. Итог необходимо подтвердить'};
  }
+ // If a proposal names an incomplete food option, build a visibly provisional
+ // working budget with labeled reserves rather than presenting rent + food as complete.
+ const planning=planningEstimate(v,count);
+ if(planning)return planning;
  const cost=v.cost||{},pricing=VENUE_PRICING[v.id]||{};
  // A venue rental on its own is not the cost of a wedding.
  const menu=perGuestPrice(v);
