@@ -443,3 +443,6 @@
 .vdp-plan-total strong{font-size:21px;color:#1c4e34}
 @media(max-width:900px){.vdp-budget-coverage-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.vdp-coverage-row{flex-wrap:wrap}.vdp-plan-option{padding:14px 13px}.vdp-plan-total strong{display:block;margin-top:5px}}
+
+.vdp-coverage-row.partial{background:#f9faf2;border-color:#dbdfc0}
+.vdp-coverage-row.partial>span{color:#8a7438}
