@@ -1,0 +1,83 @@
+/* Guest information page: desktop-wide editorial presentation; no legacy 540px venue proportions. */
+.r-app.wref-app .wref-info{width:100%!important;max-width:none!important;background:#f8f6ef;color:#1b3929;overflow:hidden}
+.r-app.wref-app .wref-info > section{position:relative;max-width:none!important;width:100%!important;box-sizing:border-box}
+.r-app.wref-app .wref-info-hero.v2-venue{display:grid!important;grid-template-columns:52% 48%!important;align-items:stretch!important;position:relative!important;height:auto!important;min-height:590px!important;max-height:none!important;overflow:hidden!important;background:#f5f3eb!important;padding:0!important}
+.wref-info-hero__photo{height:100%;min-height:590px;overflow:hidden}
+.wref-info-hero__photo img{display:block;width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;filter:none!important}
+.wref-info-hero__copy{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;padding:105px 8% 75px;background:linear-gradient(145deg,#fbf9f1,#e9efe6)}
+.wref-info-hero__copy:after{content:'';position:absolute;right:-45px;bottom:-90px;width:230px;height:280px;pointer-events:none;opacity:.5;background:url('../public/production/invitation-leaves-top.png') center/contain no-repeat}
+.r-app.wref-app .wref-info-hero h1{font:italic 400 clamp(65px,6vw,104px)/.89 'Cormorant Garamond',Georgia,serif!important;color:#234631!important;max-width:500px;margin:20px auto 20px!important}
+.r-app.wref-app .wref-info-hero h1 em{color:#71866a!important;font-style:italic}
+.wref-info-hero__copy p{font-size:16px!important;line-height:1.8!important;max-width:400px!important;margin:0!important;color:#4d634f}
+.wref-info .wref-overline{font:600 11px/1.6 Manrope,Arial,sans-serif;letter-spacing:.18em;color:#98835b}
+.wref-info-places{display:flex;flex-direction:column;gap:45px;padding:78px clamp(30px,6vw,85px) 85px!important;background:#f9f7f0!important}
+.wref-info-place{display:grid;grid-template-columns:50% 50%;overflow:hidden;background:#fffdf7;border:1px solid #ddd6c8;border-radius:22px;min-height:405px;box-shadow:0 8px 22px #203c2511}
+.wref-info-place--reverse .wref-info-place__photo{order:2}
+.wref-info-place__photo{min-height:405px;overflow:hidden;background:#d9e6d7}
+.wref-info-place__photo img{width:100%!important;height:100%!important;display:block;object-fit:cover!important;object-position:center!important;filter:none!important;transform:none!important}
+.wref-info-place__text{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:45px clamp(25px,6vw,90px)}
+.r-app.wref-app .wref-info-place h2{font:italic 400 clamp(58px,6.3vw,94px)/.88 'Cormorant Garamond',Georgia,serif!important;color:#264630!important;margin:18px 0 23px!important}
+.r-app.wref-app .wref-info-place h2 em{color:#648063!important}
+.wref-info-place__text p{font-size:15px!important;line-height:1.76!important;max-width:435px!important;margin:0 0 13px!important;color:#4f6250}
+.wref-info-place__note{font-size:12px!important;color:#867959!important}
+.wref-outline-link{display:inline-block;white-space:normal;padding:11px 19px;margin-top:19px;border-radius:30px;border:1px solid #64846b;color:#2e5637!important;font:600 13px/1.35 Manrope,Arial,sans-serif;text-decoration:none}
+.wref-info-section-title{max-width:650px;margin:0 auto 42px;text-align:center;position:relative}
+.r-app.wref-app .wref-info-section-title h2{font:italic 400 clamp(62px,6vw,96px)/.96 'Cormorant Garamond',Georgia,serif!important;margin:15px 0!important;color:#1d3e2b!important}
+.wref-info-section-title p{max-width:520px;margin:0 auto!important;font:400 15px/1.75 Manrope,Arial,sans-serif!important;color:#546b58!important}
+.wref-info-dress.r-dress{display:block!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important;padding:75px clamp(28px,5vw,85px) 95px!important;background:#eef2e9!important;color:#234834!important}
+.wref-info-colors{display:flex;justify-content:center;gap:14px;margin:30px auto 35px}
+.wref-info-colors i{height:35px;width:35px;display:block;border-radius:50%;box-shadow:0 1px 4px #182a2917}
+.wref-info-outfits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;max-width:1100px;margin:auto}
+.wref-info-outfits figure{margin:0!important;height:360px;border-radius:17px;overflow:hidden;background:#f6f4eb;box-shadow:0 6px 20px #18332218}
+.wref-info-outfits img{width:100%!important;height:100%!important;object-fit:cover!important;display:block;filter:none!important;transform:none!important}
+.r-app.wref-app .wref-info-rsvp.r-rsvp{display:grid!important;grid-template-columns:45% 55%;gap:0;align-items:center;padding:70px clamp(30px,7vw,105px)!important;min-height:350px!important;background:linear-gradient(112deg,#1d432c,#103621)!important;color:#fff!important;text-align:left!important}
+.wref-info-rsvp__copy{padding-right:55px}
+.r-app.wref-app .wref-info-rsvp h2{font:italic 400 clamp(67px,6vw,102px)/.95 'Cormorant Garamond',Georgia,serif!important;color:#fff!important;margin:14px 0 17px!important}
+.r-app.wref-app .wref-info-rsvp h2 em{color:#d9c58f!important}
+.wref-info-rsvp__copy p{font-size:14px!important;line-height:1.8!important;max-width:370px!important;color:#e1ebe1!important}
+.wref-info-rsvp__form{display:grid;gap:14px;max-width:480px;width:100%}
+.wref-info-rsvp__form>label{display:block;color:#f6f8ee;font-size:13px}
+.wref-info-rsvp__form input[type=text]{display:block;width:100%;min-height:51px;margin-top:8px;border-radius:30px;padding:12px 20px;border:0;background:#f9f8f1;color:#203f2d;font:400 14px Manrope,Arial,sans-serif}
+.wref-info-rsvp__form fieldset{display:flex;flex-wrap:wrap;gap:12px;border:0;margin:0;padding:0;color:#f6f8ee}
+.wref-info-rsvp__form fieldset legend{padding:0 0 10px;font-size:13px}
+.wref-info-rsvp__form fieldset label{display:flex;align-items:center;gap:8px;min-height:40px;padding:10px 15px;border:1px solid #c7d8c2;border-radius:25px;cursor:pointer;font-size:12px}
+.wref-info-rsvp__form input[type=radio]{accent-color:#c8ad76}
+.r-app.wref-app .wref-info-rsvp .r-rsvp-submit{background:linear-gradient(#dfd09f,#bfa56a)!important;color:#1b3625!important;border:0!important;min-height:50px!important;border-radius:28px!important;font-weight:600!important;margin:0!important;cursor:pointer}
+.wref-info-rsvp__form output{font-size:12px;color:#fff}
+.wref-info-rsvp__form small{color:#d9e5d7;font-size:11px;line-height:1.6}
+.r-app.wref-app .wref-info-details.r-details{display:block!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;padding:88px clamp(30px,8vw,110px) 105px!important;background:#f8f6ef!important;color:#21412d!important}
+.wref-info-facts{width:min(860px,100%);margin:0 auto;border-top:1px solid #d9d8c9}
+.wref-info-facts details{border-bottom:1px solid #d9d8c9}
+.wref-info-facts summary{display:flex;align-items:center;justify-content:space-between;list-style:none;cursor:pointer;gap:25px;padding:23px 6px;color:#234331;font:500 clamp(15px,1.7vw,20px)/1.45 Manrope,Arial,sans-serif}
+.wref-info-facts summary::-webkit-details-marker{display:none}
+.wref-info-facts summary b{font-size:26px;font-weight:400;color:#b6a078;transition:transform .15s}
+.wref-info-facts details[open] summary b{transform:rotate(45deg)}
+.wref-info-facts details p{font:400 14px/1.8 Manrope,Arial,sans-serif!important;margin:0 10px 23px!important;color:#526855!important}
+.wref-info-facts details a{color:#2f6940!important;text-decoration:underline}
+@media(max-width:720px){
+ .r-app.wref-app .wref-info-hero.v2-venue{grid-template-columns:1fr!important;min-height:0!important}
+ .wref-info-hero__photo{min-height:280px;height:300px}
+ .wref-info-hero__copy{padding:43px 25px 60px}
+ .r-app.wref-app .wref-info-hero h1{font-size:64px!important}
+ .wref-info-hero__copy p{font-size:13px!important}
+ .wref-info-places{padding:48px 22px 56px!important;gap:20px}
+ .wref-info-place{display:flex;flex-direction:column;min-height:0}
+ .wref-info-place--reverse .wref-info-place__photo{order:0}
+ .wref-info-place__photo{height:235px;min-height:235px}
+ .wref-info-place__text{padding:27px 28px 34px}
+ .r-app.wref-app .wref-info-place h2{font-size:64px!important;margin:12px 0 17px!important}
+ .wref-info-place__text p{font-size:13px!important}
+ .wref-info-dress.r-dress{padding:60px 23px 65px!important}
+ .r-app.wref-app .wref-info-section-title h2{font-size:65px!important}
+ .wref-info-section-title p{font-size:13px!important}
+ .wref-info-outfits{gap:8px}
+ .wref-info-outfits figure{height:190px;border-radius:10px}
+ .wref-info-colors i{width:30px;height:30px}
+ .r-app.wref-app .wref-info-rsvp.r-rsvp{display:block!important;padding:56px 26px 59px!important;text-align:center!important}
+ .wref-info-rsvp__copy{padding:0}
+ .r-app.wref-app .wref-info-rsvp h2{font-size:65px!important}
+ .wref-info-rsvp__copy p{margin:0 auto 22px!important;font-size:13px!important}
+ .wref-info-rsvp__form{margin:auto;max-width:400px;text-align:left}
+ .r-app.wref-app .wref-info-details.r-details{padding:65px 26px 88px!important}
+ .wref-info-facts summary{padding:20px 3px;font-size:14px}
+}
