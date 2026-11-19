@@ -13,7 +13,7 @@ const SORT_FIELDS=[
  ['display_name','Имя'],['first_name','Имя (отдельно)'],['last_name','Фамилия'],['name_en','Имя EN'],
  ['planning_status','Список / резерв'],['age_group','Возрастная категория'],['side','Сторона'],
  ['relation_to_couple','Кем приходится'],['relationship','Другие связи'],['community','Круг'],
- ['seating_group','Рассадка'],['decision','Решение о приглашении'],
+ ['seating_group','Компания для рассадки'],['decision','Решение о приглашении'],
  ['invitation_sent_at','Дата отправки приглашения'],['attendance','Ответ RSVP'],
  ['adults','Взрослые (RSVP)'],['children','Дети (RSVP)'],
  ['children_count','Детей разрешено'],['plus_one_allowed','Можно +1'],
@@ -182,7 +182,7 @@ export async function activateGuestDirectory(root){
    const headings=[
     ['Гость','display_name'],['Список','planning_status'],['Возраст','age_group'],
     ['Сторона','side'],['Кем приходится','relation_to_couple'],
-    ['Рассадка','seating_group'],['Решение','decision'],['Приглашение','invitation_sent_at'],
+    ['Рассадка (план)','seating_group'],['Решение','decision'],['Приглашение','invitation_sent_at'],
     ['Ответ','attendance'],['Детей +','children_count']
    ];
    for(const [name,key]of headings){
@@ -280,13 +280,27 @@ export async function activateGuestDirectory(root){
        ['city','Город','text'],['phone','Телефон','tel'],['email','Email','email'],
        ['language','Язык общения','select',LANGUAGES]
      ]);
-     group('Родство и рассадка',[
+     group('Знакомство и сопровождающие',[
        ['relation_to_couple','Отношение к паре','text'],
-       ['seating_group','Группа рассадки','text'],
-       ['community','Круг / сообщество','text'],
+       ['community','Круг знакомства','text'],
        ['plus_one_allowed','Разрешён +1','select',[['0','Нет'],['1','Да']]],
        ['children_count','Разрешено детей с этим гостем','number']
      ]);
+     // Seating is a future planning decision, not a duplicate social circle.
+     // Preserve values imported from spreadsheets, but don't present them
+     // alongside the social circle as two equivalent identity fields.
+     const seatingDetails=mk('details','ad-gb-legacy-details ad-gb-seating-details');
+     const seatingMatchesCommunity=s(g.seating_group)!==''&&
+       s(g.seating_group).toLocaleLowerCase('ru')===s(g.community).toLocaleLowerCase('ru');
+     seatingDetails.append(mk('summary','',
+       'Рассадка за столами'+(seatingMatchesCommunity?' · значение совпадает с кругом общения':'')));
+     form.append(seatingDetails);
+     const seatingGroup=group('План рассадки',[
+       ['seating_group','С кем посадить / компания для стола','text']
+     ],seatingDetails);
+     seatingGroup.append(mk('p','ad-gb-quiet-note',seatingMatchesCommunity
+       ?'Сейчас здесь повторён круг знакомства. Это исходная подсказка, а не подтверждённая рассадка. Значение сохранено; измените его, когда будете распределять гостей по столам.'
+       :'Круг знакомства — откуда вы знаете человека. Это поле — с кем он должен сидеть на празднике. Заполните или измените его при составлении плана рассадки.'));
      const bioDetails=mk('details','ad-gb-legacy-details ad-gb-bio-details');
      bioDetails.append(mk('summary','','Описания на русском и английском, заметки организаторов'));
      form.append(bioDetails);
@@ -296,7 +310,7 @@ export async function activateGuestDirectory(root){
        ['private_notes','Заметки организаторов','textarea']
      ],bioDetails);
      bio.append(mk('p','ad-gb-quiet-note',
-       'Здесь только уникальные описания. Повторяющие поле «Круг / сообщество» автоматические фразы не отображаются, но остаются в исходных данных.'));
+       'Здесь только уникальные описания. Автоматические фразы, повторяющие круг знакомства, не отображаются, но остаются в исходных данных.'));
      const advanced=mk('details','ad-gb-legacy-details');
      advanced.append(mk('summary','','Исходные поля: имя, фамилия, записи о связях'));
      const advancedFields=mk('div','ad-gb-edit-grid');
