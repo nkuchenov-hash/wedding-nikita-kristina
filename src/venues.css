@@ -311,3 +311,5 @@
 
 .vw-image-open.vw-photo-unavailable{display:grid;place-items:center;background:#e9eeea;color:#63766a;text-align:center}
 .vw-image-open.vw-photo-unavailable::after{content:'Нет фото';font-size:10px;line-height:1.1;padding:3px}
+
+.vw-image-open img[hidden]{display:none!important}
