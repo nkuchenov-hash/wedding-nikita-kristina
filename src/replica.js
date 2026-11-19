@@ -101,7 +101,7 @@ function home(){
  '<div class="wref-program-preview" id="program-preview"><div class="wref-section-head"><span>17 — 19 ИЮНЯ 2027</span><h2>Программа наших дней</h2>'+refRule()+'</div>'+
  '<div class="wref-days">'+
  refDay('17 июня','Официальная<br>регистрация','Начало в 14:00 — предварительно','estate','Усадьба Марьино','wref-day--garden','rings')+
- refDay('18 июня','Свободный день<br>в Петербурге','Прогулки, музеи и любимые места','bridge','Санкт-Петербург','wref-day--city','pin')+
+ refDay('18 июня','Свободный день<br>в Петербурге','Прогулки, музеи и любимые места','cityPhoto','Санкт-Петербург','wref-day--city','pin')+
  refDay('19 июня','Торжественная часть<br>и свадебный банкет','Время и площадка уточняются','boardTable','Санкт-Петербург','wref-day--party','glass')+
  '</div><a class="wref-text-link" href="#/schedule">Подробнее о программе <span aria-hidden="true">→</span></a></div>'+
  '<div class="wref-bridge-line">'+spbMotif+'</div>'+
