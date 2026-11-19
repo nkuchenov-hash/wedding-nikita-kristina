@@ -186,11 +186,11 @@ function venueDocuments(v){
 }
 function coveragePanel(v){
  const rows=venueBudgetCoverage(v);
- const name={priced:'Есть цена',included:'Включено',unknown:'Не подтверждено'};
- const missing=rows.filter(x=>x.state==='unknown').map(x=>x.label);
+ const name={priced:'Есть цена',included:'Включено',partial:'Частично',unknown:'Не подтверждено'};
+ const missing=rows.filter(x=>x.state==='unknown'||x.state==='partial').map(x=>x.label);
  return '<section class="vdp-pane vdp-budget-coverage"><h3>Проверка состава сметы</h3><p>В каждой площадке должны быть отдельно определены аренда, питание, техника и обслуживание. Неизвестная цена — не ноль и не подтверждение включения.</p><div class="vdp-budget-coverage-grid">'+rows.map(x=>
   '<div class="vdp-coverage-row '+h(x.state)+'"><div><strong>'+h(x.label)+'</strong><small>'+h(x.detail)+'</small></div><span>'+h(name[x.state]||'Неизвестно')+'</span></div>'
- ).join('')+'</div>'+(missing.length?'<p class="vdp-coverage-warning">Не подтверждены: '+h(missing.join(', '))+'. До их подтверждения сумму нельзя считать полной договорной стоимостью.</p>':'')+'</section>';
+ ).join('')+'</div>'+(missing.length?'<p class="vdp-coverage-warning">Не подтверждены полностью: '+h(missing.join(', '))+'. До их подтверждения сумму нельзя считать полной договорной стоимостью.</p>':'')+'</section>';
 }
 function transcriptBudget(v,guests){
  const options=transcriptAddons(v,guests),scenarios=transcriptMenuScenarios(v,guests);
