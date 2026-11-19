@@ -358,3 +358,15 @@ body:not(.admin-body) #app{width:100%!important;max-width:none!important}
   .wref-app .wref-day-content p{font-size:11px!important}
   .wref-app .wref-day-content small{font-size:10px!important}
 }
+
+/* Approved drawn Palace Bridge scene, copied from the actual selected design.
+   Do not substitute generic rectangles or re-use the hero's skyline. */
+.wref-app .wref-bridge-line{max-width:1440px!important;padding:0 2%!important;margin:4px auto -5px!important}
+.wref-app .wref-bridge-line .spb-drawbridge--approved{
+  display:block!important;width:100%!important;height:auto!important;max-height:225px!important;
+  object-fit:contain!important;opacity:.65!important;image-rendering:auto!important
+}
+@media(max-width:720px){
+ .wref-app .wref-bridge-line{padding:0 1%!important;margin:4px auto 0!important}
+ .wref-app .wref-bridge-line .spb-drawbridge--approved{max-height:115px!important;opacity:.67!important}
+}
