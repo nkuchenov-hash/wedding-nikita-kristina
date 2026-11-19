@@ -18,8 +18,13 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - name: Validate the actual source
-        run: npm run check
+      - name: Validate guest website and artwork without unrelated admin test dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/replica.js
+          node --check src/guest-online-entry.js
+          node --test tests/public-three-day.test.js
       - name: Stage an isolated guest website (no private data)
         shell: bash
         run: |
