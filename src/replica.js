@@ -72,7 +72,7 @@ function referenceHeader(path){
  '<nav id="wref-mobile-menu" class="wref-mobile-menu" aria-label="Мобильное меню" hidden>'+links.map(([p,n])=>'<a href="#'+p+'">'+n+'</a>').join('')+'<a href="#/" data-go-rsvp>Ответить на приглашение</a></nav>'+
  '</header>';
 }
-function refLeaf(cls=''){return '<svg viewBox="0 0 206 269" fill="none" class="wref-leaf '+cls+'" aria-hidden="true"><path d="M18 262C89 208 114 104 194 3" stroke="currentColor" stroke-width="1.9"/><path d="M51 226C17 214 9 184 13 167c33 3 46 20 51 46M79 187c26-2 54-25 58-47-34 1-53 13-67 34M89 161C55 151 42 120 46 103c32 8 48 25 54 46M121 116c34-8 49-34 52-52-32 4-49 19-56 40M142 77c-16-24-15-49-6-64 23 16 28 35 24 55M163 42c27-3 39-19 42-36-27 0-39 12-47 29" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity=".09"/></svg>'}
+function refLeaf(cls=''){return '<img class="wref-leaf '+cls+'" src="./public/board/02-invitation/leaves-top-transparent.png" alt="" aria-hidden="true" loading="lazy" decoding="async">'}
 function refRule(){return '<div class="wref-rule" aria-hidden="true"><i></i><span>❧</span><i></i></div>'}
 function refDay(date,title,caption,photoName,where,klass,ico){
  return '<article class="wref-day '+klass+'"><div class="wref-day-image">'+img(photoName,'','Иллюстрация: '+title)+'<div class="wref-day-shade"></div></div><div class="wref-day-content"><span class="wref-day-date">'+date+'</span><h3>'+title+'</h3><p>'+caption+'</p><small>'+ic(ico)+' '+where+'</small></div></article>';
