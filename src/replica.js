@@ -2,6 +2,7 @@
 import {wedding} from './data.js';
 const PHOTO={
  boardPortrait:'./public/production/portrait-extended-background.webp',
+ cityPhoto:'https://upload.wikimedia.org/wikipedia/commons/b/b1/Saint_Petersburg_Palace_Bridge%2C_St._Petersburg_%2837931957696%29.jpg',
  boardEstate:'./public/production/invitation-estate-clear.png',
  boardCherub:'./public/production/invitation-cherub.png',
  boardTable:'./public/board/03-program/banquet-clean.webp',
@@ -76,7 +77,7 @@ function refRule(){return '<div class="wref-rule" aria-hidden="true"><i></i><spa
 function refDay(date,title,caption,photoName,where,klass,ico){
  return '<article class="wref-day '+klass+'"><div class="wref-day-image">'+img(photoName,'','Иллюстрация: '+title)+'<div class="wref-day-shade"></div></div><div class="wref-day-content"><span class="wref-day-date">'+date+'</span><h3>'+title+'</h3><p>'+caption+'</p><small>'+ic(ico)+' '+where+'</small></div></article>';
 }
-function footer(){return '<footer class="r-footer">Никита <em>&</em> Кристина<span>Марьино × Санкт-Петербург · 17–19 июня 2027 · предварительно</span><small class="r-photo-credit">Фото пары и декора — временные иллюстративные материалы Pexels/Unsplash. На фото не Никита и Кристина. Фотографии Марьино предоставлены сайтом усадьбы; для постоянного использования потребуется разрешение правообладателя.</small></footer>'}
+function footer(){return '<footer class="r-footer">Никита <em>&</em> Кристина<span>Марьино × Санкт-Петербург · 17–19 июня 2027 · предварительно</span><small class="r-photo-credit">Фото пары и декора — временные иллюстративные материалы. На фото не Никита и Кристина. Вид Дворцового моста: <a href="https://commons.wikimedia.org/wiki/File:Saint_Petersburg_Palace_Bridge,_St._Petersburg_(37931957696).jpg" target="_blank" rel="noopener noreferrer">Michael Kuhn / Wikimedia Commons</a>, CC BY 2.0. Фотографии Марьино требуют согласования прав.</small></footer>'}
 function shell(path,body,cls=''){return '<div class="r-app wref-app '+cls+'">'+referenceHeader(path)+'<div class="r-site">'+body+footer()+'</div>'+bottom(path)+'</div>'}
 const spbMotif="<svg class=\"spb-skyline\" viewBox=\"0 0 900 226\" preserveAspectRatio=\"xMidYMax meet\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\"><g fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 183h878M16 197c110-8 190-8 283 0s188 8 286 0 208-8 299 0M22 210c78-7 145-7 213 0m77 0c74-7 158-7 248 0m58 0c96-7 174-7 246 0\" opacity=\".38\"/><path d=\"M51 182v-48h169v48M46 133h179l-12-13H59zM80 132v50m35-50v50m35-50v50m35-50v50M63 151h145m-146 15h145\"/><path d=\"M290 182v-61h158v61M280 122h177l-14-11H294zM311 121v61m25-61v61m66-61v61m25-61v61M321 109c8-32 27-49 48-49s40 17 48 49M364 60v-16m-6 0h12M301 146h138\"/><path d=\"M519 182V137h141v45M508 137h164l-16-12H522zM540 137v45m39-45v45m39-45v45M579 125V69m-21 0h42l-21-57-21 57zm14-57h14M578 8v-6M544 162h91\"/><path d=\"M704 182v-41h149v41M694 141h171l-17-10H711zM729 141v41m32-41v41m32-41v41m32-41v41M720 159h125\"/></g></svg>";
 function home(){
@@ -96,7 +97,7 @@ function home(){
  refLeaf('wref-invite-leaf wref-invite-leaf--l')+refLeaf('wref-invite-leaf wref-invite-leaf--r')+
  '<div class="wref-welcome"><figure class="wref-polaroid wref-polaroid--estate">'+img('estate','','Историческая усадьба Марьино')+'<figcaption>Марьино</figcaption></figure>'+
  '<div class="wref-welcome-message"><span class="wref-overline">С ЛЮБОВЬЮ ПРИГЛАШАЕМ</span><h2 id="w-invite-title">Дорогие друзья!</h2><p>Мы будем счастливы разделить с вами важные для нас дни: официальную регистрацию в усадьбе Марьино, свободный день в Петербурге и большой свадебный праздник 19 июня.</p>'+refRule()+'</div>'+
- '<figure class="wref-polaroid wref-polaroid--city">'+img('bridge','','Иллюстративный вид на мост')+'<figcaption>Санкт-Петербург</figcaption></figure></div>'+
+ '<figure class="wref-polaroid wref-polaroid--city">'+img('cityPhoto','','Иллюстративный вид на мост')+'<figcaption>Санкт-Петербург</figcaption></figure></div>'+
  '<div class="wref-program-preview" id="program-preview"><div class="wref-section-head"><span>17 — 19 ИЮНЯ 2027</span><h2>Программа наших дней</h2>'+refRule()+'</div>'+
  '<div class="wref-days">'+
  refDay('17 июня','Официальная<br>регистрация','Начало в 14:00 — предварительно','estate','Усадьба Марьино','wref-day--garden','rings')+
@@ -107,7 +108,7 @@ function home(){
  '<div class="wref-venues-preview"><div class="wref-section-head"><span>ДВА МЕСТА НАШЕЙ ИСТОРИИ</span><h2>Наши локации</h2>'+refRule()+'</div>'+
  '<div class="wref-venue-grid">'+
  '<article class="wref-venue-card"><div class="wref-venue-picture">'+img('estate','','Усадьба Марьино')+'</div><div class="wref-venue-copy"><span>17 ИЮНЯ</span><h3>Усадьба<br>Марьино</h3><p>Историческая усадьба в окружении парка. Здесь планируется официальная регистрация.</p><a href="#/info">Подробнее <span aria-hidden="true">→</span></a></div></article>'+
- '<article class="wref-venue-card"><div class="wref-venue-picture wref-venue-picture--city">'+img('bridge','','Иллюстративный петербургский мост')+'</div><div class="wref-venue-copy"><span>18–19 ИЮНЯ</span><h3>Санкт-<br>Петербург</h3><p>Город белых ночей и набережных. Место торжественной части пока выбираем.</p><a href="#/info">Подробнее <span aria-hidden="true">→</span></a></div></article>'+
+ '<article class="wref-venue-card"><div class="wref-venue-picture wref-venue-picture--city">'+img('cityPhoto','','Иллюстративный петербургский мост')+'</div><div class="wref-venue-copy"><span>18–19 ИЮНЯ</span><h3>Санкт-<br>Петербург</h3><p>Город белых ночей и набережных. Место торжественной части пока выбираем.</p><a href="#/info">Подробнее <span aria-hidden="true">→</span></a></div></article>'+
  '</div></div>'+
  '</section>'+
  '<section class="w-rsvp wref-rsvp" id="rsvp" aria-labelledby="w-rsvp-title">'+
