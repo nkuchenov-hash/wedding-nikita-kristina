@@ -16,7 +16,7 @@ const SORT_FIELDS=[
  ['seating_group','Компания для рассадки'],['decision','Решение о приглашении'],
  ['invitation_sent_at','Дата отправки приглашения'],['attendance','Ответ RSVP'],
  ['adults','Взрослые (RSVP)'],['children','Дети (RSVP)'],
- ['children_count','Детей разрешено'],['plus_one_allowed','Можно +1'],
+ ['plus_one_allowed','Можно +1'],
  ['city','Город'],['phone','Телефон'],['email','Email'],['language','Язык'],
  ['about','Профиль RU'],['about_en','Профиль EN'],['source_person_id','ID'],
  ['created_at','Создан'],['updated_at','Обновлён'],['response_source','Источник RSVP'],
@@ -107,7 +107,7 @@ export async function activateGuestDirectory(root){
    if(val===''&&p.attendance&&!confirm('Очистить ранее сохранённый ответ?'))return;
    const attending=val==='yes'||val==='maybe';
    const adults=attending?Math.max(1,Math.min(Number(p.adults)||1,1+Number(p.plus_one_allowed||0))):0;
-   const children=attending&&childrenEnabled?Math.min(Number(p.children||0),Number(p.children_count||0)):0;
+   const children=attending&&childrenEnabled?Math.max(0,Math.min(16,Number(p.children)||0)):0;
    const result=await request('admin/guest/rsvp',{method:'PATCH',csrf,body:{
      id:p.id,attendance:val,adults,children,transport_needed:!!Number(p.transport_needed||0),
      arrival_notes:s(p.arrival_notes),dietary_notes:s(p.dietary_notes),other_notes:s(p.other_notes)
@@ -127,7 +127,7 @@ export async function activateGuestDirectory(root){
      const opts=options?[[raw,labels[raw]||raw||placeholder],...options.filter(([v])=>v!==raw)]:null;
      const input=opts?select(opts,raw):mk('input','ad-gb-cell-input');
      input.className='ad-gb-cell-input';
-     if(!opts){input.type=key==='children_count'?'number':'text';input.value=raw;input.maxLength=key==='relation_to_couple'?320:255;if(key==='children_count'){input.min='0';input.max='15'}}
+     if(!opts){input.type='text';input.value=raw;input.maxLength=key==='relation_to_couple'?320:255}
      td.append(input);input.focus();if(!opts)input.select();
      let finished=false;
      const restore=()=>{if(finished)return;finished=true;editing=false;input.remove();btn.hidden=false};
@@ -183,7 +183,7 @@ export async function activateGuestDirectory(root){
     ['Гость','display_name'],['Список','planning_status'],['Возраст','age_group'],
     ['Сторона','side'],['Кем приходится','relation_to_couple'],
     ['Рассадка (план)','seating_group'],['Решение','decision'],['Приглашение','invitation_sent_at'],
-    ['Ответ','attendance'],['Детей +','children_count']
+    ['Ответ','attendance']
    ];
    for(const [name,key]of headings){
      const th=mk('th'),button=mk('button','ad-gb-th-sort',name+(sort.value===key?(descending?' ↓':' ↑'):''));
@@ -209,8 +209,7 @@ export async function activateGuestDirectory(root){
      row.append(nameCell,planning,age,editCell(p,'side','Уточнить',SIDES.filter(([v])=>v!=='all')),
        editCell(p,'relation_to_couple','Уточнить'),
        editCell(p,'seating_group','Не указана'),editCell(p,'decision','Не решено',decisionChoices),
-       sent,editCell(p,'attendance','Не ответил',ANSWERS),
-       editCell(p,'children_count','0',Array.from({length:16},(_,i)=>[String(i),String(i)])));
+       sent,editCell(p,'attendance','Не ответил',ANSWERS));
      if(!childrenEnabled&&isChild(p))nameCell.append(badge('Дети отключены','draft'));
      body.append(row);
    }
@@ -283,8 +282,7 @@ export async function activateGuestDirectory(root){
      group('Знакомство и сопровождающие',[
        ['relation_to_couple','Отношение к паре','text'],
        ['community','Круг знакомства','text'],
-       ['plus_one_allowed','Разрешён +1','select',[['0','Нет'],['1','Да']]],
-       ['children_count','Разрешено детей с этим гостем','number']
+       ['plus_one_allowed','Разрешён +1','select',[['0','Нет'],['1','Да']]]
      ]);
      // Seating is a future planning decision, not a duplicate social circle.
      // Preserve values imported from spreadsheets, but don't present them
@@ -311,21 +309,7 @@ export async function activateGuestDirectory(root){
      ],bioDetails);
      bio.append(mk('p','ad-gb-quiet-note',
        'Здесь только уникальные описания. Автоматические фразы, повторяющие круг знакомства, не отображаются, но остаются в исходных данных.'));
-     const advanced=mk('details','ad-gb-legacy-details');
-     advanced.append(mk('summary','','Исходные поля: имя, фамилия, записи о связях'));
-     const advancedFields=mk('div','ad-gb-edit-grid');
-     for(const [key,label,type]of [
-       ['first_name','Имя для обращения в анкете','text'],
-       ['last_name','Фамилия отдельно','text'],
-       ['relationship','Исходный текст родственных связей','textarea']
-     ]){
-       const value=displayedFieldValue(key);
-       controls[key]=field(advancedFields,label,key,value,type);
-       initial[key]=value;
-     }
-     advanced.append(mk('p','ad-gb-quiet-note',
-       'Имя и фамилия используются в обращениях; исходная запись о родстве сохранена для справки. Это не дополнительные гости и не отдельный список.'));
-     advanced.append(advancedFields);form.append(advanced);
+
      const submit=mk('button','ad-gb-primary','Сохранить изменения');submit.type='submit';
      const feedback=mk('span','ad-gb-feedback'),buttons=mk('div','ad-gb-edit-actions');
      buttons.append(submit,feedback);form.append(buttons);profile.append(form);
@@ -419,7 +403,7 @@ export async function activateGuestDirectory(root){
      const rsp=mk('form','ad-gb-edit-grid'),r={};
      r.attendance=field(rsp,'Участие','attendance',g.attendance||'','select',ANSWERS);
      r.adults=field(rsp,'Взрослых','adults',g.adults??1,'number');
-     r.children=field(rsp,'Детей','children',g.children??0,'number');
+     r.children=field(rsp,'Детей, которые придут с гостем','children',g.children??0,'number');
      r.transport_needed=field(rsp,'Нужен трансфер','transport_needed',g.transport_needed||0,'select',[['0','Нет'],['1','Да']]);
      r.dietary_notes=field(rsp,'Питание и аллергии','dietary_notes',g.dietary_notes||'','textarea');
      r.arrival_notes=field(rsp,'Транспорт и прибытие','arrival_notes',g.arrival_notes||'','textarea');
@@ -531,7 +515,7 @@ export async function activateGuestDirectory(root){
      ['relation_to_couple','Кем приходится'],['relationship','Связи'],['seating_group','Рассадка'],
      ['decision','Решение'],['invitation_sent_at','Отправлено'],
      ['attendance','RSVP'],['adults','Взрослые'],['children','Дети'],['plus_one_allowed','Можно +1'],
-     ['children_count','Дети разрешены'],['city','Город'],['phone','Телефон'],['email','Email'],
+     ['city','Город'],['phone','Телефон'],['email','Email'],
      ['community','Круг'],['about','О человеке'],['about_en','О человеке EN'],['private_notes','Заметки']];
    const safe=v=>{let t=s(v);if(/^[=+\-@\t\r]/.test(t))t="'"+t;return '"'+t.replace(/"/g,'""')+'"';};
    const contents='\uFEFF'+[fields.map(x=>safe(x[1])).join(';'),...people.map(p=>fields.map(([k])=>safe(p[k])).join(';'))].join('\r\n');
