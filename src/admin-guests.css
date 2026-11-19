@@ -128,3 +128,10 @@ body.ad-gb-lock{overflow:hidden}
  .ad-gb-unified-form{gap:18px}
  .ad-gb-field-group + .ad-gb-field-group{padding-top:16px}
 }
+
+/* Optional descriptions don't compete with the unique guest facts. */
+.ad-gb-bio-details{background:#fbfdfb}
+.ad-gb-bio-details .ad-gb-field-group{padding-top:4px}
+.ad-gb-bio-details .ad-gb-field-group h4{display:none}
+.ad-gb-bio-details[open] .ad-gb-field-group .ad-gb-edit-grid{margin-top:4px}
+.ad-gb-bio-details summary{font-size:14px}
