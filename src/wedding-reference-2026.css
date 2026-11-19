@@ -370,3 +370,14 @@ body:not(.admin-body) #app{width:100%!important;max-width:none!important}
  .wref-app .wref-bridge-line{padding:0 1%!important;margin:4px auto 0!important}
  .wref-app .wref-bridge-line .spb-drawbridge--approved{max-height:115px!important;opacity:.67!important}
 }
+
+/* 2026-11-19 visual QA: photographic botanical foliage replaces crude wireframe leaves. */
+.wref-app .wref-leaf{object-fit:contain!important;object-position:center!important;filter:drop-shadow(0 5px 7px rgba(22,55,30,.16))!important;opacity:.86!important}
+.wref-app .wref-invite-leaf{width:170px!important;height:165px!important;opacity:.72!important}
+.wref-app .wref-invite-leaf--l{top:12px!important;left:-28px!important;transform:scaleX(-1) rotate(-12deg)!important}
+.wref-app .wref-invite-leaf--r{top:35px!important;right:-25px!important;transform:rotate(18deg)!important}
+.wref-app .wref-hero-decor .wref-leaf{filter:sepia(.12) saturate(1.1) drop-shadow(0 3px 5px rgba(0,0,0,.25))!important}
+.wref-app .wref-polaroid--estate{transform:rotate(-4deg) scale(.94)!important}
+.wref-app .wref-polaroid--city{transform:rotate(4deg) scale(.94)!important;margin-top:42px!important}
+@media(min-width:721px) and (max-width:1050px){.wref-app .wref-welcome{grid-template-columns:minmax(0,24%) minmax(0,48%) minmax(0,24%);gap:2%;padding-left:28px;padding-right:28px}.wref-app .wref-polaroid img{height:175px!important}.wref-app .wref-polaroid{padding:7px 7px 13px!important}.wref-app .wref-welcome-message h2{font-size:clamp(43px,5vw,60px)!important}.wref-app .wref-welcome-message p{font-size:clamp(12px,1.45vw,15px)!important}}
+@media(max-width:720px){.wref-app .wref-invite-leaf--l{left:-53px!important;top:32px!important}.wref-app .wref-invite-leaf--r{top:242px!important;right:-62px!important}.wref-app .wref-hero-decor--a{right:-38px!important;top:-17px!important}.wref-app .wref-hero-decor--b{display:none!important}}
