@@ -47,7 +47,7 @@ const FEATURED_COVERS={
  'panorama':'1PwrAgzMU1kmK772YRhQWuQNGrfaU1d0X',     // building from outside
  'harmony':'1giLTNx8i-okBCfyiZChmaC0I3MTVsaAe',      // wide main event hall
  'palma':'1NoeveNL-VYzPILfXxUiC4nzBcgV_4BSp',       // curated Palma hall
- 'maryino':'maryino-white-hall-banquet-1'                // verified White Hall banquet interior
+ 'maryino':'1YIPooHlaubLUlADcQsbehmXEJboaJtoh'           // organizer's original White Hall interior, 31 Oct 2026
 };
 // In the current Maryino phone album there is no qualifying building or
 // banquet-hall photograph. A neutral hero is preferable to a painting/close-up.
