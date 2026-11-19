@@ -7,9 +7,17 @@ export function transcriptAddons(v,guests){
  const selected=v.visitSelectedAddons||{};
  return (Array.isArray(v.visitAddons)?v.visitAddons:[])
   .filter(x=>x&&typeof x.id==='string'&&amount(x.amount)!==null&&['fixed','perGuest'].includes(x.unit))
-  .map(x=>({...x,total:Math.round(x.amount*(x.unit==='perGuest'?count:1)),
+  .map(x=>{
+   // A replacement equipment configuration charges only the incremental
+   // difference from the organizer's current price, never the full package twice.
+   const current=amount(v.cost?.[x.alreadyQuotedField]);
+   const upgrade=amount(x.upgradeTargetTotal);
+   const unitAmount=x.alreadyQuotedField&&upgrade!==null&&current!==null
+     ? Math.max(0,upgrade-current) : x.amount;
+   return {...x,total:Math.round(unitAmount*(x.unit==='perGuest'?count:1)),
    selected:selected[x.id]===true,
-   potentialDuplicate:!!x.category&&Number(v.extras?.[x.category])>0}));
+   potentialDuplicate:!!x.category&&Number(v.extras?.[x.category])>0};
+  });
 }
 export function transcriptAddonTotal(v,guests){
  return transcriptAddons(v,guests).reduce((sum,x)=>sum+(x.selected?x.total:0),0);
