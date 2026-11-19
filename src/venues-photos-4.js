@@ -44,7 +44,22 @@ export const VENUE_PHOTOS_4 = {
       "folder": "1kt7XLaOZ8KYSzBTMhEkdc2oFI014zkp5"
     }
   ],
-  "roof18": [],
+  "roof18": [
+    {
+      "id": "web-roof18-1",
+      "name": "Крыша 18 — панорамный зал",
+      "section": "Залы",
+      "src": "https://img.restoclub.ru/uploads/place/e/c/a/0/eca09ef22c9b9ea4bfc76991019e8e0a_w1200_h630.webp",
+      "sourceUrl": "https://www.restoclub.ru/spb/place/krysha-18"
+    },
+    {
+      "id": "web-roof18-2",
+      "name": "Крыша 18 — терраса",
+      "section": "Террасы и виды",
+      "src": "https://assets.allcafe.ru/k/places/1920x1080/pic/places/37642/935b89dd6434f0eca03f238ed9f8148f.jpeg",
+      "sourceUrl": "https://spb.allcafe.ru/catalog/krysha-18/"
+    }
+  ],
   "repino-riviera": [
     {
       "id": "1kxl6Z-iLK1X1GaKUpkv4KS3uDs7HXWhL",
@@ -233,6 +248,83 @@ export const VENUE_PHOTOS_4 = {
       "name": "IMG_20261107_125513_606.jpg",
       "section": "Общий альбом",
       "folder": "1fVfrSjWndp7pGqMCYgvmIeOcc-M49AdM"
+    }
+  ],
+  "360": [
+    {
+      "id": "web-360-1",
+      "name": "Пространство 360 — панорамный зал",
+      "section": "Залы",
+      "src": "https://p0.zoon.ru/preview/idouNUxsghlgNMxvP0gQnw/1200x800x85/1/c/3/original_6442443d96231d672a046f95_667145d02add53.09089617.jpg",
+      "sourceUrl": "https://zoon.ru/spb/restaurants/banketnyj_zal_prostranstvo_360/"
+    }
+  ],
+  "kraft": [
+    {
+      "id": "web-kraft-1",
+      "name": "Крафт Лофт — банкетный зал",
+      "section": "Залы",
+      "src": "https://s.restorating.ru/places/1920x1080/places/43574/624ebef42b9bb.jpg",
+      "sourceUrl": "https://www.restorating.ru/spb/catalogue/kraft-loft"
+    }
+  ],
+  "bali": [
+    {
+      "id": "web-bali-1",
+      "name": "Bali — банкетный зал",
+      "section": "Залы",
+      "src": "https://www.fabrika-horeca.ru/images/mebel/restoran-bali--g--sankt-peterburg--ul--savushkina--98-1200x800-20207.jpg",
+      "sourceUrl": "https://www.fabrika-horeca.ru/portfolio/restoran-bali-g-sanktpeterburg-ul-savushkina-98.html"
+    },
+    {
+      "id": "web-bali-2",
+      "name": "Bali — свадебная рассадка",
+      "section": "Залы",
+      "src": "https://spb.restoran.ru/upload/resize_cache/iblock/43a/948_800_1/img_7452_-kopiya.jpg",
+      "sourceUrl": "https://spb.restoran.ru/spb/detailed/restaurants/bali/"
+    }
+  ],
+  "ambassador": [
+    {
+      "id": "web-ambassador-1",
+      "name": "Амбассадор — банкетный зал",
+      "section": "Залы",
+      "src": "https://spb.banketresto.ru/images/cms/thumbs/fba6ad9b2f8771a85c74ed10c56da4c6cd2bb277/ambassador_2_685_450.jpg",
+      "sourceUrl": "https://spb.banketresto.ru/restorans/restoran_ambassador/"
+    }
+  ],
+  "english-roof": [
+    {
+      "id": "web-english-roof-1",
+      "name": "Крыша на Английской — церемония",
+      "section": "Террасы и виды",
+      "src": "https://catering-spb.ru/assets/images/resources/174/654jpg.jpg",
+      "sourceUrl": "https://catering-spb.ru/plowadki/v_cherte_goroda/skorohod/"
+    },
+    {
+      "id": "web-english-roof-2",
+      "name": "Крыша на Английской — терраса",
+      "section": "Террасы и виды",
+      "src": "https://catering-spb.ru/assets/images/resources/174/c03e37c6-21f6-45d7-9e09-26f5c1ccd2d9.jpg",
+      "sourceUrl": "https://catering-spb.ru/plowadki/v_cherte_goroda/skorohod/"
+    }
+  ],
+  "eva": [
+    {
+      "id": "web-eva-1",
+      "name": "EVA Летний — белый шатёр",
+      "section": "Залы",
+      "src": "https://img.svadbanaprirode.com/co2UFUYAPut6GxBquVCeGaxHpspM6J0pIQ_R4HGT-bBpNlAZN12uOAjE_hIxokKpbu_7bulvQ8zBbrfvJNYu5iQ3K6nl8d20mDRgMw%3Dw710-h472-l80-rw",
+      "sourceUrl": "https://svadbanaprirode.com/spb/catalog/1602/"
+    }
+  ],
+  "zhemchuzhny": [
+    {
+      "id": "web-zhemchuzhny-1",
+      "name": "Event Hall Жемчужный — основной зал",
+      "section": "Залы",
+      "src": "https://static.tildacdn.com/tild6365-6534-4361-b062-326339663836/IMG_0459.jpg",
+      "sourceUrl": "https://xn--80aaaav9bebfeihcggq.xn--p1ai/prl"
     }
   ],
   "maryino": [
