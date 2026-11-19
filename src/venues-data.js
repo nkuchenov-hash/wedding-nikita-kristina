@@ -1094,13 +1094,183 @@ export const VENUE_RECORDS = {
     ],
     "gallery": [
       {
+        "id": "1ILtBcc9Zwz8LxPZElvyoM03eS386XRTH",
+        "label": "IMG_20261031_111346_230.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "15XYTKRcNzT2pSQ3P6p3blpkeGVuTwmzB",
+        "label": "IMG_20261031_111348_889.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1xjzJEwQApw_vBIqAC_yPpjZyuimGC6gp",
+        "label": "IMG_20261031_111356_228.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1MYb5uLi9lpVNDoCIBbv4vvBNgGPZQWFf",
+        "label": "IMG_20261031_111455_844.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1iVWthkWqssaj8GlN8Bf-sndJlDcnbPCq",
+        "label": "IMG_20261031_111539_513.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1QJzfsySsuHcT7VTMRtdVsQrHbr9U7CVE",
+        "label": "IMG_20261031_111546_942.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1oIBb256u9entF8fRTiBMVepctFg3ZNpc",
+        "label": "IMG_20261031_111617_702.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1A9ZauPeRBC182oa3aO--wFDkcm2k6InK",
+        "label": "IMG_20261031_111629_935.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1wh5FvPvZ6FwxyQnItczyIvdRAQIhlknM",
+        "label": "IMG_20261031_111643_377.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1UDSn8veaE3evuaTXu-A0cNEufl74l2ae",
+        "label": "IMG_20261031_111648_601.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "153EcBe5ta30CwnIOPzxF5Vda2Rxoo8mG",
+        "label": "IMG_20261031_111845_980.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1JFC0iHW-yfbApIVv4HyC9UMSagLKd3tP",
+        "label": "IMG_20261031_111853_927.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "15GyFPH-Hy_96om06lYAiAO7wP8RB9Vus",
+        "label": "IMG_20261031_111939_086.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1CIQoTwBxmDeF5YKDlQDv3sf579RwzDg2",
+        "label": "IMG_20261031_111949_425.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "13ig5RuCpyWKwoSi0rrJOTGU3lFnNiWnf",
+        "label": "IMG_20261031_111953_063.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1Omy_ZNcCGDgv8CTaBHW9SXNLtp9CjQzZ",
+        "label": "IMG_20261031_111956_494.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1RwuuLByl7_gZ2Jg-qOu39uPIkA7xFTP-",
+        "label": "IMG_20261031_112704_594.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1IZkE2T08y8GjGHRTSHoo3CpwA51kgfBl",
+        "label": "IMG_20261031_113040_660.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "154TydFAogSXEvpq6qVnHpxa1rsAlvL71",
+        "label": "IMG_20261031_115029_751.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1YIPooHlaubLUlADcQsbehmXEJboaJtoh",
+        "label": "IMG_20261031_115200_257.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1JNrltGY35VD3ffpODcXpk2zgavcYXuU0",
+        "label": "IMG_20261031_115242_015.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1sajkIdeiEYRWEoEYlrb36Rl8zfjXlGvT",
+        "label": "IMG_20261031_115246_830.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1stMsihnnNSrAKTvUoz_IT4bI94SxkoEq",
+        "label": "IMG_20261031_115357_694.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1164tZiNmz-49dDsrSV4tGPaF0JjhNY1S",
+        "label": "IMG_20261031_115401_410.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "10ZcamVYKi3KgFxWSi4OLvtoIpFV2UonA",
+        "label": "IMG_20261031_115448_285.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "13VG__xEnMHpJDavNbhfMvNmmrWu1V4wc",
+        "label": "IMG_20261031_115907_414.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1Au-Cmbn9M4GqennJxXAa8qfXh4vh_-xb",
+        "label": "IMG_20261031_121050_681.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
         "id": "1zFfBPwAtpRvC4CuI2jK5iyX4G4RD4XM_",
         "label": "Осмотр усадьбы",
         "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
       },
       {
+        "id": "1YBb5Xe_UbHLfCH06wPKyzParL3Ajyu0X",
+        "label": "IMG_20261031_121701_636.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1t47kS9k1IwwXvjmIESyPUnOUigIUuUMO",
+        "label": "IMG_20261031_121823_917.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1F0u2AAFaTSfjIWFyCw3tFe2VXSkObkUe",
+        "label": "IMG_20261031_122533_807.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
         "id": "1CKS_kkofCeYfmA3nghqFXs-unRfsph2u",
         "label": "Территория и залы",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1n5ks4Mt-bjulnncOMZ022oPuelMKSON8",
+        "label": "IMG_20261031_130612_469.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "11CWd8hpWEFEiwSmwOR41Of4u19KOCq60",
+        "label": "IMG_20261031_130621_970.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "1nuODkgBQRGaVIvIXIRJVc1h1LNnyGaql",
+        "label": "IMG_20261031_135050_348.jpg",
+        "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+      },
+      {
+        "id": "12Tjwv2R0O0uQTfcvveX5tNfB81m_SDmu",
+        "label": "IMG_20261031_144633_996.jpg",
         "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
       }
     ],
