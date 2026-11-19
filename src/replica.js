@@ -206,7 +206,41 @@ function details(){return '<section class="r-details">'+heading('КОНТАКТ�
  ['gift','Подарки','Пожелания пары пока уточняются.'],
  ['info','Будут вопросы?','Контакты организаторов появятся перед отправкой приглашений.']].map(([ico,title,body])=>'<details><summary>'+ic(ico)+'<span>'+title+'</span><b>⌄</b></summary><p>'+body+'</p></details>').join('')+'</div>'+
  '<div class="r-details-bottom">'+img('lake','','Летний усадебный парк и пруд')+'</div></section>'}
-function info(){return shell('/info',venue()+cityCelebration()+dress()+rsvp()+details(),'r-info')}
+function info(){
+ const directions='https://yandex.ru/maps/?text=%D1%83%D1%81%D0%B0%D0%B4%D1%8C%D0%B1%D0%B0%20%D0%9C%D0%B0%D1%80%D1%8C%D0%B8%D0%BD%D0%BE%20%D0%90%D0%BD%D0%B4%D1%80%D0%B8%D0%B0%D0%BD%D0%BE%D0%B2%D0%BE';
+ return shell('/info',
+ '<div class="wref-info">'+
+ '<section class="wref-info-hero v2-venue" aria-labelledby="wref-places-title">'+
+ '<div class="wref-info-hero__photo">'+img('boardEstate','','Историческая усадьба и парк в летней зелени',true)+'</div>'+
+ '<div class="wref-info-hero__copy"><span class="wref-overline">17–19 ИЮНЯ · МАРЬИНО И ПЕТЕРБУРГ</span>'+
+ '<h1 id="wref-places-title">Места нашей <em>истории</em></h1><p>От исторической усадьбы к набережным города. Два места, связанные одним праздником.</p>'+refRule()+'</div>'+
+ '</section>'+
+ '<section class="wref-info-places" aria-label="Места праздника">'+
+ '<article class="wref-info-place"><div class="wref-info-place__photo">'+img('boardEstate','','Усадьба Марьино')+'</div><div class="wref-info-place__text"><span class="wref-overline">17 ИЮНЯ · РЕГИСТРАЦИЯ</span><h2>Усадьба<br><em>Марьино</em></h2><p>Официальная регистрация среди зелени, садовых скульптур и усадебной архитектуры.</p><p class="wref-info-place__note">Начало в 14:00 — предварительно</p><a class="wref-outline-link" href="'+directions+'" target="_blank" rel="noopener noreferrer">Посмотреть на карте →</a></div></article>'+
+ '<article class="wref-info-place wref-info-place--reverse"><div class="wref-info-place__photo">'+img('cityPhoto','','Санкт-Петербург, городские набережные')+'</div><div class="wref-info-place__text"><span class="wref-overline">18 И 19 ИЮНЯ · ПЕТЕРБУРГ</span><h2>Санкт-<br><em>Петербург</em></h2><p>18 июня — свободный день для прогулок. 19 июня — торжественная часть, ужин и праздничный вечер.</p><p class="wref-info-place__note">Площадка 19 июня и время начала уточняются</p><a class="wref-outline-link" href="#/schedule">Программа трёх дней →</a></div></article>'+
+ '</section>'+
+ '<section class="wref-info-dress r-dress" id="dress" aria-labelledby="dress-title">'+
+ '<div class="wref-info-section-title"><span class="wref-overline">АТМОСФЕРА НАШЕГО ПРАЗДНИКА</span><h2 id="dress-title">Дресс-код</h2><p>Природные оттенки, элегантные образы и лёгкие ткани — наша палитра вдохновения, но не обязательное требование.</p>'+refRule()+'</div>'+
+ '<div class="wref-info-colors" aria-label="Цвета вдохновения"><i style="background:#244e34"></i><i style="background:#638b60"></i><i style="background:#c9d1b9"></i><i style="background:#e7e3d7"></i><i style="background:#c6ae79"></i></div>'+
+ '<div class="wref-info-outfits"><figure>'+img('boardOutfit1','','Элегантный тёмный костюм')+'</figure><figure>'+img('boardOutfit2','','Наряд насыщенного зелёного оттенка')+'</figure><figure>'+img('boardOutfit3','','Классический праздничный образ')+'</figure></div>'+
+ '</section>'+
+ '<section class="wref-info-rsvp r-rsvp" id="rsvp" aria-labelledby="info-rsvp-title">'+
+ '<div class="wref-info-rsvp__copy"><span class="wref-overline">ПОДТВЕРЖДЕНИЕ УЧАСТИЯ</span><h2 id="info-rsvp-title">Будете <em>с нами?</em></h2><p>Расскажите, планируете ли вы быть на празднике. Участие в отдельных событиях уточним персонально.</p></div>'+
+ '<form data-rsvp class="wref-info-rsvp__form"><label>Ваше имя<input name="name" type="text" maxlength="100" autocomplete="name" placeholder="Как к вам обращаться" required></label>'+
+ '<fieldset><legend>Ваш ответ</legend><label><input type="radio" name="yesno" value="yes" checked> Да, буду</label><label><input type="radio" name="yesno" value="no"> К сожалению, не смогу</label></fieldset>'+
+ '<button type="submit" class="r-rsvp-submit">Посмотреть ответ →</button><output role="status" aria-live="polite"></output>'+
+ '<small>Это предварительный просмотр: ничего не отправляется и не сохраняется.</small></form></section>'+
+ '<section class="wref-info-details r-details" aria-labelledby="useful-title">'+
+ '<div class="wref-info-section-title"><span class="wref-overline">ПЕРЕД ПРАЗДНИКОМ</span><h2 id="useful-title">Полезная информация</h2><p>Подробности добавим после подтверждения программы.</p>'+refRule()+'</div>'+
+ '<div class="wref-info-facts">'+
+ '<details><summary>Как добраться до Марьино? <b>+</b></summary><p>Ленинградская область, Тосненский район, деревня Андрианово. <a href="'+directions+'" target="_blank" rel="noopener noreferrer">Открыть маршрут на карте</a>.</p></details>'+
+ '<details><summary>Где будет торжество 19 июня? <b>+</b></summary><p>В Санкт-Петербурге. Площадку и точное время сообщим после окончательного решения.</p></details>'+
+ '<details><summary>Будет ли общий сбор 18 июня? <b>+</b></summary><p>Нет, этот день планируется свободным: можно гулять по городу и выбрать свой маршрут.</p></details>'+
+ '<details><summary>Где остановиться и кому задать вопрос? <b>+</b></summary><p>Рекомендации по размещению и контакты появятся вместе с подтверждённой программой.</p></details>'+
+ '</div></section>'+
+ '</div>','r-info');
+}
+
 export function renderGuest(path){
  if(path==='/')return home();
  if(path==='/schedule')return schedule();
