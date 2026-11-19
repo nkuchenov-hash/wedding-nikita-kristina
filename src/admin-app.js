@@ -59,3 +59,49 @@ function render(){
 }
 window.addEventListener('hashchange',render);
 render();
+
+// Release freshness: the live SQLite auto-refresh covers *data*, not JavaScript.
+// When REG.RU receives a newer private admin release, detect it without losing
+// unsaved guest/venue form edits. Never silently reload an active editor.
+const loadedRevision=new URL(import.meta.url).searchParams.get('v')||'';
+let latestRevision='',refreshChecking=false;
+function showReleaseBanner(){
+ if(document.querySelector('#ad-release-banner'))return;
+ const banner=document.createElement('div');banner.id='ad-release-banner';
+ banner.setAttribute('role','status');
+ Object.assign(banner.style,{position:'fixed',top:'12px',left:'50%',transform:'translateX(-50%)',
+   width:'min(560px,calc(100% - 30px))',zIndex:'2147483600',background:'#204b37',
+   color:'#fff',borderRadius:'12px',boxShadow:'0 12px 32px #0004',
+   padding:'14px 16px',display:'flex',alignItems:'center',gap:'14px',
+   font:'500 14px/1.4 system-ui,Arial,sans-serif'});
+ const text=document.createElement('span');
+ text.textContent='Сайт обновлён. Перезагрузите страницу, чтобы увидеть исправления.';
+ text.style.flex='1';
+ const button=document.createElement('button');button.type='button';
+ button.textContent='Обновить сейчас';
+ Object.assign(button.style,{border:'0',borderRadius:'8px',cursor:'pointer',
+   padding:'10px 13px',color:'#153c29',background:'#eef5ee',fontWeight:'700'});
+ button.addEventListener('click',()=>{
+   const unsaved=document.querySelector('.ad-gb-lock')||
+      document.querySelector('form input:focus,form textarea:focus,form select:focus');
+   if(unsaved&&!confirm('Обновить сайт? Несохранённые изменения в открытой форме могут потеряться.'))return;
+   location.reload();
+ });
+ banner.append(text,button);document.body.append(banner);
+}
+async function checkRelease(){
+ if(!loadedRevision||refreshChecking||document.visibilityState!=='visible')return;
+ refreshChecking=true;
+ try{
+   const response=await fetch('/build-info.json?_='+Date.now(),{cache:'no-store',credentials:'same-origin'});
+   if(!response.ok)return;
+   const info=await response.json();
+   latestRevision=String(info?.revision||'');
+   if(latestRevision&&latestRevision!==loadedRevision)showReleaseBanner();
+ }catch{/* Temporary network failure must never break the editor. */}
+ finally{refreshChecking=false}
+}
+setInterval(checkRelease,20000);
+window.addEventListener('focus',checkRelease);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkRelease()});
+checkRelease();
