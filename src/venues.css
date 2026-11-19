@@ -308,3 +308,6 @@
  .vw-control-board .vw-venue-media,.vw-control-board .vw-image-open{flex-basis:43px;width:43px;height:45px}
  .vw-control-board .vw-image-open>.vw-row-thumb{width:43px;height:45px}
 }
+
+.vw-image-open.vw-photo-unavailable{display:grid;place-items:center;background:#e9eeea;color:#63766a;text-align:center}
+.vw-image-open.vw-photo-unavailable::after{content:'Нет фото';font-size:10px;line-height:1.1;padding:3px}
