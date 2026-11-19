@@ -381,3 +381,34 @@ body:not(.admin-body) #app{width:100%!important;max-width:none!important}
 .wref-app .wref-polaroid--city{transform:rotate(4deg) scale(.94)!important;margin-top:42px!important}
 @media(min-width:721px) and (max-width:1050px){.wref-app .wref-welcome{grid-template-columns:minmax(0,24%) minmax(0,48%) minmax(0,24%);gap:2%;padding-left:28px;padding-right:28px}.wref-app .wref-polaroid img{height:175px!important}.wref-app .wref-polaroid{padding:7px 7px 13px!important}.wref-app .wref-welcome-message h2{font-size:clamp(43px,5vw,60px)!important}.wref-app .wref-welcome-message p{font-size:clamp(12px,1.45vw,15px)!important}}
 @media(max-width:720px){.wref-app .wref-invite-leaf--l{left:-53px!important;top:32px!important}.wref-app .wref-invite-leaf--r{top:242px!important;right:-62px!important}.wref-app .wref-hero-decor--a{right:-38px!important;top:-17px!important}.wref-app .wref-hero-decor--b{display:none!important}}
+
+/* Keep RSVP heading and controls unobscured on narrow phones. */
+.r-app.wref-app .wref-rsvp .wref-rsvp-leaf{display:none!important}
+.r-app.wref-app .wref-rsvp::before,
+.r-app.wref-app .wref-rsvp::after{display:none!important;content:none!important;background:none!important}
+.r-app.wref-app .wref-rsvp-intro,
+.r-app.wref-app .wref-rsvp-form{position:relative;z-index:3!important}
+.r-app.wref-app .r-footer::before{display:none!important;content:none!important}
+.r-app.wref-app .wref-footer-monogram{
+  display:block;position:relative;isolation:isolate;
+  font:italic 400 clamp(57px,6vw,85px)/1 'Cormorant Garamond',Georgia,serif!important;
+  letter-spacing:-.10em!important;white-space:nowrap;color:#264e37!important;
+  padding:0 26px;margin:0 auto 2px
+}
+.r-app.wref-app .wref-footer-monogram em{
+  font:italic 400 .75em/1 'Cormorant Garamond',Georgia,serif!important;
+  letter-spacing:-.08em;color:#bcaa7c!important
+}
+.r-app.wref-app .wref-footer-monogram:before,
+.r-app.wref-app .wref-footer-monogram:after{
+  content:'';position:absolute;width:42px;height:68px;top:0;opacity:.6;
+  background:url('../public/production/invitation-leaves-top.png') left center / cover no-repeat
+}
+.r-app.wref-app .wref-footer-monogram:before{left:-30px;transform:scale(.42) rotate(-35deg)}
+.r-app.wref-app .wref-footer-monogram:after{right:-30px;transform:scale(.42) scaleX(-1) rotate(-35deg)}
+.r-app.wref-app .r-footer>.r-photo-credit{max-width:760px!important;line-height:1.7!important}
+@media(max-width:720px){
+ .r-app.wref-app .wref-rsvp{padding-top:48px!important}
+ .r-app.wref-app .wref-rsvp-intro h2{max-width:100%!important;white-space:normal!important;font-size:clamp(47px,11vw,60px)!important}
+ .r-app.wref-app .wref-footer-monogram{font-size:65px!important}
+}
