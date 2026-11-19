@@ -385,11 +385,11 @@ function row(v){
  const offer=v.offerNote?'<small class="vw-offer-note">'+h(v.offerNote)+'</small>':'';
  const image=pic?'<img loading="lazy" class="vw-row-thumb" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(pic.id)+'&sz=w240" alt="Фото площадки: '+h(v.name)+'">':'<span class="vw-row-thumb vw-no-image"></span>';
  const complete=cost.value!==null&&!cost.partial;
- const amount=cost.value===null?'Не рассчитано':(complete?rub(cost.value):'от '+rub(cost.value));
+ const amount=cost.value===null?'Не рассчитано':(cost.kind==='planning'?'≈ '+rub(cost.value):complete?rub(cost.value):'от '+rub(cost.value));
  const known=cost.value===null&&cost.knownSubtotal>0?'Известно: '+rub(cost.knownSubtotal)+' (не итог)':'';
- const type=cost.value===null?'Нет полной цены':complete?'Смета':'Неполный расчёт';
+ const type=cost.value===null?'Нет полной цены':cost.kind==='planning'?'План с резервами, не КП':complete?'Смета':'Неполный расчёт';
  const missing=cost.missing?.length?'Нет: '+cost.missing.join(', '):'';
- const hint=[known,missing].filter(Boolean).join(' · ')||((cost.quoteDate&&complete)?'На '+cost.quoteDate.slice(8,10)+'.06':'');
+ const hint=cost.kind==='planning'?'Техника и сервис — рабочие резервы, не подтверждены площадкой':[known,missing].filter(Boolean).join(' · ')||((cost.quoteDate&&complete)?'На '+cost.quoteDate.slice(8,10)+'.06':'');
  return '<tr class="vw-row" data-id="'+h(v.id)+'"><td><div class="vw-venue-cell"><span class="vw-venue-media"><button type="button" class="vw-image-open" data-detail="'+h(v.id)+'" aria-label="Открыть площадку '+h(v.name)+'">'+image+'</button></span><div class="vw-venue-label"><button class="vw-name" data-detail="'+h(v.id)+'" type="button">'+h(v.name)+'</button><small>'+h(v.area)+' · '+(v.region==='country'?'За городом':'Город')+'</small></div></div></td>'+
  '<td>'+tableDateControls(v)+'</td>'+
  '<td><span class="vw-state '+(v.visited?'vw-seen':'')+'">'+(v.visited?'● Были лично':'○ Не подтверждено')+'</span></td>'+
