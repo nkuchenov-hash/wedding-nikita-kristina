@@ -327,6 +327,22 @@ export const VENUE_PHOTOS_4 = {
       "sourceUrl": "https://xn--80aaaav9bebfeihcggq.xn--p1ai/prl"
     }
   ],
+  "admiralty-roof": [
+    {
+      "id": "web-admiralty-roof-1",
+      "name": "Ресторан «Крыша» — терраса с видом на Исаакиевский собор",
+      "section": "Террасы и виды",
+      "src": "https://img.restoclub.ru/uploads/place/3/5/9/4/359454841aa7efa4cc4599a172dd6ca7_w1230_h820--no-cut.webp?v=3",
+      "sourceUrl": "https://www.restoclub.ru/spb/place/krysha-3"
+    },
+    {
+      "id": "web-admiralty-roof-2",
+      "name": "Ресторан «Крыша» — веранда и терраса",
+      "section": "Террасы и виды",
+      "src": "https://spb.banketresto.ru/images/cms/thumbs/bd61f6aae757ef42b794a6f1173c7efefecc4f5f/image-17-05-22-19-54-3_685_450.jpeg",
+      "sourceUrl": "https://spb.banketresto.ru/restorans/restoran_krysha/"
+    }
+  ],
   "maryino": [
     {
       "id": "maryino-white-hall-banquet-1",
