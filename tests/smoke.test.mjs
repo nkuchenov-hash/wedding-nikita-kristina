@@ -159,7 +159,7 @@ test('approved comprehensive venue comparison is never overlaid by generic datab
  assert.match(venue,/vw-table vw-table-sortable/);
  assert.match(venue,/data-sort-col/);
  assert.match(venue,/data-clear-filters/);
- assert.match(venue,/headerSelect\('chosenDay'/);
+ assert.match(venue,/headerSelect\('dateFilter','Доступность по дате'/);
  assert.doesNotMatch(venue,/selectedCompare\(all\)/);
  assert.match(css,/\.vw-table/);
 });
