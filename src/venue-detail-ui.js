@@ -89,7 +89,7 @@ export function filteredVenuePhotos(v,ui={}){
  return photos;
 }
 const sourceLinks=v=>{
- const all=[['Документы и предложение',v.quoteSource],['Папка документов',v.documentsFolder],['Фотографии в Google Drive',v.photos],['Папка площадки',v.drive],['Официальный сайт',v.website],...((v.documents||[]).map(x=>[x.label,x.url])),...((v.telegramLinks||[]).map(x=>[x.label,x.url]))];
+ const all=[['Документы и предложение',v.quoteSource],['Папка документов',v.documentsFolder],['Фотографии в Google Drive',v.photos],['Расшифровка встречи',v.visitTranscriptSource],['Папка площадки',v.drive],['Официальный сайт',v.website],...((v.documents||[]).map(x=>[x.label,x.url])),...((v.telegramLinks||[]).map(x=>[x.label,x.url]))];
  const seen=new Set();
  return all.filter(([l,u])=>{const safe=escUrl(u);if(!safe||seen.has(safe))return false;seen.add(safe);return true;})
   .map(([l,u])=>'<a href="'+h(escUrl(u))+'" target="_blank" rel="noopener noreferrer">'+h(l)+' ↗</a>').join('');
@@ -197,6 +197,7 @@ function infoPane(v,ctx){
  '<h3>Вместимость и формат</h3><div class="vdp-inline-facts"><div><small>Максимум гостей</small>'+inlineValue('capacity',v.capacity,{label:'Вместимость',kind:'number'})+'</div><div><small>Формат и рассадка</small>'+inlineValue('capacityNote',v.capacityNote,{label:'Формат и рассадка',kind:'multiline'})+'</div></div>'+
  '<h3>Личный осмотр</h3>'+inlineValue('visited',v.visited?'Да':'Не подтверждено',{label:'Осмотр',kind:'visited'})+
  '<h3>Заметки</h3>'+inlineValue('notes',v.notes,{label:'Заметки организаторов',kind:'multiline',className:'vdp-inline-block'})+
+ (v.visitTranscriptNotes?'<h3>Дополнения из расшифровки осмотра</h3>'+inlineValue('visitTranscriptNotes',v.visitTranscriptNotes,{label:'Дополнения из расшифровки встречи',kind:'multiline',className:'vdp-inline-block'}):'')+
  '<h3>Контакты</h3><div class="vdp-inline-facts"><div><small>Телефон</small>'+inlineValue('contactPhone',v.contactPhone||v.phone,{label:'Телефон'})+'</div><div><small>Email</small>'+inlineValue('contactEmail',v.contactEmail||v.email,{label:'Email',kind:'email'})+'</div></div>'+
  '<div class="vdp-source-links">'+sourceLinks(v)+'</div></section></div>'+scopeList(v);
 }
@@ -248,8 +249,9 @@ function venueOverview(v,ctx,photos){
     '<div class="vdp-overview-actions"><a class="vdp-primary-link" href="#/admin/venues/'+encodeURIComponent(v.id)+'/budget">Полная смета по строкам →</a>'+
       '<a class="vdp-primary-link vdp-document-entry" href="#/admin/venues/'+encodeURIComponent(v.id)+'/documents">Файлы и предложения площадки →</a></div></section>'+
   '</div>';
+ const meetingSection=v.visitTranscriptNotes?'<section class="vdp-pane vdp-meeting-notes"><h2>Из расшифровки встречи</h2>'+inlineValue('visitTranscriptNotes',v.visitTranscriptNotes,{label:'Дополнения из расшифровки встречи',kind:'multiline',className:'vdp-inline-block'})+(escUrl(v.visitTranscriptSource)?'<p><a href="'+h(escUrl(v.visitTranscriptSource))+'" target="_blank" rel="noopener noreferrer">Исходная расшифровка →</a></p>':'')+'</section>':'';
  const gallerySection='<section class="vdp-pane vdp-overview-gallery"><div class="vdp-row-between"><div><h2>Фотографии площадки</h2><p class="vdp-gallery-context">Материалы осмотров для подробного знакомства с площадкой</p></div><a href="#/admin/venues/'+encodeURIComponent(v.id)+'/photos">Все '+photos.length+' фото →</a></div>'+gallery(v,ctx.ui)+'</section>';
- return '<div class="vdp-overview">'+head+detail+scopeList(v)+gallerySection+'</div>';
+ return '<div class="vdp-overview">'+head+detail+scopeList(v)+meetingSection+gallerySection+'</div>';
 }
 
 export function renderVenueNewPage(v,ctx){
