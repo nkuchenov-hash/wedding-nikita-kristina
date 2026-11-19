@@ -236,3 +236,12 @@ test('one availability selector replaces separate day and status filters',()=>{
  assert.match(source,/\['19:unavailable','19 июня · занято'\]/);
  assert.match(source,/&&matchesDateFilter\(v,ui\.dateFilter\)/);
 });
+
+
+test('broken venue thumbnails retry a same-venue image instead of showing broken text',()=>{
+ const s=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');
+ assert.match(s,/getVenuePhotos\(v\)\.find\(p=>p\.id!==pic\?\.id\)/);
+ assert.match(s,/data-fallback-cover/);
+ assert.match(s,/root\.addEventListener\('error'/);
+ assert.match(s,/img\.hidden=true/);
+});
