@@ -71,7 +71,7 @@ function read(){
  return INITIAL();
 }
 let state=read();
-let ui={kind:'all',query:'',sort:'date',sortDir:'asc',expanded:null,detailTab:'overview',date:'all',chosenDay:'all',budget:'all',visit:'all',capacity:'all',photoSection:'all',photoView:'gallery',photoSort:'original',photoIndex:0,photoLightbox:false};
+let ui={kind:'all',query:'',sort:'date',sortDir:'asc',expanded:null,detailTab:'overview',dateFilter:'all',budget:'all',visit:'all',capacity:'all',photoSection:'all',photoView:'gallery',photoSort:'original',photoIndex:0,photoLightbox:false};
 const h=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rub=(v)=>typeof v==='number'&&Number.isFinite(v)?Math.round(v).toLocaleString('ru-RU')+' ₽':'—';
 const safeUrl=(v)=>{try{const u=new URL(String(v));return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
@@ -430,7 +430,7 @@ function sortVenues(rows){
   }
   if(ui.sort==='capacity')return numbers(v.capacity);
   if(ui.sort==='score')return weighted(v).value;
-  if(ui.sort==='date')return ui.chosenDay==='all'?datePriority(v):(ordinal[dayStatus(v,ui.chosenDay)]??2);
+  if(ui.sort==='date'){const day=ui.dateFilter.split(':')[0];return ui.dateFilter==='all'?datePriority(v):(ordinal[dayStatus(v,day)]??2);}
   return v.name;
  }
  rows.sort((a,b)=>{
@@ -443,11 +443,16 @@ function sortVenues(rows){
  });
  return rows;
 }
+function matchesDateFilter(v,filter){
+ if(filter==='all')return true;
+ const [day,status]=filter.split(':');
+ return DATE_CHOICES.some(([d])=>d===day)&&['available','unavailable'].includes(status)&&dayStatus(v,day)===status;
+}
 function visibleVenues(all){
  return sortVenues(all.filter(v=>{
   const e=totalEstimate(v);
   return (ui.kind==='all'||v.region===ui.kind)
-    &&(ui.date==='all'||(ui.chosenDay==='all'?DATE_CHOICES.some(([d])=>dayStatus(v,d)===ui.date):dayStatus(v,ui.chosenDay)===ui.date))
+    &&matchesDateFilter(v,ui.dateFilter)
     &&(ui.visit==='all'||(ui.visit==='yes')===!!v.visited)
     &&(ui.budget==='all'||(e.isQuote||e.basedOnQuote)&&e.value!==null&&e.value<=Number(ui.budget))
     &&(ui.capacity==='all'||v.capacity>=Number(ui.capacity))
@@ -480,10 +485,9 @@ export function renderVenueAdmin(){
  return '<div class="vw-page vw-control-board" data-venues-page>'+
   '<div class="vw-control-head"><div><h1>Площадки <span>'+all.length+'</span></h1><p>19 июня — приоритет · 18 и 20 июня — альтернативы</p></div><div class="vw-control-facts"><span>'+visited+' осмотрено</span><span>'+all.filter(v=>DATE_CHOICES.some(([d])=>dayStatus(v,d)==='available')).length+' со свободной датой</span></div></div>'+
   '<div class="vw-panel vw-table-panel"><div class="vw-panel-title vw-table-panel-title"><div><h2>Управление площадками</h2><span><b data-venues-visible>'+list.length+'</b> из '+all.length+'</span></div><div class="vw-table-tools"><label class="vw-compact-control">Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+state.guestCount+'" aria-label="Число гостей для пересчёта смет"></label><input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Найти площадку" aria-label="Поиск площадки (Enter)"><button type="button" data-clear-filters>Сбросить</button></div></div>'+
-  '<div class="vw-shortcuts"><button type="button" class="'+(ui.chosenDay==='19'&&ui.date==='available'?'active':'')+'" data-quick-filter="available19">Свободны 19.06</button><button type="button" class="'+(ui.chosenDay==='all'&&ui.date==='all'?'active':'')+'" data-quick-filter="all">Все даты</button><span>Статусы дат можно менять прямо в таблице</span></div>'+
   '<div class="vw-scroll" role="region" tabindex="0" aria-label="Таблица площадок, прокрутка по горизонтали"><table class="vw-table vw-table-sortable"><thead><tr>'+
   columnHeading('name','Площадка','<div class="vw-head-filter-row">'+headerSelect('kind','Расположение',[['all','Все районы'],['city','Город'],['country','За городом']])+'</div>')+
-  columnHeading('date','18 / 19 / 20 июня','<div class="vw-head-filter-row">'+headerSelect('chosenDay','День свадьбы',[['all','Все 3 даты'],['19','19 июня'],['18','18 июня'],['20','20 июня']])+headerSelect('date','Статус даты',[['all','Любой статус'],['available','Свободно'],['unavailable','Занято'],['pending','Уточняется'],['unknown','Нет ответа']])+'</div>')+
+  columnHeading('date','18 / 19 / 20 июня',headerSelect('dateFilter','Доступность по дате',[['all','Все даты'],['19:available','19 июня · свободно'],['19:unavailable','19 июня · занято'],['18:available','18 июня · свободно'],['18:unavailable','18 июня · занято'],['20:available','20 июня · свободно'],['20:unavailable','20 июня · занято']]))+
   columnHeading('visit','Осмотр',headerSelect('visit','Фильтр по осмотру',[['all','Все'],['yes','Были лично'],['no','Не подтверждено']]))+
   columnHeading('price','Бюджет',headerSelect('budget','Верхняя граница бюджета',[['all','Любой бюджет'],['650000','До 650 тыс.'],['800000','До 800 тыс.'],['1000000','До 1 млн'],['1200000','До 1,2 млн']]))+
   columnHeading('capacity','Вместимость',headerSelect('capacity','Минимальная вместимость',[['all','Все'],['80','80+ гостей'],['100','100+ гостей']]))+
@@ -501,7 +505,7 @@ function redraw(root){
  hydrateVenueFiles(root);
  const boardScroll=root.querySelector('.vw-scroll');if(boardScroll)boardScroll.scrollLeft=tableScroll;
  const n=root.querySelector('[data-state="guestCount"]');if(n)n.value=String(state.guestCount);
- for(const [key,v] of [['kind',ui.kind],['sort',ui.sort],['date',ui.date],['chosenDay',ui.chosenDay],['visit',ui.visit],['budget',ui.budget],['capacity',ui.capacity]]){
+ for(const [key,v] of [['kind',ui.kind],['sort',ui.sort],['dateFilter',ui.dateFilter],['visit',ui.visit],['budget',ui.budget],['capacity',ui.capacity]]){
   const x=root.querySelector('[data-ui="'+key+'"]');if(x)x.value=v;
  }
  for(const s of root.querySelectorAll('select[data-field="availability"]')){
@@ -549,7 +553,7 @@ export function activateVenueAdmin(root){
  redraw(root);
  initVenueDatabase(root);
  root.addEventListener('click',event=>{
-  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-venue-inline],[data-inline-quote],[data-add-inline-quote],[data-cancel-inline],[data-remove-venue-quote],[data-venue-retry],[data-quick-filter]');if(!target)return;
+  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-venue-inline],[data-inline-quote],[data-add-inline-quote],[data-cancel-inline],[data-remove-venue-quote],[data-venue-retry]');if(!target)return;
   const venueBase=PUBLIC_VENUES.find(x=>x.id===ui.expanded);
   const showError=message=>{
    const page=root.querySelector('.vdp-page');if(!page)return;
@@ -594,12 +598,7 @@ export function activateVenueAdmin(root){
     if(photos.length){ui.photoIndex=(ui.photoIndex+Number(target.dataset.photoStep)+photos.length)%photos.length;redraw(root);}
   }
   else if(target.dataset.sortCol){const key=target.dataset.sortCol;if(ui.sort===key)ui.sortDir=ui.sortDir==='asc'?'desc':'asc';else{ui.sort=key;ui.sortDir=SORT_DEFAULTS[key]||'asc';}redraw(root);}
-  else if(target.dataset.quickFilter){
-   if(target.dataset.quickFilter==='available19'){ui.chosenDay='19';ui.date='available';}
-   else{ui.chosenDay='all';ui.date='all';}
-   redraw(root);
-  }
-  else if(target.hasAttribute('data-clear-filters')){Object.assign(ui,{kind:'all',query:'',date:'all',chosenDay:'all',budget:'all',visit:'all',capacity:'all'});redraw(root);}
+  else if(target.hasAttribute('data-clear-filters')){Object.assign(ui,{kind:'all',query:'',dateFilter:'all',budget:'all',visit:'all',capacity:'all'});redraw(root);}
   else if(target.dataset.detail){location.hash='#/admin/venues/'+encodeURIComponent(target.dataset.detail);}else if(target.dataset.detailTab){location.hash='#/admin/venues/'+encodeURIComponent(ui.expanded)+'/'+target.dataset.detailTab;}
   else if(target.hasAttribute('data-close')){location.hash='#/admin/venues';}
   else if(target.dataset.uiToggle){ui.onlyVisited=!ui.onlyVisited;redraw(root);}
