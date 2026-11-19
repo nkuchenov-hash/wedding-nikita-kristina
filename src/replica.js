@@ -62,40 +62,71 @@ function bottom(path){return '<nav class="r-tabs" aria-label="Разделы с�
 function flour(){return '<div class="r-ornament" aria-hidden="true"><i></i><b>❧</b><i></i></div>'}
 function leaf(){return '<svg viewBox="0 0 180 210" fill="none" class="r-leaf" aria-hidden="true"><path d="M13 199c44-48 85-87 156-175" stroke="currentColor" stroke-width="1.5"/><path d="M49 156C6 147 7 105 16 93c28 13 38 36 33 63Zm23-27C55 91 78 61 91 58c10 27 3 52-19 71Zm31-38C71 80 72 45 89 33c24 20 26 42 14 58Zm27-36C118 31 135 10 154 8c8 18-1 36-24 47Z" stroke="currentColor" fill="currentColor" fill-opacity=".13"/><path d="M50 158c-21-22-27-43-34-65m56 35 19-70m13 33L89 33m41 21 24-46" stroke="currentColor" stroke-width="1"/></svg>'}
 function heading(top,title,sub=''){return '<div class="r-heading"><span class="r-micro">'+top+'</span><h1>'+title+'</h1>'+(sub?'<p>'+sub+'</p>':'')+'</div>'}
+function referenceHeader(path){
+ const links=[['/','Главная'],['/schedule','Программа'],['/info','Локации'],['/gallery','Галерея'],['/guests','Гости']];
+ return '<header class="wref-header'+(path==='/'?' wref-header--home':'')+'">'+
+ '<a class="wref-monogram" href="#/" aria-label="Главная — Никита и Кристина">Н<span>&</span>К</a>'+
+ '<nav class="wref-header-links" aria-label="Разделы свадьбы">'+links.map(([p,n])=>'<a href="#'+p+'"'+(p===path?' aria-current="page"':'')+'>'+n+'</a>').join('')+'<a href="#/" data-go-rsvp>Ответить</a></nav>'+
+ '<button type="button" class="wref-menu-toggle" data-site-menu-toggle aria-label="Открыть меню" aria-controls="wref-mobile-menu" aria-expanded="false"><span></span><span></span><span></span></button>'+
+ '<nav id="wref-mobile-menu" class="wref-mobile-menu" aria-label="Мобильное меню" hidden>'+links.map(([p,n])=>'<a href="#'+p+'">'+n+'</a>').join('')+'<a href="#/" data-go-rsvp>Ответить на приглашение</a></nav>'+
+ '</header>';
+}
+function refLeaf(cls=''){return '<svg viewBox="0 0 206 269" fill="none" class="wref-leaf '+cls+'" aria-hidden="true"><path d="M18 262C89 208 114 104 194 3" stroke="currentColor" stroke-width="1.9"/><path d="M51 226C17 214 9 184 13 167c33 3 46 20 51 46M79 187c26-2 54-25 58-47-34 1-53 13-67 34M89 161C55 151 42 120 46 103c32 8 48 25 54 46M121 116c34-8 49-34 52-52-32 4-49 19-56 40M142 77c-16-24-15-49-6-64 23 16 28 35 24 55M163 42c27-3 39-19 42-36-27 0-39 12-47 29" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity=".09"/></svg>'}
+function refRule(){return '<div class="wref-rule" aria-hidden="true"><i></i><span>❧</span><i></i></div>'}
+function refDay(date,title,caption,photoName,where,klass,ico){
+ return '<article class="wref-day '+klass+'"><div class="wref-day-image">'+img(photoName,'','Иллюстрация: '+title)+'<div class="wref-day-shade"></div></div><div class="wref-day-content"><span class="wref-day-date">'+date+'</span><h3>'+title+'</h3><p>'+caption+'</p><small>'+ic(ico)+' '+where+'</small></div></article>';
+}
 function footer(){return '<footer class="r-footer">Никита <em>&</em> Кристина<span>Марьино × Санкт-Петербург · 17–19 июня 2027 · предварительно</span><small class="r-photo-credit">Фото пары и декора — временные иллюстративные материалы Pexels/Unsplash. На фото не Никита и Кристина. Фотографии Марьино предоставлены сайтом усадьбы; для постоянного использования потребуется разрешение правообладателя.</small></footer>'}
-function shell(path,body,cls=''){return '<div class="r-app '+cls+'"><div class="r-site">'+body+footer()+'</div>'+bottom(path)+'</div>'}
+function shell(path,body,cls=''){return '<div class="r-app wref-app '+cls+'">'+referenceHeader(path)+'<div class="r-site">'+body+footer()+'</div>'+bottom(path)+'</div>'}
 const spbMotif="<svg class=\"spb-skyline\" viewBox=\"0 0 900 226\" preserveAspectRatio=\"xMidYMax meet\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\"><g fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 183h878M16 197c110-8 190-8 283 0s188 8 286 0 208-8 299 0M22 210c78-7 145-7 213 0m77 0c74-7 158-7 248 0m58 0c96-7 174-7 246 0\" opacity=\".38\"/><path d=\"M51 182v-48h169v48M46 133h179l-12-13H59zM80 132v50m35-50v50m35-50v50m35-50v50M63 151h145m-146 15h145\"/><path d=\"M290 182v-61h158v61M280 122h177l-14-11H294zM311 121v61m25-61v61m66-61v61m25-61v61M321 109c8-32 27-49 48-49s40 17 48 49M364 60v-16m-6 0h12M301 146h138\"/><path d=\"M519 182V137h141v45M508 137h164l-16-12H522zM540 137v45m39-45v45m39-45v45M579 125V69m-21 0h42l-21-57-21 57zm14-57h14M578 8v-6M544 162h91\"/><path d=\"M704 182v-41h149v41M694 141h171l-17-10H711zM729 141v41m32-41v41m32-41v41m32-41v41M720 159h125\"/></g></svg>";
 function home(){
-  return shell('/',
-    '<section class="r-hero r-hero--editorial r-hero--board">'+img('boardPortrait','r-cover-photo','Иллюстративное свадебное фото: пока не фотография пары',true)+'<div class="r-hero-dim"></div><img class="r-hero-bouquet" src="./public/production/invitation-flowers-left.png" alt="" aria-hidden="true" loading="eager"><div class="r-top-label">МАРЬИНО · САНКТ-ПЕТЕРБУРГ</div><div class="r-hero-title"><span>Мы приглашаем вас на нашу свадьбу</span><h1>Никита<br><em>&</em><br>Кристина</h1>'+flour()+'<p>17 — 19 ИЮНЯ 2027</p><small class="spb-hero-subline">Три дня · две локации · одна история</small></div><button type="button" class="r-scroll-indicator" data-scroll-welcome aria-label="Перейти к приглашению"><span>⌄</span></button></section>'+
-    '<section class="r-invitation w-invite" id="welcome" aria-labelledby="w-invite-title">'+
-      '<div class="w-invite__content">'+
-        '<svg class="w-invite__botanical" aria-hidden="true" viewBox="0 0 180 250" fill="none"><path d="M166 1C124 89 94 167 28 242" stroke="currentColor" stroke-width="1.4"/><path d="M144 49C106 43 93 19 98 3c27 4 44 23 46 46ZM124 92C87 83 75 54 80 36c29 10 44 30 44 56ZM102 134C64 135 49 115 48 91c31 2 51 17 54 43ZM76 173C41 178 22 160 17 138c29-2 52 9 59 35ZM138 64C164 52 175 31 174 15c-28 6-37 21-36 49ZM111 119c27-10 39-32 35-55-25 9-38 26-35 55ZM87 157c25-6 43-23 41-49-28 6-40 21-41 49Z" stroke="currentColor" stroke-width="1.2" fill="currentColor" fill-opacity=".10"/></svg>'+
-        '<span class="w-invite__eyebrow">ПРИГЛАШЕНИЕ НА СВАДЬБУ</span>'+
-        '<h2 id="w-invite-title" class="w-invite__title">Разделите<br><em>эту историю с нами</em></h2>'+
-        '<p class="w-invite__message">В этом июне нас ждут три особенных дня: от регистрации в усадебном саду до большого праздника в Петербурге. Будем счастливы разделить эту историю с вами. Подробности участия в отдельных событиях сообщим лично.</p>'+
-        '<div class="w-invite__rule" aria-hidden="true"><i></i><span>✦</span><i></i></div>'+
-        '<div class="w-invite__details spb-invite__dates"><div><span>17 ИЮНЯ · ЧЕТВЕРГ</span><strong>17 июня 2027</strong><small>Регистрация · Усадьба Марьино</small></div><div><span>19 ИЮНЯ · СУББОТА</span><strong>19 июня 2027</strong><small>Торжество · Санкт-Петербург</small></div></div>'+
-        '<p class="w-invite__tentative">18 июня — свободный день в Санкт-Петербурге. Все детали программы пока предварительные.</p>'+
-      '</div>'+
-      '<figure class="w-invite__photo"><img src="./public/photos/estate.jpg" alt="Усадьба Марьино, исторический усадебный комплекс и парк" loading="lazy" decoding="async"><figcaption>Марьино · начало нашей истории</figcaption></figure>'+
-      '<div class="spb-transition"><span class="spb-transition__eyebrow">ОТ УСАДЕБНОГО САДА К НАБЕРЕЖНЫМ</span><h3>И дальше — <em>Петербург</em></h3><p>Каналы, летняя зелень и особенная атмосфера белых ночей. 18 июня оставляем для свободных прогулок, а 19-го собираемся на большой праздник.</p>'+spbMotif+'</div>'+
-    '</section>'+
-    '<section class="w-rsvp" id="rsvp" aria-labelledby="w-rsvp-title">'+
-      '<div class="w-rsvp__intro"><span class="w-rsvp__eyebrow">ВАШ ОТВЕТ</span><h2 id="w-rsvp-title">Будете <em>с нами?</em></h2><p>Пожалуйста, сообщите, сможете ли вы присоединиться к празднику. Участие в отдельных событиях 17 и 19 июня уточним после утверждения программы.</p></div>'+
-      '<form data-rsvp class="w-rsvp__form">'+
-        '<fieldset class="w-rsvp__choices"><legend>Планируете присутствовать?</legend>'+
-          '<label class="w-rsvp__choice"><input type="radio" name="yesno" value="yes" checked><span>Да, с радостью!</span><span class="w-rsvp__check" aria-hidden="true">✓</span></label>'+
-          '<label class="w-rsvp__choice"><input type="radio" name="yesno" value="no"><span>К сожалению, не смогу</span><span class="w-rsvp__check" aria-hidden="true">✓</span></label>'+
-        '</fieldset>'+
-        '<label class="w-rsvp__name">Ваше имя<input name="name" type="text" maxlength="100" autocomplete="name" placeholder="Как к вам обращаться" required></label>'+
-        '<button type="submit" class="w-rsvp__submit">ПОСМОТРЕТЬ ОТВЕТ <span aria-hidden="true">→</span></button>'+
-        '<output role="status" aria-live="polite"></output>'+
-        '<p class="w-rsvp__notice">Анкета пока только для просмотра: ответ не отправляется и не сохраняется. Подтверждение по отдельным дням появится в личном приглашении после утверждения программы.</p>'+
-      '</form>'+
-    '</section>'+
-    '<section class="r-home-links">'+heading('НАШ ПРАЗДНИК','Всё, что нужно знать')+'<a href="#/schedule">'+ic('schedule')+'Программа трёх дней <b>↗</b></a><a href="#/info">'+ic('pin')+'Марьино и Петербург <b>↗</b></a><a href="#/guests">'+ic('guests')+'Наши близкие <b>↗</b></a><a href="#/gallery">'+ic('gallery')+'Фотографии <b>↗</b></a></section>',
-    'r-home');
+ return shell('/',
+ '<section class="r-hero r-hero--editorial r-hero--board wref-hero" aria-labelledby="wref-main-title">'+
+ img('boardPortrait','r-cover-photo wref-cover','Временная иллюстративная свадебная фотография',true)+
+ '<div class="wref-hero-shade"></div>'+
+ '<div class="wref-hero-decor wref-hero-decor--a">'+refLeaf()+'</div>'+
+ '<div class="wref-hero-decor wref-hero-decor--b">'+refLeaf()+'</div>'+
+ '<div class="wref-hero-copy"><span class="wref-hero-eyebrow">ПРИГЛАШАЕМ НА НАШУ СВАДЬБУ</span>'+
+ '<h1 id="wref-main-title">Никита <em>&</em><br>Кристина</h1>'+refRule()+
+ '<p>17 — 19 июня 2027</p><small>МАРЬИНО · САНКТ-ПЕТЕРБУРГ</small>'+
+ '<div class="wref-hero-skyline">'+spbMotif+'</div></div>'+
+ '<button type="button" class="r-scroll-indicator wref-hero-down" data-scroll-welcome aria-label="Перейти к приглашению">'+ic('arrow')+'</button>'+
+ '</section>'+
+ '<section class="r-invitation w-invite wref-invitation" id="welcome" aria-labelledby="w-invite-title">'+
+ refLeaf('wref-invite-leaf wref-invite-leaf--l')+refLeaf('wref-invite-leaf wref-invite-leaf--r')+
+ '<div class="wref-welcome"><figure class="wref-polaroid wref-polaroid--estate">'+img('estate','','Историческая усадьба Марьино')+'<figcaption>Марьино</figcaption></figure>'+
+ '<div class="wref-welcome-message"><span class="wref-overline">С ЛЮБОВЬЮ ПРИГЛАШАЕМ</span><h2 id="w-invite-title">Дорогие друзья!</h2><p>Мы будем счастливы разделить с вами важные для нас дни: официальную регистрацию в усадьбе Марьино, свободный день в Петербурге и большой свадебный праздник 19 июня.</p>'+refRule()+'</div>'+
+ '<figure class="wref-polaroid wref-polaroid--city">'+img('bridge','','Иллюстративный вид на мост')+'<figcaption>Санкт-Петербург</figcaption></figure></div>'+
+ '<div class="wref-program-preview" id="program-preview"><div class="wref-section-head"><span>17 — 19 ИЮНЯ 2027</span><h2>Программа наших дней</h2>'+refRule()+'</div>'+
+ '<div class="wref-days">'+
+ refDay('17 июня','Официальная<br>регистрация','Начало в 14:00 — предварительно','estate','Усадьба Марьино','wref-day--garden','rings')+
+ refDay('18 июня','Свободный день<br>в Петербурге','Прогулки, музеи и любимые места','bridge','Санкт-Петербург','wref-day--city','pin')+
+ refDay('19 июня','Торжественная часть<br>и свадебный банкет','Время и площадка уточняются','boardTable','Санкт-Петербург','wref-day--party','glass')+
+ '</div><a class="wref-text-link" href="#/schedule">Подробнее о программе <span aria-hidden="true">→</span></a></div>'+
+ '<div class="wref-bridge-line">'+spbMotif+'</div>'+
+ '<div class="wref-venues-preview"><div class="wref-section-head"><span>ДВА МЕСТА НАШЕЙ ИСТОРИИ</span><h2>Наши локации</h2>'+refRule()+'</div>'+
+ '<div class="wref-venue-grid">'+
+ '<article class="wref-venue-card"><div class="wref-venue-picture">'+img('estate','','Усадьба Марьино')+'</div><div class="wref-venue-copy"><span>17 ИЮНЯ</span><h3>Усадьба<br>Марьино</h3><p>Историческая усадьба в окружении парка. Здесь планируется официальная регистрация.</p><a href="#/info">Подробнее <span aria-hidden="true">→</span></a></div></article>'+
+ '<article class="wref-venue-card"><div class="wref-venue-picture wref-venue-picture--city">'+img('bridge','','Иллюстративный петербургский мост')+'</div><div class="wref-venue-copy"><span>18–19 ИЮНЯ</span><h3>Санкт-<br>Петербург</h3><p>Город белых ночей и набережных. Место торжественной части пока выбираем.</p><a href="#/info">Подробнее <span aria-hidden="true">→</span></a></div></article>'+
+ '</div></div>'+
+ '</section>'+
+ '<section class="w-rsvp wref-rsvp" id="rsvp" aria-labelledby="w-rsvp-title">'+
+ refLeaf('wref-rsvp-leaf wref-rsvp-leaf--l')+refLeaf('wref-rsvp-leaf wref-rsvp-leaf--r')+
+ '<div class="wref-rsvp-intro"><h2 id="w-rsvp-title">Будете <em>с нами?</em></h2><p>Пожалуйста, сообщите, сможете ли вы разделить с нами этот праздник.</p></div>'+
+ '<form data-rsvp class="w-rsvp__form wref-rsvp-form"><label class="wref-rsvp-name">Ваше имя<input name="name" type="text" maxlength="100" autocomplete="name" placeholder="Как к вам обращаться" required></label>'+
+ '<fieldset class="wref-rsvp-options"><legend>Ваш ответ</legend><label><input type="radio" name="yesno" value="yes" checked><span>Да, буду</span></label><label><input type="radio" name="yesno" value="no"><span>К сожалению, не смогу</span></label></fieldset>'+
+ '<button type="submit" class="wref-rsvp-submit">Посмотреть ответ <span aria-hidden="true">→</span></button><output role="status" aria-live="polite"></output>'+
+ '<p class="wref-rsvp-disclaimer">Предварительный просмотр: ответы пока не отправляются и не сохраняются. Участие в отдельных событиях уточним лично.</p>'+
+ '</form></section>'+
+ '<section class="wref-guides">'+
+ '<article><span class="wref-guide-icon">'+ic('leaf')+'</span><h3>Дресс-код</h3><p>Природная палитра и элегантные образы — наше вдохновение, а не строгое правило.</p><a href="#/info">Подробнее →</a></article>'+
+ '<article><span class="wref-guide-icon">'+ic('gift')+'</span><h3>Подарки</h3><p>Самое ценное для нас — ваше присутствие. Остальные пожелания расскажем позже.</p><a href="#/info">Подробнее →</a></article>'+
+ '<article><span class="wref-guide-icon">'+ic('info')+'</span><h3>Полезная информация</h3><p>Места, маршруты и детали поездки по мере подтверждения программы.</p><a href="#/info">Подробнее →</a></article>'+
+ '</section>'+
+ '<section class="wref-gallery-preview"><div><span>НАШИ ВОСПОМИНАНИЯ</span><h2>Галерея</h2><p>Делимся атмосферой нашей истории.</p><a href="#/gallery">Смотреть фото →</a></div>'+
+ '<div class="wref-gallery-photos"><figure>'+img('boardGallery1','','Галерея, фото 1')+'</figure><figure>'+img('boardGallery3','','Галерея, фото 2')+'</figure><figure>'+img('boardGallery4','','Галерея, фото 3')+'</figure></div>'+
+ '</section>',
+ 'r-home');
 }
 function schedule(){
  return shell('/schedule',
@@ -183,6 +214,11 @@ export function renderGuest(path){
  return shell('/','<section class="r-profile-page"><h1>Страница не найдена</h1><a href="#/">На главную</a></section>');
 }
 export function activateGuest(root){
+ const menu=root.querySelector('[data-site-menu-toggle]');
+ const nav=root.querySelector('#wref-mobile-menu');
+ menu?.addEventListener('click',()=>{const open=menu.getAttribute('aria-expanded')!=='true';menu.setAttribute('aria-expanded',String(open));menu.setAttribute('aria-label',open?'Закрыть меню':'Открыть меню');if(nav)nav.hidden=!open;});
+ nav?.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>{nav.hidden=true;menu?.setAttribute('aria-expanded','false');}));
+ root.querySelectorAll('[data-go-rsvp]').forEach(el=>el.addEventListener('click',e=>{e.preventDefault();if(location.hash==='#/'||location.hash===''){root.querySelector('#rsvp')?.scrollIntoView({behavior:'smooth'});}else{location.hash='#/';requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelector('#rsvp')?.scrollIntoView({behavior:'smooth'})));}}));
  root.querySelector('[data-scroll-welcome]')?.addEventListener('click',()=>{
    root.querySelector('#welcome')?.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
  });
