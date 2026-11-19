@@ -29,9 +29,39 @@ jobs:
           cp -a public src _guest-preview/
           test ! -e _guest-preview/backend
       - name: Install screenshot browser driver
-        run: npm install --no-save --no-package-lock puppeteer-core@24
+        run: npm install --no-save --no-package-lock puppeteer-core@24 esbuild@0.25
+      - name: Bundle a double-clickable offline-friendly HTML website
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx esbuild src/app.js --bundle --format=iife --target=es2020 --outfile=_guest-preview/site-bundle.js
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const path='_guest-preview/index.html';
+          let html=readFileSync(path,'utf8');
+          if(!html.includes('<script type="module" src="./src/app.js"></script>'))throw Error('Original guest entry point changed');
+          html=html.replace('<script type="module" src="./src/app.js"></script>','<script defer src="./site-bundle.js"></script>');
+          html=html.replace(/<script type="module">if\(new URLSearchParams\(location.search\).get\('compare'\)==='1'\).*?<\/script>/s,'');
+          writeFileSync(path,html);
+          NODE
+          test -s _guest-preview/site-bundle.js
       - name: Verify mobile and desktop pages in headless Chrome
         run: node tools/guest-visual-preview.mjs
+      - name: Package a real website that opens directly on Windows
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _guest-download
+          cp _guest-preview/index.html _guest-preview/site-bundle.js _guest-download/
+          cp -a _guest-preview/src _guest-preview/public _guest-download/
+          printf 'Свадебный сайт — предварительный просмотр.\nРаспакуйте архив и откройте index.html двойным щелчком.\nДля фотографий Петербурга и веб-шрифтов нужен интернет.\nАнкета демонстрационная и не сохраняет ответы.\n' > _guest-download/README-RU.txt
+      - name: Save working wedding website files
+        uses: actions/upload-artifact@v4
+        with:
+          name: wedding-website-open-in-browser
+          path: _guest-download/
+          if-no-files-found: error
+          retention-days: 14
       - name: Save actual rendered HTML screenshots
         if: always()
         uses: actions/upload-artifact@v4
