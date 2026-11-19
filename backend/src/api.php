@@ -446,16 +446,16 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
             json(['ok'=>true,'attendance'=>null]);
         }
         $adults=intvalField($d,'adults',0,1+(int)$g['plus_one_allowed'],1);
-        $children=intvalField($d,'children',0,childrenEnabled($db)?(int)$g['children_count']:0,0);
-        // Disabling children excludes them from current counts; never erase a prior RSVP.
-        if(!childrenEnabled($db)){
-            $previous=one($db,'SELECT children FROM rsvps WHERE guest_id=?',[$id]);
-            $children=(int)($previous['children']??0);
-        }
+        $previous=one($db,'SELECT children,transport_needed,arrival_notes FROM rsvps WHERE guest_id=?',[$id])?:[];
+        $children=intvalField($d,'children',0,childrenEnabled($db)?16:0,0);
+        // When children are disabled, exclude them from live counts but retain saved historical RSVP details.
+        if(!childrenEnabled($db))$children=(int)($previous['children']??0);
         if($attendance==='no'){$adults=0;$children=0;}
-        $transport=boolval($d,'transport_needed')?1:0;
+        // Transfer/arrival fields are retired from the form. Preserve previous information
+        // when the organiser updates unrelated RSVP fields.
+        $transport=array_key_exists('transport_needed',$d) ? (boolval($d,'transport_needed')?1:0) : (int)($previous['transport_needed']??0);
         $diet=strval($d,'dietary_notes',1000);
-        $arrival=strval($d,'arrival_notes',1000);
+        $arrival=array_key_exists('arrival_notes',$d) ? strval($d,'arrival_notes',1000) : (string)($previous['arrival_notes']??'');
         $notes=strval($d,'other_notes',1200);
         statement($db,"INSERT INTO rsvps(guest_id,attendance,adults,children,transport_needed,
           arrival_notes,dietary_notes,other_notes,response_source)
@@ -629,7 +629,7 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
         if(!is_array($items)||!array_is_list($items)||count($items)>16)
             fail(422,'companions','Некорректный список сопровождающих');
         $g=one($db,'SELECT plus_one_allowed,children_count FROM guests WHERE id=?',[$actor]);
-        $maxAdults=(int)$g['plus_one_allowed'];$maxChildren=childrenEnabled($db)?(int)$g['children_count']:0;
+        $maxAdults=(int)$g['plus_one_allowed'];$maxChildren=childrenEnabled($db)?16:0;
         $adultCount=0;$childCount=0;$valid=[];
         foreach($items as $item){
             if(!is_array($item))fail(422,'companion','Неверная запись');
@@ -698,7 +698,7 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
         $guest=one($db,'SELECT plus_one_allowed,children_count FROM guests WHERE id=?',[$actor]);
         $maxAdults=1+(int)$guest['plus_one_allowed'];
         $adults=intvalField($d,'adults',0,$maxAdults,1);
-        $children=intvalField($d,'children',0,childrenEnabled($db)?(int)$guest['children_count']:0,0);
+        $children=intvalField($d,'children',0,childrenEnabled($db)?16:0,0);
         if(!childrenEnabled($db)){
             $previous=one($db,'SELECT children FROM rsvps WHERE guest_id=?',[$actor]);
             $children=(int)($previous['children']??0);
