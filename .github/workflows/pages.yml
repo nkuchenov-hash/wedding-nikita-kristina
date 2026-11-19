@@ -43,6 +43,7 @@ jobs:
           cp src/admin-app.js src/admin-data-ui.js src/admin-data.css src/admin-photos.js src/admin-photos.css src/venue-files-ui.js src/venue-files-ui.css src/admin-guests.js src/admin-guests.css src/data.js src/styles.css \
              src/venues.js src/venues-data.js src/venues.css \
              src/venue-detail-ui.js src/venue-detail-ui.css src/venues-pricing.js src/venue-evaluation.js \
+             src/venue-transcript-costs.js src/venue-budget-coverage.js \
              src/venues-photos-1.js src/venues-photos-2.js src/venues-photos-3.js src/venues-photos-4.js _site/src/
           cp public/mark.svg _site/public/
           touch _site/.nojekyll
@@ -55,6 +56,10 @@ jobs:
           test -s _site/admin/index.php
           test -s _admin-private/index.html
           test -s _admin-private/src/admin-data-ui.js
+          test -s _admin-private/src/venue-transcript-costs.js
+          test -s _admin-private/src/venue-budget-coverage.js
+          grep -Fq 'index.php?asset=src/venue-transcript-costs.js' _admin-private/src/venues.js
+          grep -Fq 'index.php?asset=src/venue-budget-coverage.js' _admin-private/src/venue-evaluation.js
           ! grep -Fq 'Демо-панель:' _admin-private/src/admin-app.js
           ! grep -Fq 'ДЕМО · БЕЗ БАЗЫ ДАННЫХ' _admin-private/src/admin-app.js
           ! grep -Fq 'Пока без серверной авторизации' _admin-private/src/venue-detail-ui.js
@@ -137,7 +142,7 @@ jobs:
             echo "::error::REG.RU admin/index.php checksum mismatch."
             exit 1
           fi
-          for asset in admin-app.js admin-data-ui.js admin-guests.js admin-guests.css admin-photos.js venue-files-ui.js venue-detail-ui.js; do
+          for asset in admin-app.js admin-data-ui.js admin-guests.js admin-guests.css admin-photos.js venue-files-ui.js venue-detail-ui.js venue-transcript-costs.js venue-budget-coverage.js; do
             local_asset_sha=$(sha256sum "_admin-private/src/$asset" | awk '{print $1}')
             remote_asset_sha=$(ssh $SSH_OPTS "$USERNAME@$HOST" "sha256sum '/var/www/u3728035/data/wedding-private/admin-release/src/$asset'" | awk '{print $1}')
             if [[ "$local_asset_sha" != "$remote_asset_sha" ]]; then
