@@ -81,3 +81,19 @@
  .r-app.wref-app .wref-info-details.r-details{padding:65px 26px 88px!important}
  .wref-info-facts summary{padding:20px 3px;font-size:14px}
 }
+
+/* Defeat inherited legacy dress-page photographic pseudo-layers; they caused
+   blurred background over the new heading and color palette. */
+.r-app.wref-app.r-info .wref-info .wref-info-dress.r-dress::before,
+.r-app.wref-app.r-info .wref-info .wref-info-dress.r-dress::after{
+  content:none!important;display:none!important;visibility:hidden!important;
+  background:none!important;mask-image:none!important;-webkit-mask-image:none!important;
+}
+.r-app.wref-app.r-info .wref-info .wref-info-dress.r-dress{
+  background:#eef2e9!important;isolation:isolate!important;
+}
+.r-app.wref-app.r-info .wref-info .wref-info-dress .wref-info-section-title,
+.r-app.wref-app.r-info .wref-info .wref-info-dress .wref-info-colors,
+.r-app.wref-app.r-info .wref-info .wref-info-dress .wref-info-outfits{
+  position:relative!important;z-index:5!important;opacity:1!important;visibility:visible!important;
+}
