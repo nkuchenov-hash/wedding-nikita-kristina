@@ -29,15 +29,20 @@ test('All 25 venues have the same 13 price rows, even when price is unknown',()=
   assert.match(html,/Неизвестные суммы указаны отдельно/);
  }
 });
-test('Photo archive includes all 365 indexed photographs in source room categories',()=>{
+test('Photo archive includes all 367 indexed photographs in source room categories',()=>{
  const total=allIds.reduce((s,id)=>s+getVenuePhotos(venue(id)).length,0);
- assert.equal(total,365);
+ assert.equal(total,367);
  assert.equal(getVenuePhotos(venue('vinity')).length,24);
  assert.equal(getVenuePhotos(venue('palma')).length,7,'all seven original Telegram photos must be displayed');
  assert.equal(getVenuePhotos(venue('palma')).filter(p=>p.section==='Залы').length,4);
  assert.equal(getVenuePhotos(venue('palma')).filter(p=>p.section==='Welcome-зона').length,3);
- assert.equal(getVenuePhotos(venue('maryino')).length,36,'all unique Maryino visit photos must appear');
- assert.equal(new Set(getVenuePhotos(venue('maryino')).map(p=>p.name)).size,36,'duplicates from Drive must not appear twice');
+ assert.equal(getVenuePhotos(venue('maryino')).length,38,'36 unique Maryino visit photos and two hall photos must appear');
+ assert.equal(new Set(getVenuePhotos(venue('maryino')).map(p=>p.id)).size,38,'all photos must be unique');
+ assert.equal(getVenuePhotos(venue('maryino')).filter(p=>p.section==='Общий альбом').length,0,'Maryino photos must be classified');
+ assert.ok(getVenuePhotos(venue('maryino')).some(p=>p.section==='Залы'));
+ assert.ok(getVenuePhotos(venue('maryino')).some(p=>p.section==='Территория'));
+ assert.ok(getVenuePhotos(venue('maryino')).some(p=>p.section==='Лаунж и фотозоны'));
+ assert.ok(getVenuePhotos(venue('maryino')).some(p=>p.section==='Входы и переходы'));
  assert.equal(venue('maryino').gallery.length,36,'legacy gallery uses the same unique archive');
  assert.ok(getVenuePhotos(venue('maryino')).some(p=>p.name==='IMG_20261031_144633_996.jpg'));
  assert.ok(getVenuePhotos(venue('royal')).some(f=>f.section==='Террасы и виды'));
@@ -55,7 +60,7 @@ test('Main covers use banquet halls or building facades; technical photos sort l
   'palma':'1NoeveNL-VYzPILfXxUiC4nzBcgV_4BSp'
  };
  for(const [id,photoId] of Object.entries(expected))assert.equal(getVenueCover(venue(id)).id,photoId,id+' cover');
- assert.equal(getVenueCover(venue('maryino')),null,'Maryino lacks a suitable owned hall/facade photo');
+ assert.equal(getVenueCover(venue('maryino'))?.id,'maryino-white-hall-banquet-1','Maryino opens with verified White Hall interior');
  const named=['royal','vesenniy','alex-park','loft-roof','seasons','petr','vinity'];
  for(const id of named)assert.equal(getVenueCover(venue(id))?.section,'Залы',id+' must show banquet hall');
  for(const id of ['royal','vesenniy','loft-roof','seasons','petr','alex-park']){
