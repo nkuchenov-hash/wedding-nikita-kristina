@@ -345,22 +345,6 @@ export const VENUE_PHOTOS_4 = {
   ],
   "maryino": [
     {
-      "id": "maryino-white-hall-banquet-1",
-      "name": "Белый зал — банкетная расстановка",
-      "section": "Залы",
-      "src": "https://www.avtobanket.ru/upload/image_gallery/1920/1200x_6be3b3a9c001f53ef39bb6e3e2924c7c.jpg",
-      "sourceUrl": "https://www.avtobanket.ru/palaces/usadbamaryino",
-      "credit": "Автобанкет"
-    },
-    {
-      "id": "maryino-white-hall-banquet-2",
-      "name": "Белый зал — круглые столы",
-      "section": "Залы",
-      "src": "https://www.avtobanket.ru/upload/image_gallery/1920/1200x_7634493359dd80bfd88b0bf09eea68c7.jpg",
-      "sourceUrl": "https://www.avtobanket.ru/palaces/usadbamaryino",
-      "credit": "Автобанкет"
-    },
-    {
       "id": "1ILtBcc9Zwz8LxPZElvyoM03eS386XRTH",
       "name": "Пруд и дворец — вид с берега",
       "section": "Территория",
