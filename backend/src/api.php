@@ -104,7 +104,7 @@ function guestLifecycleCounts(PDO $db): array {
           COALESCE(SUM(CASE WHEN r.guest_id IS NOT NULL THEN 1 ELSE 0 END),0) responded,
           COALESCE(SUM(CASE WHEN r.attendance='yes' THEN 1 ELSE 0 END),0) attending,
           COALESCE(SUM(CASE WHEN pd.decision LIKE '%вопрос%' THEN 1 ELSE 0 END),0) undecided_invitation,
-          COALESCE(SUM(CASE WHEN trim(g.first_name)='' THEN 1 ELSE 0 END),0) name_missing,
+          COALESCE(SUM(CASE WHEN trim(g.display_name)='' OR lower(trim(g.display_name)) IN ('(имя не указано)','имя не указано','name not provided') THEN 1 ELSE 0 END),0) name_missing,
           COALESCE(SUM(CASE WHEN r.attendance='yes' AND p.profile_completed_at IS NOT NULL THEN 1 ELSE 0 END),0) confirmed,
           COALESCE(SUM(CASE WHEN r.attendance='no' THEN 1 ELSE 0 END),0) declined,
           COALESCE(SUM(CASE WHEN r.attendance='maybe' THEN 1 ELSE 0 END),0) tentative,
