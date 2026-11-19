@@ -34,12 +34,14 @@ export function venueBudgetCoverage(v){
  if(priced(tech))equipment=make('Звук, свет, техника','priced',Number(tech),'Единый технический пакет — не прибавлять звук и свет повторно');
  else if(included(tech)){
   const sum=(priced(sound)?Number(sound):0)+(priced(light)?Number(light):0);
-  equipment=sum>0?make('Звук, свет, техника','priced',sum,'Часть единого пакета отдельно оценена, остальное включено')
-    :make('Звук, свет, техника','included',0,'Техническое оснащение входит в пакет; по отдельным позициям перепроверить состав');
+  if(!(priced(sound)||included(sound))||!(priced(light)||included(light)))
+   equipment=make('Звук, свет, техника','partial',sum,'Включена лишь часть комплектации. Не подтверждены все необходимые звук, сценический свет или работа техперсонала');
+  else
+   equipment=sum>0?make('Звук, свет, техника','priced',sum,'Отдельно оплачиваемая часть единого пакета указана; остальные позиции включены')
+     :make('Звук, свет, техника','included',0,'Полный звук, свет и техническая комплектация обозначены как включённые');
  }else if((included(sound)||priced(sound))&&(included(light)||priced(light))){
   const sum=(priced(sound)?Number(sound):0)+(priced(light)?Number(light):0);
-  equipment=sum>0?make('Звук, свет, техника','priced',sum,'Стоимость звука и света указана в предложении')
-    :make('Звук, свет, техника','included',0,'Звук и свет обозначены как включённые');
+  equipment=make('Звук, свет, техника','partial',sum,'Цена звука и света указана, но отдельно не подтверждено, что входит работа технического персонала');
  }else {
   equipment=make('Звук, свет, техника','unknown',null,
     'Нет подтверждения, что полный технический пакет включён; стоимость требуемого оснащения не установлена');
