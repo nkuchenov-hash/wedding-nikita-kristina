@@ -143,5 +143,14 @@ test('Visit transcript insights are additive editable fields on seven correctly 
  }
  // A transcript of the separate Balinskogo mansion is not mixed with Bali.
  assert.equal(VENUE_RECORDS.bali.visitTranscriptNotes,undefined);
- assert.equal(VENUE_RECORDS.k2.visitTranscriptNotes,undefined);
+ for(const [id,docId] of [['k2','1yxll_uMcNO_j9mpSpCTkUgN86hGlrg55'],['alex-park','14FJ4Ogo8qB6_Ta4HNru8UMCB57ah53gG']]){
+  const record=VENUE_RECORDS[id];
+  assert.ok(record.visitTranscriptNotes?.length>100,id+' contains verified original visit details');
+  assert.ok(record.visitTranscriptSource.includes(docId),id+' has the correct distinct transcript source');
+  const overview=renderVenueNewPage(venue(id),context('overview'));
+  assert.match(overview,/Из расшифровки встречи/);
+ }
+ assert.ok(!VENUE_RECORDS.k2.visitTranscriptSource.includes('14FJ4Ogo8qB6'));
+ assert.ok(!VENUE_RECORDS['alex-park'].visitTranscriptSource.includes('1yxll_uMcNO'));
+
 });
