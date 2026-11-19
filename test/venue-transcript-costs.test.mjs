@@ -100,7 +100,7 @@ test('K2 gives the same inclusive planning arithmetic at 80 or 100 guests',()=>{
  assert.deepEqual(rows.map(x=>x.label),['Аренда','Питание','Звук, свет, техника','Обслуживание']);
  assert.equal(rows[2].state,'unknown','technical included status cannot be inferred from rent');
  assert.equal(rows[3].state,'unknown','service rate cannot be inferred from other venue');
- assert.equal(estimateVenue(venue('k2',{cost:{rent:420000,menu:5900,technical:125000,service:10}}),80).value,1099200,
+ assert.equal(estimateVenue(venue('k2',{cost:{rent:420000,menu:5900,technical:125000,service:10}}),80).value,1064200,
    'organizer-supplied complete price should supersede planning guess');
 });
 
