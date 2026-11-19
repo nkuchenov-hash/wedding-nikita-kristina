@@ -237,6 +237,168 @@ export const VENUE_PHOTOS_4 = {
   ],
   "maryino": [
     {
+      "id": "1ILtBcc9Zwz8LxPZElvyoM03eS386XRTH",
+      "name": "IMG_20261031_111346_230.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "15XYTKRcNzT2pSQ3P6p3blpkeGVuTwmzB",
+      "name": "IMG_20261031_111348_889.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1xjzJEwQApw_vBIqAC_yPpjZyuimGC6gp",
+      "name": "IMG_20261031_111356_228.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1MYb5uLi9lpVNDoCIBbv4vvBNgGPZQWFf",
+      "name": "IMG_20261031_111455_844.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1iVWthkWqssaj8GlN8Bf-sndJlDcnbPCq",
+      "name": "IMG_20261031_111539_513.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1QJzfsySsuHcT7VTMRtdVsQrHbr9U7CVE",
+      "name": "IMG_20261031_111546_942.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1oIBb256u9entF8fRTiBMVepctFg3ZNpc",
+      "name": "IMG_20261031_111617_702.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1A9ZauPeRBC182oa3aO--wFDkcm2k6InK",
+      "name": "IMG_20261031_111629_935.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1wh5FvPvZ6FwxyQnItczyIvdRAQIhlknM",
+      "name": "IMG_20261031_111643_377.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1UDSn8veaE3evuaTXu-A0cNEufl74l2ae",
+      "name": "IMG_20261031_111648_601.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "153EcBe5ta30CwnIOPzxF5Vda2Rxoo8mG",
+      "name": "IMG_20261031_111845_980.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1JFC0iHW-yfbApIVv4HyC9UMSagLKd3tP",
+      "name": "IMG_20261031_111853_927.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "15GyFPH-Hy_96om06lYAiAO7wP8RB9Vus",
+      "name": "IMG_20261031_111939_086.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1CIQoTwBxmDeF5YKDlQDv3sf579RwzDg2",
+      "name": "IMG_20261031_111949_425.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "13ig5RuCpyWKwoSi0rrJOTGU3lFnNiWnf",
+      "name": "IMG_20261031_111953_063.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1Omy_ZNcCGDgv8CTaBHW9SXNLtp9CjQzZ",
+      "name": "IMG_20261031_111956_494.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1RwuuLByl7_gZ2Jg-qOu39uPIkA7xFTP-",
+      "name": "IMG_20261031_112704_594.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1IZkE2T08y8GjGHRTSHoo3CpwA51kgfBl",
+      "name": "IMG_20261031_113040_660.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "154TydFAogSXEvpq6qVnHpxa1rsAlvL71",
+      "name": "IMG_20261031_115029_751.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1YIPooHlaubLUlADcQsbehmXEJboaJtoh",
+      "name": "IMG_20261031_115200_257.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1JNrltGY35VD3ffpODcXpk2zgavcYXuU0",
+      "name": "IMG_20261031_115242_015.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1sajkIdeiEYRWEoEYlrb36Rl8zfjXlGvT",
+      "name": "IMG_20261031_115246_830.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1stMsihnnNSrAKTvUoz_IT4bI94SxkoEq",
+      "name": "IMG_20261031_115357_694.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1164tZiNmz-49dDsrSV4tGPaF0JjhNY1S",
+      "name": "IMG_20261031_115401_410.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "10ZcamVYKi3KgFxWSi4OLvtoIpFV2UonA",
+      "name": "IMG_20261031_115448_285.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "13VG__xEnMHpJDavNbhfMvNmmrWu1V4wc",
+      "name": "IMG_20261031_115907_414.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "1Au-Cmbn9M4GqennJxXAa8qfXh4vh_-xb",
+      "name": "IMG_20261031_121050_681.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
       "id": "1zFfBPwAtpRvC4CuI2jK5iyX4G4RD4XM_",
       "name": "IMG_20261031_121659_337.jpg",
       "section": "Общий альбом",
@@ -281,6 +443,12 @@ export const VENUE_PHOTOS_4 = {
     {
       "id": "1nuODkgBQRGaVIvIXIRJVc1h1LNnyGaql",
       "name": "IMG_20261031_135050_348.jpg",
+      "section": "Общий альбом",
+      "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
+    },
+    {
+      "id": "12Tjwv2R0O0uQTfcvveX5tNfB81m_SDmu",
+      "name": "IMG_20261031_144633_996.jpg",
       "section": "Общий альбом",
       "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww"
     }
