@@ -266,12 +266,14 @@ export async function activateGuestDirectory(root){
      }
      const decisionOptions=[['','Не решено'],...
        [...new Set([s(g.decision),...DECISIONS])].filter(Boolean).map(v=>[v,v])];
-     group('Планирование',[
+     const planningGroup=group('Планирование',[
        ['planning_status','Участие в плане','select',PLANNING],
        ['age_group','Возрастная категория','select',AGE],
        ['side','Сторона','select',SIDES.filter(([v])=>v!=='all')],
        ['decision','Приглашаем?','select',decisionOptions]
      ]);
+     planningGroup.append(mk('p','ad-gb-quiet-note',
+       '«Основной / Резерв» управляет составом и расчётами; «Приглашаем?» — внутреннее решение. Факт отправки отмечается ниже в разделе «Приглашение».'));
      group('Имя и контакты',[
        ['display_name','Имя гостя в списке','text'],
        ['name_en','Имя на английском','text'],
