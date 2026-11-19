@@ -273,3 +273,88 @@ body:not(.admin-body) #app{width:100%!important;max-width:none!important}
 @media(prefers-reduced-motion:reduce){
  .wref-header a,.wref-header button,.wref-day{transition:none!important}
 }
+
+/* Reference-fidelity fixes, 19 Nov: preserve actual photograph proportions,
+   remove the wireframe foliage and restore the botanical photographic ornament. */
+.wref-app .wref-hero-decor .wref-leaf,
+.wref-app .wref-invite-leaf{display:none!important}
+.wref-app .wref-hero-decor{filter:none!important;background-repeat:no-repeat!important;background-size:contain!important;pointer-events:none}
+.wref-app .wref-hero-decor--a{
+  width:clamp(170px,24vw,340px)!important;height:clamp(170px,24vw,340px)!important;
+  top:-30px!important;right:-35px!important;left:auto!important;bottom:auto!important;
+  transform:scaleX(-1)!important;
+  background-image:url('../public/production/invitation-leaves-top.png')!important;
+  background-position:right top!important;
+  opacity:.92!important
+}
+.wref-app .wref-hero-decor--b{
+  display:block!important;width:clamp(150px,18vw,290px)!important;height:clamp(190px,24vw,350px)!important;
+  left:-42px!important;bottom:-65px!important;right:auto!important;top:auto!important;
+  transform:none!important;
+  background-image:url('../public/production/invitation-flowers-left.png')!important;
+  background-position:left bottom!important;
+  opacity:.9!important
+}
+.wref-app .wref-welcome:before,.wref-app .wref-welcome:after{
+  content:'';display:block;position:absolute;z-index:1;pointer-events:none;
+  background-repeat:no-repeat;background-size:contain;opacity:.58
+}
+.wref-app .wref-welcome:before{
+  width:clamp(165px,20vw,305px);height:clamp(165px,20vw,305px);
+  top:-42px;left:-65px;background-image:url('../public/production/invitation-flowers-left.png')
+}
+.wref-app .wref-welcome:after{
+  width:clamp(175px,21vw,320px);height:clamp(175px,21vw,320px);
+  top:20px;right:-110px;transform:scaleX(-1);
+  background-image:url('../public/production/invitation-leaves-top.png')
+}
+.wref-app .wref-hero-skyline .spb-skyline--approved{
+  display:block!important;width:100%!important;height:auto!important;
+  max-height:135px!important;object-fit:contain!important;opacity:.93!important;
+  image-rendering:auto!important
+}
+.wref-app .wref-bridge-line .spb-skyline--approved{
+  display:block;width:100%;height:auto;max-height:160px;object-fit:contain;
+  opacity:.60;filter:grayscale(1) sepia(.42) hue-rotate(48deg) saturate(1.4) brightness(.78)
+}
+.wref-app .spb-program__skyline .spb-skyline--approved,
+.wref-app .spb-city-venue .spb-skyline--approved{
+  width:100%;height:auto;max-height:155px;object-fit:contain;
+  opacity:.5;filter:grayscale(1) sepia(.4) hue-rotate(48deg) saturate(1.2)
+}
+.wref-app .wref-welcome-message h2{font-size:clamp(60px,6.3vw,96px)!important}
+.wref-app .wref-welcome-message p{font-size:clamp(14px,1.35vw,18px)!important;line-height:1.75!important}
+.wref-app .wref-day-content p{font-size:13px!important}
+.wref-app .wref-day-content small{font-size:13px!important}
+.wref-app .wref-guides p{font-size:13px!important}
+@media(min-width:721px){
+  .r-app.wref-app .wref-hero .wref-cover{
+    left:0!important;right:auto!important;width:65%!important;height:100%!important;
+    object-fit:cover!important;object-position:center 18%!important;
+    transform:none!important;filter:none!important
+  }
+  .wref-app .wref-hero-shade{
+    background:linear-gradient(90deg,rgba(8,35,19,.04) 0%,rgba(11,39,22,.1) 32%,rgba(12,43,27,.58) 55%,#123a26 71%,#123a26 100%),linear-gradient(0deg,rgba(7,28,14,.2),transparent 58%)!important
+  }
+  .wref-app .wref-hero-copy{left:53%!important;width:45%!important}
+  .wref-app .wref-hero-skyline{width:118%!important;max-width:none!important;margin-top:8px!important}
+  .wref-app .wref-day-image{height:clamp(215px,21vw,300px)!important}
+  .wref-app .wref-day-content{min-height:240px!important}
+}
+@media(max-width:720px){
+  .r-app.wref-app .wref-hero .wref-cover{
+    width:100%!important;height:100%!important;object-fit:cover!important;
+    object-position:51% 10%!important;transform:none!important
+  }
+  .wref-app .wref-hero-shade{
+    background:linear-gradient(180deg,rgba(11,37,22,.07) 0%,rgba(12,43,27,.06) 30%,rgba(12,43,27,.48) 56%,rgba(12,43,27,.92) 75%,#123a26 100%)!important
+  }
+  .wref-app .wref-hero-decor--a{width:160px!important;height:160px!important;top:-20px!important;right:-40px!important;opacity:.82!important}
+  .wref-app .wref-hero-decor--b{display:none!important}
+  .wref-app .wref-welcome:before{left:-110px;top:12px;opacity:.32;width:225px;height:225px}
+  .wref-app .wref-welcome:after{right:-135px;top:140px;opacity:.33;width:245px;height:245px}
+  .wref-app .wref-welcome-message h2{font-size:clamp(55px,12vw,71px)!important}
+  .wref-app .wref-welcome-message p{font-size:14px!important}
+  .wref-app .wref-day-content p{font-size:11px!important}
+  .wref-app .wref-day-content small{font-size:10px!important}
+}
