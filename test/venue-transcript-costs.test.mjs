@@ -68,6 +68,10 @@ test('Putilov terrace and Petr AV upgrade are incremental optional charges',()=>
  const petr=venue('petr',{visitSelectedAddons:{'upgraded-av':true}});
  assert.equal(transcriptAddonTotal(petr,80),50000);
  assert.equal(petr.cost.technical,35000,'current equipment cost stays unchanged');
+ const revised=venue('petr',{cost:{...petr.cost,technical:85000},
+   visitSelectedAddons:{'upgraded-av':true}});
+ assert.equal(transcriptAddonTotal(revised,80),0,
+   'once base tech reaches the upgraded 85k, no surcharge can be counted');
 });
 
 test('Selectable options persist through the existing authenticated venue record updates',()=>{
