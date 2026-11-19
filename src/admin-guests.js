@@ -239,7 +239,7 @@ export async function activateGuestDirectory(root){
      if(activeId!==id)return;
      const g=data.guest,p=byId(id)||g;
      detail.replaceChildren(mk('span','ad-gb-id',g.source_person_id||'Добавлен вручную'),mk('h2','',display(g)));
-     detail.append(mk('p','ad-gb-note','Редактируйте поля ниже. Сохранение изменит единую базу сайта; исходные таблицы остаются архивом.'));
+     detail.append(mk('p','ad-gb-note','Поля сгруппированы по назначению. Сохраняются только изменённые значения.'));
      const profile=section('Данные гостя');
      const form=mk('form','ad-gb-unified-form'),controls={},initial={};
      // Imported sheets repeat the social-circle label in the bio fields.
@@ -452,22 +452,22 @@ export async function activateGuestDirectory(root){
          sent.textContent=value?'Отменить отметку об отправке':'Отметить отправленным';render();
        }catch(err){notice(err.message,true)}finally{sent.disabled=false}
      });
-     const archiveSection=section('Положение в списке');
-     const archiveButton=mk('button','ad-gb-light',g.status==='archived'?'Восстановить в основной список':g.planning_status==='reserve'?'Вернуть в основной список':'Перевести в резерв');
-     archiveButton.type='button';archiveSection.append(archiveButton);
-     archiveSection.append(mk('p','ad-gb-note','Резерв — временный статус. История, связи, контакты и ответы остаются в базе. Участие в расчётах отключается до возврата в основной список.'));
-     archiveButton.addEventListener('click',async()=>{
-       const restore=g.status==='archived';
-       const next=restore?'main':g.planning_status==='reserve'?'main':'reserve';
-       archiveButton.disabled=true;
-       try{
-         if(restore)await request('admin/guest/update',{method:'POST',csrf,body:{id,status:'draft'}});
-         await request('admin/guest/fields',{method:'PATCH',csrf,body:{id,fields:{planning_status:next}}});
-         g.status=restore?'draft':g.status;g.planning_status=next;
-         await reloadData();archiveButton.textContent=next==='reserve'?'Вернуть в основной список':'Перевести в резерв';
-         notice(next==='reserve'?'Гость перенесён в резерв':'Гость возвращён в основной список');
-       }catch(err){notice(err.message,true)}finally{archiveButton.disabled=false}
-     });
+     // Active guests have exactly one Main/Reserve control, in Planning.
+     // Only legacy archived records require an additional recovery action.
+     if(g.status==='archived'){
+       const recovery=section('Восстановление архивной записи');
+       const restore=mk('button','ad-gb-light','Вернуть из архива');restore.type='button';
+       recovery.append(restore);
+       restore.addEventListener('click',async()=>{
+         restore.disabled=true;
+         try{
+           await request('admin/guest/update',{method:'POST',csrf,body:{id,status:'draft'}});
+           await reloadData();
+           notice('Запись восстановлена. Её основной/резервный статус не изменён.');
+           await openGuest(id);
+         }catch(err){notice(err.message,true);restore.disabled=false}
+       });
+     }
 
    }catch(err){detail.replaceChildren(mk('p','ad-gb-error','Не удалось открыть карточку: '+err.message))}
  }
