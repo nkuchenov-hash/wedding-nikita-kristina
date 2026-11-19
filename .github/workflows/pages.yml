@@ -56,6 +56,12 @@ jobs:
           test -s _site/admin/index.php
           test -s _admin-private/index.html
           test -s _admin-private/src/admin-data-ui.js
+          # Regression gate: organisers must never see the removed duplicate
+          # identity panel, the child quota, or the transport questions.
+          ! grep -Fq 'advanced.append(advancedFields)' _admin-private/src/admin-guests.js
+          ! grep -Fq 'Разрешено детей с этим гостем' _admin-private/src/admin-guests.js
+          ! grep -Fq 'Нужен трансфер' _admin-private/src/admin-guests.js
+          grep -Fq 'checkRelease' _admin-private/src/admin-app.js
           test -s _admin-private/src/venue-transcript-costs.js
           test -s _admin-private/src/venue-budget-coverage.js
           grep -Fq 'index.php?asset=src/venue-transcript-costs.js' _admin-private/src/venues.js
@@ -157,6 +163,15 @@ jobs:
             exit 1
           fi
           echo "Guest browser preview uploaded to REG.RU at /preview/."
+          # Inspect the actual private files installed at the production path.
+          # A successful GitHub commit is NOT sufficient release evidence.
+          ssh $SSH_OPTS "$USERNAME@$HOST" \
+            "set -eu; ! grep -Fq 'advanced.append(advancedFields)' /var/www/u3728035/data/wedding-private/admin-release/src/admin-guests.js; \
+             ! grep -Fq 'Разрешено детей с этим гостем' /var/www/u3728035/data/wedding-private/admin-release/src/admin-guests.js; \
+             ! grep -Fq 'Нужен трансфер' /var/www/u3728035/data/wedding-private/admin-release/src/admin-guests.js; \
+             grep -Fq 'checkRelease' /var/www/u3728035/data/wedding-private/admin-release/src/admin-app.js"
+          remote_version=$(ssh $SSH_OPTS "$USERNAME@$HOST" "cat '$DESTINATION/build-info.json'")
+          echo "$remote_version" | node -e 'let s="";process.stdin.on("data",d=>s+=d);process.stdin.on("end",()=>{const v=JSON.parse(s); if(v.revision!==process.env.GITHUB_SHA.slice(0,12))process.exit(1)})'
           echo "REG.RU protected admin JavaScript bundle matches this release."
           echo "REG.RU admin-only deployment confirmed by remote checksums."
       - uses: actions/configure-pages@v5
