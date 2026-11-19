@@ -2,6 +2,7 @@ import {mkdirSync,cpSync,readFileSync,writeFileSync,readdirSync,existsSync} from
 import {join,dirname} from 'node:path';
 import assert from 'node:assert/strict';
 
+const sha=(process.env.GITHUB_SHA||'local').slice(0,12);
 const source=readFileSync('index.html','utf8');
 const links=[...source.matchAll(/<link\s+rel="stylesheet"\s+href="\.\/src\/([\w-]+\.css)"\s*\/>/g)].map(x=>x[1]);
 assert.ok(links.includes('wedding-reference-2026.css'),'Approved stylesheet missing');
@@ -11,8 +12,9 @@ let html=source.replace('<script type="module" src="./src/app.js"></script>','<s
 html=html.replace(/\s*<script type="module">if\(new URLSearchParams\(location.search\).get\('compare'\)==='1'\) import\('\.\/src\/comparison\.js'\);<\/script>/,'');
 html=html.replace('</head>','  <meta name="robots" content="noindex,nofollow" />\n</head>');
 html=html.replace('<title>Никита & Кристина — наша свадьба</title>','<title>Никита & Кристина — просмотр свадебного сайта</title>');
+html=html.replace(/(href="\.\/src\/[\w-]+\.css)"/g,(_all,href)=>href+'?v='+sha+'"');
+html=html.replace('src="./src/guest-online-entry.js"','src="./src/guest-online-entry.js?v='+sha+'"');
 
-const sha=(process.env.GITHUB_SHA||'local').slice(0,12);
 for(const root of ['_site/preview','_pages/preview']){
  mkdirSync(join(root,'src'),{recursive:true});
  mkdirSync(join(root,'public'),{recursive:true});
@@ -22,6 +24,10 @@ for(const root of ['_site/preview','_pages/preview']){
   assert.ok(existsSync(src),'Missing preview source: '+src);
   cpSync(src,dest);
  }
+ const previewEntry=join(root,'src/guest-online-entry.js');
+ writeFileSync(previewEntry,readFileSync(previewEntry,'utf8').replace("from './replica.js'","from './replica.js?v="+sha+"'"));
+ const previewReplica=join(root,'src/replica.js');
+ writeFileSync(previewReplica,readFileSync(previewReplica,'utf8').replace("from './data.js'","from './data.js?v="+sha+"'"));
  for(const dirname of ['approved-reference','board','production','reference']){
   cpSync(join('public',dirname),join(root,'public',dirname),{recursive:true});
  }
