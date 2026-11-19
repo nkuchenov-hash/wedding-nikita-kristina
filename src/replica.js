@@ -1,7 +1,7 @@
 
 import {wedding} from './data.js';
 const PHOTO={
- boardPortrait:'./public/production/portrait-extended-background.webp',
+ boardPortrait:'./public/board/01-home/portrait-clean.webp',
  cityPhoto:'https://upload.wikimedia.org/wikipedia/commons/b/b1/Saint_Petersburg_Palace_Bridge%2C_St._Petersburg_%2837931957696%29.jpg',
  boardEstate:'./public/production/invitation-estate-clear.png',
  boardCherub:'./public/production/invitation-cherub.png',
