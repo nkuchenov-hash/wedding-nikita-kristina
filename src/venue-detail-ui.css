@@ -397,3 +397,29 @@
  .vdp-budget-header>div:last-child{grid-column:auto}
  .vdp-budget-header strong{font-size:20px}
 }
+
+
+/* Verified meeting supplements: a separate, explicitly optional cost layer.
+   Never visually merge these choices with quoted required charges. */
+.vdp-transcript-budget{min-width:0}
+.vdp-transcript-budget h3{margin:0 0 9px}
+.vdp-transcript-budget h4{font-size:16px;line-height:1.35;color:#24533a;margin:20px 0 8px}
+.vdp-transcript-budget p{font-size:13px;line-height:1.65;color:#657f6b;max-width:1050px}
+.vdp-transcript-scenarios{margin:8px 0 22px}
+.vdp-transcript-scenarios .vdp-source-rows{margin:14px 0 8px}
+.vdp-transcript-scenarios .vdp-source-rows>div{gap:15px;align-items:baseline}
+.vdp-transcript-scenarios .vdp-source-rows small{display:block;font-size:12px;color:#718a77;margin-top:4px}
+.vdp-transcript-options{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin:14px 0 18px}
+.vdp-transcript-option{display:grid;grid-template-columns:21px minmax(0,1fr) auto;align-items:start;gap:16px;padding:17px 19px;border:1px solid #d8e6db;border-radius:12px;background:#f9fbf8;cursor:pointer;min-width:0}
+.vdp-transcript-option:has(input:checked){border-color:#9dbda4;background:#eef8ef}
+.vdp-transcript-option input{appearance:auto;width:19px;height:19px;accent-color:#315e40;margin:1px 0 0;cursor:pointer}
+.vdp-transcript-option span{min-width:0}
+.vdp-transcript-option strong{display:block;font-size:14px;line-height:1.45;font-weight:700;color:#234b34}
+.vdp-transcript-option small{display:block;margin-top:5px;font-size:12px;line-height:1.5;color:#6a806e}
+.vdp-transcript-option b{font-size:17px;font-weight:750;white-space:nowrap;color:#2d6041}
+.vdp-transcript-budget a{color:#285a3c;text-decoration:underline;text-underline-offset:4px}
+.vdp-transcript-budget .vdp-note{font-size:12px;line-height:1.6;color:#67806d}
+@media(max-width:640px){
+ .vdp-transcript-option{grid-template-columns:20px minmax(0,1fr);gap:10px;padding:14px}
+ .vdp-transcript-option b{grid-column:2;font-size:15px}
+}
