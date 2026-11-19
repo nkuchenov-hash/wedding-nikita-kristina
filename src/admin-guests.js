@@ -22,7 +22,7 @@ const SORT_FIELDS=[
  ['created_at','Создан'],['updated_at','Обновлён'],['response_source','Источник RSVP'],
  ['profile_completed_at','Анкета заполнена'],['first_opened_at','Первое открытие'],
  ['last_opened_at','Последнее открытие'],['invite_prepared_at','Ссылка создана'],
- ['private_notes','Личные заметки'],['dietary_notes','Питание'],['arrival_notes','Прибытие'],
+ ['private_notes','Личные заметки'],['dietary_notes','Питание'],
  ['other_notes','Другие пожелания'],['status','Статус профиля']
 ];
 const SIDENAME=Object.fromEntries(SIDES);
@@ -109,8 +109,8 @@ export async function activateGuestDirectory(root){
    const adults=attending?Math.max(1,Math.min(Number(p.adults)||1,1+Number(p.plus_one_allowed||0))):0;
    const children=attending&&childrenEnabled?Math.max(0,Math.min(16,Number(p.children)||0)):0;
    const result=await request('admin/guest/rsvp',{method:'PATCH',csrf,body:{
-     id:p.id,attendance:val,adults,children,transport_needed:!!Number(p.transport_needed||0),
-     arrival_notes:s(p.arrival_notes),dietary_notes:s(p.dietary_notes),other_notes:s(p.other_notes)
+     id:p.id,attendance:val,adults,children,
+     dietary_notes:s(p.dietary_notes),other_notes:s(p.other_notes)
    }});
    await reloadData();
    notice('Ответ сохранён в базе с пометкой «внесено организатором»');
@@ -404,9 +404,7 @@ export async function activateGuestDirectory(root){
      r.attendance=field(rsp,'Участие','attendance',g.attendance||'','select',ANSWERS);
      r.adults=field(rsp,'Взрослых','adults',g.adults??1,'number');
      r.children=field(rsp,'Детей, которые придут с гостем','children',g.children??0,'number');
-     r.transport_needed=field(rsp,'Нужен трансфер','transport_needed',g.transport_needed||0,'select',[['0','Нет'],['1','Да']]);
      r.dietary_notes=field(rsp,'Питание и аллергии','dietary_notes',g.dietary_notes||'','textarea');
-     r.arrival_notes=field(rsp,'Транспорт и прибытие','arrival_notes',g.arrival_notes||'','textarea');
      r.other_notes=field(rsp,'Другие пожелания','other_notes',g.other_notes||'','textarea');
      const saveR=mk('button','ad-gb-primary','Сохранить ответ'),msgR=mk('span','ad-gb-feedback');
      saveR.type='submit';const f=mk('div','ad-gb-edit-actions');f.append(saveR,msgR);rsp.append(f);response.append(rsp);
@@ -419,8 +417,7 @@ export async function activateGuestDirectory(root){
        if(val===''&&g.attendance&&!confirm('Удалить сохранённый ответ?')){saveR.disabled=false;msgR.textContent='';return}
        try{const data=await request('admin/guest/rsvp',{method:'PATCH',csrf,body:{
          id,attendance:val,adults:Number(r.adults.value),children:childrenEnabled?Number(r.children.value):0,
-         transport_needed:r.transport_needed.value==='1',dietary_notes:s(r.dietary_notes.value),
-         arrival_notes:s(r.arrival_notes.value),other_notes:s(r.other_notes.value)
+         dietary_notes:s(r.dietary_notes.value),other_notes:s(r.other_notes.value)
        }});Object.assign(g,{attendance:data.attendance});await reloadData();msgR.textContent='Сохранено в базе'}
        catch(err){msgR.textContent=err.message}finally{saveR.disabled=false}
      });
