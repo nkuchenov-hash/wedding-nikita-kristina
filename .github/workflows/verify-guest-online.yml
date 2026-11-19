@@ -1,0 +1,36 @@
+name: Verify wedding preview URLs in the browser
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-guest-online.yml'
+      - 'src/guest-online-entry.js'
+      - 'tools/stage-guest-online.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Check online HTML, CSS, JavaScript and photography
+        shell: bash
+        run: |
+          set -euo pipefail
+          for BASE in "https://nikitakristina.ru/preview" "https://nkuchenov-hash.github.io/wedding-nikita-kristina/preview"; do
+            echo "Checking $BASE/"
+            curl --retry 4 --retry-delay 3 --fail --silent --show-error --location --max-time 20 "$BASE/index.html?v=browser" -o /tmp/wedding-preview.html
+            grep -Fq './src/guest-online-entry.js' /tmp/wedding-preview.html
+            grep -Fq './src/wedding-reference-2026.css' /tmp/wedding-preview.html
+            ! grep -Fq 'Сайт готовится' /tmp/wedding-preview.html
+            curl --retry 3 --fail --silent --show-error --location --max-time 20 "$BASE/src/guest-online-entry.js" -o /tmp/wedding-entry.js
+            grep -Fq 'renderGuest' /tmp/wedding-entry.js
+            curl --retry 3 --fail --silent --show-error --location --max-time 20 "$BASE/src/replica.js" -o /tmp/wedding-replica.js
+            grep -Fq 'wref-hero' /tmp/wedding-replica.js
+            curl --retry 3 --fail --silent --show-error --location --max-time 20 "$BASE/src/wedding-reference-2026.css" -o /tmp/wedding-styles.css
+            grep -Fq '.wref-hero' /tmp/wedding-styles.css
+            curl --retry 3 --fail --silent --show-error --location --max-time 20 "$BASE/public/production/portrait-extended-background.webp" -o /tmp/wedding-photo.webp
+            test "$(wc -c < /tmp/wedding-photo.webp)" -gt 1000
+            echo "LIVE_BROWSER_PREVIEW_VERIFIED: $BASE/"
+          done
