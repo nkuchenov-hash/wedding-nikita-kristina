@@ -7,6 +7,7 @@ import {VENUE_PHOTOS_4} from './venues-photos-4.js';
 import {VENUE_PRICING,VENUE_COST_LABELS} from './venues-pricing.js';
 import {PERSONAL_CRITERIA,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
 import {transcriptAddons,transcriptMenuScenarios} from './venue-transcript-costs.js';
+import {venueBudgetCoverage,k2PlanningScenarios} from './venue-budget-coverage.js';
 
 const ALL_PHOTOS={...VENUE_PHOTOS_1,...VENUE_PHOTOS_2,...VENUE_PHOTOS_3,...VENUE_PHOTOS_4};
 const h=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -138,13 +139,13 @@ function quoteCards(v,guests){
 function budget(v,ctx){
  const guests=ctx.guests,e=ctx.estimate(v),extra=ctx.extraTotal(v);
  const total=e.value===null?null:e.value+extra;
- const base=e.value===null?'Не рассчитано':money(e.value);
- const basis=e.value===null?'Нет цены банкета или аренды':e.isQuote&&!e.partial?'Полученная смета':'Неполный расчёт';
+ const base=e.value===null?'Не рассчитано':(e.kind==='planning'?'≈ ':'')+money(e.value);
+ const basis=e.value===null?'Нет цены банкета или аренды':e.kind==='planning'?'План с резервами (не КП)':e.isQuote&&!e.partial?'Полученная смета':'Неполный расчёт';
  const missing=e.missing?.length?'<p class="vdp-cost-missing"><strong>Нужно уточнить:</strong> '+h(e.missing.join(', '))+'</p>':'';
  const known=e.value===null&&e.knownSubtotal>0?'<p class="vdp-cost-known">Сейчас известно: '+money(e.knownSubtotal)+' — это не итоговая стоимость.</p>':'';
  return '<div class="vdp-budget-header"><div><small>Смета / оценка · '+h(guests)+' гостей</small><strong>'+base+'</strong><span>'+basis+'</span></div>'+
  '<div><small>Дополнительные расходы</small><strong>'+money(extra)+'</strong><span>Поверх стоимости площадки</span></div>'+
- '<div><small>Итого с доплатами</small><strong>'+(total===null?'Не рассчитано':(e.partial?'от ':'')+money(total))+'</strong><span>'+(e.partial?'Только известные суммы':'На основании полученной сметы')+'</span></div></div>'+known+missing;
+ '<div><small>Итого с доплатами</small><strong>'+(total===null?'Не рассчитано':(e.kind==='planning'?'≈ ':e.partial?'от ':'')+money(total))+'</strong><span>'+(e.partial?'Только известные суммы':'На основании полученной сметы')+'</span></div></div>'+known+missing;
 }
 function dates(v,ctx){
  return '<div class="vdp-dates">'+[['18','18 июня'],['19','19 июня'],['20','20 июня']].map(([n,label])=>{const status=ctx.dayStatus(v,n),txt=ctx.dayText(v,n);return '<button type="button" data-venue-inline="date:'+n+'" data-inline-kind="date" class="vdp-date vdp-date-editable '+h(status)+'" aria-label="Изменить доступность '+label+'"><span>'+label+(n==='19'?' · приоритет':'')+'</span><strong>'+h(txt)+' <span class="vdp-inline-pencil" aria-hidden="true">✎</span></strong></button>'}).join('')+'</div>';
@@ -174,7 +175,7 @@ function priceLine(v){
 }
 function hero(v,ctx,photos){
  const pic=getVenueCover(v),budgeted=ctx.estimate(v),menu=getCost(v).menu;
- return '<div class="vdp-hero">'+(pic?'<div class="vdp-hero-image" style="background-image:linear-gradient(90deg,rgba(14,36,28,.86),rgba(14,36,28,.27)),url(&quot;'+thumb(pic.id,1600)+'&quot;)"></div>':'<div class="vdp-hero-image vdp-no-image"></div>')+'<div class="vdp-hero-content"><span class="vdp-eyebrow">'+(v.region==='city'?'САНКТ-ПЕТЕРБУРГ':'ЗА ГОРОДОМ')+' · '+(v.visited?'ПОСМОТРЕЛИ':'ОСМОТР НЕ ПОДТВЕРЖДЁН')+'</span><h1>'+inlineValue('name',v.name,{label:'Название площадки',className:'vdp-inline-hero'})+'</h1><div class="vdp-hero-area">'+inlineValue('area',v.area,{label:'Местоположение'})+'</div><div class="vdp-hero-bottom"><div><small>Банкет на гостя</small><strong>'+(typeof menu?.value==='number'?money(menu.value):'Нет данных')+'</strong></div><div><small>Бюджет на '+ctx.guests+' гостей</small><strong>'+(budgeted.value===null?'Не рассчитано':money(budgeted.value))+'</strong><span>'+(budgeted.value===null?'Известно: '+money(budgeted.knownSubtotal)+'; не итог':budgeted.partial?'Неполный расчёт':'По полученной смете')+'</span></div><div><small>Фотографии</small><strong>'+photos.length+'</strong><span>С осмотров в Wedding Drive</span></div></div></div></div>';
+ return '<div class="vdp-hero">'+(pic?'<div class="vdp-hero-image" style="background-image:linear-gradient(90deg,rgba(14,36,28,.86),rgba(14,36,28,.27)),url(&quot;'+thumb(pic.id,1600)+'&quot;)"></div>':'<div class="vdp-hero-image vdp-no-image"></div>')+'<div class="vdp-hero-content"><span class="vdp-eyebrow">'+(v.region==='city'?'САНКТ-ПЕТЕРБУРГ':'ЗА ГОРОДОМ')+' · '+(v.visited?'ПОСМОТРЕЛИ':'ОСМОТР НЕ ПОДТВЕРЖДЁН')+'</span><h1>'+inlineValue('name',v.name,{label:'Название площадки',className:'vdp-inline-hero'})+'</h1><div class="vdp-hero-area">'+inlineValue('area',v.area,{label:'Местоположение'})+'</div><div class="vdp-hero-bottom"><div><small>Банкет на гостя</small><strong>'+(typeof menu?.value==='number'?money(menu.value):'Нет данных')+'</strong></div><div><small>Бюджет на '+ctx.guests+' гостей</small><strong>'+(budgeted.value===null?'Не рассчитано':money(budgeted.value))+'</strong><span>'+(budgeted.value===null?'Известно: '+money(budgeted.knownSubtotal)+'; не итог':budgeted.kind==='planning'?'План с резервами, не КП':budgeted.partial?'Неполный расчёт':'По полученной смете')+'</span></div><div><small>Фотографии</small><strong>'+photos.length+'</strong><span>С осмотров в Wedding Drive</span></div></div></div></div>';
 }
 function scopeList(v){
  const blocks=[['Что входит','included'],['Доплаты и ограничения','excluded'],['Открытые вопросы','questions']];
@@ -183,10 +184,34 @@ function scopeList(v){
 function venueDocuments(v){
  return '<section class="vdp-pane vdp-files-pane"><div class="vdp-row-between"><div><h2>Документы и материалы площадки</h2><p class="vdp-files-intro">Исходные сметы, коммерческие предложения, документы, видео и папки Google Drive — всё привязано к этой площадке. Оригиналы хранятся в Wedding Drive.</p></div></div><div data-venue-files="'+h(v.id)+'"></div></section>';
 }
+function coveragePanel(v){
+ const rows=venueBudgetCoverage(v);
+ const name={priced:'Есть цена',included:'Включено',unknown:'Не подтверждено'};
+ const missing=rows.filter(x=>x.state==='unknown').map(x=>x.label);
+ return '<section class="vdp-pane vdp-budget-coverage"><h3>Проверка состава сметы</h3><p>В каждой площадке должны быть отдельно определены аренда, питание, техника и обслуживание. Неизвестная цена — не ноль и не подтверждение включения.</p><div class="vdp-budget-coverage-grid">'+rows.map(x=>
+  '<div class="vdp-coverage-row '+h(x.state)+'"><div><strong>'+h(x.label)+'</strong><small>'+h(x.detail)+'</small></div><span>'+h(name[x.state]||'Неизвестно')+'</span></div>'
+ ).join('')+'</div>'+(missing.length?'<p class="vdp-coverage-warning">Не подтверждены: '+h(missing.join(', '))+'. До их подтверждения сумму нельзя считать полной договорной стоимостью.</p>':'')+'</section>';
+}
 function transcriptBudget(v,guests){
  const options=transcriptAddons(v,guests),scenarios=transcriptMenuScenarios(v,guests);
  if(!options.length&&!scenarios.length&&!v.visitPaymentTerms&&!v.visitIncludedEquipment&&!v.visitUnpricedFacts)return '';
- const scenarioHtml=scenarios.length?'<div class="vdp-transcript-scenarios"><h4>Варианты меню из разговора · '+guests+' гостей</h4><p>Это НЕ подтверждённые полные сметы. Цена аренды берётся из текущей базы, но в ориентир не входят техника, сервис и иные услуги.</p><div class="vdp-source-rows">'+scenarios.map(x=>'<div><span>'+h(x.name)+'<small> · '+h(x.menuPerGuest.toLocaleString('ru-RU'))+' ₽/гость</small></span><strong>'+(x.indicativeTotal===null?money(x.cateringTotal)+' за меню':money(x.indicativeTotal))+'</strong></div>').join('')+'</div>'+scenarios.map(x=>'<p class="vdp-note">'+h(x.comment)+' [запись '+h(x.sourceTime||'')+']</p>').join('')+'</div>':'';
+ const fullK2=k2PlanningScenarios(v,guests);
+ const scenarioHtml=fullK2.length?
+  '<div class="vdp-transcript-scenarios"><h4>Плановые сметы К2 · '+guests+' гостей</h4>'+
+  '<p><strong>Техника в аренду 420 000 ₽ не подтверждена.</strong> Для планирования использован резерв 170 000 ₽ по техническому КП другой площадки и временные 10% обслуживания. Это не тарифы К2. Без подтверждения этих условий сумма остаётся плановой, а не договорной.</p>'+
+  fullK2.map(x=>'<div class="vdp-plan-option"><h4>'+h(x.name)+'</h4>'+
+    '<div class="vdp-source-rows">'+[
+      ['Аренда (К2, предложение)',x.rent],
+      ['Банкет: '+x.menuRate.toLocaleString('ru-RU')+' ₽ × '+guests+' (устно)',x.menu],
+      ['Звук, свет и техника (плановый резерв)',x.tech],
+      ['Обслуживание ('+x.serviceRate+'%, рабочее допущение)',x.service]
+    ].map(([label,value])=>'<div><span>'+h(label)+'</span><strong>'+money(value)+'</strong></div>').join('')+'</div>'+
+    '<p class="vdp-plan-total">Плановая сумма основных статей: <strong>≈ '+money(x.total)+'</strong></p>'+
+    '<p class="vdp-note">'+h(x.comment)+'</p><p class="vdp-note">'+h(x.reserveBasis)+' '+h(x.serviceBasis)+'</p>'+
+    '<p class="vdp-coverage-warning">'+h(x.unresolved.join(' · '))+'</p>'+
+    '</div>').join('')+'</div>':
+  scenarios.length?'<div class="vdp-transcript-scenarios"><h4>Варианты меню из разговора · '+guests+' гостей</h4><p>Это НЕ подтверждённые полные сметы. В разделе проверки состава указаны цены, которых нет.</p><div class="vdp-source-rows">'+scenarios.map(x=>'<div><span>'+h(x.name)+'<small> · '+h(x.menuPerGuest.toLocaleString('ru-RU'))+' ₽/гость</small></span><strong>'+(x.indicativeTotal===null?money(x.cateringTotal)+' за меню':money(x.indicativeTotal)+' без неподтверждённых услуг')+'</strong></div>').join('')+'</div>'+scenarios.map(x=>'<p class="vdp-note">'+h(x.comment)+' [запись '+h(x.sourceTime||'')+']</p>').join('')+'</div>':'';
+
  const addonsHtml=options.length?'<h4>Дополнительные расходы из встречи</h4><p>По умолчанию не включены. Отметьте только услуги, которые планируете заказать и которых ещё нет в смете или ручных дополнительных расходах.</p><div class="vdp-transcript-options">'+options.map(x=>'<label class="vdp-transcript-option"><input type="checkbox" data-transcript-addon="'+h(x.id)+'" '+(x.selected?'checked ':'')+'aria-label="Учитывать: '+h(x.label)+'"><span><strong>'+h(x.label)+'</strong><small>'+h(x.note)+' · ['+h(x.sourceTime||'встреча')+']</small>'+(x.potentialDuplicate?'<small>Проверьте: в дополнительных расходах уже есть сумма этой категории.</small>':'')+'</span><b>'+money(x.total)+'</b></label>').join('')+'</div>':'';
  const otherNotes=[v.visitIncludedEquipment,v.visitPaymentTerms,v.visitUnpricedFacts].filter(Boolean).map(x=>'<p class="vdp-note">'+h(x)+'</p>').join('');
  return '<section class="vdp-pane vdp-transcript-budget"><h3>Дополнения к расчёту из встречи</h3>'+scenarioHtml+addonsHtml+otherNotes+(v.visitTranscriptSource?'<p><a href="'+h(escUrl(v.visitTranscriptSource))+'" target="_blank" rel="noopener noreferrer">Просмотреть исходную расшифровку ↗</a></p>':'')+'</section>';
@@ -196,7 +221,7 @@ function estimatePane(v,ctx){
  const p=getCost(v);
  const breakdown=v.budgetItems?.length?'<section class="vdp-pane"><h3>Строки из полученных материалов</h3><div class="vdp-source-rows">'+v.budgetItems.map(([n,c])=>'<div><span>'+h(n)+'</span><strong>'+money(c)+'</strong></div>').join('')+'</div><p class="vdp-note">Это строки источника, некоторые относятся к разным датам и пакетам. Точный итог берётся из полученной сметы, а не из произвольной суммы всех строк.</p></section>':'';
  const extras=[['alcohol','Алкоголь / сбор'],['decor','Декор'],['host','Ведущий и DJ'],['photoVideo','Фото / видео'],['transport','Транспорт'],['extension','Продление'],['other','Прочее']];
- return '<div class="vdp-budget-page"><div class="vdp-pane"><div class="vdp-row-between"><div><h2>Смета на '+ctx.guests+' гостей</h2><p>Единая структура для каждой площадки. Неизвестные суммы указаны отдельно, депозит не прибавляется дважды.</p></div><label>Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+ctx.guests+'" aria-label="Изменить число гостей и пересчитать смету"></label></div>'+budget(v,ctx)+'<details class="vdp-budget-context"><summary>Источник и пояснения к расчёту</summary><p>Неизвестные расходы не учтены.</p><p>'+h(ctx.estimate(v).note||'Требует уточнения')+'</p><p>'+h(p.summary||'Данные ещё уточняются')+'</p></details></div><div class="vdp-cost-grid">'+costSchedule(v)+'</div>'+breakdown+'<section class="vdp-pane"><div class="vdp-row-between"><h3>Полученные сметы и сценарии</h3><button type="button" class="vdp-inline-add" data-add-inline-quote>+ Добавить смету</button></div>'+quoteCards(v,ctx.guests)+'</section>'+transcriptBudget(v,ctx.guests)+'<section class="vdp-pane vdp-files-pane"><div data-venue-files="'+h(v.id)+'" data-venue-files-kind="quotes"></div></section><section class="vdp-pane"><h3>Остальные расходы свадьбы</h3><p>Вносите только расходы сверх предложения площадки. Нажмите на сумму, чтобы изменить её.</p><div class="vdp-extra-grid">'+extras.map(([k,n])=>'<div class="vdp-inline-extra"><span>'+n+'</span>'+inlineValue('extra:'+k,v.extras?.[k],{label:n,kind:'number',empty:'Не рассчитано'})+'</div>').join('')+'</div></section></div>';
+ return '<div class="vdp-budget-page"><div class="vdp-pane"><div class="vdp-row-between"><div><h2>Смета на '+ctx.guests+' гостей</h2><p>Единая структура для каждой площадки. Неизвестные суммы указаны отдельно, депозит не прибавляется дважды.</p></div><label>Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+ctx.guests+'" aria-label="Изменить число гостей и пересчитать смету"></label></div>'+budget(v,ctx)+'<details class="vdp-budget-context"><summary>Источник и пояснения к расчёту</summary><p>Неизвестные расходы не учтены.</p><p>'+h(ctx.estimate(v).note||'Требует уточнения')+'</p><p>'+h(p.summary||'Данные ещё уточняются')+'</p></details></div><div class="vdp-cost-grid">'+costSchedule(v)+'</div>'+breakdown+'<section class="vdp-pane"><div class="vdp-row-between"><h3>Полученные сметы и сценарии</h3><button type="button" class="vdp-inline-add" data-add-inline-quote>+ Добавить смету</button></div>'+quoteCards(v,ctx.guests)+'</section>'+coveragePanel(v)+transcriptBudget(v,ctx.guests)+'<section class="vdp-pane vdp-files-pane"><div data-venue-files="'+h(v.id)+'" data-venue-files-kind="quotes"></div></section><section class="vdp-pane"><h3>Остальные расходы свадьбы</h3><p>Вносите только расходы сверх предложения площадки. Нажмите на сумму, чтобы изменить её.</p><div class="vdp-extra-grid">'+extras.map(([k,n])=>'<div class="vdp-inline-extra"><span>'+n+'</span>'+inlineValue('extra:'+k,v.extras?.[k],{label:n,kind:'number',empty:'Не рассчитано'})+'</div>').join('')+'</div></section></div>';
 }
 function infoPane(v,ctx){
  const p=getCost(v);
