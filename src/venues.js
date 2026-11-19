@@ -383,7 +383,7 @@ function tableDateControls(v){
 function row(v){
  const score=weighted(v),cost=totalEstimate(v),pic=getVenueCover(v);
  const offer=v.offerNote?'<small class="vw-offer-note">'+h(v.offerNote)+'</small>':'';
- const image=pic?'<img loading="lazy" class="vw-row-thumb" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(pic.id)+'&sz=w240" alt="Фото площадки: '+h(v.name)+'">':'<span class="vw-row-thumb vw-no-image"></span>';
+ const image=pic?'<img loading="lazy" class="vw-row-thumb" src="'+h(pic.src?safeUrl(pic.src):'https://drive.google.com/thumbnail?id='+encodeURIComponent(pic.id)+'&sz=w240')+'" alt="Фото площадки: '+h(v.name)+'">':'<span class="vw-row-thumb vw-no-image"></span>';
  const complete=cost.value!==null&&!cost.partial;
  const amount=cost.value===null?'Не рассчитано':(cost.kind==='planning'?'≈ '+rub(cost.value):complete?rub(cost.value):'от '+rub(cost.value));
  const known=cost.value===null&&cost.knownSubtotal>0?'Известно: '+rub(cost.knownSubtotal)+' (не итог)':'';
