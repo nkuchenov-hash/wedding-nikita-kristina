@@ -227,3 +227,12 @@ test('Putilov personal quote adds a 2027 scenario without replacing original cat
  assert.equal(estimateVenue(v,80).partial,true);
  assert.equal(source.cateringMenus.length,4);
 });
+
+test('one availability selector replaces separate day and status filters',()=>{
+ const source=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');
+ assert.equal((source.match(/headerSelect\('dateFilter','Доступность по дате'/g)||[]).length,1);
+ assert.doesNotMatch(source,/headerSelect\('chosenDay'|headerSelect\('date','Статус даты'|data-quick-filter|Любой статус/);
+ assert.match(source,/\['19:available','19 июня · свободно'\]/);
+ assert.match(source,/\['19:unavailable','19 июня · занято'\]/);
+ assert.match(source,/&&matchesDateFilter\(v,ui\.dateFilter\)/);
+});
