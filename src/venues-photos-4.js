@@ -479,7 +479,7 @@ export const VENUE_PHOTOS_4 = {
     },
     {
       "id": "1YIPooHlaubLUlADcQsbehmXEJboaJtoh",
-      "name": "Парадная гостиная — общий вид",
+      "name": "Белый зал — общий вид, фото с осмотра",
       "section": "Залы",
       "folder": "1_S-g5GPwBQyWeHdLB6u2FiXgRCb6B3Ww",
       "originalName": "IMG_20261031_115200_257.jpg"
