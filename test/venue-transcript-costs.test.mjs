@@ -109,7 +109,7 @@ test('Full cost audit distinguishes bundled equipment from unknown light',()=>{
   const v=VENUE_RECORDS[id]?venue(id):{id,cost:{}};
   const list=venueBudgetCoverage(v);
   assert.equal(list.length,4);
-  assert.ok(list.every(x=>['priced','included','unknown'].includes(x.state)));
+  assert.ok(list.every(x=>['priced','included','partial','unknown'].includes(x.state)));
  }
  assert.notEqual(venueBudgetCoverage(venue('palma'))[2].state,'unknown');
  assert.equal(venueBudgetCoverage(venue('k2'))[2].state,'unknown');
