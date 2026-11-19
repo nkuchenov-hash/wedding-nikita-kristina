@@ -94,7 +94,7 @@ jobs:
             -o /tmp/wedding-guests.json
           python3 -c 'import json;v=json.load(open("/tmp/wedding-guests.json"));g=v.get("guests",[]);assert v.get("ok") and len(g)>=114 and "source_person_id" in g[0];print("PRIVATE_GUEST_PROFILES_OK",len(g))'
 
-          for asset in admin-guests.js venue-files-ui.js venue-detail-ui.js admin-photos.js; do
+          for asset in admin-guests.js venue-files-ui.js venue-detail-ui.js admin-photos.js venue-transcript-costs.js venue-budget-coverage.js; do
             code=$(curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" -o "/tmp/$asset" \
               -w '%{http_code}' "https://nikitakristina.ru/admin/index.php?asset=src/$asset")
             test "$code" = 200
@@ -107,6 +107,8 @@ jobs:
           grep -Fq 'admin/guests/revision' /tmp/admin-guests.js
           grep -Fq 'invitations/sent' /tmp/admin-guests.js
           grep -Fq 'hydrateVenueFiles' /tmp/venue-files-ui.js
+          grep -Fq 'transcriptAddonTotal' /tmp/venue-transcript-costs.js
+          grep -Fq 'venueBudgetCoverage' /tmp/venue-budget-coverage.js
           grep -Fq 'data-venue-files' /tmp/venue-detail-ui.js
           curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" \
             'https://nikitakristina.ru/admin/index.php?api=admin%2Fvenue-files&venue_id=vinity' \
