@@ -77,6 +77,7 @@ export async function activateGuestDirectory(root){
  const status=p=>p.attendance==='yes'?'Будет':p.attendance==='no'?'Не придёт':p.attendance==='maybe'?'Не решил':'Нет ответа';
  const display=p=>s(p.display_name)||'[Имя не указано]';
  const isQuestion=p=>/вопрос|уточн/i.test(s(p.decision));
+ const missingName=p=>!s(p.display_name)||/^(?:\(?имя не указано\)?|name not provided)$/i.test(s(p.display_name));
  const isChild=p=>['child','infant'].includes(p.age_group);
  const isReserve=p=>p.planning_status==='reserve';
  const eligible=p=>p.status!=='archived'&&!isReserve(p)&&(childrenEnabled||!isChild(p));
@@ -167,7 +168,7 @@ export async function activateGuestDirectory(root){
      if(filter.value==='reserve'&&!isReserve(p))return false;
      if(filter.value==='kids'&&!isChild(p))return false;
      if(filter.value==='question'&&!isQuestion(p))return false;
-     if(filter.value==='no-name'&&s(p.first_name))return false;
+     if(filter.value==='no-name'&&!missingName(p))return false;
      if(filter.value==='duplicates'&&(duplicateCounts.get(display(p).toLocaleLowerCase('ru').replace(/\s+/g,' ').trim())||0)<2)return false;
      if(filter.value==='yes'&&p.attendance!=='yes')return false;
      if(filter.value==='maybe'&&p.attendance!=='maybe')return false;
@@ -196,7 +197,7 @@ export async function activateGuestDirectory(root){
    for(const p of chosen){
      const row=mk('tr','ad-gb-person-row'),nameCell=mk('td','ad-gb-name');
      const name=mk('button','ad-gb-person-link',display(p));name.type='button';name.addEventListener('click',()=>openGuest(p.id));
-     nameCell.append(name,mk('small','',p.name_en||(!s(p.first_name)?'Требуется уточнить имя':' ')));
+     nameCell.append(name,mk('small','',p.name_en||(missingName(p)?'Требуется уточнить имя':' ')));
      const decisionChoices=[...new Set([s(p.decision),...DECISIONS])].filter(Boolean).map(v=>[v,v]);
      const sent=mk('td');sent.append(p.invitation_sent_at?badge('Отправлено','sent'):badge('Не отправлено','draft'));
      const planning=editCell(p,'planning_status','Основной',PLANNING);
@@ -247,8 +248,7 @@ export async function activateGuestDirectory(root){
      // value until the organiser actually edits that particular field.
      function displayedFieldValue(key){
        const raw=s(g[key]);
-       if(key==='about' && s(g.community) &&
-          raw==='Круг общения: '+s(g.community)+'.')return '';
+       if(key==='about' && /^Круг общения:\s*[^\n]{1,90}\.?$/i.test(raw))return '';
        if(key==='about_en' && /^Social circle:\s*[^\n]{1,90}\.?$/i.test(raw))
           return '';
        return raw;
