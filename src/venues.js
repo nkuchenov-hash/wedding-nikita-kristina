@@ -7,6 +7,7 @@
  */
 import {VENUE_RECORDS} from './venues-data.js';
 import {VENUE_PRICING} from './venues-pricing.js';
+import {transcriptAddonTotal} from './venue-transcript-costs.js';
 import {renderVenueNewPage,renderVenueQuoteEditorRow,filteredVenuePhotos,getVenueCover} from './venue-detail-ui.js';
 import {hydrateVenueFiles} from './venue-files-ui.js';
 import {estimateVenue,scoreVenue,PERSONAL_CRITERIA,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
@@ -348,7 +349,7 @@ function collectInlineQuote(form,v){
 }
 
 function estimate(v){return estimateVenue(v,state.guestCount);}
-function extraTotal(v){return EXTRAS.reduce((s,[k])=>s+(numbers(v.extras?.[k])??0),0)}
+function extraTotal(v){return EXTRAS.reduce((s,[k])=>s+(numbers(v.extras?.[k])??0),0)+transcriptAddonTotal(v,state.guestCount)}
 // The comparison table and its cost score use the same total as the venue budget page.
 function totalEstimate(v){
  const base=estimate(v),extra=extraTotal(v);
@@ -649,6 +650,19 @@ export function activateVenueAdmin(root){
  });
  root.addEventListener('change',async event=>{
   const t=event.target;
+  if(t.hasAttribute('data-transcript-addon')){
+   const base=PUBLIC_VENUES.find(x=>x.id===ui.expanded);
+   if(!base||!venueDb.ready){redraw(root);return;}
+   const venue=get(base),addonId=t.dataset.transcriptAddon;
+   if(!(venue.visitAddons||[]).some(x=>x.id===addonId)){redraw(root);return;}
+   const update={...(state.venues[base.id]||{}),
+     visitSelectedAddons:{...(venue.visitSelectedAddons||{}),[addonId]:t.checked}};
+   t.disabled=true;
+   try{await commitInlineChanges(base.id,update,root);}
+   catch(error){redraw(root);}
+   finally{if(t.isConnected)t.disabled=false;}
+   return;
+  }
   if(t.dataset.listDate){
    t.disabled=true;
    try{await commitVenueDate(t.dataset.venueId,t.dataset.listDate,t.value,root);}
