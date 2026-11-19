@@ -253,7 +253,7 @@ export async function activateGuestDirectory(root){
           return '';
        return raw;
      }
-     function group(title,items){
+     function group(title,items,container=form){
        const wrapper=mk('div','ad-gb-field-group');
        wrapper.append(mk('h4','',title));
        const body=mk('div','ad-gb-edit-grid');
@@ -262,40 +262,43 @@ export async function activateGuestDirectory(root){
          controls[key]=field(body,label,key,value,type,opts||null);
          initial[key]=value;
        }
-       wrapper.append(body);form.append(wrapper);return wrapper;
+       wrapper.append(body);container.append(wrapper);return wrapper;
      }
      const decisionOptions=[['','Не решено'],...
        [...new Set([s(g.decision),...DECISIONS])].filter(Boolean).map(v=>[v,v])];
      const planningGroup=group('Планирование',[
-       ['planning_status','Участие в плане','select',PLANNING],
+       ['planning_status','Состав гостей','select',PLANNING],
        ['age_group','Возрастная категория','select',AGE],
        ['side','Сторона','select',SIDES.filter(([v])=>v!=='all')],
-       ['decision','Приглашаем?','select',decisionOptions]
+       ['decision','Решение об отправке приглашения','select',decisionOptions]
      ]);
      planningGroup.append(mk('p','ad-gb-quiet-note',
        '«Основной / Резерв» управляет составом и расчётами; «Приглашаем?» — внутреннее решение. Факт отправки отмечается ниже в разделе «Приглашение».'));
      group('Имя и контакты',[
-       ['display_name','Имя гостя в списке','text'],
-       ['name_en','Имя на английском','text'],
+       ['display_name','Имя для списка и приглашения','text'],
+       ['name_en','Имя латиницей (если нужно)','text'],
        ['city','Город','text'],['phone','Телефон','tel'],['email','Email','email'],
        ['language','Язык общения','select',LANGUAGES]
      ]);
      group('Родство и рассадка',[
-       ['relation_to_couple','Кем приходится Никите и Кристине','text'],
+       ['relation_to_couple','Отношение к паре','text'],
        ['seating_group','Группа рассадки','text'],
        ['community','Круг / сообщество','text'],
        ['plus_one_allowed','Разрешён +1','select',[['0','Нет'],['1','Да']]],
-       ['children_count','Можно пригласить детей','number']
+       ['children_count','Разрешено детей с этим гостем','number']
      ]);
-     const bio=group('О человеке',[
+     const bioDetails=mk('details','ad-gb-legacy-details ad-gb-bio-details');
+     bioDetails.append(mk('summary','','Описания на русском и английском, заметки организаторов'));
+     form.append(bioDetails);
+     const bio=group('О человеке',[ 
        ['about','Описание на русском','textarea'],
        ['about_en','Описание на английском','textarea'],
        ['private_notes','Заметки организаторов','textarea']
-     ]);
+     ],bioDetails);
      bio.append(mk('p','ad-gb-quiet-note',
-       'Поле «Круг / сообщество» заполняется отдельно. Автоматические описания, повторяющие только круг общения, скрыты; исходные тексты сохранены в базе.'));
+       'Здесь только уникальные описания. Повторяющие поле «Круг / сообщество» автоматические фразы не отображаются, но остаются в исходных данных.'));
      const advanced=mk('details','ad-gb-legacy-details');
-     advanced.append(mk('summary','','Дополнительные поля имени и исходных связей'));
+     advanced.append(mk('summary','','Исходные поля: имя, фамилия, записи о связях'));
      const advancedFields=mk('div','ad-gb-edit-grid');
      for(const [key,label,type]of [
        ['first_name','Имя для обращения в анкете','text'],
@@ -307,7 +310,7 @@ export async function activateGuestDirectory(root){
        initial[key]=value;
      }
      advanced.append(mk('p','ad-gb-quiet-note',
-       'Эти сведения нужны для личного обращения к гостю и сохранения исходных родственных связей. Они не являются вторым списком гостей.'));
+       'Имя и фамилия используются в обращениях; исходная запись о родстве сохранена для справки. Это не дополнительные гости и не отдельный список.'));
      advanced.append(advancedFields);form.append(advanced);
      const submit=mk('button','ad-gb-primary','Сохранить изменения');submit.type='submit';
      const feedback=mk('span','ad-gb-feedback'),buttons=mk('div','ad-gb-edit-actions');
