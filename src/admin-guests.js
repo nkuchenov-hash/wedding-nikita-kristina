@@ -13,7 +13,7 @@ const SORT_FIELDS=[
  ['display_name','Имя'],['first_name','Имя (отдельно)'],['last_name','Фамилия'],['name_en','Имя EN'],
  ['planning_status','Список / резерв'],['age_group','Возрастная категория'],['side','Сторона'],
  ['relation_to_couple','Кем приходится'],['relationship','Другие связи'],['community','Круг'],
- ['seating_group','Рассадка'],['decision','Решение о приглашении'],['base_count','В базовом составе'],
+ ['seating_group','Рассадка'],['decision','Решение о приглашении'],
  ['invitation_sent_at','Дата отправки приглашения'],['attendance','Ответ RSVP'],
  ['adults','Взрослые (RSVP)'],['children','Дети (RSVP)'],
  ['children_count','Детей разрешено'],['plus_one_allowed','Можно +1'],
@@ -77,7 +77,6 @@ export async function activateGuestDirectory(root){
  const status=p=>p.attendance==='yes'?'Будет':p.attendance==='no'?'Не придёт':p.attendance==='maybe'?'Не решил':'Нет ответа';
  const display=p=>s(p.display_name)||'[Имя не указано]';
  const isQuestion=p=>/вопрос|уточн/i.test(s(p.decision));
- const isBase=p=>/^(да|yes|1)$/i.test(s(p.base_count));
  const isChild=p=>['child','infant'].includes(p.age_group);
  const isReserve=p=>p.planning_status==='reserve';
  const eligible=p=>p.status!=='archived'&&!isReserve(p)&&(childrenEnabled||!isChild(p));
@@ -242,36 +241,91 @@ export async function activateGuestDirectory(root){
      detail.replaceChildren(mk('span','ad-gb-id',g.source_person_id||'Добавлен вручную'),mk('h2','',display(g)));
      detail.append(mk('p','ad-gb-note','Редактируйте поля ниже. Сохранение изменит единую базу сайта; исходные таблицы остаются архивом.'));
      const profile=section('Данные гостя');
-     const form=mk('form','ad-gb-edit-grid');const controls={};
-     const fields=[
-       ['planning_status','Список','select',PLANNING],
-       ['age_group','Категория возраста','select',AGE],
-       ['display_name','Имя в списке','text'],['name_en','Имя на английском','text'],
-       ['first_name','Имя','text'],['last_name','Фамилия','text'],
+     const form=mk('form','ad-gb-unified-form'),controls={},initial={};
+     // Imported sheets repeat the social-circle label in the bio fields.
+     // Hide *only* recognisable boilerplate, without changing the stored
+     // value until the organiser actually edits that particular field.
+     function displayedFieldValue(key){
+       const raw=s(g[key]);
+       if(key==='about' && s(g.community) &&
+          raw==='Круг общения: '+s(g.community)+'.')return '';
+       if(key==='about_en' && /^Social circle:\s*[^\n]{1,90}\.?$/i.test(raw))
+          return '';
+       return raw;
+     }
+     function group(title,items){
+       const wrapper=mk('div','ad-gb-field-group');
+       wrapper.append(mk('h4','',title));
+       const body=mk('div','ad-gb-edit-grid');
+       for(const [key,label,type,opts]of items){
+         const value=displayedFieldValue(key);
+         controls[key]=field(body,label,key,value,type,opts||null);
+         initial[key]=value;
+       }
+       wrapper.append(body);form.append(wrapper);return wrapper;
+     }
+     const decisionOptions=[['','Не решено'],...
+       [...new Set([s(g.decision),...DECISIONS])].filter(Boolean).map(v=>[v,v])];
+     group('Планирование',[
+       ['planning_status','Участие в плане','select',PLANNING],
+       ['age_group','Возрастная категория','select',AGE],
        ['side','Сторона','select',SIDES.filter(([v])=>v!=='all')],
-       ['relation_to_couple','Кем приходится Никите и Кристине','text'],
-       ['relationship','Другие сведения о родстве','textarea'],
-       ['seating_group','Группа рассадки','text'],
-       ['decision','Решение о приглашении','text'],
-       ['base_count','В основном подсчёте','select',[['','Не определено'],['Да','Да'],['Нет','Нет']]],
-       ['plus_one_allowed','Разрешён +1','select',[['0','Нет'],['1','Да']]],
-       ['children_count','Допустимое число детей','number'],
+       ['decision','Приглашаем?','select',decisionOptions]
+     ]);
+     group('Имя и контакты',[
+       ['display_name','Имя гостя в списке','text'],
+       ['name_en','Имя на английском','text'],
        ['city','Город','text'],['phone','Телефон','tel'],['email','Email','email'],
-       ['language','Язык','select',LANGUAGES],
+       ['language','Язык общения','select',LANGUAGES]
+     ]);
+     group('Родство и рассадка',[
+       ['relation_to_couple','Кем приходится Никите и Кристине','text'],
+       ['seating_group','Группа рассадки','text'],
        ['community','Круг / сообщество','text'],
-       ['about','О человеке / история на русском','textarea'],
-       ['about_en','О человеке на английском','textarea'],['private_notes','Заметки организаторов','textarea']
-     ];
-     for(const [key,label,type,items]of fields)controls[key]=field(form,label,key,g[key],type,items||null);
+       ['plus_one_allowed','Разрешён +1','select',[['0','Нет'],['1','Да']]],
+       ['children_count','Можно пригласить детей','number']
+     ]);
+     const bio=group('О человеке',[
+       ['about','Описание на русском','textarea'],
+       ['about_en','Описание на английском','textarea'],
+       ['private_notes','Заметки организаторов','textarea']
+     ]);
+     bio.append(mk('p','ad-gb-quiet-note',
+       'Поле «Круг / сообщество» заполняется отдельно. Автоматические описания, повторяющие только круг общения, скрыты; исходные тексты сохранены в базе.'));
+     const advanced=mk('details','ad-gb-legacy-details');
+     advanced.append(mk('summary','','Дополнительные поля имени и исходных связей'));
+     const advancedFields=mk('div','ad-gb-edit-grid');
+     for(const [key,label,type]of [
+       ['first_name','Имя для обращения в анкете','text'],
+       ['last_name','Фамилия отдельно','text'],
+       ['relationship','Исходный текст родственных связей','textarea']
+     ]){
+       const value=displayedFieldValue(key);
+       controls[key]=field(advancedFields,label,key,value,type);
+       initial[key]=value;
+     }
+     advanced.append(mk('p','ad-gb-quiet-note',
+       'Эти сведения нужны для личного обращения к гостю и сохранения исходных родственных связей. Они не являются вторым списком гостей.'));
+     advanced.append(advancedFields);form.append(advanced);
      const submit=mk('button','ad-gb-primary','Сохранить изменения');submit.type='submit';
-     const feedback=mk('span','ad-gb-feedback');const buttons=mk('div','ad-gb-edit-actions');buttons.append(submit,feedback);form.append(buttons);profile.append(form);
+     const feedback=mk('span','ad-gb-feedback'),buttons=mk('div','ad-gb-edit-actions');
+     buttons.append(submit,feedback);form.append(buttons);profile.append(form);
      form.addEventListener('submit',async ev=>{
        ev.preventDefault();const changed={};
-       for(const key of Object.keys(controls)){const value=s(controls[key].value);if(value!==s(g[key]))changed[key]=value}
+       for(const key of Object.keys(controls)){
+         const value=s(controls[key].value);
+         if(value!==s(initial[key]))changed[key]=value;
+       }
        if(!Object.keys(changed).length){feedback.textContent='Изменений нет';return}
        submit.disabled=true;feedback.textContent='Сохраняю…';
-       try{await saveFields(p,changed);Object.assign(g,changed);feedback.textContent='Сохранено';detail.querySelector('h2').textContent=display(g)}
-       catch(err){feedback.textContent=err.message}finally{submit.disabled=false}
+       try{
+         await saveFields(p,changed);
+         Object.assign(g,changed);
+         for(const key of Object.keys(changed))initial[key]=s(changed[key]);
+         feedback.textContent='Сохранено в базе';
+         detail.querySelector('h2').textContent=display(g);
+       }catch(err){feedback.textContent=err.message}
+       finally{submit.disabled=false}
      });
      const household=section('Семья и сопровождающие');
      household.append(mk('p','ad-gb-note','Связи указывают на существующих гостей, без создания повторных записей. Сопровождающие добавляются только по необходимости.'));
@@ -456,7 +510,7 @@ export async function activateGuestDirectory(root){
    if(!people.length)return;
    const fields=[['source_person_id','ID'],['display_name','Гость'],['name_en','Имя EN'],['planning_status','Список'],['age_group','Возраст'],['side','Сторона'],
      ['relation_to_couple','Кем приходится'],['relationship','Связи'],['seating_group','Рассадка'],
-     ['decision','Решение'],['base_count','Основной список'],['invitation_sent_at','Отправлено'],
+     ['decision','Решение'],['invitation_sent_at','Отправлено'],
      ['attendance','RSVP'],['adults','Взрослые'],['children','Дети'],['plus_one_allowed','Можно +1'],
      ['children_count','Дети разрешены'],['city','Город'],['phone','Телефон'],['email','Email'],
      ['community','Круг'],['about','О человеке'],['about_en','О человеке EN'],['private_notes','Заметки']];
