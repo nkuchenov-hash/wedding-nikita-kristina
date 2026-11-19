@@ -50,7 +50,7 @@ test('Photo archive includes all 380 indexed photographs in source room categori
  assert.ok(getVenuePhotos(venue('maryino')).some(p=>p.section==='Лаунж и фотозоны'));
  assert.ok(getVenuePhotos(venue('maryino')).some(p=>p.section==='Входы и переходы'));
  assert.equal(venue('maryino').gallery.length,36,'legacy gallery uses the same unique archive');
- assert.ok(getVenuePhotos(venue('maryino')).some(p=>p.name==='IMG_20261031_144633_996.jpg'));
+ assert.ok(getVenuePhotos(venue('maryino')).some(p=>p.originalName==='IMG_20261031_144633_996.jpg'));
  assert.ok(getVenuePhotos(venue('royal')).some(f=>f.section==='Террасы и виды'));
  assert.ok(getVenuePhotos(venue('alex-park')).some(f=>f.section==='Санузлы'));
  // A venue hero must never start with a restroom or utility-room photo.
