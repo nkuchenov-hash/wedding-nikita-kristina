@@ -32,6 +32,24 @@ export const GUEST_TABLE_FIELDS=[
  ['birth_country','Страна рождения']
 ];
 export const DEFAULT_GUEST_TABLE_COLUMNS=['display_name','side','community','about','planning_status','attendance'];
+export const DEFAULT_GUEST_TABLE_LAYOUT={row_height:72,truncate:true,widths:{}};
+const GUEST_TABLE_WIDTHS={display_name:242,side:130,community:182,relation_to_couple:180,
+ about:460,about_en:440,city:185,country:150,origin_place:190,origin_country:165,
+ planning_status:140,age_group:142,decision:190,attendance:155,seating_group:190,
+ phone:180,email:210,birth_city:195,birth_country:175};
+export function normalizeGuestTableLayout(value){
+ const heights=[0,56,72,96,128];
+ const height=heights.includes(value?.row_height)?value.row_height:72;
+ const truncate=typeof value?.truncate==='boolean'?value.truncate:true;
+ const widths={};
+ if(value?.widths&&typeof value.widths==='object'&&!Array.isArray(value.widths)){
+   for(const [key,number] of Object.entries(value.widths))
+     if(Object.hasOwn(GUEST_TABLE_WIDTHS,key)&&Number.isInteger(number)&&number>=100&&number<=900)
+       widths[key]=number;
+ }
+ return {row_height:height,truncate,widths};
+}
+
 export function normalizeGuestTableColumns(value){
  if(!Array.isArray(value))return [...DEFAULT_GUEST_TABLE_COLUMNS];
  const allowed=new Set(GUEST_TABLE_FIELDS.map(([key])=>key));
@@ -179,8 +197,29 @@ export async function activateGuestDirectory(root){
  destination.append(page);
  let people=[],csrf='',activeId=null,editing=false,lastSnapshot='',lastRevision=0,refreshing=false,childrenEnabled=true,descending=false;
  let visibleColumns=[...DEFAULT_GUEST_TABLE_COLUMNS],savingColumns=false,relationshipEdges=[];
+ let tableLayout=normalizeGuestTableLayout(null),savingLayout=false;
  let panelSave=null,panelDirty=null,panelDelete=null,panelBusy=false;
  const notice=(message,error=false)=>showAdminToast(message,{kind:error?'error':'success'});
+ const tooltip=mk('div','ad-gb-clipped-tooltip');
+ tooltip.hidden=true;tooltip.setAttribute('role','tooltip');page.append(tooltip);
+ function hideClippedTooltip(){tooltip.hidden=true;tooltip.textContent=''}
+ function showClippedTooltip(node){
+   if(!tableLayout.truncate||tableLayout.row_height===0){hideClippedTooltip();return}
+   if(node.scrollHeight<=node.clientHeight+1&&node.scrollWidth<=node.clientWidth+1){
+     hideClippedTooltip();return;
+   }
+   tooltip.textContent=node.textContent;
+   tooltip.hidden=false;
+   const bounds=node.getBoundingClientRect();
+   const width=Math.min(470,window.innerWidth-24);
+   tooltip.style.maxWidth=width+'px';
+   const measured=tooltip.getBoundingClientRect();
+   tooltip.style.left=Math.max(12,Math.min(window.innerWidth-measured.width-12,bounds.left))+'px';
+   const below=bounds.bottom+10;
+   tooltip.style.top=(below+measured.height<window.innerHeight-12?below:
+     Math.max(12,bounds.top-measured.height-10))+'px';
+ }
+
  const byId=id=>people.find(p=>p.id===id);
  const status=p=>p.attendance==='yes'?'Будет':p.attendance==='no'?'Не придёт':p.attendance==='maybe'?'Не решил':'Нет ответа';
  const display=p=>s(p.display_name)||'[Имя не указано]';
@@ -209,6 +248,21 @@ export async function activateGuestDirectory(root){
    else if(search.value){search.value='';render()}
  }
  searchToggle.addEventListener('click',()=>{closeColumns();setSearchOpen(searchField.hidden)});
+ async function applyTableLayout(next,{rerender=true}={}){
+   if(savingLayout||!csrf)return;
+   const normalized=normalizeGuestTableLayout(next),previous=tableLayout;
+   tableLayout=normalized;
+   if(rerender)render();
+   savingLayout=true;
+   try{
+     await request('admin/settings',{method:'POST',csrf,
+       body:{key:'guest_table_layout',value:normalized}});
+     if(rerender&& !columnsMenu.hidden)renderColumnMenu();
+   }catch(error){
+     tableLayout=previous;if(rerender){render();if(!columnsMenu.hidden)renderColumnMenu()}
+     notice(error.message,true);
+   }finally{savingLayout=false}
+ }
  async function applyColumns(next){
    if(savingColumns||!csrf)return;
    savingColumns=true;
@@ -241,6 +295,24 @@ export async function activateGuestDirectory(root){
    });
    filters.append(clearFilters);
    columnsMenu.append(filters);
+   const appearance=mk('div','ad-gb-menu-layout');
+   appearance.append(mk('strong','ad-gb-columns-heading','Размер ячеек'));
+   const sizeRow=mk('label','ad-gb-menu-filter-row');
+   sizeRow.append(mk('span','','Высота строки'));
+   const size=select([['56','Компактная · 56 px'],['72','Стандартная · 72 px'],
+     ['96','Высокая · 96 px'],['128','Очень высокая · 128 px'],['0','По содержимому']],
+     String(tableLayout.row_height));
+   size.className='ad-gb-select';size.addEventListener('change',()=>{
+     applyTableLayout({...tableLayout,row_height:Number(size.value)});
+   });
+   sizeRow.append(size);appearance.append(sizeRow);
+   const wrapLabel=mk('label','ad-gb-menu-wrap-choice'),wrapCheck=mk('input');
+   wrapCheck.type='checkbox';wrapCheck.checked=tableLayout.truncate;
+   wrapCheck.addEventListener('change',()=>applyTableLayout({...tableLayout,truncate:wrapCheck.checked}));
+   wrapLabel.append(wrapCheck,mk('span','','Обрезать текст до высоты строки'));
+   appearance.append(wrapLabel,mk('p','ad-gb-columns-hint',
+      'Потяните правую границу заголовка, чтобы изменить ширину столбца. Наведите на обрезанный текст для полного просмотра.'));
+   columnsMenu.append(appearance);
    columnsMenu.append(mk('strong','ad-gb-columns-heading','Отображаемые столбцы'),
      mk('p','ad-gb-columns-hint','Выберите поля и порядок. Изменения сохраняются в настройках.'));
    for(const [key,label] of GUEST_TABLE_FIELDS){
@@ -801,6 +873,7 @@ export async function activateGuestDirectory(root){
    try{
      const saved=await request('admin/settings');
      visibleColumns=normalizeGuestTableColumns(saved.settings?.guest_table_columns);
+     tableLayout=normalizeGuestTableLayout(saved.settings?.guest_table_layout);
      if(saved.settings?.guest_sort_mode==='connections')sort.value='__connections';
    }catch(error){notice('Настройки столбцов недоступны; выбран стандартный вид.',true)}
    await reloadData();
@@ -827,6 +900,7 @@ export async function activateGuestDirectory(root){
    document.removeEventListener('visibilitychange',onVisible);
    document.removeEventListener('keydown',onKey);
    document.removeEventListener('pointerdown',onOutsideColumns);
+   hideClippedTooltip();tooltip.remove();
    if(page.isConnected)closeGuest();
    cleanupPreviousGuestView=null;
  };
