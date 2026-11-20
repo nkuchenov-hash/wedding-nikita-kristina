@@ -14,7 +14,7 @@ test('required organizer modules are present',()=>{
 test('no real attendees are seeded',()=>assert.ok(sampleGuests.every(x=>x.isSample)));
 test('public shell exposes responsive entry point',async()=>{const html=await read('../index.html');assert.match(html,/viewport/);assert.match(html,/src\/app\.js/);});
 test('migration has RLS and private storage',async()=>{const sql=await read('../supabase/migrations/001_initial.sql');assert.match(sql,/enable row level security/);assert.match(sql,/wedding-private.*false/);});
-test('admin-only release compiles known assets then unpublishes the guest bundle',async()=>{const yaml=await read('../.github/workflows/pages.yml');assert.match(yaml,/cp src\/admin-app\.js src\/admin-data-ui\.js src\/admin-data\.css/);assert.match(yaml,/node tools\/prepare-admin-release\.mjs/);assert.match(yaml,/--delete --exclude=/);assert.match(yaml,/path: _pages/);assert.doesNotMatch(yaml,/cp -r \. /);});
+test('admin-only release compiles known assets then unpublishes the guest bundle',async()=>{const yaml=await read('../.github/workflows/pages.yml');assert.match(yaml,/cp src\/admin-app\.js src\/admin-toast\.js src\/admin-data-ui\.js src\/admin-data\.css/);assert.match(yaml,/node tools\/prepare-admin-release\.mjs/);assert.match(yaml,/--delete --exclude=/);assert.match(yaml,/path: _pages/);assert.doesNotMatch(yaml,/cp -r \. /);});
 test('photo-first homepage uses distinct depth layers and placeholder slots',async()=>{const js=await read('../src/app.js');assert.match(js,/hero-photo-stage/);assert.match(js,/depth-subject/);assert.match(js,/data-scroll-welcome/);});
 test('guest tab bar uses accessible app navigation',async()=>{const js=await read('../src/app.js');assert.match(js,/aria-current="page"/);assert.match(js,/app-dock/);});
 
