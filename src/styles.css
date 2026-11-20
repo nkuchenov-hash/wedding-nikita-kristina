@@ -191,50 +191,87 @@ body:not(.admin-body) .mobile-nav.app-dock a:focus-visible{outline:2px solid #C1
 .admin-content{width:100%;max-width:none;margin:0;padding:30px clamp(16px,2.2vw,44px) 70px}
 @media(max-width:760px){.admin-layout{grid-template-columns:minmax(0,1fr)}.admin-content{padding:20px 14px 48px}}
 
-/* The organizer sidebar fills the viewport, not the page's document height.
-   Only middle navigation scrolls when the screen is short. Settings is always
-   visible, in its own footer outside of that scrolling region. */
+/* Sidebar is exactly one viewport high. It never scrolls and the document
+   can scroll independently. Every section, including Settings, stays visible.
+   Navigation rows share the available vertical space when the window is short. */
 @media(min-width:761px){
  .admin-layout{min-height:100dvh;align-items:start}
  .admin-side{
    position:sticky;top:0;align-self:start;
-   height:100vh;height:100dvh;min-height:0;
+   height:100vh;height:100dvh;min-height:0;max-height:100dvh;
    display:flex;flex-direction:column;overflow:hidden;
-   padding-bottom:max(14px,env(safe-area-inset-bottom));
+   padding:clamp(8px,1.7dvh,20px) 12px;
  }
- .admin-side .admin-brand{flex:0 0 auto}
- .admin-side .side-caption{flex:0 0 auto}
+ .admin-side .admin-brand{
+   flex:0 0 auto;min-height:0;
+   padding:clamp(4px,.8dvh,8px) 10px clamp(8px,2dvh,22px);
+ }
+ .admin-side .side-caption{
+   flex:0 0 auto;padding:clamp(3px,1dvh,12px) 14px;
+ }
  .admin-side nav[aria-label="Разделы админки"]{
+   display:flex;flex-direction:column;
    flex:1 1 auto;min-height:0;
-   overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
-   scrollbar-width:thin;scrollbar-color:#668a74 transparent;
+   gap:2px;overflow:hidden!important;overscroll-behavior:none;
+   scrollbar-width:none;
  }
- .admin-settings-footer{
-   flex:0 0 auto;margin-top:10px;padding:12px 0 0;
-   border-top:1px solid #436050;background:#18342d;
- }
- .admin-settings-footer .side-link{min-height:45px}
- .admin-main{min-height:100dvh}
-}
-@media(max-width:760px){
- /* On mobile the organizer menu stays compact; settings is the pinned,
-    last control to the right of the scrollable section navigation. */
- .admin-side{
-   position:relative;top:auto;height:auto;min-height:0;overflow:visible;
-   display:grid;grid-template-columns:minmax(0,1fr) auto;
-   grid-template-areas:"brand brand" "sections settings";
-   align-items:center;column-gap:5px;
- }
- .admin-side .admin-brand{grid-area:brand}
- .admin-side .side-caption{display:none}
- .admin-side nav[aria-label="Разделы админки"]{
-   grid-area:sections;display:flex;min-width:0;min-height:0;
-   flex-direction:row;overflow-x:auto;overflow-y:hidden;
+ .admin-side nav[aria-label="Разделы админки"] .side-link{
+   flex:1 1 0;min-height:0;max-height:46px;
+   padding:0 11px;gap:10px;
+   font-size:clamp(11px,1.65dvh,13px);line-height:1.2;
    white-space:nowrap;
  }
- .admin-settings-footer{
-   grid-area:settings;flex:0 0 auto;margin:0;padding:0;
-   border-left:1px solid #436050;
+ .admin-side nav[aria-label="Разделы админки"] .side-icon{
+   flex:0 0 19px;font-size:clamp(14px,2.1dvh,18px);
  }
- .admin-settings-footer .side-link{padding:10px 9px;white-space:nowrap}
+ .admin-settings-footer{
+   flex:0 0 auto;margin-top:auto;padding:clamp(6px,1dvh,12px) 0 0;
+   border-top:1px solid #436050;background:#18342d;
+ }
+ .admin-settings-footer .side-link{
+   height:clamp(32px,5.5dvh,45px);min-height:0;
+   padding:0 11px;gap:10px;
+   display:flex;align-items:center;font-size:clamp(11px,1.65dvh,13px);
+ }
+ .admin-main{min-height:100dvh}
+}
+@media(min-width:761px) and (max-height:550px){
+ .admin-side{padding:6px 11px}
+ .admin-side .admin-brand{padding:2px 9px 5px}
+ .admin-side .admin-brand-logo{width:31px;height:31px;font-size:17px}
+ .admin-side .side-caption{display:none}
+ .admin-side nav[aria-label="Разделы админки"]{gap:1px}
+ .admin-side nav[aria-label="Разделы админки"] .side-link{font-size:11px;gap:7px}
+ .admin-side nav[aria-label="Разделы админки"] .side-icon{font-size:14px;flex-basis:17px}
+ .admin-settings-footer{padding-top:4px}
+}
+@media(max-width:760px){
+ /* Mobile menu is a compact grid, not an independently scrollable strip. */
+ .admin-side{
+   position:relative;top:auto;height:auto;min-height:0;max-height:none;
+   overflow:visible;display:flex;flex-direction:column;
+   padding:8px 12px;
+ }
+ .admin-side .admin-brand{padding:7px 8px 9px}
+ .admin-side .side-caption{display:none}
+ .admin-side nav[aria-label="Разделы админки"]{
+   width:100%;min-width:0;min-height:0;
+   display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+   gap:3px;overflow:visible!important;white-space:normal;
+ }
+ .admin-side nav[aria-label="Разделы админки"] .side-link{
+   display:flex;flex-direction:column;justify-content:center;
+   gap:3px;min-height:44px;text-align:center;
+   white-space:normal;font-size:10px;line-height:1.2;padding:5px 2px;
+ }
+ .admin-side nav[aria-label="Разделы админки"] .side-icon{font-size:15px}
+ .admin-settings-footer{
+   width:100%;margin:6px 0 0;padding:5px 0 0;border:0;
+   border-top:1px solid #436050;
+ }
+ .admin-settings-footer .side-link{
+   display:flex;justify-content:center;align-items:center;
+   gap:9px;min-height:35px;padding:6px 9px;white-space:normal;
+   font-size:12px;
+ }
 }
