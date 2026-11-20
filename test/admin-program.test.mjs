@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {assignedDay,scheduled,itemTags} from '../src/admin-program.js';
+import {assignedDay,scheduled,itemTags,parallelEventLayout,snapToFive,MINUTE_PX} from '../src/admin-program.js';
 
 const source=readFileSync(new URL('../src/admin-program.js',import.meta.url),'utf8');
 const schema=readFileSync(new URL('../backend/schema.sql',import.meta.url),'utf8');
@@ -63,4 +63,47 @@ test('program page omits redundant admin bar and explanatory header text',()=>{
  assert.match(source,/\$\('h1','','Программа мероприятия'\)/);
  assert.doesNotMatch(source,/СВАДЬБА · СЦЕНАРИЙ/);
  assert.doesNotMatch(source,/Выберите день, затем откройте его программу/);
+});
+
+test('simultaneous events receive separate lanes; sequential events stay full width',()=>{
+ const entries=[
+  {id:'welcome',start_at:'2027-06-19T13:00:00',end_at:'2027-06-19T14:00:00'},
+  {id:'photos',start_at:'2027-06-19T13:30:00',end_at:'2027-06-19T14:15:00'},
+  {id:'speech',start_at:'2027-06-19T14:30:00',end_at:'2027-06-19T15:00:00'}
+ ];
+ const layout=parallelEventLayout(entries);
+ assert.equal(layout.length,3);
+ const byId=Object.fromEntries(layout.map(x=>[x.id,x]));
+ assert.equal(byId.welcome.laneCount,2);
+ assert.equal(byId.photos.laneCount,2);
+ assert.notEqual(byId.welcome.lane,byId.photos.lane);
+ assert.equal(byId.speech.laneCount,1);
+ assert.equal(byId.speech.lane,0);
+});
+test('triple parallel events have 3 lanes and time sizing is proportional to minutes',()=>{
+ const layout=parallelEventLayout([
+  {id:'one',start_at:'2027-06-19T16:00:00',duration_min:60},
+  {id:'two',start_at:'2027-06-19T16:05:00',duration_min:30},
+  {id:'three',start_at:'2027-06-19T16:15:00',duration_min:15}
+ ]);
+ assert.deepEqual(layout.map(x=>x.laneCount),[3,3,3]);
+ assert.deepEqual(layout.map(x=>x.lane).sort(),[0,1,2]);
+ assert.equal(MINUTE_PX*30,90);
+ assert.equal(MINUTE_PX*60,180);
+ assert.equal(snapToFive(29),30);
+ assert.equal(snapToFive(32),30);
+});
+test('calendar supports vertical time dragging, bottom-edge resizing and manual concurrency',()=>{
+ assert.match(source,/attachTimelineHandles/);
+ assert.match(source,/ad-tl-move-grip/);
+ assert.match(source,/ad-tl-resize-grip/);
+ assert.match(source,/pointerdown/);
+ assert.match(source,/pointermove/);
+ assert.match(source,/pointerup/);
+ assert.match(source,/admin\\/schedule\\/slot/);
+ assert.match(source,/Параллельно с/);
+ assert.match(source,/parallelField\.hidden=!enabled/);
+ assert.doesNotMatch(source,/Время пересекается с/);
+ assert.match(api,/admin\\/schedule\\/slot/);
+ assert.match(api,/duration_min=\\?,sort_order=\\?,gap_before_min=0/);
 });
