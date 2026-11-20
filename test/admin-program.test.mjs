@@ -6,7 +6,7 @@ import {assignedDay,scheduled,itemTags} from '../src/admin-program.js';
 const source=readFileSync(new URL('../src/admin-program.js',import.meta.url),'utf8');
 const schema=readFileSync(new URL('../backend/schema.sql',import.meta.url),'utf8');
 const migrate=readFileSync(new URL('../backend/bin/migrate.php',import.meta.url),'utf8');
-const api=readFileSync(new URL('../backend/src/api.php',import.meta.url),'utf8';
+const api=readFileSync(new URL('../backend/src/api.php',import.meta.url),'utf8');
 
 test('activities and un-timed ideas belong to a distinct wedding day',()=>{
  assert.equal(assignedDay({activity_date:'2027-06-17',start_at:null}),'2027-06-17');
