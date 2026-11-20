@@ -8,7 +8,7 @@ if(!/^[a-zA-Z0-9-]+$/.test(sha))throw new Error('Invalid revision');
 const admin=join(root,'admin'), privateDir='_admin-private', assets=join(privateDir,'src');
 mkdirSync(admin,{recursive:true});
 mkdirSync(assets,{recursive:true});
-const required=['admin-app.js','admin-data-ui.js','admin-data.css','admin-photos.js','admin-photos.css','venue-files-ui.js','venue-files-ui.css','admin-guests.js','admin-guests.css','data.js','styles.css','venues.js','venues-data.js','venues.css','venue-detail-ui.js','venue-detail-ui.css','venues-pricing.js','venue-evaluation.js','venue-transcript-costs.js','venue-budget-coverage.js','venues-photos-1.js','venues-photos-2.js','venues-photos-3.js','venues-photos-4.js'];
+const required=['admin-app.js','admin-data-ui.js','admin-data.css','admin-program.js','admin-program.css','admin-photos.js','admin-photos.css','venue-files-ui.js','venue-files-ui.css','admin-guests.js','admin-guests.css','data.js','styles.css','venues.js','venues-data.js','venues.css','venue-detail-ui.js','venue-detail-ui.css','venues-pricing.js','venue-evaluation.js','venue-transcript-costs.js','venue-budget-coverage.js','venues-photos-1.js','venues-photos-2.js','venues-photos-3.js','venues-photos-4.js'];
 for(const name of required){
  const src=join(root,'src',name);
  if(!existsSync(src))throw new Error('Missing admin dependency: '+name);
@@ -16,7 +16,7 @@ for(const name of required){
 }
 mkdirSync(join(admin,'public'),{recursive:true});
 cpSync(join(root,'public','mark.svg'),join(admin,'public','mark.svg'));
-const styles=['styles.css','venues.css','venue-detail-ui.css','admin-data.css','admin-photos.css','venue-files-ui.css','admin-guests.css'].map(n=>'<link rel="stylesheet" href="./index.php?asset=src/'+n+'&v='+sha+'">').join('\n');
+const styles=['styles.css','venues.css','venue-detail-ui.css','admin-data.css','admin-program.css','admin-photos.css','venue-files-ui.css','admin-guests.css'].map(n=>'<link rel="stylesheet" href="./index.php?asset=src/'+n+'&v='+sha+'">').join('\n');
 const adminHtml='<!doctype html>\n<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#17332d"><title>Панель организаторов — Никита и Кристина</title><link rel="icon" href="./public/mark.svg">\n'+styles+'\n</head><body class="admin-body"><div id="app"></div><script type="module" src="./index.php?asset=src/admin-app.js&v='+sha+'"></script></body></html>\n';
 writeFileSync(join(privateDir,'index.html'),adminHtml);
 cpSync('tools/admin-gateway.php',join(admin,'index.php'));
