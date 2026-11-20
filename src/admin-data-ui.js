@@ -1,5 +1,6 @@
 import {weddingDays} from './data.js';
 import {renderWeddingProgram} from './admin-program.js';
+import {renderWeddingSettings} from './admin-settings.js';
 import {PUBLIC_VENUES} from './venues.js';
 import {VENUE_RECORDS} from './venues-data.js';
 // Wedding admin live-data layer. Never stores guest details in browser storage.
@@ -282,6 +283,7 @@ async function renderSection(host,section){
  if(section==='overview'){await overview(host);return}
  if(section==='menu'){await collection(host,'menu_options');return}
  if(section==='schedule'){await renderWeddingProgram(host,call,weddingDays,PUBLIC_VENUES);return}
+ if(section==='settings'){await renderWeddingSettings(host,call);return}
  if(mapSection[section]){
    await collection(host,mapSection[section]);
    return;
@@ -306,7 +308,7 @@ export async function activateAdminData(root,section){
  const destination=root.querySelector('.admin-content');if(!destination)return;
  // Venue comparison has its own approved detailed table in venues.js.
  // Never inject a generic database table above it.
- const supported=['overview','budget','tasks','schedule','menu'];
+ const supported=['overview','budget','tasks','schedule','menu','settings'];
  if(!supported.includes(section))return;
  const host=$('section','ad-live-panel');host.setAttribute('aria-label','Данные свадебной базы');
  destination.prepend(host);
