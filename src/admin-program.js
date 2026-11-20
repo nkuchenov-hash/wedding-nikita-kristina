@@ -41,7 +41,7 @@ const typeColor=type=>/^#[0-9a-fA-F]{6}$/.test(type?.color||'')?type.color:'#E8E
 const safeTypes=(saved,fallback)=>Array.isArray(saved)&&saved.length?saved.map(x=>({...x})):fallback.map(x=>({...x}));
 
 // One fixed vertical time scale keeps start/end and stretch height in sync.
-export const MINUTE_PX=3;
+export const MINUTE_PX=6;
 export const snapToFive=value=>Math.round(value/5)*5;
 export function parallelEventLayout(items){
  const slots=items.map(item=>{
@@ -226,20 +226,30 @@ export async function renderWeddingProgram(host,api,days){
      if(e.target!==node)return;
      if(e.key==='Enter'||e.key===' '){e.preventDefault();openCard(item)}
    });
-   if(view==='program'){
+   const scheduledCard=view==='program';
+   const cardHead=$('div','ad-tl-card-head');
+   if(scheduledCard){
      const from=hm(item.start_at);
      const until=hm(item.end_at)||(mins(from)!==null
        ?clock(Math.min(1439,mins(from)+duration(item))):'—');
-     const top=$('div','ad-tl-card-top');
      clockLabel=$('span','ad-tl-clock',(from||'—')+' — '+until);
-     top.append(clockLabel);
-     node.append(top);
+     cardHead.append(clockLabel);
    }
-   const meta=$('div','ad-tl-card-eyebrow');
+   // Category only colors the card; it is not repeated as another tag group.
    lengthLabel=$('span','ad-tl-length',duration(item)+' мин');
-   meta.append($('span','ad-tl-type',cat?.label||'Другое'),lengthLabel);
-   node.append(meta,$('h3','ad-tl-card-title',item.title));
-   if(item.notes)node.append($('p','ad-tl-card-description',item.notes));
+   cardHead.append(lengthLabel);
+   node.append(cardHead,$('h3','ad-tl-card-title',item.title));
+   // Draft time in the note is useful for ideas, but duplicates the real clock
+   // in the schedule. Keep the original note intact in the database/editor.
+   const fullNotes=String(item.notes||'');
+   const visibleNotes=scheduledCard
+     ?fullNotes.replace(/^Предложенный тайминг:[^\\n]*(?:\\n|$)/iu,'').trim()
+     :fullNotes;
+   if(visibleNotes)node.append($('p','ad-tl-card-description',visibleNotes));
+   if(scheduledCard){
+     if(duration(item)<10)node.classList.add('ad-tl-micro-event');
+     else if(duration(item)<25)node.classList.add('ad-tl-short-event');
+   }
    const pills=$('div','ad-tl-tags-inline');
    for(const id of itemTags(item)){
      const tag=tags.find(t=>t.id===id);
@@ -247,7 +257,10 @@ export async function renderWeddingProgram(host,api,days){
      const pill=$('span','ad-tl-tag',tag.label);
      pill.style.setProperty('--tag-color',typeColor(tag));pills.append(pill);
    }
-   if(pills.childElementCount)node.append(pills);
+   if(pills.childElementCount){
+     pills.setAttribute('aria-label','Теги');
+     node.append(pills);
+   }
    if(view==='program')attachTimelineHandles(node,item,clockLabel,lengthLabel);
    return node;
  }
