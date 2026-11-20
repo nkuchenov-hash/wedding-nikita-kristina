@@ -462,7 +462,10 @@ export async function activateGuestDirectory(root){
    if(!items)input.value=s(value);
    input.name=key;wrapper.append(input);parent.append(wrapper);return input;
  }
- function section(title){const el=mk('section','ad-gb-section');el.append(mk('h3','',title));detail.append(el);return el}
+ function section(title,{collapsed=false}={}){
+   const el=mk(collapsed?'details':'section',collapsed?'ad-gb-section ad-gb-secondary-section':'ad-gb-section');
+   el.append(mk(collapsed?'summary':'h3','',title));detail.append(el);return el;
+ }
  async function openGuest(id){
    activeId=id;overlay.hidden=false;document.body.classList.add('ad-gb-lock');
    titleArea.replaceChildren(mk('span','ad-gb-loading-name','Загрузка…'));detail.scrollTop=0;
@@ -551,7 +554,7 @@ export async function activateGuestDirectory(root){
      group('Заметки',[['private_notes','Что важно учесть на свадьбе','textarea']],notesDetails);
      profile.append(form);
      form.addEventListener('submit',event=>{event.preventDefault();panelSave?.()});
-     const household=section('Семья и сопровождающие');
+     const household=section('Семья и сопровождающие',{collapsed:true});
 
      const relList=mk('div','ad-gb-relations');
      async function refreshRel(){
@@ -620,7 +623,7 @@ export async function activateGuestDirectory(root){
        try{await request('admin/companions',{method:'POST',csrf,body:{guest_id:id,display_name:s(compName.value),age_group:compAge.value}});
          compName.value='';await refreshComp()}catch(err){notice(err.message,true)}finally{compAdd.disabled=false}
      });
-     const response=section('Ответ на приглашение');
+     const response=section('Ответ на приглашение',{collapsed:true});
      const rsp=mk('form','ad-gb-edit-grid'),r={};
      r.attendance=field(rsp,'Участие','attendance',g.attendance||'','select',ANSWERS);
      r.adults=field(rsp,'Взрослых','adults',g.adults??1,'number');
@@ -629,7 +632,7 @@ export async function activateGuestDirectory(root){
      r.other_notes=field(rsp,'Другие пожелания','other_notes',g.other_notes||'','textarea');
      response.append(rsp);
      rsp.addEventListener('submit',event=>{event.preventDefault();panelSave?.()});
-     const invites=section('Приглашение');
+     const invites=section('Приглашение',{collapsed:true});
      const inviteInfo=mk('p','ad-gb-note',g.invitation_sent_at?'Отправлено: '+g.invitation_sent_at:'Пока не отправлено');
      invites.append(inviteInfo);
      const inviteActions=mk('div','ad-gb-invitation-actions');
@@ -663,7 +666,7 @@ export async function activateGuestDirectory(root){
      // Active guests have exactly one Main/Reserve control, in Planning.
      // Only legacy archived records require an additional recovery action.
      if(g.status==='archived'){
-       const recovery=section('Восстановление архивной записи');
+       const recovery=section('Восстановление архивной записи',{collapsed:true});
        const restore=mk('button','ad-gb-light','Вернуть из архива');restore.type='button';
        recovery.append(restore);
        restore.addEventListener('click',async()=>{
