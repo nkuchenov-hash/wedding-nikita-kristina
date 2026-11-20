@@ -238,6 +238,7 @@ if (isset($_GET['api'])) {
 $types = [
     'index.html' => 'text/html; charset=UTF-8',
     'src/admin-app.js' => 'text/javascript; charset=UTF-8',
+    'src/admin-toast.js' => 'text/javascript; charset=UTF-8',
     'src/admin-data-ui.js' => 'text/javascript; charset=UTF-8',
     'src/admin-program.js' => 'text/javascript; charset=UTF-8',
     'src/admin-settings.js' => 'text/javascript; charset=UTF-8',
