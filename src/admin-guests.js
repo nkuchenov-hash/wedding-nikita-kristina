@@ -17,14 +17,17 @@ export const GUEST_TABLE_FIELDS=[
  ['relation_to_couple','Кем приходится'],
  ['about','Профиль гостя'],
  ['about_en','Профиль EN'],
- ['city','Город'],
+ ['city','Город / регион'],
+ ['country','Страна'],
  ['planning_status','Состав'],
  ['age_group','Возраст'],
  ['decision','Приглашение'],
  ['attendance','Ответ'],
  ['seating_group','Рассадка'],
  ['phone','Телефон'],
- ['email','Email']
+ ['email','Email'],
+ ['birth_city','Город рождения'],
+ ['birth_country','Страна рождения']
 ];
 export const DEFAULT_GUEST_TABLE_COLUMNS=['display_name','side','community','about','planning_status','attendance'];
 export function normalizeGuestTableColumns(value){
@@ -99,7 +102,7 @@ export function groupGuestsByConnections(selected,allGuests,links,descending=fal
 const SORT_FIELDS=[
  ['display_name','Имя'],['__connections','По семьям и кругам'],['side','Сторона'],
  ['community','Круг'],['planning_status','Состав'],['attendance','Ответ RSVP'],
- ['city','Город'],['decision','Решение о приглашении'],['about','Профиль'],
+ ['city','Город'],['country','Страна'],['decision','Решение о приглашении'],['about','Профиль'],
  ['seating_group','Рассадка']
 ];
 const SIDENAME=Object.fromEntries(SIDES);
@@ -346,7 +349,7 @@ export async function activateGuestDirectory(root){
      if(filter.value==='maybe'&&p.attendance!=='maybe')return false;
      if(filter.value==='no'&&p.attendance!=='no')return false;
      if(filter.value==='unsent'&&p.invitation_sent_at)return false;
-     return !query||[p.display_name,p.name_en,p.relationship,p.relation_to_couple,p.seating_group,p.community,p.city,p.email,p.phone,p.source_person_id].some(v=>s(v).toLocaleLowerCase('ru').includes(query));
+     return !query||[p.display_name,p.name_en,p.relationship,p.relation_to_couple,p.seating_group,p.community,p.city,p.country,p.birth_city,p.birth_country,p.email,p.phone,p.source_person_id].some(v=>s(v).toLocaleLowerCase('ru').includes(query));
    });
    const grouped=sort.value==='__connections';
    const groups=grouped?groupGuestsByConnections(chosen,people,relationshipEdges,descending):
@@ -368,7 +371,7 @@ export async function activateGuestDirectory(root){
    const body=mk('tbody');
    const editable=new Set(['first_name','last_name','name_en','planning_status','age_group',
      'side','relation_to_couple','relationship','community','seating_group','decision',
-     'attendance','plus_one_allowed','city','phone','email','language']);
+     'attendance','plus_one_allowed','city','country','birth_city','birth_country','phone','email','language']);
    function tableCell(p,key){
      if(key==='display_name'){
        const td=mk('td','ad-gb-name');
@@ -530,8 +533,12 @@ export async function activateGuestDirectory(root){
        ['side','Сторона','select',SIDES.filter(([v])=>v!=='all')],
        ['decision','Решение об отправке приглашения','select',decisionOptions]
      ]);
+     group('Где живёт сейчас',[
+       ['city','Город / регион','text'],
+       ['country','Страна','text']
+     ]);
      group('Контакты',[
-       ['city','Город','text'],['phone','Телефон','tel'],['email','Email','email'],
+       ['phone','Телефон','tel'],['email','Email','email'],
        ['language','Язык общения','select',LANGUAGES]
      ]);
      group('Знакомство и сопровождающие',[
@@ -542,6 +549,13 @@ export async function activateGuestDirectory(root){
      // Seating is a future planning decision, not a duplicate social circle.
      // Preserve values imported from spreadsheets, but don't present them
      // alongside the social circle as two equivalent identity fields.
+     const birthDetails=mk('details','ad-gb-legacy-details ad-gb-birth-details');
+     birthDetails.append(mk('summary','','Место рождения (дополнительно)'));
+     form.append(birthDetails);
+     group('Место рождения',[
+       ['birth_city','Город рождения','text'],
+       ['birth_country','Страна рождения','text']
+     ],birthDetails);
      const seatingDetails=mk('details','ad-gb-legacy-details ad-gb-seating-details');
      seatingDetails.append(mk('summary','','Рассадка за столами'));
      form.append(seatingDetails);
