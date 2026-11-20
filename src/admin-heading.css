@@ -1,17 +1,19 @@
-/* Shared admin page-heading design-system component, loaded after module CSS. */
+/* Shared admin heading scale: one design-system source across all admin pages.
+   Loaded last by the protected admin release, after each module stylesheet. */
 body.admin-body{
  --admin-page-title-font:Georgia,"Times New Roman",serif;
  --admin-page-title-color:#214734;
- --admin-page-title-size:clamp(29px,2.7vw,36px);
+ --admin-page-title-size:clamp(40px,3.8vw,52px);
  --admin-page-subtitle-color:#6d8070;
  --admin-page-kicker-color:#668974;
- --admin-section-title-size:18px;
+ --admin-section-title-size:21px;
 }
 body.admin-body .admin-page-heading h1{
  font-family:var(--admin-page-title-font);
  font-size:var(--admin-page-title-size);
- font-weight:400;line-height:1.16;letter-spacing:-.035em;
+ font-weight:400;line-height:1.12;letter-spacing:-.035em;
  color:var(--admin-page-title-color);margin:0;
+ max-width:100%;overflow-wrap:break-word;
 }
 body.admin-body .admin-page-heading :is(.eyebrow,.ad-overview-kicker,.ad-photo-eyebrow){
  font:750 10px/1.4 Manrope,Arial,sans-serif;
@@ -31,6 +33,23 @@ body.admin-body .vdp-hero h1{
  font-family:var(--admin-page-title-font);
  font-weight:400;letter-spacing:-.035em;
 }
+/* A longer title and the +Activity control must never overlap in the program editor. */
+body.admin-body .ad-timeline-page .ad-tl-header{
+ flex-wrap:wrap;
+}
+body.admin-body .ad-timeline-page .ad-tl-header>div:first-child{
+ min-width:0;
+ flex:1 1 340px;
+}
+body.admin-body .ad-timeline-page .ad-tl-top-actions{
+ margin-left:auto;
+}
+@media(max-width:900px){
+ body.admin-body{--admin-page-title-size:clamp(36px,4.5vw,44px)}
+}
 @media(max-width:680px){
- body.admin-body{--admin-page-title-size:clamp(27px,7vw,32px)}
+ body.admin-body{--admin-page-title-size:clamp(32px,6.5vw,38px);--admin-section-title-size:19px}
+ /* Preserve the compact guest toolbar at phone widths. */
+ body.admin-body .ad-guestbook .ad-gb-top h1{font-size:clamp(26px,5.4vw,32px)}
+ body.admin-body .ad-timeline-page .ad-tl-header>div:first-child{flex-basis:220px}
 }
