@@ -664,12 +664,7 @@ export async function activateGuestDirectory(root){
        [...new Set([s(g.decision),...DECISIONS])].filter(Boolean).map(v=>[v,v])];
      const basics=group('Основные данные',[
        ['relation_to_couple','Кем приходится','text'],
-       ['side','Сторона','select',SIDES.filter(([v])=>v!=='all')],
        ['community','Круг общения','text'],
-       ['planning_status','Состав гостей','select',PLANNING],
-       ['age_group','Возрастная категория','select',AGE],
-       ['plus_one_allowed','Можно прийти с +1','select',[['0','Нет'],['1','Да']]],
-       ['decision','Решение о приглашении','select',decisionOptions],
        ['origin_place','Откуда родом — город / регион','text'],
        ['origin_country','Страна происхождения','text'],
        ['city','Где живёт сейчас — город / регион','text'],
@@ -684,6 +679,17 @@ export async function activateGuestDirectory(root){
        ['phone','Телефон','tel'],['email','Email','email'],
        ['language','Язык общения','select',LANGUAGES]
      ]);
+     // Organizational attributes are preserved but deliberately separated from biography.
+     const adminDetails=mk('details','ad-gb-legacy-details ad-gb-organizer-details');
+     adminDetails.append(mk('summary','','Организация приглашения'));
+     form.append(adminDetails);
+     group('Планирование и приглашение',[
+       ['side','Сторона','select',SIDES.filter(([v])=>v!=='all')],
+       ['planning_status','Состав гостей','select',PLANNING],
+       ['age_group','Возрастная категория','select',AGE],
+       ['plus_one_allowed','Можно прийти с +1','select',[['0','Нет'],['1','Да']]],
+       ['decision','Решение о приглашении','select',decisionOptions]
+     ],adminDetails);
      // Seating is a future planning decision, not a duplicate social circle.
      // Preserve values imported from spreadsheets, but don't present them
      // alongside the social circle as two equivalent identity fields.
