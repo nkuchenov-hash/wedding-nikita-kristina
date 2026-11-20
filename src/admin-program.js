@@ -296,10 +296,14 @@ export async function renderWeddingProgram(host,api,days){
      (layout.some(x=>x.laneCount>1)?'Есть параллельные активности':'Без пересечений'));
    container.append(footer);
    // Initial scroll keeps the first event in sight without a blank prelude.
-   scroller.scrollTop=timelineScrollByDay.has(day)
+   const savedScroll=timelineScrollByDay.has(day)
      ?timelineScrollByDay.get(day)
      :Math.max(0,(earliest-axisStart)*MINUTE_PX-84);
-   scroller.addEventListener('scroll',()=>timelineScrollByDay.set(day,scroller.scrollTop));
+   // The scrollable element receives real dimensions only after it joins the DOM.
+   requestAnimationFrame(()=>{
+     if(scroller.isConnected)scroller.scrollTop=savedScroll;
+     scroller.addEventListener('scroll',()=>timelineScrollByDay.set(day,scroller.scrollTop));
+   });
    return container;
  }
  function render(){
