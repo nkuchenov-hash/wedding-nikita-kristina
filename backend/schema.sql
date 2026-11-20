@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS schedule_items (
   is_public INTEGER NOT NULL DEFAULT 0, sort_order INTEGER NOT NULL DEFAULT 0,
   venue_id TEXT NOT NULL DEFAULT '', is_confirmed INTEGER NOT NULL DEFAULT 0,
   stage TEXT NOT NULL DEFAULT 'idea', activity_type TEXT NOT NULL DEFAULT 'other',
-  duration_min INTEGER NOT NULL DEFAULT 30,
+  duration_min INTEGER NOT NULL DEFAULT 30, gap_before_min INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE TABLE IF NOT EXISTS documents (
