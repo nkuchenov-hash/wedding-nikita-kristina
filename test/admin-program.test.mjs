@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {assignedDay,scheduled,itemTags,parallelEventLayout,snapToFive,MINUTE_PX,cardDescription} from '../src/admin-program.js';
+import {assignedDay,scheduled,itemTags,parallelEventLayout,snapToFive,MINUTE_PX,cardDescription,cardColorStyle,cardTagColors} from '../src/admin-program.js';
 
 const source=readFileSync(new URL('../src/admin-program.js',import.meta.url),'utf8');
 const schema=readFileSync(new URL('../backend/schema.sql',import.meta.url),'utf8');
@@ -140,7 +140,12 @@ test('activity editor uses title, visual tag chips and program switch; global se
  assert.doesNotMatch(source,/placement\.value==='program'/);
  assert.match(settings,/renderWeddingSettings/);
  assert.match(settings,/activity_tags/);
- assert.match(settings,/activity_types/);
+ assert.doesNotMatch(settings,/activity_types/);
+ assert.doesNotMatch(settings,/Категории/);
+ assert.doesNotMatch(source,/field\('Категория'/);
+ assert.doesNotMatch(source,/field\('Название'/);
+ assert.match(source,/ad-tl-editor-title-input/);
+ assert.match(source,/name\.setAttribute\('form',form\.id\)/);
  assert.match(dataUi,/section==='settings'/);
  assert.match(sidebar,/id:'settings'/);
  assert.match(gateway,/src\/admin-settings\.js/);
@@ -165,4 +170,24 @@ test('timeline cards present time once, large titles and a single row of actual 
  assert.match(css,/\.ad-tl-calendar-card\.ad-tl-micro-event \.ad-tl-card-title/);
  assert.match(css,/\.ad-tl-calendar-card\.ad-tl-short-event \.ad-tl-card-title/);
  assert.match(css,/\.ad-tl-ideas-grid\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+});
+
+test('tag colors directly drive card color and multicolor stripe without a category',()=>{
+ const item={tags_json:JSON.stringify(['photo','welcome','photo'])};
+ const tags=[{id:'photo',label:'Фото',color:'#AABBCC'},
+             {id:'welcome',label:'Встреча',color:'#DDEEFF'}];
+ assert.deepEqual(cardTagColors(item,tags),['#AABBCC','#DDEEFF']);
+ const painted=cardColorStyle(item,tags);
+ assert.equal(painted.primary,'#AABBCC');
+ assert.match(painted.stripe,/linear-gradient\(to bottom/);
+ assert.match(painted.stripe,/#AABBCC/);
+ assert.match(painted.stripe,/#DDEEFF/);
+ const changed=cardColorStyle(item,[{...tags[0],color:'#102030'},tags[1]]);
+ assert.equal(changed.primary,'#102030');
+ assert.notEqual(changed.stripe,painted.stripe);
+ assert.equal(cardColorStyle({tags_json:'[]'},tags).primary,'#ECF2EC');
+ const css=readFileSync(new URL('../src/admin-program.css',import.meta.url),'utf8');
+ assert.match(source,/cardColorStyle\(item,tags\)/);
+ assert.match(css,/var\(--activity-stripe/);
+ assert.match(css,/color-mix\(in srgb,var\(--activity-color/);
 });
