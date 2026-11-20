@@ -1,3 +1,4 @@
+import {showAdminToast} from './admin-toast.js';
 import {weddingDays} from './data.js';
 import {renderWeddingProgram} from './admin-program.js';
 import {renderWeddingSettings} from './admin-settings.js';
@@ -218,9 +219,9 @@ function showForm(host,config,submit,defaults=null,actionLabel='Сохранит
    }
    try{
      await submit(payload);
-     feedback.textContent='Изменения сохранены в базе';
+     feedback.textContent='';showAdminToast('Изменения сохранены.');
      if(!defaults)form.reset();
-   }catch(err){feedback.textContent=errorText(err)}
+   }catch(err){feedback.textContent='';showAdminToast(errorText(err),{kind:'error'})}
    finally{action.disabled=false}
  });
  host.append(form);
