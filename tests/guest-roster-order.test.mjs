@@ -32,9 +32,11 @@ test('filtering does not insert hidden relatives or duplicate rows',()=>{
  const groups=groupGuestsByConnections(selected,people,[{guest_id_1:'sam',guest_id_2:'girlfriend'}]);
  assert.deepEqual(new Set(groups.flatMap(g=>g.members.map(p=>p.id))),new Set(selected.map(p=>p.id)));
 });
-test('guest identity column is always kept first',()=>{
+test('guest identity stays first and invalid legacy selections use the current readable default',()=>{
  assert.deepEqual(normalizeGuestTableColumns(['city','name_en','city','not-a-column']),
- ['display_name','city','name_en']);
+ DEFAULT_GUEST_TABLE_COLUMNS);
+ assert.deepEqual(normalizeGuestTableColumns(['city','city']),
+ ['display_name','city']);
  assert.deepEqual(normalizeGuestTableColumns(null),DEFAULT_GUEST_TABLE_COLUMNS);
 });
 
