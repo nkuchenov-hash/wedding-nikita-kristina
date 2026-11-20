@@ -520,42 +520,34 @@ export async function activateGuestDirectory(root){
        }
        wrapper.append(body);container.append(wrapper);return wrapper;
      }
-     const bio=group('Профиль гостя',[
-       ['about','О человеке: характер, работа, увлечения, интересы','textarea'],
-       ['about_en','Профиль на английском','textarea']
-     ]);
-     bio.classList.add('ad-gb-main-profile');
      const decisionOptions=[['','Не решено'],...
        [...new Set([s(g.decision),...DECISIONS])].filter(Boolean).map(v=>[v,v])];
-     group('Данные гостя',[
+     const basics=group('Основные данные',[
+       ['relation_to_couple','Кем приходится','text'],
+       ['side','Сторона','select',SIDES.filter(([v])=>v!=='all')],
+       ['community','Круг общения','text'],
        ['planning_status','Состав гостей','select',PLANNING],
        ['age_group','Возрастная категория','select',AGE],
-       ['side','Сторона','select',SIDES.filter(([v])=>v!=='all')],
-       ['decision','Решение об отправке приглашения','select',decisionOptions]
+       ['decision','Решение о приглашении','select',decisionOptions],
+       ['city','Город проживания','text'],
+       ['country','Страна проживания','text']
      ]);
-     group('Где живёт сейчас',[
-       ['city','Город / регион','text'],
-       ['country','Страна','text']
+     basics.classList.add('ad-gb-main-details');
+     const bio=group('Профиль гостя',[
+       ['about','Характер, работа, интересы и увлечения','textarea']
      ]);
+     bio.classList.add('ad-gb-main-profile');
      group('Контакты',[
        ['phone','Телефон','tel'],['email','Email','email'],
        ['language','Язык общения','select',LANGUAGES]
      ]);
-     group('Знакомство и сопровождающие',[
-       ['relation_to_couple','Отношение к паре','text'],
-       ['community','Круг знакомства','text'],
-       ['plus_one_allowed','Разрешён +1','select',[['0','Нет'],['1','Да']]]
-     ]);
+     const companionDetails=mk('details','ad-gb-legacy-details ad-gb-bio-details');
+     companionDetails.append(mk('summary','','Сопровождающий'));
+     form.append(companionDetails);
+     group('Сопровождающий',[['plus_one_allowed','Разрешён +1','select',[['0','Нет'],['1','Да']]]],companionDetails);
      // Seating is a future planning decision, not a duplicate social circle.
      // Preserve values imported from spreadsheets, but don't present them
      // alongside the social circle as two equivalent identity fields.
-     const birthDetails=mk('details','ad-gb-legacy-details ad-gb-birth-details');
-     birthDetails.append(mk('summary','','Место рождения (дополнительно)'));
-     form.append(birthDetails);
-     group('Место рождения',[
-       ['birth_city','Город рождения','text'],
-       ['birth_country','Страна рождения','text']
-     ],birthDetails);
      const seatingDetails=mk('details','ad-gb-legacy-details ad-gb-seating-details');
      seatingDetails.append(mk('summary','','Рассадка за столами'));
      form.append(seatingDetails);
@@ -566,6 +558,20 @@ export async function activateGuestDirectory(root){
      notesDetails.append(mk('summary','','Дополнительные заметки организаторов'));
      form.append(notesDetails);
      group('Заметки',[['private_notes','Что важно учесть на свадьбе','textarea']],notesDetails);
+     const birthDetails=mk('details','ad-gb-legacy-details ad-gb-birth-details');
+     birthDetails.append(mk('summary','','Место рождения (дополнительно)'));
+     form.append(birthDetails);
+     group('Место рождения',[
+       ['birth_city','Город рождения','text'],
+       ['birth_country','Страна рождения','text']
+     ],birthDetails);
+     const englishDetails=mk('details','ad-gb-legacy-details ad-gb-english-details');
+     englishDetails.append(mk('summary','','Профиль на английском'));
+     form.append(englishDetails);
+     group('Английская версия',[
+       ['about_en','Полный профиль EN','textarea']
+     ],englishDetails);
+
      profile.append(form);
      form.addEventListener('submit',event=>{event.preventDefault();panelSave?.()});
      const household=section('Семья и сопровождающие',{collapsed:true});
