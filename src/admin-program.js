@@ -250,9 +250,6 @@ export async function renderWeddingProgram(host,api,days){
    else category.value=types.find(t=>t.id==='other')?.id||types[0]?.id||'other';
    const durationInput=$('input');durationInput.type='number';durationInput.step='1';
    durationInput.min='5';durationInput.max='600';durationInput.value=String(duration(item));
-   const targetDay=$('select');
-   for(const d of days){const option=$('option','',d.label);option.value=d.date;targetDay.append(option)}
-   targetDay.value=item?assignedDay(item):day;
    const placement=$('select');
    for(const [id,label] of [['idea','Пул идей'],['program','В программе']]){
      const option=$('option','',label);option.value=id;placement.append(option)
@@ -262,12 +259,11 @@ export async function renderWeddingProgram(host,api,days){
    const end=$('input');end.type='time';
    end.value=hm(item?.end_at)||(mins(start.value)!==null&&mins(start.value)+duration(item)<1440
      ?clock(mins(start.value)+duration(item)):'');
-   const dayField=field('День мероприятия',targetDay);
    const startField=field('Начало',start),endField=field('Окончание',end);
    const timeHint=$('p','ad-tl-end-preview','');
    function updateVisible(){
      const enabled=placement.value==='program';
-     dayField.hidden=false;startField.hidden=!enabled;endField.hidden=!enabled;
+     startField.hidden=!enabled;endField.hidden=!enabled;
      start.required=enabled;end.required=enabled;
      timeHint.textContent=enabled?'Время начала и окончания можно менять. Длительность синхронизируется автоматически.'
        :'У идеи есть длительность, но нет назначенного времени.';
@@ -297,7 +293,7 @@ export async function renderWeddingProgram(host,api,days){
    tagsField.append(makeButton('Управлять тегами',()=>{shade.remove();openTaxonomy('tags')},'ad-tl-text-button'));
    form.append(field('Название',name),field('Описание',description),field('Категория',category),
      field('Длительность, минут',durationInput),tagsField,
-     dayField,field('Раздел',placement),
+     field('Раздел',placement),
      startField,endField,timeHint);
    const feedback=$('p','ad-tl-form-error');feedback.setAttribute('role','alert');
    const buttons=$('div','ad-tl-modal-actions');
@@ -317,7 +313,8 @@ export async function renderWeddingProgram(host,api,days){
        feedback.textContent='Проверьте начало, окончание и длительность активности.';return;
      }
      if(isProgram&&endN>=1440){feedback.textContent='Событие должно завершиться до полуночи.';return}
-     const chosenDay=targetDay.value;
+     // An activity never changes its wedding day from within the card editor.
+     const chosenDay=item?assignedDay(item):day;
      if(isProgram){
        const conflict=entries.find(x=>x.id!==item?.id&&scheduled(x)&&assignedDay(x)===chosenDay&&
          startN<mins(hm(x.end_at)||clock(Math.min(1439,mins(hm(x.start_at))+duration(x))))&&
@@ -338,7 +335,7 @@ export async function renderWeddingProgram(host,api,days){
        await api('admin/records',{method:item?.id?'PATCH':'POST',body:{
          collection:'schedule_items',...(item?.id?{id:item.id}:{}),fields
        }});
-       day=chosenDay;view=isProgram?'program':'idea';filter='all';
+       view=isProgram?'program':'idea';filter='all';
        shade.remove();await reload('Карточка сохранена.');
      }catch(error){feedback.textContent=error.message||'Не удалось сохранить.';}
      finally{busy=false;save.disabled=false}
