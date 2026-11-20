@@ -31,9 +31,9 @@ const mins=value=>{
 };
 const clock=minutes=>String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0');
 const duration=entry=>Math.max(5,Number(entry?.duration_min)||30);
-const scheduled=entry=>entry?.stage==='program'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d/.test(entry.start_at||'');
-const assignedDay=entry=>entry?.activity_date||String(entry?.start_at||'').slice(0,10)||'2027-06-19';
-const itemTags=item=>{
+export const scheduled=entry=>entry?.stage==='program'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d/.test(entry.start_at||'');
+export const assignedDay=entry=>entry?.activity_date||String(entry?.start_at||'').slice(0,10)||'2027-06-19';
+export const itemTags=item=>{
  try{const tags=JSON.parse(item?.tags_json||'[]');return Array.isArray(tags)?tags.filter(x=>typeof x==='string'):[]}
  catch{return []}
 };
@@ -62,6 +62,7 @@ export async function renderWeddingProgram(host,api,days){
  const order=()=>entriesFor('program');
  async function moveInTimeline(id,beforeId){
    if(busy)return;
+   if(filter!=='all'){notification='Для перестановки включите «Все теги».';render();return}
    const rows=order(),source=rows.find(e=>e.id===id);
    if(!source)return;
    const ids=rows.map(e=>e.id).filter(x=>x!==id);
@@ -78,12 +79,12 @@ export async function renderWeddingProgram(host,api,days){
    finally{busy=false}
  }
  async function removeItem(item){
-   if(busy||!confirm('Удалить активность «'+item.title+'»? Это действие нельзя отменить.'))return;
+   if(busy||!confirm('Удалить активность «'+item.title+'»? Это действие нельзя отменить.'))return false;
    busy=true;
    try{
      await api('admin/schedule/delete',{method:'POST',body:{id:item.id}});
-     await reload('Активность удалена.');
-   }catch(err){await reload('Не удалось удалить: '+err.message);}
+     await reload('Активность удалена.');return true;
+   }catch(err){await reload('Не удалось удалить: '+err.message);return false;}
    finally{busy=false}
  }
  function card(item,rows){
@@ -292,7 +293,7 @@ export async function renderWeddingProgram(host,api,days){
    const buttons=$('div','ad-tl-modal-actions');
    const save=$('button','ad-tl-button ad-tl-primary','Сохранить');save.type='submit';
    buttons.append(save);
-   if(item)buttons.append(makeButton('Удалить',()=>removeItem(item).then(()=>shade.remove()),'ad-tl-muted ad-tl-delete'));
+   if(item)buttons.append(makeButton('Удалить',()=>removeItem(item),'ad-tl-muted ad-tl-delete'));
    buttons.append(makeButton('Отмена',()=>shade.remove(),'ad-tl-secondary'));
    form.append(buttons,feedback);modal.append(form);shade.append(modal);host.append(shade);
    updateVisible();name.focus({preventScroll:true});
@@ -347,6 +348,7 @@ export async function renderWeddingProgram(host,api,days){
    const footer=$('div','ad-tl-modal-actions');
    const preview=()=>{
      list.replaceChildren();tabs.replaceChildren();error.textContent='';
+     if(add)add.textContent='+ Добавить '+(part==='types'?'категорию':'тег');
      for(const [id,label] of [['types','Категории'],['tags','Теги']]){
        tabs.append(makeButton(label,()=>{part=id;preview()},'ad-tl-main-tab'+(part===id?' is-active':'')));
      }
@@ -373,16 +375,14 @@ export async function renderWeddingProgram(host,api,days){
      if(!data.length)list.append($('p','ad-tl-empty','Пока ничего нет.'));
    };
    preview();
-   footer.append(makeButton('+ Добавить '+(part==='types'?'категорию':'тег'),()=>{
+   const add=makeButton('+ Добавить',()=>{
       const arr=part==='types'?newTypes:newTags;
       if(arr.length>=30){error.textContent='Не более 30 записей.';return}
       const id=(part==='types'?'category_':'tag_')+(Date.now().toString(36))+'_'+arr.length;
       arr.push({id,label:part==='types'?'Новая категория':'Новый тег',color:'#DDE9DF'});
       preview();
-   },'ad-tl-secondary'));
-   // The Add button follows the selected management tab.
-   const add=footer.querySelector('button');
-   const originalAdd=add;originalAdd.addEventListener('click',()=>{});
+   },'ad-tl-secondary');
+   footer.append(add);
    footer.append(makeButton('Сохранить',async()=>{
      if(!newTypes.length){error.textContent='Добавьте хотя бы одну категорию.';return}
      if([...newTypes,...newTags].some(x=>!x.label.trim())){
