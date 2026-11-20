@@ -495,7 +495,7 @@ export async function activateGuestDirectory(root){
        });
      }
      titleArea.replaceChildren(titleInput,titleEn,nameStatus);
-     const profile=section('Данные гостя');
+     const profile=mk('section','ad-gb-section');detail.append(profile);
      const form=mk('form','ad-gb-unified-form'),controls={},initial={};
      // Imported sheets repeat the social-circle label in the bio fields.
      // Hide *only* recognisable boilerplate, without changing the stored
@@ -518,6 +518,14 @@ export async function activateGuestDirectory(root){
        }
        wrapper.append(body);container.append(wrapper);return wrapper;
      }
+     const decisionOptions=[['','Не решено'],...
+       [...new Set([s(g.decision),...DECISIONS])].filter(Boolean).map(v=>[v,v])];
+     group('Данные гостя',[
+       ['planning_status','Состав гостей','select',PLANNING],
+       ['age_group','Возрастная категория','select',AGE],
+       ['side','Сторона','select',SIDES.filter(([v])=>v!=='all')],
+       ['decision','Решение об отправке приглашения','select',decisionOptions]
+     ]);
      group('Контакты',[
        ['city','Город','text'],['phone','Телефон','tel'],['email','Email','email'],
        ['language','Язык общения','select',LANGUAGES]
