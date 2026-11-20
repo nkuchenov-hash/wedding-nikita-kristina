@@ -31,8 +31,66 @@ export function normalizeGuestTableColumns(value){
  for(const key of value)if(key!=='display_name'&&allowed.has(key)&&!columns.includes(key))columns.push(key);
  return columns;
 }
+// Display-only grouping: never modifies guest rows, IDs, families or seating plans.
+export function groupGuestsByConnections(selected,allGuests,links,descending=false){
+ const full=new Map(allGuests.map(p=>[String(p.id),p]));
+ const parent=new Map([...full.keys()].map(id=>[id,id]));
+ const find=id=>{let a=id;while(parent.get(a)!==a){const next=parent.get(a);parent.set(a,parent.get(next));a=next}return a};
+ const union=(a,b)=>{a=String(a);b=String(b);if(!parent.has(a)||!parent.has(b))return;const x=find(a),y=find(b);if(x!==y)parent.set(y,x)};
+ for(const e of links||[]){
+   // Broad social acquaintances still share the circle, not a single enormous family component.
+   if(/^(?:friend|colleague|acquaintance|coworker)$/i.test(String(e.relation_type||'')))continue;
+   union(e.guest_id_1,e.guest_id_2);
+ }
+ const seatMembers=new Map();
+ for(const p of allGuests){
+   const seat=String(p.seating_group||'').trim().toLocaleLowerCase('ru');
+   if(!seat||seat.length<4)continue;
+   // Seat labels are used as a fallback link only within the same social circle.
+   const key=[p.side,String(p.community||'').trim().toLowerCase(),seat].join('|');
+   if(seatMembers.has(key))union(p.id,seatMembers.get(key));else seatMembers.set(key,p.id);
+ }
+ const components=new Map();
+ for(const p of selected){
+   const root=find(String(p.id));
+   if(!components.has(root))components.set(root,[]);
+   components.get(root).push(p);
+ }
+ const primary=p=>/^(?:\(?имя не указано|name not provided|жена |муж |девушка |парень |сын |дочь |реб[её]нок |супруг)/i.test(String(p.display_name||''))?1:0;
+ const compare=(a,b)=>String(a.display_name||'').localeCompare(String(b.display_name||''),'ru',{numeric:true,sensitivity:'base'});
+ const byCircle=new Map();
+ for(const members of components.values()){
+   members.sort((a,b)=>primary(a)-primary(b)||compare(a,b));
+   const ranks=new Map();
+   for(const person of members){
+     const circle=String(person.community||'').trim(),side=String(person.side||'other');
+     const key=side+'|'+circle;
+     ranks.set(key,(ranks.get(key)||0)+1);
+   }
+   const key=[...ranks.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'ru'))[0]?.[0]||'other|';
+   if(!byCircle.has(key))byCircle.set(key,[]);
+   byCircle.get(key).push(members);
+ }
+ const sideLabels={groom:'Никита',bride:'Кристина',both:'Общие',other:'Без стороны'};
+ const sideOrder={groom:0,bride:1,both:2,other:3};
+ const sortGroups=(a,b)=>{
+   const [sa,ca='']=a.split('|'),[sb,cb='']=b.split('|');
+   const af=/семь|родств/i.test(ca)?0:/школ/i.test(ca)?1:/универ|вуз|эшм|cems|высш|финэк|спбгу/i.test(ca)?2:3;
+   const bf=/семь|родств/i.test(cb)?0:/школ/i.test(cb)?1:/универ|вуз|эшм|cems|высш|финэк|спбгу/i.test(cb)?2:3;
+   return (sideOrder[sa]??4)-(sideOrder[sb]??4)||af-bf||ca.localeCompare(cb,'ru',{sensitivity:'base'});
+ };
+ const keys=[...byCircle.keys()].sort(sortGroups);
+ if(descending)keys.reverse();
+ return keys.map(key=>{
+   const [side,circle='']=key.split('|');
+   const components=byCircle.get(key);
+   components.sort((a,b)=>compare(a[0],b[0]));
+   if(descending)components.reverse();
+   return {key,label:(sideLabels[side]||'Гости')+' · '+(circle||'Без группы'),members:components.flat()};
+ });
+}
 const SORT_FIELDS=[
- ['display_name','Имя'],['first_name','Имя (отдельно)'],['last_name','Фамилия'],['name_en','Имя EN'],
+ ['display_name','Имя'],['__connections','По связям и кругам'],['first_name','Имя (отдельно)'],['last_name','Фамилия'],['name_en','Имя EN'],
  ['planning_status','Список / резерв'],['age_group','Возрастная категория'],['side','Сторона'],
  ['relation_to_couple','Кем приходится'],['relationship','Другие связи'],['community','Круг'],
  ['seating_group','Компания для рассадки'],['decision','Решение о приглашении'],
@@ -98,7 +156,7 @@ export async function activateGuestDirectory(root){
  const detail=mk('div','ad-gb-details');panel.append(close,detail);overlay.append(panel);page.append(overlay);
  destination.append(page);
  let people=[],csrf='',activeId=null,editing=false,lastSnapshot='',lastRevision=0,refreshing=false,childrenEnabled=true,descending=false;
- let visibleColumns=[...DEFAULT_GUEST_TABLE_COLUMNS],savingColumns=false;
+ let visibleColumns=[...DEFAULT_GUEST_TABLE_COLUMNS],savingColumns=false,relationshipEdges=[];
  const notice=(message,error=false)=>{alert.textContent=message;alert.hidden=!message;alert.className='ad-gb-notice'+(error?' ad-gb-error':'')};
  const byId=id=>people.find(p=>p.id===id);
  const status=p=>p.attendance==='yes'?'Будет':p.attendance==='no'?'Не придёт':p.attendance==='maybe'?'Не решил':'Нет ответа';
@@ -242,7 +300,10 @@ export async function activateGuestDirectory(root){
      if(filter.value==='no'&&p.attendance!=='no')return false;
      if(filter.value==='unsent'&&p.invitation_sent_at)return false;
      return !query||[p.display_name,p.name_en,p.relationship,p.relation_to_couple,p.seating_group,p.community,p.city,p.email,p.phone,p.source_person_id].some(v=>s(v).toLocaleLowerCase('ru').includes(query));
-   }).sort((a,b)=>compareRows(a,b,sort.value));
+   });
+   const grouped=sort.value==='__connections';
+   const groups=grouped?groupGuestsByConnections(chosen,people,relationshipEdges,descending):
+     [{key:'all',label:'',members:chosen.sort((a,b)=>compareRows(a,b,sort.value))}];
    list.replaceChildren();
    const holder=mk('div','ad-gb-scroll'),table=mk('table','ad-gb-table'),thead=mk('thead'),tr=mk('tr');
    const headings=visibleColumns.map(key=>GUEST_TABLE_FIELDS.find(([field])=>field===key))
@@ -253,7 +314,7 @@ export async function activateGuestDirectory(root){
      button.type='button';button.title='Сортировать: '+label;
      button.addEventListener('click',()=>{
        if(sort.value===key)descending=!descending;else{sort.value=key;descending=false}
-       direction.textContent=descending?'Я → А':'А → Я';render();
+       direction.textContent=descending?'Я → А':'А → Я';render();saveSortMode();
      });th.append(button);tr.append(th);
    }
    thead.append(tr);table.append(thead);
@@ -298,12 +359,18 @@ export async function activateGuestDirectory(root){
      }
      return td;
    }
-   for(const p of chosen){
+   for(const group of groups){
+     if(grouped){
+       const separator=mk('tr','ad-gb-group-row'),cell=mk('th','ad-gb-group-label',group.label);
+       cell.colSpan=headings.length;cell.scope='rowgroup';separator.append(cell);body.append(separator);
+     }
+     for(const p of group.members){
      const row=mk('tr','ad-gb-person-row');
      row.classList.toggle('ad-gb-reserve-row',isReserve(p));
      row.classList.toggle('ad-gb-child-off-row',!childrenEnabled&&isChild(p));
      for(const [,key]of headings)row.append(tableCell(p,key));
      body.append(row);
+     }
    }
    table.append(body);holder.append(table);list.append(holder);
    list.append(mk('p','ad-gb-count','Показано '+chosen.length+' из '+people.length+
@@ -566,7 +633,8 @@ export async function activateGuestDirectory(root){
  async function reloadData(quiet=false){
    const data=await request('admin/guests');
    const next=data.guests||[];
-   const fingerprint=JSON.stringify({guests:next,children_enabled:data.children_enabled});
+   relationshipEdges=Array.isArray(data.relationships)?data.relationships:[];
+   const fingerprint=JSON.stringify({guests:next,relationships:relationshipEdges,children_enabled:data.children_enabled});
    lastRevision=Number(data.revision||0);
    if(quiet&&fingerprint===lastSnapshot)return;
    people=next;
@@ -598,7 +666,13 @@ export async function activateGuestDirectory(root){
      }catch(err){feedback.textContent=err.message}finally{btn.disabled=false}
    });
  }
- for(const x of [search,side,filter,sort])x.addEventListener(x===search?'input':'change',render);
+ for(const x of [search,side,filter])x.addEventListener(x===search?'input':'change',render);
+ const saveSortMode=async()=>{if(!csrf)return;
+   try{await request('admin/settings',{method:'POST',csrf,
+     body:{key:'guest_sort_mode',value:sort.value==='__connections'?'connections':'alphabetical'}})}
+   catch(error){notice(error.message,true)}
+ };
+ sort.addEventListener('change',()=>{descending=false;direction.textContent='А → Я';render();saveSortMode()});
  direction.addEventListener('click',()=>{descending=!descending;direction.textContent=descending?'Я → А':'А → Я';render()});
  add.addEventListener('click',createGuest);
  close.addEventListener('click',closeGuest);overlay.addEventListener('click',ev=>{if(ev.target===overlay)closeGuest()});
@@ -616,6 +690,7 @@ export async function activateGuestDirectory(root){
    try{
      const saved=await request('admin/settings');
      visibleColumns=normalizeGuestTableColumns(saved.settings?.guest_table_columns);
+     if(saved.settings?.guest_sort_mode==='connections')sort.value='__connections';
    }catch(error){notice('Настройки столбцов недоступны; выбран стандартный вид.',true)}
    await reloadData();
  }
