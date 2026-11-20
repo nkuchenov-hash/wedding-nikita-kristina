@@ -44,6 +44,7 @@ jobs:
           done
           php backend/bin/smoke.php
           php backend/bin/test-guest-progress.php
+          node --test test/kristina-ideas.test.mjs
       - name: Install on REG.RU outside document root
         timeout-minutes: 4
         shell: bash
