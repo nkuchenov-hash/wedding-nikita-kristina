@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {groupGuestsByConnections,normalizeGuestTableColumns,DEFAULT_GUEST_TABLE_COLUMNS} from '../src/admin-guests.js';
+import {groupGuestsByConnections,normalizeGuestTableColumns,DEFAULT_GUEST_TABLE_COLUMNS,normalizeGuestTableLayout} from '../src/admin-guests.js';
 
 const people=[
  {id:'sam',display_name:'Сэм',side:'groom',community:'Друзья',seating_group:'Сэм с девушкой'},
@@ -74,4 +74,28 @@ test('guest editor has a pinned Save Cancel Delete footer and icon-only close',a
  assert.match(css,/\.ad-gb-panel-footer\{/);
  assert.match(css,/\.ad-gb-details\{flex:1 1 auto;min-height:0;overflow-y:auto/);
  assert.match(css,/\.ad-gb-panel-footer\[hidden\]\{display:none!important\}/);
+});
+
+
+test('guest table width preferences are bounded and do not introduce unknown columns',()=>{
+ assert.deepEqual(normalizeGuestTableLayout(null),
+   {row_height:72,truncate:true,widths:{}});
+ assert.deepEqual(normalizeGuestTableLayout({row_height:96,truncate:false,
+   widths:{about:610,display_name:250,invalid:400,side:9999,city:70}}),
+   {row_height:96,truncate:false,widths:{about:610,display_name:250}});
+ assert.equal(normalizeGuestTableLayout({row_height:999,truncate:'no',widths:[]}).row_height,72);
+});
+test('roster has no pencil icons and exposes true table resizers and tooltip for clipped profiles',async()=>{
+ const ui=await readFile(new URL('../src/admin-guests.js',import.meta.url),'utf8');
+ const css=await readFile(new URL('../src/admin-guests.css',import.meta.url),'utf8');
+ assert.doesNotMatch(ui,/mk\('span','ad-gb-pencil'/);
+ assert.match(ui,/ad-gb-col-resize/);
+ assert.match(ui,/setPhysicalWidths/);
+ assert.match(ui,/window\.addEventListener\('pointermove'/);
+ assert.match(ui,/key:'guest_table_layout'/);
+ assert.match(ui,/showClippedTooltip/);
+ assert.match(ui,/scrollHeight<=node\.clientHeight/);
+ assert.match(ui,/ad-gb-menu-layout/);
+ assert.match(css,/\.ad-gb-clipped-tooltip\{/);
+ assert.match(css,/\.ad-gb-table\.ad-gb-rows-clipped \.ad-gb-cell-value\{/);
 });
