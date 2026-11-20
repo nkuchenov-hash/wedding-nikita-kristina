@@ -19,12 +19,13 @@ test('guest album has precisely the four requested content groups',()=>{
 
 test('only actual confirmed programme venue IDs qualify as approved',()=>{
  const ids=approvedVenueIds([
-  {venue_id:'maryino',is_confirmed:1},
-  {venue_id:'vinity',is_confirmed:0},
-  {venue_id:'royal',is_confirmed:'1'},
-  {venue_id:'alex-park',is_confirmed:null},
-  {venue_id:'',is_confirmed:1},
-  {venue_id:'maryino',is_confirmed:true}
+  {venue_id:'maryino',stage:'program',is_confirmed:1},
+  {venue_id:'vinity',stage:'program',is_confirmed:0},
+  {venue_id:'royal',stage:'program',is_confirmed:'1'},
+  {venue_id:'alex-park',stage:'program',is_confirmed:null},
+  {venue_id:'',stage:'program',is_confirmed:1},
+  {venue_id:'maryino',stage:'program',is_confirmed:true},
+  {venue_id:'candidate',stage:'idea',is_confirmed:1}
  ]);
  assert.deepEqual([...ids],['maryino','royal']);
 });
