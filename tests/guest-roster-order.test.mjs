@@ -102,7 +102,7 @@ test('roster has no pencil icons and exposes true table resizers and tooltip for
 
 test('guest identity and biography precede collapsed organizer invitation fields',async()=>{
  const js=await readFile(new URL('../src/admin-guests.js',import.meta.url),'utf8');
- const start=js.indexOf("const basics=group('Основные данные'");
+ const start=js.indexOf("const basics=group('О человеке'");
  const bio=js.indexOf("const bio=group('Профиль гостя'",start);
  const organizational=js.indexOf("const adminDetails=mk('details'",bio);
  assert.ok(start>0&&bio>start&&organizational>bio);
