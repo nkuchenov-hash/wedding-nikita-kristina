@@ -1,3 +1,4 @@
+import {showAdminToast} from './admin-toast.js';
 // Single organiser workspace. SQLite is the only live source of truth.
 // Spreadsheet copies and CSV exports never overwrite responses or manual edits.
 const API='/admin/index.php?api=';
@@ -156,7 +157,6 @@ export async function activateGuestDirectory(root){
  columnPrefs.append(columnsButton,columnsMenu);
  actions.append(add,searchWrap,columnPrefs);head.append(heading,actions);page.append(head);
  const metrics=mk('div','ad-gb-metrics');page.append(metrics);
- const alert=mk('p','ad-gb-notice');alert.hidden=true;page.append(alert);
  const list=mk('div','ad-gb-list');page.append(list);
  const overlay=mk('div','ad-gb-shade');overlay.hidden=true;overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
  const panel=mk('section','ad-gb-panel'),panelHeader=mk('header','ad-gb-panel-header'),
@@ -166,7 +166,7 @@ export async function activateGuestDirectory(root){
  destination.append(page);
  let people=[],csrf='',activeId=null,editing=false,lastSnapshot='',lastRevision=0,refreshing=false,childrenEnabled=true,descending=false;
  let visibleColumns=[...DEFAULT_GUEST_TABLE_COLUMNS],savingColumns=false,relationshipEdges=[];
- const notice=(message,error=false)=>{alert.textContent=message;alert.hidden=!message;alert.className='ad-gb-notice'+(error?' ad-gb-error':'')};
+ const notice=(message,error=false)=>showAdminToast(message,{kind:error?'error':'success'});
  const byId=id=>people.find(p=>p.id===id);
  const status=p=>p.attendance==='yes'?'Будет':p.attendance==='no'?'Не придёт':p.attendance==='maybe'?'Не решил':'Нет ответа';
  const display=p=>s(p.display_name)||'[Имя не указано]';
@@ -457,7 +457,7 @@ export async function activateGuestDirectory(root){
        try{
          await request('admin/guest/fields',{method:'PATCH',csrf,body:{id,fields:{[key]:value}}});
          g[key]=value;if(p)p[key]=value;
-         nameStatus.textContent='Сохранено';
+         nameStatus.textContent='';showAdminToast('Имя гостя сохранено.');
          await reloadData();
        }catch(error){
          input.value=previous;nameStatus.textContent=error.message||'Не удалось сохранить';
@@ -537,13 +537,13 @@ export async function activateGuestDirectory(root){
          const value=s(controls[key].value);
          if(value!==s(initial[key]))changed[key]=value;
        }
-       if(!Object.keys(changed).length){feedback.textContent='Изменений нет';return}
+       if(!Object.keys(changed).length){showAdminToast('Изменений нет.');return}
        submit.disabled=true;feedback.textContent='Сохраняю…';
        try{
          await saveFields(p,changed);
          Object.assign(g,changed);
          for(const key of Object.keys(changed))initial[key]=s(changed[key]);
-         feedback.textContent='Сохранено в базе';
+         feedback.textContent='';showAdminToast('Данные гостя сохранены.');
          titleInput.value=display(g);
        }catch(err){feedback.textContent=err.message}
        finally{submit.disabled=false}
@@ -633,7 +633,7 @@ export async function activateGuestDirectory(root){
        try{const data=await request('admin/guest/rsvp',{method:'PATCH',csrf,body:{
          id,attendance:val,adults:Number(r.adults.value),children:childrenEnabled?Number(r.children.value):0,
          dietary_notes:s(r.dietary_notes.value),other_notes:s(r.other_notes.value)
-       }});Object.assign(g,{attendance:data.attendance});await reloadData();msgR.textContent='Сохранено в базе'}
+       }});Object.assign(g,{attendance:data.attendance});await reloadData();msgR.textContent='';showAdminToast('Ответ гостя сохранён.')}
        catch(err){msgR.textContent=err.message}finally{saveR.disabled=false}
      });
      const invites=section('Приглашение');
