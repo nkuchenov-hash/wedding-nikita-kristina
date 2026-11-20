@@ -191,15 +191,50 @@ body:not(.admin-body) .mobile-nav.app-dock a:focus-visible{outline:2px solid #C1
 .admin-content{width:100%;max-width:none;margin:0;padding:30px clamp(16px,2.2vw,44px) 70px}
 @media(max-width:760px){.admin-layout{grid-template-columns:minmax(0,1fr)}.admin-content{padding:20px 14px 48px}}
 
-/* Keep global Settings as the last item, anchored to the bottom of the
-   desktop organizer sidebar. Preserve its last position on mobile. */
-.admin-side nav[aria-label="Разделы админки"]{flex:1;min-height:0}
-.admin-side nav[aria-label="Разделы админки"] .side-link[href="#/admin/settings"]{
- margin-top:auto;border-top:1px solid #426052;border-radius:4px 4px 8px 8px;
+/* The organizer sidebar fills the viewport, not the page's document height.
+   Only middle navigation scrolls when the screen is short. Settings is always
+   visible, in its own footer outside of that scrolling region. */
+@media(min-width:761px){
+ .admin-layout{min-height:100dvh;align-items:start}
+ .admin-side{
+   position:sticky;top:0;align-self:start;
+   height:100vh;height:100dvh;min-height:0;
+   display:flex;flex-direction:column;overflow:hidden;
+   padding-bottom:max(14px,env(safe-area-inset-bottom));
+ }
+ .admin-side .admin-brand{flex:0 0 auto}
+ .admin-side .side-caption{flex:0 0 auto}
+ .admin-side nav[aria-label="Разделы админки"]{
+   flex:1 1 auto;min-height:0;
+   overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
+   scrollbar-width:thin;scrollbar-color:#668a74 transparent;
+ }
+ .admin-settings-footer{
+   flex:0 0 auto;margin-top:10px;padding:12px 0 0;
+   border-top:1px solid #436050;background:#18342d;
+ }
+ .admin-settings-footer .side-link{min-height:45px}
+ .admin-main{min-height:100dvh}
 }
 @media(max-width:760px){
- .admin-side nav[aria-label="Разделы админки"]{flex:none;min-height:unset}
- .admin-side nav[aria-label="Разделы админки"] .side-link[href="#/admin/settings"]{
-   margin-top:0;border-top:0;border-radius:7px;
+ /* On mobile the organizer menu stays compact; settings is the pinned,
+    last control to the right of the scrollable section navigation. */
+ .admin-side{
+   position:relative;top:auto;height:auto;min-height:0;overflow:visible;
+   display:grid;grid-template-columns:minmax(0,1fr) auto;
+   grid-template-areas:"brand brand" "sections settings";
+   align-items:center;column-gap:5px;
  }
+ .admin-side .admin-brand{grid-area:brand}
+ .admin-side .side-caption{display:none}
+ .admin-side nav[aria-label="Разделы админки"]{
+   grid-area:sections;display:flex;min-width:0;min-height:0;
+   flex-direction:row;overflow-x:auto;overflow-y:hidden;
+   white-space:nowrap;
+ }
+ .admin-settings-footer{
+   grid-area:settings;flex:0 0 auto;margin:0;padding:0;
+   border-left:1px solid #436050;
+ }
+ .admin-settings-footer .side-link{padding:10px 9px;white-space:nowrap}
 }
