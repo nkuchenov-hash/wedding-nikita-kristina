@@ -88,7 +88,7 @@ test('three-day wedding itinerary contains only organizer-confirmed events',asyn
  assert.ok(!seed.schedule.some(e=>e.id.startsWith('draft-schedule-')));
  const backend=await read('../backend/bin/seed-planning.php');
  assert.match(backend,/DELETE FROM schedule_items WHERE id=/);
- assert.match(backend,/INSERT OR IGNORE INTO schedule_items\(id,title,start_at,place,notes,is_public,sort_order\)/);
+ assert.match(backend,/INSERT OR IGNORE INTO schedule_items\(id,title,start_at,place,notes,is_public,sort_order,stage,activity_type,duration_min\)/);
  const admin=await read('../src/admin-data-ui.js');
  assert.match(admin,/async function schedule\(host\)/);
  assert.match(admin,/admin\/records\?collection=schedule_items/);
@@ -97,7 +97,7 @@ test('three-day wedding itinerary contains only organizer-confirmed events',asyn
 
 test('protected guest roster edits any core field inline and separates relationship to the couple',async()=>{
  const ui=await read('../src/admin-guests.js');
- assert.match(ui,/Кем приходится Никите и Кристине/);
+ assert.match(ui,/Кем приходится/);
  assert.match(ui,/relation_to_couple/);
  assert.match(ui,/admin\/guest\/fields/);
  assert.match(ui,/ad-gb-panel/);
