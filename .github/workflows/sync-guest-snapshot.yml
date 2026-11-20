@@ -1,0 +1,74 @@
+name: Reconcile 20 Nov wedding guest updates into private SQLite
+on:
+  push:
+    paths:
+      - 'tools/sync-guest-snapshot.php'
+      - 'tools/guest-snapshot-source.enc'
+      - '.github/workflows/sync-guest-snapshot.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: wedding-backend
+  cancel-in-progress: false
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate sync script and encrypted source
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -l tools/sync-guest-snapshot.php
+          test -s tools/guest-snapshot-source.enc
+      - name: Private server snapshot download, dry run, backup, apply and verify
+        timeout-minutes: 6
+        shell: bash
+        env:
+          HOST: ${{ secrets.WEDDING_SFTP_HOST }}
+          USERNAME: ${{ secrets.WEDDING_SFTP_USER }}
+          SSH_KEY: ${{ secrets.WEDDING_SFTP_SSH_KEY }}
+          HOST_KEYS: ${{ secrets.WEDDING_SFTP_KNOWN_HOSTS }}
+          PORT: ${{ secrets.WEDDING_SFTP_PORT }}
+        run: |
+          set -euo pipefail
+          test -n "$HOST" && test -n "$USERNAME" && test -n "$SSH_KEY" && test -n "$HOST_KEYS"
+          : "${PORT:=22}"
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/wedding_guest_sync"
+          printf '%s\n' "$HOST_KEYS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/wedding_guest_sync" "$HOME/.ssh/known_hosts"
+          SSH_OPTS="-4 -i $HOME/.ssh/wedding_guest_sync -p $PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15"
+          PRIVATE=/var/www/u3728035/data/wedding-private
+          ssh $SSH_OPTS "$USERNAME@$HOST" "set -eu; umask 077; mkdir -p '$PRIVATE/imports'; chmod 700 '$PRIVATE/imports'"
+          scp -4 -i "$HOME/.ssh/wedding_guest_sync" -P "$PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            tools/sync-guest-snapshot.php tools/guest-snapshot-source.enc \
+            "$USERNAME@$HOST:$PRIVATE/imports/"
+          ssh $SSH_OPTS "$USERNAME@$HOST" 'bash -se' <<'REMOTE'
+          set -euo pipefail
+          umask 077
+          root=/var/www/u3728035/data/wedding-private
+          imports="$root/imports"
+          trap 'rm -f "$imports/guest-snapshot.csv" "$imports/guest-snapshot-source.bin" "$imports/guest-snapshot-source.enc"' EXIT
+          base64 -d "$imports/guest-snapshot-source.enc" > "$imports/guest-snapshot-source.bin"
+          sheet=$(openssl pkeyutl -decrypt -inkey "$root/guest-import.key" \
+            -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 \
+            -in "$imports/guest-snapshot-source.bin")
+          if ! [[ "$sheet" =~ ^[A-Za-z0-9_-]{30,80}$ ]]; then
+            echo 'PRIVATE_SNAPSHOT_ID_INVALID'
+            exit 1
+          fi
+          curl --fail --location --silent --show-error --retry 2 --max-time 75 \
+            --header 'Accept: text/csv' \
+            "https://docs.google.com/spreadsheets/d/$sheet/export?format=csv&gid=26111801" \
+            --output "$imports/guest-snapshot.csv"
+          test -s "$imports/guest-snapshot.csv"
+          php -l "$imports/sync-guest-snapshot.php"
+          php "$imports/sync-guest-snapshot.php" "$imports/guest-snapshot.csv" --dry-run
+          php "$root/backend/bin/backup.php"
+          php "$imports/sync-guest-snapshot.php" "$imports/guest-snapshot.csv" --apply
+          php "$imports/sync-guest-snapshot.php" "$imports/guest-snapshot.csv" --dry-run
+          echo 'PRIVATE_GUEST_SQLITE_RECONCILIATION_COMPLETE'
+          REMOTE
