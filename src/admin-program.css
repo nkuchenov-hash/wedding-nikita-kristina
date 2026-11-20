@@ -508,3 +508,30 @@
   text-align:center;
   pointer-events:none;
 }
+
+/* Clear visual groups: the date buttons and Program / Ideas are separate
+   controls, not one continuous segmented strip. Keep the rows breathing. */
+.ad-timeline-page .ad-tl-section-controls{
+  column-gap:64px;
+  row-gap:18px;
+  margin-bottom:20px;
+}
+.ad-timeline-page .ad-tl-section-controls .ad-tl-main-switch::before{
+  display:none;
+}
+.ad-timeline-page .ad-tl-compact-tools{
+  column-gap:36px;
+  row-gap:14px;
+  margin-bottom:20px;
+}
+.ad-timeline-page .ad-tl-compact-tools .ad-tl-display-modes::before{
+  display:none;
+}
+@media (min-width:761px) and (max-width:900px), (max-width:600px){
+  .ad-timeline-page .ad-tl-section-controls{
+    column-gap:18px;row-gap:16px;margin-bottom:18px;
+  }
+  .ad-timeline-page .ad-tl-compact-tools{
+    column-gap:18px;row-gap:12px;margin-bottom:18px;
+  }
+}
