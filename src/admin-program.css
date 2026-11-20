@@ -275,3 +275,48 @@
  .ad-tl-editor-title-input{font-size:23px;line-height:1.25}
  .ad-tl-editor-heading .ad-tl-editor-pencil{width:30px;height:32px;padding:4px}
 }
+
+/* Program can show either a time grid or full idea-style cards. */
+.ad-tl-display-modes{
+ display:flex;gap:5px;align-items:center;margin:2px 0 17px;
+ border:1px solid #e1e9e0;border-radius:12px;background:#eef4ee;
+ padding:5px;width:max-content;max-width:100%;
+}
+.ad-tl-display-option{
+ border:0;background:transparent;color:#6e8373;
+ border-radius:9px;font-size:13px;font-weight:750;
+ min-width:115px;min-height:40px;padding:10px 17px;
+}
+.ad-tl-display-option.is-active{
+ background:#fff;color:#245d3c;box-shadow:0 2px 9px #244d3215;
+}
+.ad-tl-program-list{margin:0 0 18px}
+.ad-tl-program-list .ad-tl-card{height:auto!important;min-height:155px}
+.ad-tl-program-list .ad-tl-card-head{justify-content:space-between;gap:12px;margin-bottom:5px}
+.ad-tl-program-list .ad-tl-card-title{font-size:20px!important}
+.ad-tl-program-list .ad-tl-card-description{font-size:15px;line-height:1.55}
+.ad-tl-program-list .ad-tl-clock{font-size:16px;white-space:nowrap}
+.ad-tl-program-list .ad-tl-tags-inline{margin-top:12px}
+/* Editable hours are grouped by date, not a global wedding setting. */
+.ad-tl-hours-panel{margin-top:22px}
+.ad-tl-hours-grid{display:flex;flex-direction:column;gap:2px}
+.ad-tl-hours-row{
+ display:grid;grid-template-columns:minmax(90px,1fr) minmax(130px,1fr) minmax(130px,1fr);
+ gap:16px;align-items:end;padding:15px 0;border-bottom:1px solid #e8eee9;
+}
+.ad-tl-hours-row:last-child{border-bottom:0}
+.ad-tl-hours-day{font-size:15px;font-weight:750;color:#2a5439;align-self:center}
+.ad-tl-hours-field{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:700;color:#637a68}
+.ad-tl-hours-field input{
+ background:#fff;border:1px solid #cfdecf;border-radius:9px;max-width:100%;
+ min-height:44px;padding:10px 12px;color:#234f37;font-size:15px;font-variant-numeric:tabular-nums;
+}
+.ad-tl-hours-field input:focus-visible{outline:2px solid #398652;outline-offset:2px}
+.ad-tl-hours-panel .ad-tl-modal-actions{margin:17px 0 13px}
+.ad-tl-hours-panel .ad-tl-form-error{margin-bottom:0}
+@media(max-width:560px){
+ .ad-tl-hours-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .ad-tl-hours-day{grid-column:1/-1}
+ .ad-tl-display-option{min-width:100px}
+ .ad-tl-program-list .ad-tl-card-head{flex-wrap:wrap}
+}
