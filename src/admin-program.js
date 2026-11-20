@@ -76,6 +76,7 @@ export function parallelEventLayout(items){
 export async function renderWeddingProgram(host,api,days){
  let entries=[],types=BASE_TYPES.map(t=>({...t})),tags=[],day='2027-06-19',view='program';
  let filter='all',notification='',busy=false,dragged='';
+ const timelineScrollByDay=new Map();
  const dateName=value=>days.find(d=>d.date===value)?.label||value;
  const entriesFor=which=>entries.filter(e=>assignedDay(e)===day&&(which==='program'?scheduled(e):!scheduled(e)))
    .sort((a,b)=>which==='program'
@@ -295,7 +296,10 @@ export async function renderWeddingProgram(host,api,days){
      (layout.some(x=>x.laneCount>1)?'Есть параллельные активности':'Без пересечений'));
    container.append(footer);
    // Initial scroll keeps the first event in sight without a blank prelude.
-   scroller.scrollTop=Math.max(0,(earliest-axisStart)*MINUTE_PX-84);
+   scroller.scrollTop=timelineScrollByDay.has(day)
+     ?timelineScrollByDay.get(day)
+     :Math.max(0,(earliest-axisStart)*MINUTE_PX-84);
+   scroller.addEventListener('scroll',()=>timelineScrollByDay.set(day,scroller.scrollTop));
    return container;
  }
  function render(){
