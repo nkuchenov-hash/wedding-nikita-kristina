@@ -95,8 +95,10 @@ test('triple parallel events have 3 lanes and time sizing is proportional to min
 });
 test('calendar supports vertical time dragging, bottom-edge resizing and manual concurrency',()=>{
  assert.match(source,/attachTimelineHandles/);
- assert.match(source,/ad-tl-move-grip/);
- assert.match(source,/ad-tl-resize-grip/);
+ assert.match(source,/setTimeout\(\(\)=>arm\(state\),230\)/);
+ assert.match(source,/baseLength/);
+ assert.doesNotMatch(source,/ad-tl-move-grip/);
+ assert.doesNotMatch(source,/ad-tl-resize-grip/);
  assert.match(source,/pointerdown/);
  assert.match(source,/pointermove/);
  assert.match(source,/pointerup/);
@@ -106,4 +108,30 @@ test('calendar supports vertical time dragging, bottom-edge resizing and manual 
  assert.doesNotMatch(source,/Время пересекается с/);
  assert.match(api,/admin\/schedule\/slot/);
  assert.match(api,/duration_min=\?,sort_order=\?,gap_before_min=0/);
+});
+
+test('activity editor uses title, visual tag chips and program switch; global settings manages tags',()=>{
+ const settings=readFileSync(new URL('../src/admin-settings.js',import.meta.url),'utf8');
+ const dataUi=readFileSync(new URL('../src/admin-data-ui.js',import.meta.url),'utf8');
+ const sidebar=readFileSync(new URL('../src/data.js',import.meta.url),'utf8');
+ const gateway=readFileSync(new URL('../tools/admin-gateway.php',import.meta.url),'utf8');
+ const release=readFileSync(new URL('../tools/prepare-admin-release.mjs',import.meta.url),'utf8');
+ assert.match(source,/ad-tl-editor-title/);
+ assert.match(source,/ad-tl-editor-pencil/);
+ assert.doesNotMatch(source,/Карточка активности/);
+ assert.match(source,/ad-tl-tag-select/);
+ assert.match(source,/aria-pressed/);
+ assert.doesNotMatch(source,/tagBox\.querySelectorAll\('input:checked'\)/);
+ assert.doesNotMatch(source,/Управлять тегами/);
+ assert.doesNotMatch(source,/У идеи есть длительность/);
+ assert.match(source,/placement\.type='checkbox'/);
+ assert.match(source,/placement\.setAttribute\('role','switch'\)/);
+ assert.doesNotMatch(source,/placement\.value==='program'/);
+ assert.match(settings,/renderWeddingSettings/);
+ assert.match(settings,/activity_tags/);
+ assert.match(settings,/activity_types/);
+ assert.match(dataUi,/section==='settings'/);
+ assert.match(sidebar,/id:'settings'/);
+ assert.match(gateway,/src\/admin-settings\.js/);
+ assert.match(release,/admin-settings\.js/);
 });
