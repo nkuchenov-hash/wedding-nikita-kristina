@@ -396,11 +396,18 @@ export async function renderWeddingProgram(host,api,days){
    else category.value=types.find(t=>t.id==='other')?.id||types[0]?.id||'other';
    const durationInput=$('input');durationInput.type='number';durationInput.step='1';
    durationInput.min='5';durationInput.max='600';durationInput.value=String(duration(item));
-   const placement=$('select');
-   for(const [id,label] of [['idea','Пул идей'],['program','В программе']]){
-     const option=$('option','',label);option.value=id;placement.append(option)
-   }
-   placement.value=prefs.stage||(item&&scheduled(item)?'program':'idea');
+   const placement=$('input');
+   placement.type='checkbox';
+   placement.checked=prefs.stage==='program'||(!prefs.stage&&Boolean(item&&scheduled(item)));
+   placement.setAttribute('role','switch');
+   placement.setAttribute('aria-label','В программе');
+   const statusLabel=$('label','ad-tl-placement-toggle');
+   const track=$('span','ad-tl-switch-track');
+   track.setAttribute('aria-hidden','true');
+   const stateText=$('span','ad-tl-switch-state',placement.checked?'В программе':'В пуле идей');
+   statusLabel.append(placement,track,stateText);
+   const placementField=$('div','ad-tl-placement-field');
+   placementField.append(statusLabel);
    const start=$('input');start.type='time';start.value=hm(item?.start_at);
    const end=$('input');end.type='time';
    end.value=hm(item?.end_at)||(mins(start.value)!==null&&mins(start.value)+duration(item)<1440
@@ -415,10 +422,10 @@ export async function renderWeddingProgram(host,api,days){
    }
    const parallelField=field('Параллельно с',parallel);
    const startField=field('Начало',start),endField=field('Окончание',end);
-   const timeHint=$('p','ad-tl-end-preview','');
    function updateVisible(){
-     const enabled=placement.value==='program';
+     const enabled=placement.checked;
      parallelField.hidden=!enabled;startField.hidden=!enabled;endField.hidden=!enabled;
+     stateText.textContent=enabled?'В программе':'В пуле идей';
      start.required=enabled;end.required=enabled;
      if(enabled&&!start.value){
        const last=Math.max(780,...entriesFor('program')
@@ -427,8 +434,6 @@ export async function renderWeddingProgram(host,api,days){
        start.value=clock(Math.min(1380,last));
        fromStartOrDuration();
      }
-     timeHint.textContent=enabled?'Пересечения разрешены: мероприятия можно проводить одновременно. Начало и конец можно менять вручную.'
-       :'У идеи есть длительность, но нет назначенного времени.';
    }
    function fromStartOrDuration(){
      const a=mins(start.value),d=Number(durationInput.value);
@@ -448,21 +453,26 @@ export async function renderWeddingProgram(host,api,days){
      if(a!==null&&b!==null&&b>a&&b-a>=5&&b-a<=600)durationInput.value=String(b-a);
    });
    placement.addEventListener('change',updateVisible);
-   const tagBox=$('div','ad-tl-tag-checkboxes');const selected=new Set(itemTags(item));
+   const tagBox=$('div','ad-tl-tag-select-list');
+   const selected=new Set(itemTags(item));
    for(const tag of tags){
-     const check=$('input');check.type='checkbox';check.value=tag.id;check.checked=selected.has(tag.id);
-     const chip=field(tag.label,check);chip.classList.add('ad-tl-check-chip');
-     chip.style.setProperty('--tag-color',typeColor(tag));tagBox.append(chip);
+     const chip=makeButton(tag.label,()=>toggleTag(),'ad-tl-tag-select');
+     chip.style.setProperty('--tag-color',typeColor(tag));
+     const refresh=()=>{
+       const active=selected.has(tag.id);
+       chip.classList.toggle('is-selected',active);
+       chip.setAttribute('aria-pressed',String(active));
+     };
+     const toggleTag=()=>{if(selected.has(tag.id))selected.delete(tag.id);else selected.add(tag.id);refresh()};
+     refresh();tagBox.append(chip);
    }
    const tagsField=$('div','ad-tl-tags-field');
    tagsField.append($('span','ad-tl-form-label','Теги'));
    if(tags.length)tagsField.append(tagBox);
-   else tagsField.append($('p','ad-tl-help','Теги пока не созданы.'));
-   tagsField.append(makeButton('Управлять тегами',()=>{shade.remove();openTaxonomy('tags')},'ad-tl-text-button'));
    form.append(field('Название',name),field('Описание',description),field('Категория',category),
      field('Длительность, минут',durationInput),tagsField,
-     field('Раздел',placement),
-     parallelField,startField,endField,timeHint);
+     placementField,
+     parallelField,startField,endField);
    const feedback=$('p','ad-tl-form-error');feedback.setAttribute('role','alert');
    const buttons=$('div','ad-tl-modal-actions');
    const save=$('button','ad-tl-button ad-tl-primary','Сохранить');save.type='submit';
@@ -474,7 +484,7 @@ export async function renderWeddingProgram(host,api,days){
    form.addEventListener('submit',async event=>{
      event.preventDefault();if(busy)return;
      const startN=mins(start.value),endN=mins(end.value);
-     const n=Number(durationInput.value),isProgram=placement.value==='program';
+     const n=Number(durationInput.value),isProgram=placement.checked;
      if(!name.value.trim()){feedback.textContent='Укажите название активности.';return}
      if(!Number.isInteger(n)||n<5||n>600){feedback.textContent='Длительность должна составлять 5–600 минут.';return}
      if(isProgram&&(startN===null||endN===null||endN<=startN||endN-startN!==n)){
@@ -483,7 +493,7 @@ export async function renderWeddingProgram(host,api,days){
      if(isProgram&&endN>=1440){feedback.textContent='Событие должно завершиться до полуночи.';return}
      // An activity never changes its wedding day from within the card editor.
      const chosenDay=item?assignedDay(item):day;
-     const checked=[...tagBox.querySelectorAll('input:checked')].map(x=>x.value);
+     const checked=[...selected];
      const fields={
        title:name.value.trim(),notes:description.value.trim(),
        activity_type:category.value,duration_min:n,tags_json:JSON.stringify(checked),
