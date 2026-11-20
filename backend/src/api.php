@@ -152,7 +152,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $d=payload(16384);
         $allowed=['event_date','event_time','event_venue','venue_address','rsvp_deadline',
           'dress_code','transport_info','public_notes','menu_open','directory_open',
-          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','guest_table_columns','guest_sort_mode','activity_types','activity_tags','program_day_hours'];
+          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','guest_table_columns','guest_table_layout','guest_sort_mode','activity_types','activity_tags','program_day_hours'];
         $key=choice($d,'key',$allowed,'');
         if(!array_key_exists('value',$d))
             fail(422,'field','Значение настройки недопустимо');
@@ -168,6 +168,24 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
                    !is_string($type['color'])||!preg_match('/^#[0-9a-fA-F]{6}$/',$type['color'])||
                    isset($seen[$type['id']]))fail(422,'field','Некорректный тип активности');
                 $seen[$type['id']]=true;
+            }
+        } elseif($key==='guest_table_layout'){
+            $allowedHeights=[56,72,96,128,0];
+            $allowedFields=['display_name','side','community','relation_to_couple','about',
+                'about_en','city','country','origin_place','origin_country','planning_status',
+                'age_group','decision','attendance','seating_group','phone','email',
+                'birth_city','birth_country'];
+            if(!is_array($value)||array_is_list($value)||
+                array_diff(array_keys($value),['row_height','truncate','widths'])||
+                !isset($value['row_height'],$value['truncate'],$value['widths'])||
+                !in_array($value['row_height'],$allowedHeights,true)||
+                !is_bool($value['truncate'])||!is_array($value['widths'])||
+                count($value['widths'])>count($allowedFields))
+                fail(422,'field','Некорректные параметры таблицы гостей');
+            foreach($value['widths'] as $column=>$width){
+                if(!is_string($column)||!in_array($column,$allowedFields,true)||
+                    !is_int($width)||$width<100||$width>900)
+                    fail(422,'field','Недопустимая ширина столбца');
             }
         } elseif($key==='guest_sort_mode'){
             if(!in_array($value,['alphabetical','connections'],true))
