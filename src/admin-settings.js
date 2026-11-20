@@ -73,6 +73,22 @@ export async function renderWeddingSettings(host,api){
  const guestPanel=$('section','ad-tl-settings-content ad-gb-global-settings');
  guestPanel.append($('h2','','Гости · отображение таблицы'),
    $('p','ad-tl-settings-help','Выберите столбцы и их порядок. Имя гостя остаётся первым, остальные поля можно скрыть или переставить.'));
+ const groupMode=$('div','ad-gb-global-sort-mode');
+ const groupLabel=$('label','ad-gb-global-children-choice');
+ const groupCheck=$('input');groupCheck.type='checkbox';
+ groupCheck.checked=settings.settings?.guest_sort_mode==='connections';
+ groupLabel.append(groupCheck,$('span','','Расположить гостей по семьям, связям и кругам общения'));
+ const groupResult=$('span','ad-gb-feedback');groupResult.setAttribute('role','status');
+ groupCheck.addEventListener('change',async()=>{
+   const checked=groupCheck.checked;groupCheck.disabled=true;groupResult.textContent='';
+   try{
+     await api('admin/settings',{method:'POST',body:{key:'guest_sort_mode',
+       value:checked?'connections':'alphabetical'}});
+     groupResult.textContent='Сохранено';
+   }catch(error){groupCheck.checked=!checked;groupResult.textContent=error.message||'Ошибка сохранения'}
+   finally{groupCheck.disabled=false}
+ });
+ groupMode.append(groupLabel,groupResult);guestPanel.append(groupMode);
  const guestRows=$('div','ad-gb-global-settings-list');
  let chosen=normalizeGuestTableColumns(settings.settings?.guest_table_columns);
  let savingGuests=false;
