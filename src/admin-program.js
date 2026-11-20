@@ -105,6 +105,7 @@ export async function renderWeddingProgram(host,call,weddingDays,venues){
    if(where==='timeline'){
      const start=timeOf(item),end=String(item.end_at||'').match(/T(\d\d:\d\d)/)?.[1]||'';
      card.prepend(element('div','ad-tl-clock',(start||'—')+' — '+(end||'—')));
+     if(!item.end_at)card.append(element('small','ad-tl-break','Длительность предварительная — уточните в редакторе.'));
      if(Number(item.gap_before_min)>0)card.append(element('small','ad-tl-break','Пауза перед: '+item.gap_before_min+' мин'));
    }
    const actions=element('div','ad-tl-card-actions');
@@ -215,7 +216,7 @@ export async function renderWeddingProgram(host,call,weddingDays,venues){
    function updateTiming(){
      const inProgram=stage.value==='program';dateWrap.hidden=!inProgram;timeWrap.hidden=!inProgram;start.required=inProgram;
      const n=asMinutes(start.value),m=Number(minutes.value);
-     endPreview.textContent=inProgram?(n!==null&&m>0&&n+m<=1440?'Окончание: '+clock(n+m):'Выберите начало и длительность'):'Идея хранится без времени начала и окончания';
+     endPreview.textContent=inProgram?(n!==null&&m>0&&n+m<1440?'Окончание: '+clock(n+m):'Выберите начало и длительность'):'Идея хранится без времени начала и окончания';
    }
    stage.addEventListener('change',updateTiming);start.addEventListener('input',updateTiming);minutes.addEventListener('input',updateTiming);
    form.append(field('Название активности',name),field('Описание',notes),field('Тип активности',type),
@@ -235,7 +236,7 @@ export async function renderWeddingProgram(host,call,weddingDays,venues){
      const target=date.value,isProgram=stage.value==='program';
      if(!name.value.trim()){status.textContent='Укажите название';return;}
      if(!Number.isInteger(n)||n<5||n>600){status.textContent='Длительность от 5 до 600 минут';return;}
-     if(isProgram&&(begin===null||begin+n>1440)){
+     if(isProgram&&(begin===null||begin+n>=1440)){
        status.textContent='Укажите время, позволяющее закончить активность в тот же день';return;
      }
      let gap=0;
