@@ -41,6 +41,14 @@ const typeColor=type=>/^#[0-9a-fA-F]{6}$/.test(type?.color||'')?type.color:'#E8E
 const safeTypes=(saved,fallback)=>Array.isArray(saved)&&saved.length?saved.map(x=>({...x})):fallback.map(x=>({...x}));
 
 // One fixed vertical time scale keeps start/end and stretch height in sync.
+export function cardDescription(item,isScheduled){
+ const notes=String(item?.notes||'');
+ // The original draft time remains in the editor, but does not repeat the
+ // actual program start/end time printed on the timeline card.
+ return isScheduled
+   ?notes.replace(/^\s*Предложенный тайминг:[^\r\n]*(?:\r?\n|$)/iu,'').trim()
+   :notes.trim();
+}
 export const MINUTE_PX=6;
 export const snapToFive=value=>Math.round(value/5)*5;
 export function parallelEventLayout(items){
@@ -239,15 +247,16 @@ export async function renderWeddingProgram(host,api,days){
    lengthLabel=$('span','ad-tl-length',duration(item)+' мин');
    cardHead.append(lengthLabel);
    node.append(cardHead,$('h3','ad-tl-card-title',item.title));
-   // Draft time in the note is useful for ideas, but duplicates the real clock
-   // in the schedule. Keep the original note intact in the database/editor.
-   const fullNotes=String(item.notes||'');
-   const visibleNotes=scheduledCard
-     ?fullNotes.replace(/^Предложенный тайминг:[^\\n]*(?:\\n|$)/iu,'').trim()
-     :fullNotes;
+   const visibleNotes=cardDescription(item,scheduledCard);
    if(visibleNotes)node.append($('p','ad-tl-card-description',visibleNotes));
    if(scheduledCard){
-     if(duration(item)<10)node.classList.add('ad-tl-micro-event');
+     if(duration(item)<10){
+       node.classList.add('ad-tl-micro-event');
+       // Extremely short slots have space for only one line: show the
+       // activity's name and duration instead of truncating both away.
+       const heading=node.querySelector('.ad-tl-card-title');
+       if(heading)heading.title=item.title;
+     }
      else if(duration(item)<25)node.classList.add('ad-tl-short-event');
    }
    const pills=$('div','ad-tl-tags-inline');
