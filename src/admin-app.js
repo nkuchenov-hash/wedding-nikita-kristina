@@ -14,7 +14,17 @@ const venueSummary={
  inspected:venueIds.filter(id=>VENUE_RECORDS[id].visited===true).length,
  quotes:venueIds.filter(id=>VENUE_RECORDS[id].quotes?.length>0).length
 };
-function adminSidebar(active){return `<aside class="admin-side"><a href="#/admin/overview" class="admin-brand"><span class="admin-brand-logo">НК</span><span>Wedding<br/><small>Панель организаторов</small></span></a><div class="side-caption">УПРАВЛЕНИЕ</div><nav aria-label="Разделы админки">${adminModules.map(m=>`<a href="#/admin/${m.id}" class="side-link ${active===m.id?'selected':''}"><span class="side-icon">${m.icon}</span>${m.label}</a>`).join('')}</nav></aside>`;}
+function adminSidebar(active){
+ const items=adminModules.filter(m=>m.id!=='settings');
+ const settings=adminModules.find(m=>m.id==='settings');
+ const navLink=m=>`<a href="#/admin/${m.id}" class="side-link ${active===m.id?'selected':''}"><span class="side-icon">${m.icon}</span>${m.label}</a>`;
+ return `<aside class="admin-side">
+   <a href="#/admin/overview" class="admin-brand"><span class="admin-brand-logo">НК</span><span>Wedding<br/><small>Панель организаторов</small></span></a>
+   <div class="side-caption">УПРАВЛЕНИЕ</div>
+   <nav aria-label="Разделы админки">${items.map(navLink).join('')}</nav>
+   ${settings?`<div class="admin-settings-footer">${navLink(settings)}</div>`:''}
+ </aside>`;
+}
 function adminOverview(){
  return `<div class="dashboard-heading"><div><div class="eyebrow">ПОДГОТОВКА СВАДЬБЫ</div><h1>Никита и Кристина</h1><p>Площадки, условия и бюджет праздника</p></div></div>
  <div class="metrics-grid">
