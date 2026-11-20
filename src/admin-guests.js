@@ -662,7 +662,7 @@ export async function activateGuestDirectory(root){
      }
      const decisionOptions=[['','Не решено'],...
        [...new Set([s(g.decision),...DECISIONS])].filter(Boolean).map(v=>[v,v])];
-     const basics=group('Основные данные',[
+     const basics=group('О человеке',[
        ['relation_to_couple','Кем приходится','text'],
        ['community','Круг общения','text'],
        ['origin_place','Откуда родом — город / регион','text'],
@@ -679,17 +679,6 @@ export async function activateGuestDirectory(root){
        ['phone','Телефон','tel'],['email','Email','email'],
        ['language','Язык общения','select',LANGUAGES]
      ]);
-     // Organizational attributes are preserved but deliberately separated from biography.
-     const adminDetails=mk('details','ad-gb-legacy-details ad-gb-organizer-details');
-     adminDetails.append(mk('summary','','Организация приглашения'));
-     form.append(adminDetails);
-     group('Планирование и приглашение',[
-       ['side','Сторона','select',SIDES.filter(([v])=>v!=='all')],
-       ['planning_status','Состав гостей','select',PLANNING],
-       ['age_group','Возрастная категория','select',AGE],
-       ['plus_one_allowed','Можно прийти с +1','select',[['0','Нет'],['1','Да']]],
-       ['decision','Решение о приглашении','select',decisionOptions]
-     ],adminDetails);
      // Seating is a future planning decision, not a duplicate social circle.
      // Preserve values imported from spreadsheets, but don't present them
      // alongside the social circle as two equivalent identity fields.
@@ -716,6 +705,18 @@ export async function activateGuestDirectory(root){
      group('Английская версия',[
        ['about_en','Полный профиль EN','textarea']
      ],englishDetails);
+     // Organizational attributes are preserved but deliberately separated from biography.
+     const adminDetails=mk('details','ad-gb-legacy-details ad-gb-organizer-details');
+     adminDetails.append(mk('summary','','Организация приглашения'));
+     form.append(adminDetails);
+     group('Планирование и приглашение',[
+       ['side','Сторона','select',SIDES.filter(([v])=>v!=='all')],
+       ['planning_status','Состав гостей','select',PLANNING],
+       ['age_group','Возрастная категория','select',AGE],
+       ['plus_one_allowed','Можно прийти с +1','select',[['0','Нет'],['1','Да']]],
+       ['decision','Решение о приглашении','select',decisionOptions]
+     ],adminDetails);
+
 
      profile.append(form);
      form.addEventListener('submit',event=>{event.preventDefault();panelSave?.()});
