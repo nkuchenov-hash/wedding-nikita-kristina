@@ -19,6 +19,8 @@ export const GUEST_TABLE_FIELDS=[
  ['about_en','Профиль EN'],
  ['city','Город / регион'],
  ['country','Страна'],
+ ['origin_place','Откуда родом'],
+ ['origin_country','Страна происхождения'],
  ['planning_status','Состав'],
  ['age_group','Возраст'],
  ['decision','Приглашение'],
@@ -349,7 +351,7 @@ export async function activateGuestDirectory(root){
      if(filter.value==='maybe'&&p.attendance!=='maybe')return false;
      if(filter.value==='no'&&p.attendance!=='no')return false;
      if(filter.value==='unsent'&&p.invitation_sent_at)return false;
-     return !query||[p.display_name,p.name_en,p.relationship,p.relation_to_couple,p.seating_group,p.community,p.city,p.country,p.birth_city,p.birth_country,p.email,p.phone,p.source_person_id].some(v=>s(v).toLocaleLowerCase('ru').includes(query));
+     return !query||[p.display_name,p.name_en,p.relationship,p.relation_to_couple,p.seating_group,p.community,p.city,p.country,p.origin_place,p.origin_country,p.birth_city,p.birth_country,p.email,p.phone,p.source_person_id].some(v=>s(v).toLocaleLowerCase('ru').includes(query));
    });
    const grouped=sort.value==='__connections';
    const groups=grouped?groupGuestsByConnections(chosen,people,relationshipEdges,descending):
@@ -371,7 +373,7 @@ export async function activateGuestDirectory(root){
    const body=mk('tbody');
    const editable=new Set(['first_name','last_name','name_en','planning_status','age_group',
      'side','relation_to_couple','relationship','community','seating_group','decision',
-     'attendance','plus_one_allowed','city','country','birth_city','birth_country','phone','email','language']);
+     'attendance','plus_one_allowed','city','country','origin_place','origin_country','birth_city','birth_country','phone','email','language']);
    function tableCell(p,key){
      if(key==='display_name'){
        const td=mk('td','ad-gb-name');
@@ -528,8 +530,11 @@ export async function activateGuestDirectory(root){
        ['community','Круг общения','text'],
        ['planning_status','Состав гостей','select',PLANNING],
        ['age_group','Возрастная категория','select',AGE],
+       ['plus_one_allowed','Можно прийти с +1','select',[['0','Нет'],['1','Да']]],
        ['decision','Решение о приглашении','select',decisionOptions],
-       ['city','Город проживания','text'],
+       ['origin_place','Откуда родом — город / регион','text'],
+       ['origin_country','Страна происхождения','text'],
+       ['city','Где живёт сейчас — город / регион','text'],
        ['country','Страна проживания','text']
      ]);
      basics.classList.add('ad-gb-main-details');
@@ -541,10 +546,6 @@ export async function activateGuestDirectory(root){
        ['phone','Телефон','tel'],['email','Email','email'],
        ['language','Язык общения','select',LANGUAGES]
      ]);
-     const companionDetails=mk('details','ad-gb-legacy-details ad-gb-bio-details');
-     companionDetails.append(mk('summary','','Сопровождающий'));
-     form.append(companionDetails);
-     group('Сопровождающий',[['plus_one_allowed','Разрешён +1','select',[['0','Нет'],['1','Да']]]],companionDetails);
      // Seating is a future planning decision, not a duplicate social circle.
      // Preserve values imported from spreadsheets, but don't present them
      // alongside the social circle as two equivalent identity fields.
@@ -643,46 +644,6 @@ export async function activateGuestDirectory(root){
        try{await request('admin/companions',{method:'POST',csrf,body:{guest_id:id,display_name:s(compName.value),age_group:compAge.value}});
          compName.value='';await refreshComp()}catch(err){notice(err.message,true)}finally{compAdd.disabled=false}
      });
-     const response=section('Ответ на приглашение',{collapsed:true});
-     const rsp=mk('form','ad-gb-edit-grid'),r={};
-     r.attendance=field(rsp,'Участие','attendance',g.attendance||'','select',ANSWERS);
-     r.adults=field(rsp,'Взрослых','adults',g.adults??1,'number');
-     r.children=field(rsp,'Детей, которые придут с гостем','children',g.children??0,'number');
-     r.dietary_notes=field(rsp,'Питание и аллергии','dietary_notes',g.dietary_notes||'','textarea');
-     r.other_notes=field(rsp,'Другие пожелания','other_notes',g.other_notes||'','textarea');
-     response.append(rsp);
-     rsp.addEventListener('submit',event=>{event.preventDefault();panelSave?.()});
-     const invites=section('Приглашение',{collapsed:true});
-     const inviteInfo=mk('p','ad-gb-note',g.invitation_sent_at?'Отправлено: '+g.invitation_sent_at:'Пока не отправлено');
-     invites.append(inviteInfo);
-     const inviteActions=mk('div','ad-gb-invitation-actions');
-     const issue=mk('button','ad-gb-light',g.active_invite_id?'Перевыпустить личную ссылку':'Создать личную ссылку'),
-       sent=mk('button','ad-gb-light',g.invitation_sent_at?'Отменить отметку об отправке':'Отметить отправленным');
-     issue.type=sent.type='button';sent.disabled=!g.active_invite_id;
-     inviteActions.append(issue,sent);invites.append(inviteActions);
-
-     issue.addEventListener('click',async()=>{
-       if(g.active_invite_id&&!confirm('Существующая ссылка станет недействительной. Продолжить?'))return;
-       issue.disabled=true;
-       try{
-         const data=await request('admin/invitations',{method:'POST',csrf,body:{guest_id:id}});
-         const url='https://nikitakristina.ru/guest/#invite/'+data.token;
-         const box=mk('div','ad-gb-personal-link'),inp=mk('input'),copy=mk('button','ad-gb-light','Скопировать');
-         inp.readOnly=true;inp.value=url;copy.type='button';
-         copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(url);copy.textContent='Скопировано'}catch{inp.focus();inp.select()}});
-         box.append(inp,copy);invites.append(box);g.active_invite_id=data.id;sent.disabled=false;g.invitation_sent_at=null;inviteInfo.textContent='Пока не отправлено';
-         const p=byId(id);if(p){p.active_invite_id=data.id;p.invitation_sent_at=null}render();
-       }catch(err){notice(err.message,true)}finally{issue.disabled=false}
-     });
-     sent.addEventListener('click',async()=>{
-       const value=!Boolean(g.invitation_sent_at);sent.disabled=true;
-       try{await request('admin/invitations/sent',{method:'POST',csrf,body:{guest_id:id,sent:value}});
-         g.invitation_sent_at=value?new Date().toISOString():null;
-         const p=byId(id);if(p)p.invitation_sent_at=g.invitation_sent_at;
-         inviteInfo.textContent=value?'Приглашение отправлено (отмечено организатором)':'Пока не отправлено';
-         sent.textContent=value?'Отменить отметку об отправке':'Отметить отправленным';render();
-       }catch(err){notice(err.message,true)}finally{sent.disabled=false}
-     });
      // Active guests have exactly one Main/Reserve control, in Planning.
      // Only legacy archived records require an additional recovery action.
      if(g.status==='archived'){
@@ -700,8 +661,7 @@ export async function activateGuestDirectory(root){
        });
      }
 
-     const rsvpKeys=['attendance','adults','children','dietary_notes','other_notes'];
-     const rsvpBefore=Object.fromEntries(rsvpKeys.map(key=>[key,s(r[key].value)]));
+
      const fieldsChanged=()=>{
        const updated={};
        for(const key of Object.keys(controls)){
@@ -713,33 +673,21 @@ export async function activateGuestDirectory(root){
        if(en!==s(g.name_en))updated.name_en=en;
        return updated;
      };
-     const rsvpChanged=()=>rsvpKeys.some(key=>s(r[key].value)!==rsvpBefore[key]);
-     panelDirty=()=>Object.keys(fieldsChanged()).length>0||rsvpChanged()||
+     panelDirty=()=>Object.keys(fieldsChanged()).length>0||
        (!missingName(g)&&!s(titleInput.value));
      panelSave=async()=>{
        if(panelBusy||activeId!==id)return;
        if(!s(titleInput.value)&&!missingName(g)){
          footerFeedback.textContent='Укажите имя гостя';titleInput.focus();return;
        }
-       if(!form.reportValidity()||!rsp.reportValidity())return;
-       const changed=fieldsChanged(),replyDirty=rsvpChanged();
-       if(!Object.keys(changed).length&&!replyDirty){showAdminToast('Изменений нет.');return}
-       if(replyDirty&&r.attendance.value===''&&g.attendance&&
-         !confirm('Очистить сохранённый ответ гостя?'))return;
-       if(replyDirty&&r.attendance.value===''&&!g.attendance){
-         footerFeedback.textContent='Чтобы сохранить детали ответа, сначала выберите участие';
-         return;
-       }
+       if(!form.reportValidity())return;
+       const changed=fieldsChanged();
+       if(!Object.keys(changed).length){showAdminToast('Изменений нет.');return}
        panelBusy=true;footerSave.disabled=footerCancel.disabled=footerDelete.disabled=true;
        footerFeedback.textContent='Сохранение…';
        try{
          if(Object.keys(changed).length)
            await request('admin/guest/fields',{method:'PATCH',csrf,body:{id,fields:changed}});
-         if(replyDirty)await request('admin/guest/rsvp',{method:'PATCH',csrf,body:{
-           id,attendance:r.attendance.value,adults:Number(r.adults.value),
-           children:childrenEnabled?Number(r.children.value):0,
-           dietary_notes:s(r.dietary_notes.value),other_notes:s(r.other_notes.value)
-         }});
          await reloadData();
          footerFeedback.textContent='';
          panelBusy=false;closeGuest();
@@ -766,6 +714,22 @@ export async function activateGuestDirectory(root){
          panelBusy=false;footerSave.disabled=footerCancel.disabled=footerDelete.disabled=false;
        }
      };
+     const registration=section('Регистрация на свадьбу');
+     registration.classList.add('ad-gb-registration');
+     const registrationGrid=mk('div','ad-gb-registration-grid');
+     function statusItem(label,value){
+       const item=mk('div','ad-gb-registration-item');
+       item.append(mk('span','',label),mk('strong','',value));registrationGrid.append(item);
+     }
+     const sentAt=s(g.invitation_sent_at);
+     const openedAt=s(g.first_opened_at);
+     const answered=s(g.attendance);
+     statusItem('Приглашение',sentAt?'Отправлено':'Не отправлено');
+     statusItem('Гостевая анкета',g.profile_completed_at?'Заполнена':openedAt?'Открыта, не заполнена':'Не открыта');
+     const answerName=ANSWERS.find(([id])=>id===answered)?.[1];
+     statusItem('Ответ',answerName||'Нет ответа');
+     registration.append(registrationGrid);
+     // Guest-site submissions populate the statuses above automatically.
      showGuestFooter({showDelete:g.status!=='archived'});
 
    }catch(err){titleArea.replaceChildren(mk('h2','ad-gb-new-title','Гость'));detail.replaceChildren(mk('p','ad-gb-error','Не удалось открыть карточку: '+err.message))}
