@@ -244,45 +244,70 @@ export async function activateGuestDirectory(root){
      return !query||[p.display_name,p.name_en,p.relationship,p.relation_to_couple,p.seating_group,p.community,p.city,p.email,p.phone,p.source_person_id].some(v=>s(v).toLocaleLowerCase('ru').includes(query));
    }).sort((a,b)=>compareRows(a,b,sort.value));
    list.replaceChildren();
-   const holder=mk('div','ad-gb-scroll'),table=mk('table','ad-gb-table'),
-     thead=mk('thead'),tr=mk('tr');
-   const headings=[
-    ['Гость','display_name'],['Список','planning_status'],['Возраст','age_group'],
-    ['Сторона','side'],['Кем приходится','relation_to_couple'],
-    ['Рассадка (план)','seating_group'],['Решение','decision'],['Приглашение','invitation_sent_at'],
-    ['Ответ','attendance']
-   ];
-   for(const [name,key]of headings){
-     const th=mk('th'),button=mk('button','ad-gb-th-sort',name+(sort.value===key?(descending?' ↓':' ↑'):''));
-     button.type='button';button.title='Сортировать: '+name;button.addEventListener('click',()=>{
+   const holder=mk('div','ad-gb-scroll'),table=mk('table','ad-gb-table'),thead=mk('thead'),tr=mk('tr');
+   const headings=visibleColumns.map(key=>GUEST_TABLE_FIELDS.find(([field])=>field===key))
+     .filter(Boolean).map(([key,label])=>[label,key]);
+   table.style.minWidth=Math.max(620,225+(headings.length-1)*160)+'px';
+   for(const [label,key] of headings){
+     const th=mk('th'),button=mk('button','ad-gb-th-sort',label+(sort.value===key?(descending?' ↓':' ↑'):''));
+     button.type='button';button.title='Сортировать: '+label;
+     button.addEventListener('click',()=>{
        if(sort.value===key)descending=!descending;else{sort.value=key;descending=false}
        direction.textContent=descending?'Я → А':'А → Я';render();
      });th.append(button);tr.append(th);
    }
    thead.append(tr);table.append(thead);
    const body=mk('tbody');
+   const editable=new Set(['first_name','last_name','name_en','planning_status','age_group',
+     'side','relation_to_couple','relationship','community','seating_group','decision',
+     'attendance','plus_one_allowed','city','phone','email','language']);
+   function tableCell(p,key){
+     if(key==='display_name'){
+       const td=mk('td','ad-gb-name');
+       const name=mk('button','ad-gb-person-link',display(p));
+       name.type='button';name.addEventListener('click',()=>openGuest(p.id));
+       td.append(name,mk('small','',p.name_en||(missingName(p)?'Требуется уточнить имя':'')));
+       if(!childrenEnabled&&isChild(p))td.append(badge('Дети отключены','draft'));
+       return td;
+     }
+     if(key==='invitation_sent_at'){
+       const td=mk('td','ad-gb-plain-cell');
+       td.append(p.invitation_sent_at?badge('Отправлено','sent'):badge('Не отправлено','draft'));
+       return td;
+     }
+     if(editable.has(key)){
+       const choices=key==='planning_status'?PLANNING:
+         key==='age_group'?AGE:key==='side'?SIDES.filter(([v])=>v!=='all'):
+         key==='attendance'?ANSWERS:key==='language'?LANGUAGES:
+         key==='plus_one_allowed'?[['0','Нет'],['1','Да']]:
+         key==='decision'?[...new Set([s(p.decision),...DECISIONS])].filter(Boolean).map(v=>[v,v]):null;
+       const td=editCell(p,key,'Не указано',choices);
+       if(key==='planning_status'&&isReserve(p))td.classList.add('ad-gb-reserve-cell');
+       if(key==='age_group'&&!childrenEnabled&&isChild(p))td.classList.add('ad-gb-child-off-cell');
+       return td;
+     }
+     const td=mk('td','ad-gb-plain-cell');
+     const content=key==='status'?({'draft':'Черновик','invited':'Приглашён','registered':'Зарегистрирован','archived':'Архив'}[p[key]]||p[key]):
+       key==='adults'||key==='children'?s(p[key]??'—'):s(p[key]);
+     if(['about','about_en','private_notes','dietary_notes','other_notes'].includes(key)){
+       const preview=mk('button','ad-gb-text-preview',content.length>110?content.slice(0,107)+'…':content||'—');
+       preview.type='button';preview.title='Открыть карточку гостя';preview.addEventListener('click',()=>openGuest(p.id));
+       td.append(preview);
+     }else{
+       const span=mk('span','ad-gb-plain-value',content||'—');span.title=content;td.append(span);
+     }
+     return td;
+   }
    for(const p of chosen){
-     const row=mk('tr','ad-gb-person-row'),nameCell=mk('td','ad-gb-name');
-     const name=mk('button','ad-gb-person-link',display(p));name.type='button';name.addEventListener('click',()=>openGuest(p.id));
-     nameCell.append(name,mk('small','',p.name_en||(missingName(p)?'Требуется уточнить имя':' ')));
-     const decisionChoices=[...new Set([s(p.decision),...DECISIONS])].filter(Boolean).map(v=>[v,v]);
-     const sent=mk('td');sent.append(p.invitation_sent_at?badge('Отправлено','sent'):badge('Не отправлено','draft'));
-     const planning=editCell(p,'planning_status','Основной',PLANNING);
-     if(isReserve(p))planning.classList.add('ad-gb-reserve-cell');
-     const age=editCell(p,'age_group','Уточнить',AGE);
-     if(!childrenEnabled&&isChild(p))age.classList.add('ad-gb-child-off-cell');
+     const row=mk('tr','ad-gb-person-row');
      row.classList.toggle('ad-gb-reserve-row',isReserve(p));
      row.classList.toggle('ad-gb-child-off-row',!childrenEnabled&&isChild(p));
-     row.append(nameCell,planning,age,editCell(p,'side','Уточнить',SIDES.filter(([v])=>v!=='all')),
-       editCell(p,'relation_to_couple','Уточнить'),
-       editCell(p,'seating_group','Не указана'),editCell(p,'decision','Не решено',decisionChoices),
-       sent,editCell(p,'attendance','Не ответил',ANSWERS));
-     if(!childrenEnabled&&isChild(p))nameCell.append(badge('Дети отключены','draft'));
+     for(const [,key]of headings)row.append(tableCell(p,key));
      body.append(row);
    }
    table.append(body);holder.append(table);list.append(holder);
    list.append(mk('p','ad-gb-count','Показано '+chosen.length+' из '+people.length+
-     ' · Любой заголовок сортирует столбец. Для остальных полей используйте «Сортировать по». Все изменения сохраняются на сервере.'));
+     ' · Заголовки сортируют данные. Нажмите на значение для редактирования. Столбцы настраиваются справа.'));
  }
  function closeGuest(){activeId=null;overlay.hidden=true;document.body.classList.remove('ad-gb-lock');detail.replaceChildren()}
  function field(parent,label,key,value,type='text',items=null){
