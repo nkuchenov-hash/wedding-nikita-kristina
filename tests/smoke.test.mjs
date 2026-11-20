@@ -90,9 +90,12 @@ test('three-day wedding itinerary contains only organizer-confirmed events',asyn
  assert.match(backend,/DELETE FROM schedule_items WHERE id=/);
  assert.match(backend,/INSERT OR IGNORE INTO schedule_items\(id,title,start_at,place,notes,is_public,sort_order,stage,activity_type,duration_min\)/);
  const admin=await read('../src/admin-data-ui.js');
- assert.match(admin,/async function schedule\(host\)/);
- assert.match(admin,/admin\/records\?collection=schedule_items/);
+ const program=await read('../src/admin-program.js');
+ assert.match(admin,/renderWeddingProgram\(host,call,weddingDays,PUBLIC_VENUES\)/);
  assert.match(admin,/section==='schedule'/);
+ assert.match(program,/admin\/records\?collection=schedule_items/);
+ assert.match(program,/admin\/schedule\/arrange/);
+ assert.match(program,/dragstart/);
 });
 
 test('protected guest roster edits any core field inline and separates relationship to the couple',async()=>{
