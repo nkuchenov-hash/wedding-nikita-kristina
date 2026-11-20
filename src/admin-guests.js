@@ -441,11 +441,21 @@ export async function activateGuestDirectory(root){
  footerSave.addEventListener('click',()=>panelSave?.());
  footerCancel.addEventListener('click',closeGuest);
  footerDelete.addEventListener('click',()=>panelDelete?.());
+ function updateGuestSaveVisibility(){
+   // An existing guest has no Save button until an actual edit is pending.
+   // During creation, the Add button remains available.
+   footerSave.hidden=activeId!=='new'&&!Boolean(panelDirty?.());
+ }
  function showGuestFooter(options={}){
    footerFeedback.textContent='';
    footerSave.textContent=options.saveText||'Сохранить';
    footerDelete.hidden=options.showDelete===false;
    footer.hidden=false;
+   updateGuestSaveVisibility();
+ }
+ for(const container of [detail,titleArea]){
+   container.addEventListener('input',updateGuestSaveVisibility);
+   container.addEventListener('change',updateGuestSaveVisibility);
  }
  function field(parent,label,key,value,type='text',items=null){
    const wrapper=mk('label','ad-gb-edit-field');wrapper.append(mk('span','',label));
