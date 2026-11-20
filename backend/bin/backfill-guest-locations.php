@@ -37,7 +37,7 @@ try{
         $city='';$changes['city']=$city;$cityCleared++;
     }
     if($birthCity===''
-       &&preg_match('/(?:родился|родилась)\\s+в\\s+(Москве|Северодвинске)/iu',(string)$g['about'],$m)){
+       &&preg_match('/(?:родился|родилась)\s+в\s+(Москве|Северодвинске)/iu',(string)$g['about'],$m)){
        $match=mb_strtolower($m[1]);
        foreach($birthCityNames as $case=>$name){
          if(mb_strtolower($case)===$match){
@@ -57,7 +57,7 @@ try{
     $updates++;
  }
  $db->commit();
-}catch(\\Throwable $error){$db->rollBack();throw $error;}
+}catch(\Throwable $error){$db->rollBack();throw $error;}
 $counts=one($db,"SELECT COUNT(*) total,
  SUM(CASE WHEN trim(country)!='' THEN 1 ELSE 0 END) known_countries,
  SUM(CASE WHEN trim(city)!='' THEN 1 ELSE 0 END) known_cities,
