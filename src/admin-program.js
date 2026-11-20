@@ -112,92 +112,95 @@ export async function renderWeddingProgram(host,api,days){
  function attachTimelineHandles(node,item,clockLabel,lengthLabel){
    const start=mins(hm(item.start_at));
    if(start===null)return;
-   const grip=$('span','ad-tl-move-grip','⋮⋮');
-   grip.setAttribute('title','Переместить по времени (стрелки вверх/вниз — шаг 5 минут)');
-   grip.setAttribute('role','button');
-   grip.setAttribute('tabindex','0');
-   grip.setAttribute('aria-label','Переместить активность по времени');
-   const handle=$('span','ad-tl-resize-grip','⋮⋮');
-   handle.setAttribute('title','Потяните вниз или вверх, чтобы изменить длительность');
-   handle.setAttribute('role','slider');
-   handle.setAttribute('tabindex','0');
-   handle.setAttribute('aria-label','Длительность активности');
-   handle.setAttribute('aria-valuemin','5');
-   handle.setAttribute('aria-valuemax',String(Math.min(600,1435-start)));
-   handle.setAttribute('aria-valuenow',String(duration(item)));
-   handle.setAttribute('aria-orientation','vertical');
-   const top=node.querySelector('.ad-tl-card-top');
-   top.append(grip);
-   node.append(handle);
-   const drag=(control,mode)=>{
-     control.addEventListener('click',e=>{e.preventDefault();e.stopPropagation()});
-     control.addEventListener('pointerdown',e=>{
-       if(busy||(e.pointerType==='mouse'&&e.button!==0))return;
-       e.preventDefault();e.stopPropagation();
-       const originY=e.clientY,originStart=start,originLength=duration(item);
-       let resultStart=originStart,resultLength=originLength;
-       control.setPointerCapture(e.pointerId);
-       node.classList.add('ad-tl-adjusting');
-       const update=e2=>{
-         if(e2.pointerId!==e.pointerId)return;
-         e2.preventDefault();
-         const delta=snapToFive((e2.clientY-originY)/MINUTE_PX);
-         if(mode==='resize'){
-           resultLength=Math.max(5,Math.min(600,1435-originStart,
-             snapToFive(originLength+delta)));
-           node.style.height=Math.max(15,resultLength*MINUTE_PX-3)+'px';
-           handle.setAttribute('aria-valuenow',String(resultLength));
-         }else{
-           resultStart=Math.max(0,Math.min(1435-originLength,snapToFive(originStart+delta)));
-           node.style.transform='translateY('+((resultStart-originStart)*MINUTE_PX)+'px)';
-         }
-         clockLabel.textContent=clock(resultStart)+' — '+clock(resultStart+resultLength);
-         lengthLabel.textContent=resultLength+' мин';
-       };
-       const finish=e2=>{
-         if(e2.pointerId!==e.pointerId)return;
-         control.removeEventListener('pointermove',update);
-         control.removeEventListener('pointerup',finish);
-         control.removeEventListener('pointercancel',cancel);
-         try{control.releasePointerCapture(e.pointerId)}catch{}
-         node.classList.remove('ad-tl-adjusting');
-         node.style.transform='';
-         if(resultStart!==originStart||resultLength!==originLength)
-           void saveSlot(item,resultStart,resultLength,
-             mode==='resize'?'Длительность изменена.':'Время начала изменено.');
-         else{
-           node.style.height='';
-           clockLabel.textContent=clock(start)+' — '+clock(start+originLength);
-           lengthLabel.textContent=originLength+' мин';
-         }
-       };
-       const cancel=e2=>{
-         if(e2.pointerId!==e.pointerId)return;
-         control.removeEventListener('pointermove',update);
-         control.removeEventListener('pointerup',finish);
-         control.removeEventListener('pointercancel',cancel);
-         node.classList.remove('ad-tl-adjusting');node.style.transform='';node.style.height='';
-         clockLabel.textContent=clock(start)+' — '+clock(start+originLength);
-         lengthLabel.textContent=originLength+' мин';
-       };
-       control.addEventListener('pointermove',update);
-       control.addEventListener('pointerup',finish);
-       control.addEventListener('pointercancel',cancel);
-     });
-     control.addEventListener('keydown',event=>{
-       if(!['ArrowUp','ArrowDown'].includes(event.key))return;
-       event.preventDefault();event.stopPropagation();
-       const step=event.shiftKey?15:5;
-       const direction=event.key==='ArrowDown'?1:-1;
-       if(mode==='resize')void saveSlot(item,start,
-         Math.max(5,Math.min(600,1435-start,duration(item)+direction*step)),'Длительность изменена.');
-       else void saveSlot(item,
-         Math.max(0,Math.min(1435-duration(item),start+direction*step)),
-         duration(item),'Время начала изменено.');
-     });
+   let pointer=null,ignoreNextClick=false;
+   // A short click edits the card. Hold for 230 ms, then drag the whole card
+   // to another time slot. The bottom 16 px are the unmarked resize edge.
+   node.addEventListener('click',event=>{
+     if(!ignoreNextClick)return;
+     ignoreNextClick=false;
+     event.preventDefault();event.stopImmediatePropagation();
+   },true);
+   const refresh=(state,y)=>{
+     const delta=snapToFive((y-state.initialY)/MINUTE_PX);
+     if(state.mode==='resize'){
+       state.length=Math.max(5,Math.min(600,1435-state.baseStart,
+         snapToFive(state.baseLength+delta)));
+       node.style.height=Math.max(15,state.length*MINUTE_PX)+'px';
+     }else{
+       state.start=Math.max(0,Math.min(1435-state.baseLength,
+         snapToFive(state.baseStart+delta)));
+       node.style.transform='translateY('+((state.start-state.baseStart)*MINUTE_PX)+'px)';
+     }
+     clockLabel.textContent=clock(state.start)+' — '+clock(state.start+state.length);
+     lengthLabel.textContent=state.length+' мин';
    };
-   drag(grip,'move');
-   drag(handle,'resize');
+   const arm=state=>{
+     if(pointer!==state)return;
+     state.armed=true;ignoreNextClick=true;
+     node.classList.add('ad-tl-adjusting','ad-tl-grabbing');
+     refresh(state,state.lastY);
+   };
+   const reset=state=>{
+     if(state.holdTimer!==null)clearTimeout(state.holdTimer);
+     node.classList.remove('ad-tl-adjusting','ad-tl-grabbing');
+     node.style.transform='';node.style.height='';
+     clockLabel.textContent=clock(state.baseStart)+' — '+clock(state.baseStart+state.baseLength);
+     lengthLabel.textContent=state.baseLength+' мин';
+     try{if(node.hasPointerCapture(state.pointerId))node.releasePointerCapture(state.pointerId)}catch{}
+     pointer=null;
+   };
+   node.addEventListener('pointerdown',event=>{
+     if(busy||pointer||(event.pointerType==='mouse'&&event.button!==0)||
+       event.target.closest('button,input,select,textarea,a'))return;
+     const bounds=node.getBoundingClientRect();
+     const resizing=event.clientY>=bounds.bottom-16;
+     const state={
+       pointerId:event.pointerId,initialY:event.clientY,lastY:event.clientY,
+       baseStart:start,baseLength:duration(item),start,length:duration(item),
+       mode:resizing?'resize':'move',armed:resizing,holdTimer:null
+     };
+     pointer=state;
+     node.setPointerCapture(event.pointerId);
+     if(resizing){
+       ignoreNextClick=true;
+       node.classList.add('ad-tl-adjusting','ad-tl-resizing');
+       event.preventDefault();
+     }else{
+       state.holdTimer=setTimeout(()=>arm(state),230);
+     }
+   });
+   node.addEventListener('pointermove',event=>{
+     if(!pointer||pointer.pointerId!==event.pointerId)return;
+     pointer.lastY=event.clientY;
+     if(pointer.armed){event.preventDefault();refresh(pointer,event.clientY)}
+   });
+   node.addEventListener('pointerup',event=>{
+     if(!pointer||pointer.pointerId!==event.pointerId)return;
+     const state=pointer;
+     if(state.armed)refresh(state,event.clientY);
+     const changed=state.armed&&(state.start!==state.baseStart||state.length!==state.baseLength);
+     if(state.armed)ignoreNextClick=true;
+     reset(state);
+     node.classList.remove('ad-tl-resizing');
+     if(changed)void saveSlot(item,state.start,state.length,
+       state.mode==='resize'?'Длительность изменена.':'Время начала изменено.');
+   });
+   node.addEventListener('pointercancel',event=>{
+     if(!pointer||pointer.pointerId!==event.pointerId)return;
+     const state=pointer;
+     ignoreNextClick=state.armed;
+     reset(state);node.classList.remove('ad-tl-resizing');
+   });
+   // Keyboard users can move by 5 minutes or resize with Shift + arrows.
+   node.addEventListener('keydown',event=>{
+     if(event.target!==node||!['ArrowUp','ArrowDown'].includes(event.key))return;
+     event.preventDefault();event.stopPropagation();
+     const delta=event.key==='ArrowDown'?5:-5;
+     if(event.shiftKey)void saveSlot(item,start,Math.max(5,
+       Math.min(600,1435-start,duration(item)+delta)),'Длительность изменена.');
+     else void saveSlot(item,Math.max(0,Math.min(1435-duration(item),start+delta)),
+       duration(item),'Время начала изменено.');
+   });
  }
  async function removeItem(item){
    if(busy||!confirm('Удалить активность «'+item.title+'»? Это действие нельзя отменить.'))return false;
@@ -216,7 +219,7 @@ export async function renderWeddingProgram(host,api,days){
    node.setAttribute('tabindex','0');
    node.setAttribute('aria-label','Открыть активность: '+item.title);
    node.addEventListener('click',e=>{
-     if(e.target.closest('button,.ad-tl-move-grip,.ad-tl-resize-grip'))return;
+     if(e.target.closest('button'))return;
      openCard(item);
    });
    node.addEventListener('keydown',e=>{
@@ -344,7 +347,7 @@ export async function renderWeddingProgram(host,api,days){
    const toolbar=$('div','ad-tl-section-toolbar'),heading=$('div','ad-tl-section-heading');
    heading.append($('h2','',view==='program'?'Программа · '+dateName(day):'Пул идей · '+dateName(day)));
    heading.append($('span','ad-tl-help',view==='program'
-     ?'Тяните карточку за верхний значок, чтобы сдвинуть по времени, или за нижний край, чтобы изменить длительность. Параллельные события отображаются рядом.'
+     ?'Удерживайте карточку для перемещения. Растягивайте её за нижний край для изменения длительности.'
      :'Идеи принадлежат этому дню, но пока не имеют назначенного времени.'));
    toolbar.append(heading);
    const sum=$('span','ad-tl-summary',current.length+' '+(view==='program'?'событий':'идей'));
