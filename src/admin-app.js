@@ -1,3 +1,4 @@
+import {showAdminToast} from './admin-toast.js';
 import {renderVenueAdmin,activateVenueAdmin} from './venues.js';
 import {activateAdminData} from './admin-data-ui.js';
 import {activatePhotoArchive} from './admin-photos.js';
@@ -76,34 +77,15 @@ render();
 const loadedRevision=new URL(import.meta.url).searchParams.get('v')||'';
 let latestRevision='',refreshChecking=false,lastNotifiedRevision='';
 function showReleaseBanner(){
- document.querySelector('#ad-release-banner')?.remove();
- const toast=document.createElement('div');toast.id='ad-release-banner';
- toast.setAttribute('role','status');
- Object.assign(toast.style,{
-   position:'fixed',bottom:'max(20px,env(safe-area-inset-bottom))',
-   left:'50%',transform:'translateX(-50%)',
-   width:'max-content',maxWidth:'calc(100% - 28px)',
-   zIndex:'2147483600',background:'#204b37',color:'#fff',
-   borderRadius:'12px',boxShadow:'0 10px 26px #0003',
-   padding:'11px 15px',display:'flex',alignItems:'center',gap:'12px',
-   font:'500 13px/1.4 system-ui,Arial,sans-serif'
+ showAdminToast('Сайт обновлён — доступна новая версия.',{
+   duration:6000,
+   action:{label:'Обновить',onClick:()=>{
+     const editing=document.querySelector('.ad-gb-lock')||
+       document.querySelector('form input:focus,form textarea:focus,form select:focus');
+     if(editing&&!confirm('Обновить сайт? Несохранённые изменения могут потеряться.'))return;
+     location.reload();
+   }}
  });
- const label=document.createElement('span');
- label.textContent='Сайт обновлён — доступна новая версия.';
- const action=document.createElement('button');action.type='button';
- action.textContent='Обновить';
- Object.assign(action.style,{
-   background:'#edf5ec',border:0,borderRadius:'8px',cursor:'pointer',
-   padding:'7px 12px',color:'#204b37',fontWeight:'700',whiteSpace:'nowrap'
- });
- action.addEventListener('click',()=>{
-   const editing=document.querySelector('.ad-gb-lock')||
-     document.querySelector('form input:focus,form textarea:focus,form select:focus');
-   if(editing&&!confirm('Обновить сайт? Несохранённые изменения могут потеряться.'))return;
-   location.reload();
- });
- toast.append(label,action);document.body.append(toast);
- setTimeout(()=>toast.remove(),5500);
 }
 async function checkRelease(){
  if(!loadedRevision||refreshChecking||document.visibilityState!=='visible')return;
