@@ -42,8 +42,11 @@ import {readFile} from 'node:fs/promises';
 test('guest toolbar uses only header add, expandable search and icon-only settings',async()=>{
  const js=await readFile(new URL('../src/admin-guests.js',import.meta.url),'utf8');
  const css=await readFile(new URL('../src/admin-guests.css',import.meta.url),'utf8');
- assert.match(js,/actions\.append\(add,searchWrap,columnPrefs\)/);
+ assert.match(js,/actions\.append\(searchWrap,columnPrefs,add\)/);
  assert.match(js,/searchField\.hidden=true/);
+ assert.match(js,/searchWrap\.append\(searchField,searchToggle\)/);
+ assert.match(css,/right:calc\(100% \+ 8px\)/);
+ assert.match(css,/\.ad-guestbook \.ad-gb-top-actions>\.ad-gb-primary\{order:3/);
  assert.match(js,/searchToggle\.addEventListener\('click'/);
  assert.match(js,/filterField\('Сторона',side\)/);
  assert.match(js,/filterField\('Сортировка',sort\)/);
