@@ -58,7 +58,7 @@ jobs:
             gzip -c |
             openssl smime -encrypt -binary -aes-256-cbc -outform DER "$cert"
           php -l "$ROOT/backend/src/guest-xlsx-export.php" >&2
-          php -r 'require $argv[1];require $argv[2];\\Wedding\\streamLiveGuestXlsx(\\Wedding\\db());'             "$ROOT/backend/src/core.php" "$ROOT/backend/src/guest-xlsx-export.php" > "$test_xlsx"
+          php -r 'require $argv[1];require $argv[2];\Wedding\streamLiveGuestXlsx(\Wedding\db());'             "$ROOT/backend/src/core.php" "$ROOT/backend/src/guest-xlsx-export.php" > "$test_xlsx"
           php -r '$z=new ZipArchive();if($z->open($argv[1])!==true)exit(2);if($z->locateName("xl/worksheets/sheet1.xml")===false)exit(3);if($z->numFiles<6)exit(4);$z->close();'             "$test_xlsx"
           echo "LIVE_GUEST_XLSX_OK" >&2
           REMOTE
