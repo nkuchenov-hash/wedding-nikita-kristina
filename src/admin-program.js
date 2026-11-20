@@ -174,7 +174,7 @@ export async function renderWeddingProgram(host,call,weddingDays,venues){
    const track=element('div','ad-tl-track');dropTarget(track);
    if(dayList.length){
      for(const item of dayList)track.append(drawCard(item,'timeline',dayList));
-     const sortedByStart=[...dayList].sort((a,b)=>String(a.start_at).localeCompare(String(b.start_at));
+     const sortedByStart=[...dayList].sort((a,b)=>String(a.start_at).localeCompare(String(b.start_at)));
      const overlaps=sortedByStart.some((x,i)=>i>0&&String(x.start_at)<String(sortedByStart[i-1].end_at||''));
      if(overlaps)timeline.append(element('p','ad-tl-warning','Обнаружено пересечение времени. Измените карточку или переставьте события.'));
    }else{
