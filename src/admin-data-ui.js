@@ -1,4 +1,5 @@
 import {weddingDays} from './data.js';
+import {renderWeddingProgram} from './admin-program.js';
 import {PUBLIC_VENUES} from './venues.js';
 import {VENUE_RECORDS} from './venues-data.js';
 // Wedding admin live-data layer. Never stores guest details in browser storage.
@@ -397,7 +398,7 @@ async function schedule(host){
 async function renderSection(host,section){
  if(section==='overview'){await overview(host);return}
  if(section==='menu'){await collection(host,'menu_options');return}
- if(section==='schedule'){await schedule(host);return}
+ if(section==='schedule'){await renderWeddingProgram(host,call,weddingDays,PUBLIC_VENUES);return}
  if(mapSection[section]){
    await collection(host,mapSection[section]);
    return;
