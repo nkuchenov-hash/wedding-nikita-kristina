@@ -25,7 +25,15 @@ test('the organizer app starts, shows the navigation and supports every route',a
    hash:'#/admin/overview',
    replace(url){this.hash=url}
  };
- await import('../src/admin-app.js?test_bootstrap=1');
+ // The production app polls for new releases; do not leave a live timer
+ // in the Node test process.
+ const originalSetInterval=globalThis.setInterval;
+ globalThis.setInterval=()=>0;
+ try {
+   await import('../src/admin-app.js?test_bootstrap=1');
+ } finally {
+   globalThis.setInterval=originalSetInterval;
+ }
  assert.match(container.markup,/class="admin-layout"/);
  assert.match(container.markup,/class="admin-side"/);
  assert.match(container.markup,/Панель организаторов/);
