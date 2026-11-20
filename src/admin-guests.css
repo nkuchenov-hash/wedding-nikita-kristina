@@ -353,3 +353,35 @@ body.ad-gb-lock{overflow:hidden}
  .ad-gb-footer-save{min-width:100px}
  .ad-gb-panel-header .ad-gb-close{width:36px;height:36px;font-size:26px}
 }
+
+/* Guest toolbar order: [expanding search] [settings] [+ Add Guest].
+   Floating search never changes toolbar width, so Add Guest stays right-aligned. */
+.ad-guestbook .ad-gb-top-actions{
+  flex:0 0 auto;flex-wrap:nowrap;
+  margin-left:auto;justify-content:flex-end;align-items:center;gap:8px;
+}
+.ad-guestbook .ad-gb-top-actions>.ad-gb-primary{order:3;flex:0 0 auto;margin:0}
+.ad-guestbook .ad-gb-search-wrap{order:1;position:relative;flex:0 0 42px;width:42px;min-width:42px;gap:0}
+.ad-guestbook .ad-gb-column-prefs{order:2;flex:0 0 42px;width:42px}
+.ad-guestbook .ad-gb-search-wrap>.ad-gb-search-field{
+  position:absolute;display:block;box-sizing:border-box;
+  right:calc(100% + 8px);top:50%;transform:translateY(-50%);
+  flex:none;width:clamp(190px,22vw,330px);max-width:calc(100vw - 35px);
+  z-index:35;
+}
+.ad-guestbook .ad-gb-search-wrap>.ad-gb-search-field[hidden]{display:none!important}
+.ad-guestbook .ad-gb-search-wrap>.ad-gb-search-field .ad-gb-search-input{
+  box-sizing:border-box;width:100%;min-width:0;height:42px;
+}
+@media(max-width:800px){
+  .ad-guestbook .ad-gb-search-wrap{flex-basis:36px;width:36px;min-width:36px}
+  .ad-guestbook .ad-gb-column-prefs{flex-basis:36px;width:36px}
+  .ad-guestbook .ad-gb-search-wrap.ad-gb-search-open>.ad-gb-search-field{
+    right:0;top:calc(100% + 8px);transform:none;
+    width:min(310px,calc(100vw - 32px));max-width:calc(100vw - 32px);
+  }
+}
+@media(max-width:500px){
+  .ad-guestbook .ad-gb-top{align-items:center;gap:5px}
+  .ad-guestbook .ad-gb-top-actions{gap:1px}
+}
