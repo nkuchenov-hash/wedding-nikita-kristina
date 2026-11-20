@@ -394,11 +394,12 @@ export async function renderWeddingProgram(host,api,days){
    placement.type='checkbox';
    placement.checked=prefs.stage==='program'||(!prefs.stage&&Boolean(item&&scheduled(item)));
    placement.setAttribute('role','switch');
-   placement.setAttribute('aria-label','В программе');
+   const switchCaption=enabled=>enabled?'Включено в программу':'Включить в программу';
+   placement.setAttribute('aria-label',switchCaption(placement.checked));
    const statusLabel=$('label','ad-tl-placement-toggle');
    const track=$('span','ad-tl-switch-track');
    track.setAttribute('aria-hidden','true');
-   const stateText=$('span','ad-tl-switch-state',placement.checked?'В программе':'В пуле идей');
+   const stateText=$('span','ad-tl-switch-state',switchCaption(placement.checked));
    statusLabel.append(placement,track,stateText);
    const placementField=$('div','ad-tl-placement-field');
    placementField.append(statusLabel);
@@ -406,21 +407,17 @@ export async function renderWeddingProgram(host,api,days){
    const end=$('input');end.type='time';
    end.value=hm(item?.end_at)||(mins(start.value)!==null&&mins(start.value)+duration(item)<1440
      ?clock(mins(start.value)+duration(item)):'');
-   const parallel=$('select');
-   const free=$('option','','Не привязывать — время вручную');
-   free.value='';parallel.append(free);
-   for(const other of entriesFor('program')){
-     if(other.id===item?.id)continue;
-     const option=$('option','',hm(other.start_at)+' · '+other.title);
-     option.value=other.id;parallel.append(option);
-   }
-   const parallelField=field('Параллельно с',parallel);
    const startField=field('Начало',start),endField=field('Окончание',end);
+   const timeRow=$('div','ad-tl-time-row');
+   timeRow.append(startField,endField);
    function updateVisible(){
      const enabled=placement.checked;
-     parallelField.hidden=!enabled;startField.hidden=!enabled;endField.hidden=!enabled;
-     stateText.textContent=enabled?'В программе':'В пуле идей';
+     timeRow.classList.toggle('is-inactive',!enabled);
+     timeRow.setAttribute('aria-hidden',String(!enabled));
+     stateText.textContent=switchCaption(enabled);
+     placement.setAttribute('aria-label',switchCaption(enabled));
      start.required=enabled;end.required=enabled;
+     start.disabled=!enabled;end.disabled=!enabled;
      if(enabled&&!start.value){
        const last=Math.max(780,...entriesFor('program')
          .filter(other=>other.id!==item?.id)
@@ -434,13 +431,7 @@ export async function renderWeddingProgram(host,api,days){
      if(a!==null&&Number.isInteger(d)&&d>=5&&d<=600&&a+d<1440)end.value=clock(a+d);
      else end.value='';
    }
-   parallel.addEventListener('change',()=>{
-     const other=entries.find(x=>x.id===parallel.value);
-     if(!other)return;
-     start.value=hm(other.start_at);
-     fromStartOrDuration();
-   });
-   start.addEventListener('change',()=>{parallel.value='';fromStartOrDuration()});
+   start.addEventListener('change',fromStartOrDuration);
    durationInput.addEventListener('change',fromStartOrDuration);
    end.addEventListener('change',()=>{
      const a=mins(start.value),b=mins(end.value);
@@ -465,8 +456,7 @@ export async function renderWeddingProgram(host,api,days){
    if(tags.length)tagsField.append(tagBox);
    form.append(field('Название',name),field('Описание',description),field('Категория',category),
      field('Длительность, минут',durationInput),tagsField,
-     placementField,
-     parallelField,startField,endField);
+     placementField,timeRow);
    const feedback=$('p','ad-tl-form-error');feedback.setAttribute('role','alert');
    const buttons=$('div','ad-tl-modal-actions');
    const save=$('button','ad-tl-button ad-tl-primary','Сохранить');save.type='submit';
