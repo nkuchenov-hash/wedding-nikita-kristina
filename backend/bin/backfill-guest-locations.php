@@ -18,7 +18,51 @@ $map=[
 $countryOnly=['Ирландия'=>1,'Финляндия'=>1,'Швейцария'=>1,
  'Германия'=>1,'Австрия'=>1,'Кипр'=>1];
 $birthCityNames=['Москве'=>'Москва','Северодвинске'=>'Северодвинск'];
-$guests=all($db,'SELECT id,city,country,birth_city,birth_country,about FROM guests');
+
+/* Hometown and nationality explicitly supplied by the organizer.
+   Hometown is tracked separately from place of residence; for the wedding
+   planning list we also use it as a *provisional* birthplace when unknown. */
+$origins=[
+ 'P020'=>['Архангельск','Россия'],
+ 'P023'=>['Северодвинск','Россия'],
+ 'P025'=>['Северодвинск','Россия'],
+ 'P030'=>['Северодвинск','Россия'],
+ 'P033'=>['Северодвинск','Россия'],
+ 'P048'=>['Москва','Россия'],
+ 'P049'=>['Москва','Россия'],
+ 'P050'=>['','Болгария'],
+ 'P051'=>['','Австрия'],
+ 'P054'=>['','Канада'],
+ 'P056'=>['','Германия'],
+ 'P058'=>['','Германия'],
+ 'P060'=>['','Румыния'],
+ 'P061'=>['','Франция'],
+ 'P063'=>['София','Болгария'],
+ 'P065'=>['Москва','Россия'],
+ 'P066'=>['Мурманск','Россия'],
+ 'P067'=>['Шварцвальд','Германия'],
+ 'P068'=>['','Украина'],
+ 'P102'=>['Северодвинск','Россия'],
+ 'P105'=>['Северодвинск','Россия'],
+ 'P109'=>['Северодвинск','Россия'],
+ 'P110'=>['Северодвинск','Россия'],
+ 'P111'=>['Северодвинск','Россия'],
+ 'P113'=>['Северодвинск','Россия'],
+ 'P114'=>['Северодвинск','Россия'],
+ 'P115'=>['Санкт-Петербург','Россия'],
+ 'P118'=>['','Кыргызстан'],
+ 'P119'=>['','Сербия'],
+ 'P121'=>['Мерсин','Турция'],
+ 'P122'=>['','Турция / Палестина'],
+ 'P124'=>['Пермь','Россия'],
+ 'P125'=>['Чечня','Россия'],
+ 'P127'=>['','Ливан'],
+ 'P128'=>['','Сирия'],
+ 'P129'=>['Санкт-Петербург','Россия']
+];
+
+$guests=all($db,'SELECT g.id,g.city,g.country,g.origin_place,g.origin_country,g.birth_city,g.birth_country,g.about,p.source_person_id
+ FROM guests g LEFT JOIN guest_profile_details p ON p.guest_id=g.id');
 $updates=0;$countryUpdates=0;$birthUpdates=0;$cityCleared=0;$unresolved=0;
 $db->beginTransaction();
 try{
@@ -28,7 +72,21 @@ try{
     $country=trim((string)$g['country']);
     $birthCity=trim((string)$g['birth_city']);
     $birthCountry=trim((string)$g['birth_country']);
+    $originPlace=trim((string)$g['origin_place']);
+    $originCountry=trim((string)$g['origin_country']);
+    $sourceId=trim((string)($g['source_person_id']??''));
     $changes=[];
+    // Never overwrite a city/country already edited through the site.
+    if(isset($origins[$sourceId])){
+       [$from,$originNation]=$origins[$sourceId];
+       if(!$originPlace && $from!==''){$originPlace=$from;$changes['origin_place']=$from;}
+       if(!$originCountry && $originNation!==''){$originCountry=$originNation;$changes['origin_country']=$originNation;}
+    }
+    // Location that was explicitly provided by the organizer, not nationality.
+    if($sourceId==='P117'&&$country===''){
+       $country='Индия';$changes['country']=$country;
+    }
+
     if($country===''&&isset($map[$city])){
        $country=$map[$city];$changes['country']=$country;$countryUpdates++;
     }
@@ -45,8 +103,18 @@ try{
          }
        }
     }
-    if($birthCountry===''&&in_array($birthCity,['Москва','Северодвинск'],true))
-       $changes['birth_country']='Россия';
+    if($birthCountry===''&&in_array($birthCity,['Москва','Северодвинск'],true)){
+       $birthCountry='Россия';$changes['birth_country']='Россия';
+    }
+    // User asked to count hometown as provisional birthplace if no exact birth record exists.
+    if($birthCity===''&&$originPlace!==''){
+       $birthCity=$originPlace;
+       $changes['birth_city']=$originPlace;
+    }
+    if($birthCountry===''&&$originCountry!==''&&!str_contains($originCountry,'/')){
+       $birthCountry=$originCountry;
+       $changes['birth_country']=$originCountry;
+    }
     if($country==='')$unresolved++;
     if(!$changes)continue;
     $parts=[];$params=[];
