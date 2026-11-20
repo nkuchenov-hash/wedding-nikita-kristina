@@ -11,7 +11,7 @@ function streamLiveGuestXlsx(\PDO $db): never {
     }
     $db->beginTransaction();
     try {
-        $people=all($db,"SELECT g.id,g.display_name,g.side,g.community,g.city,g.phone,g.email,g.about,
+        $people=all($db,"SELECT g.id,g.display_name,g.side,g.community,g.city,g.country,g.origin_place,g.origin_country,g.birth_city,g.birth_country,g.phone,g.email,g.about,
           g.about_en,g.private_notes,g.planning_status,g.age_group,p.source_person_id,p.name_en,
           p.relation_to_couple,p.decision,p.seating_group,
           r.attendance,t.invitation_sent_at
@@ -35,9 +35,11 @@ function streamLiveGuestXlsx(\PDO $db): never {
         $relations[$b][]=$names[$a].' — '.(string)($l['relation_2_to_1']?:$l['relation_type']);
     }
     $headers=['Гость','Name EN','Сторона','Круг общения','Кем приходится','Связанные гости',
-      'Город','Профиль гостя (RU)','Guest profile (EN)','Заметки организатора',
+      'Откуда родом','Страна происхождения','Где живёт сейчас','Страна проживания',
+      'Профиль гостя (RU)','Guest profile (EN)','Заметки организатора',
       'Состав','Возраст','Решение о приглашении','RSVP','Приглашение отправлено',
-      'Рассадка','Телефон','Email','ID'];
+      'Рассадка','Телефон','Email','ID',
+      'Город рождения (по происхождению)','Страна рождения (по происхождению)'];
     $rows=[$headers];
     $sides=['groom'=>'Никита','bride'=>'Кристина','both'=>'Общие','other'=>'Не определено'];
     $ages=['unknown'=>'Не уточнено','adult'=>'Взрослый','child'=>'Ребёнок','infant'=>'Младенец'];
@@ -47,12 +49,14 @@ function streamLiveGuestXlsx(\PDO $db): never {
           $p['display_name'],$p['name_en'],$sides[(string)$p['side']]??'Не определено',
           $p['community'],$p['relation_to_couple'],
           implode('; ',array_unique($relations[(string)$p['id']]??[])),
-          $p['city'],$p['about'],$p['about_en'],$p['private_notes'],
+          $p['origin_place'],$p['origin_country'],$p['city'],$p['country'],
+          $p['about'],$p['about_en'],$p['private_notes'],
           ($p['planning_status']==='reserve'?'Резерв':'Основной'),
           $ages[(string)$p['age_group']]??'Не уточнено',$p['decision'],
           $attendance[(string)($p['attendance']??'')]??'Нет ответа',
           ($p['invitation_sent_at']?'Да · '.substr((string)$p['invitation_sent_at'],0,10):'Нет'),
-          $p['seating_group'],$p['phone'],$p['email'],$p['source_person_id']?:$p['id']
+          $p['seating_group'],$p['phone'],$p['email'],$p['source_person_id']?:$p['id'],
+          $p['birth_city'],$p['birth_country']
         ];
     }
     $xmlText=static function($value):string{
@@ -66,7 +70,7 @@ function streamLiveGuestXlsx(\PDO $db): never {
         return $result;
     };
     $last=count($rows);
-    $columns=[24,22,12,19,23,35,18,52,48,36,13,15,22,16,20,26,19,27,15];
+    $columns=[24,22,12,19,23,35,23,20,23,18,52,48,36,13,15,22,16,20,26,19,27,15,22,20];
     $cols='<cols>';
     foreach($columns as $i=>$width)$cols.='<col min="'.($i+1).'" max="'.($i+1).'" width="'.$width.'" customWidth="1"/>';
     $cols.='</cols>';
@@ -83,10 +87,10 @@ function streamLiveGuestXlsx(\PDO $db): never {
     }
     $sheet='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'.
       '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'.
-      '<dimension ref="A1:S'.$last.'"/>'.
+      '<dimension ref="A1:X'.$last.'"/>'.
       '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'.
       $cols.'<sheetData>'.$sheetRows.'</sheetData>'.
-      '<autoFilter ref="A1:S'.$last.'"/></worksheet>';
+      '<autoFilter ref="A1:X'.$last.'"/></worksheet>';
     $types='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'.
       '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'.
       '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'.
