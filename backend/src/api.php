@@ -684,7 +684,7 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
           implode(',',array_fill(0,count($keys),'?')).')',$keys);
         $public=[];
         foreach($rows as $row)$public[$row['key']]=json_decode($row['value_json'],true);
-        $schedule=all($db,'SELECT title,start_at,end_at,place,notes FROM schedule_items WHERE is_public=1 AND stage='program' ORDER BY start_at,sort_order');
+        $schedule=all($db,"SELECT title,start_at,end_at,place,notes FROM schedule_items WHERE is_public=1 AND stage='program' ORDER BY start_at,sort_order");
         json(['ok'=>true,'settings'=>$public,'schedule'=>$schedule]);
     }
     if ($route==='guest/companions' && $method==='GET') {
