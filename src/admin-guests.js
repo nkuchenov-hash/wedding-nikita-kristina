@@ -508,14 +508,6 @@ export async function activateGuestDirectory(root){
        }
        wrapper.append(body);container.append(wrapper);return wrapper;
      }
-     const decisionOptions=[['','Не решено'],...
-       [...new Set([s(g.decision),...DECISIONS])].filter(Boolean).map(v=>[v,v])];
-     const planningGroup=group('Планирование',[
-       ['planning_status','Состав гостей','select',PLANNING],
-       ['age_group','Возрастная категория','select',AGE],
-       ['side','Сторона','select',SIDES.filter(([v])=>v!=='all')],
-       ['decision','Решение об отправке приглашения','select',decisionOptions]
-     ]);
      group('Контакты',[
        ['city','Город','text'],['phone','Телефон','tel'],['email','Email','email'],
        ['language','Язык общения','select',LANGUAGES]
@@ -688,7 +680,7 @@ export async function activateGuestDirectory(root){
        (!missingName(g)&&!s(titleInput.value));
      panelSave=async()=>{
        if(panelBusy||activeId!==id)return;
-       if(!s(titleInput.value)){
+       if(!s(titleInput.value)&&!missingName(g)){
          footerFeedback.textContent='Укажите имя гостя';titleInput.focus();return;
        }
        if(!form.reportValidity()||!rsp.reportValidity())return;
