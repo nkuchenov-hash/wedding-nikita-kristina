@@ -1,6 +1,6 @@
 import {showAdminToast} from './admin-toast.js';
 import {itemTags,DEFAULT_DAY_HOURS,displayHoursForDay} from './admin-program.js';
-import {GUEST_TABLE_FIELDS,DEFAULT_GUEST_TABLE_COLUMNS,normalizeGuestTableColumns} from './admin-guests.js';
+import {GUEST_TABLE_FIELDS,DEFAULT_GUEST_TABLE_COLUMNS,normalizeGuestTableColumns,DEFAULT_GUEST_TABLE_LAYOUT,normalizeGuestTableLayout} from './admin-guests.js';
 const $=(tag,cls='',value)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(value!==undefined)e.textContent=String(value);return e};
 const button=(label,fn,cls='')=>{const e=$('button','ad-tl-button '+cls,label);e.type='button';e.addEventListener('click',fn);return e};
 const color=value=>/^#[0-9a-fA-F]{6}$/.test(value||'')?value:'#DDE9DF';
@@ -88,6 +88,42 @@ export async function renderWeddingSettings(host,api){
    finally{groupCheck.disabled=false}
  });
  groupMode.append(groupLabel,groupResult);guestPanel.append(groupMode);
+ // These are shared with the icon settings in the guest list; only SQLite stores them.
+ const layoutPanel=$('div','ad-gb-global-layout');
+ const currentLayout=normalizeGuestTableLayout(settings.settings?.guest_table_layout);
+ let guestLayout={...currentLayout,widths:{...currentLayout.widths}},savingLayout=false;
+ const heightLabel=$('label','','Высота строк');
+ const heightSelect=$('select');
+ for(const [size,caption] of [['56','Компактные — 56 px'],['72','Стандартные — 72 px'],
+   ['96','Увеличенные — 96 px'],['128','Большие — 128 px'],
+   ['0','Автоматическая, по тексту']]){
+   const option=$('option','',caption);option.value=size;heightSelect.append(option);
+ }
+ heightSelect.value=String(guestLayout.row_height);
+ heightLabel.append(heightSelect);
+ const textLabel=$('label','ad-gb-menu-wrap-choice');
+ const textToggle=$('input');textToggle.type='checkbox';textToggle.checked=guestLayout.truncate;
+ textLabel.append(textToggle,$('span','','Обрезать текст по высоте строки (полный текст — при наведении)'));
+ const saveLayout=async()=>{
+   if(savingLayout)return;
+   const updated=normalizeGuestTableLayout({...guestLayout,
+     row_height:Number(heightSelect.value),truncate:textToggle.checked});
+   const previous=guestLayout;guestLayout=updated;
+   savingLayout=true;heightSelect.disabled=textToggle.disabled=true;
+   try{
+     await api('admin/settings',{method:'POST',body:{key:'guest_table_layout',value:updated}});
+     showAdminToast('Размеры строк и отображение текста сохранены.');
+   }catch(error){
+     guestLayout=previous;heightSelect.value=String(previous.row_height);
+     textToggle.checked=previous.truncate;
+     showAdminToast(error.message||'Не удалось сохранить вид таблицы',{kind:'error'});
+   }finally{savingLayout=false;heightSelect.disabled=textToggle.disabled=false}
+ };
+ heightSelect.addEventListener('change',saveLayout);
+ textToggle.addEventListener('change',saveLayout);
+ layoutPanel.append(heightLabel,textLabel,
+   $('p','','Ширину любого столбца можно изменить перетаскиванием его правой границы прямо в списке гостей. Ширина сохранится автоматически.'));
+ guestPanel.append(layoutPanel);
  const guestRows=$('div','ad-gb-global-settings-list');
  let chosen=normalizeGuestTableColumns(settings.settings?.guest_table_columns);
  let savingGuests=false;
