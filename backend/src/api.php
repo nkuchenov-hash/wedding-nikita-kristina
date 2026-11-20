@@ -338,6 +338,10 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $revision=(int)$db->query('SELECT COALESCE(MAX(id),0) FROM audit_log')->fetchColumn();
         json(['ok'=>true,'revision'=>$revision]);
     }
+    if ($route==='admin/guests/excel' && $method==='GET') {
+        require_once __DIR__.'/guest-xlsx-export.php';
+        streamLiveGuestXlsx($db);
+    }
     if ($route==='admin/guests' && $method==='GET') {
         $items=all($db,"SELECT g.*,r.attendance,r.adults,r.children,r.transport_needed,r.arrival_notes,r.dietary_notes,
             r.other_notes,r.response_source,r.submitted_at,p.source_person_id,p.name_en,p.relation_to_couple,p.seating_group,p.decision,p.base_count,
