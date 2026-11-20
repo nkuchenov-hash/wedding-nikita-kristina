@@ -240,6 +240,7 @@ $types = [
     'src/admin-app.js' => 'text/javascript; charset=UTF-8',
     'src/admin-data-ui.js' => 'text/javascript; charset=UTF-8',
     'src/admin-program.js' => 'text/javascript; charset=UTF-8',
+    'src/admin-settings.js' => 'text/javascript; charset=UTF-8',
     'src/admin-photos.js' => 'text/javascript; charset=UTF-8',
     'src/venue-files-ui.js' => 'text/javascript; charset=UTF-8',
     'src/admin-guests.js' => 'text/javascript; charset=UTF-8',
