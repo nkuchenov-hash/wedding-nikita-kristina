@@ -54,3 +54,11 @@ test('the day is primary navigation with program and idea sub-tabs',()=>{
  assert.doesNotMatch(source,/Общий пул идей/);
  assert.doesNotMatch(source,/field\('Место/);
 });
+
+test('program page omits redundant admin bar and explanatory header text',()=>{
+ const app=readFileSync(new URL('../src/admin-app.js',import.meta.url),'utf8');
+ assert.match(app,/active==='schedule'\?'':/);
+ assert.match(source,/\$\('h1','','Программа мероприятия'\)/);
+ assert.doesNotMatch(source,/СВАДЬБА · СЦЕНАРИЙ/);
+ assert.doesNotMatch(source,/Выберите день, затем откройте его программу/);
+});
