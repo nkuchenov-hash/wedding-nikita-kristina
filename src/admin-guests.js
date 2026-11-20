@@ -402,7 +402,7 @@ export async function activateGuestDirectory(root){
      const titleInput=mk('input','ad-gb-title-input'),titleEn=mk('input','ad-gb-subtitle-input');
      titleInput.type=titleEn.type='text';
      titleInput.maxLength=titleEn.maxLength=320;
-     titleInput.value=display(g);titleInput.placeholder='Имя гостя';
+     titleInput.value=missingName(g)?'':display(g);titleInput.placeholder=missingName(g)?'Указать имя гостя':'Имя гостя';
      titleEn.value=s(g.name_en);titleEn.placeholder='Имя латиницей';
      titleInput.setAttribute('aria-label','Имя гостя');
      titleEn.setAttribute('aria-label','Имя латиницей');
@@ -412,6 +412,7 @@ export async function activateGuestDirectory(root){
        const value=s(input.value),previous=s(g[key]);
        if(value===previous)return;
        if(key==='display_name'&&!value){
+         if(missingName(g)){nameStatus.textContent='';input.value='';return}
          nameStatus.textContent='Введите имя';input.value=previous;return;
        }
        input.disabled=true;nameStatus.textContent='Сохраняю…';
