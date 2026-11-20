@@ -37,7 +37,7 @@ try {
     $insertSchedule=$db->prepare('INSERT OR IGNORE INTO schedule_items(id,title,start_at,place,notes,is_public,sort_order,stage,activity_type,duration_min,activity_date) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
     $scheduleAdded=0;
     foreach($seed['schedule']??[] as $item) {
-        $insertSchedule->execute([$item['id'],$item['title'],$item['start_at'],$item['place'],$item['notes'],$item['is_public'],$item['sort_order'],str_contains((string)$item['start_at'],'T')?'program':'idea','ceremony',30,str_contains((string)$item['start_at'],'T')?substr((string)$item['start_at'],0,10):'']);
+        $insertSchedule->execute([$item['id'],$item['title'],$item['start_at'],$item['place'],$item['notes'],$item['is_public'],$item['sort_order'],str_contains((string)$item['start_at'],'T')?'program':'idea','ceremony',30,substr((string)$item['start_at'],0,10)]);
         $scheduleAdded+=$insertSchedule->rowCount();
     }
     $insertDoc=$db->prepare('INSERT OR IGNORE INTO documents(id,category,label,reference,visibility) VALUES(?,?,?,?,?)');
