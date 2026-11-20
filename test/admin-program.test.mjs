@@ -174,23 +174,24 @@ test('timeline cards present time once, large titles and a single row of actual 
  assert.match(css,/\.ad-tl-ideas-grid\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 });
 
-test('tag colors directly drive card color and multicolor stripe without a category',()=>{
+test('the first selected tag alone sets the card color and additional tags remain labels',()=>{
  const item={tags_json:JSON.stringify(['photo','welcome','photo'])};
  const tags=[{id:'photo',label:'Фото',color:'#AABBCC'},
              {id:'welcome',label:'Встреча',color:'#DDEEFF'}];
  assert.deepEqual(cardTagColors(item,tags),['#AABBCC','#DDEEFF']);
  const painted=cardColorStyle(item,tags);
  assert.equal(painted.primary,'#AABBCC');
- assert.match(painted.stripe,/linear-gradient\(to bottom/);
- assert.match(painted.stripe,/#AABBCC/);
- assert.match(painted.stripe,/#DDEEFF/);
+ assert.equal(painted.stripe,'#AABBCC');
+ assert.doesNotMatch(painted.stripe,/linear-gradient/);
  const changed=cardColorStyle(item,[{...tags[0],color:'#102030'},tags[1]]);
  assert.equal(changed.primary,'#102030');
  assert.notEqual(changed.stripe,painted.stripe);
  assert.equal(cardColorStyle({tags_json:'[]'},tags).primary,'#ECF2EC');
  const css=readFileSync(new URL('../src/admin-program.css',import.meta.url),'utf8');
  assert.match(source,/cardColorStyle\(item,tags\)/);
- assert.match(css,/var\(--activity-stripe/);
+ assert.match(css,/\.ad-tl-card::before\{[\s\S]*?background:var\(--activity-color/);
+ assert.match(css,/\.ad-tl-calendar-card\.ad-tl-short-event \.ad-tl-tags-inline,[\s\S]*?display:flex!important/);
+ assert.match(css,/\.ad-tl-calendar-card\.ad-tl-has-short-tags\{[\s\S]*?overflow:visible!important/);
  assert.match(css,/color-mix\(in srgb,var\(--activity-color/);
 });
 
@@ -270,4 +271,21 @@ test('organizer sidebar never scrolls independently and settings stays visible',
  assert.doesNotMatch(desktop,/overflow-y:auto/);
  assert.doesNotMatch(desktop,/overflow-x:auto/);
  assert.match(desktop,/\.admin-settings-footer\{[\s\S]*?flex:0 0 auto/);
+});
+
+
+test('toolbar groups have their own spacing and independent visual separators',()=>{
+ const css=readFileSync(new URL('../src/admin-program.css',import.meta.url),'utf8');
+ assert.match(css,/\.ad-tl-section-controls\{column-gap:26px\}/);
+ assert.match(css,/\.ad-tl-compact-tools\{column-gap:22px\}/);
+ assert.match(css,/\.ad-tl-section-controls \.ad-tl-main-switch::before/);
+ assert.match(css,/\.ad-tl-compact-tools \.ad-tl-display-modes::before/);
+});
+test('program confirmations render as bottom toasts and disappear automatically',()=>{
+ const css=readFileSync(new URL('../src/admin-program.css',import.meta.url),'utf8');
+ assert.match(source,/document\.body\.append\(toast\)/);
+ assert.match(source,/setTimeout\(\(\)=>toast\.remove\(\),3800\)/);
+ assert.doesNotMatch(source,/host\.append\(n\)/);
+ assert.match(css,/\.ad-tl-toast\{/);
+ assert.match(css,/bottom:max\(20px,env\(safe-area-inset-bottom\)\)/);
 });
