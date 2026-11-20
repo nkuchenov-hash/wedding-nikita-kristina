@@ -570,7 +570,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         foreach($ids as $index=>$id){
             if($index>0)$minute+=(int)$byId[$id]['gap_before_min'];
             $duration=(int)$byId[$id]['duration_min'];
-            if($duration<5||$duration>600||$minute+$duration>1440)
+            if($duration<5||$duration>600||$minute+$duration>=1440)
                 fail(422,'schedule','События не помещаются в выбранный день');
             $finish=$minute+$duration;
             $updates[]=[$day.'T'.sprintf('%02d:%02d:00',intdiv($minute,60),$minute%60),
@@ -684,7 +684,7 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
           implode(',',array_fill(0,count($keys),'?')).')',$keys);
         $public=[];
         foreach($rows as $row)$public[$row['key']]=json_decode($row['value_json'],true);
-        $schedule=all($db,'SELECT title,start_at,end_at,place,notes FROM schedule_items WHERE is_public=1 ORDER BY sort_order,start_at');
+        $schedule=all($db,'SELECT title,start_at,end_at,place,notes FROM schedule_items WHERE is_public=1 AND stage='program' ORDER BY start_at,sort_order');
         json(['ok'=>true,'settings'=>$public,'schedule'=>$schedule]);
     }
     if ($route==='guest/companions' && $method==='GET') {
