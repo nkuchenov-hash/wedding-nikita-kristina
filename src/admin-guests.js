@@ -203,11 +203,30 @@ export async function activateGuestDirectory(root){
  const tooltip=mk('div','ad-gb-clipped-tooltip');
  tooltip.hidden=true;tooltip.setAttribute('role','tooltip');page.append(tooltip);
  function hideClippedTooltip(){tooltip.hidden=true;tooltip.textContent=''}
+ // Some browsers report the visible, clamped height as scrollHeight.
+ // Measure an unclamped clone before deciding whether to show the full text.
+ function cellIsClipped(node){
+   if(node.scrollHeight>node.clientHeight+1||node.scrollWidth>node.clientWidth+1)return true;
+   const probe=node.cloneNode(true);
+   probe.style.setProperty('position','fixed','important');
+   probe.style.setProperty('visibility','hidden','important');
+   probe.style.setProperty('pointer-events','none','important');
+   probe.style.setProperty('height','auto','important');
+   probe.style.setProperty('max-height','none','important');
+   probe.style.setProperty('overflow','visible','important');
+   probe.style.setProperty('display','block','important');
+   probe.style.setProperty('-webkit-line-clamp','unset','important');
+   probe.style.setProperty('line-clamp','unset','important');
+   probe.style.setProperty('width',node.getBoundingClientRect().width+'px','important');
+   node.parentElement.append(probe);
+   const clipped=probe.getBoundingClientRect().height>node.getBoundingClientRect().height+1;
+   probe.remove();
+   return clipped;
+ }
  function showClippedTooltip(node){
    if(!tableLayout.truncate||tableLayout.row_height===0){hideClippedTooltip();return}
-   if(node.scrollHeight<=node.clientHeight+1&&node.scrollWidth<=node.clientWidth+1){
-     hideClippedTooltip();return;
-   }
+   if(!cellIsClipped(node)){hideClippedTooltip();return}
+
    tooltip.textContent=node.textContent;
    tooltip.hidden=false;
    const bounds=node.getBoundingClientRect();
@@ -436,7 +455,7 @@ export async function activateGuestDirectory(root){
    table.classList.toggle('ad-gb-rows-wrapped',!tableLayout.truncate||tableLayout.row_height===0);
    table.style.setProperty('--guest-row-height',(tableLayout.row_height||72)+'px');
    table.style.setProperty('--guest-line-count',String(
-     tableLayout.row_height<=56?2:tableLayout.row_height<=72?3:tableLayout.row_height<=96?4:6
+     tableLayout.row_height<=56?1:tableLayout.row_height<=72?2:tableLayout.row_height<=96?3:5
    ));
    const colgroup=mk('colgroup'),colWidths={},columnElements={};
    for(const [,field] of headings){
