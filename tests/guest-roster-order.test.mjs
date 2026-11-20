@@ -99,3 +99,17 @@ test('roster has no pencil icons and exposes true table resizers and tooltip for
  assert.match(css,/\.ad-gb-clipped-tooltip\{/);
  assert.match(css,/\.ad-gb-table\.ad-gb-rows-clipped \.ad-gb-cell-value\{/);
 });
+
+test('guest identity and biography precede collapsed organizer invitation fields',async()=>{
+ const js=await readFile(new URL('../src/admin-guests.js',import.meta.url),'utf8');
+ const start=js.indexOf("const basics=group('Основные данные'");
+ const bio=js.indexOf("const bio=group('Профиль гостя'",start);
+ const organizational=js.indexOf("const adminDetails=mk('details'",bio);
+ assert.ok(start>0&&bio>start&&organizational>bio);
+ const main=js.slice(start,bio);
+ for(const field of ['relation_to_couple','community','origin_place','origin_country','city','country'])
+   assert.match(main,new RegExp("'"+field+"'"));
+ for(const field of ['planning_status','age_group','plus_one_allowed','decision','side'])
+   assert.doesNotMatch(main,new RegExp("'"+field+"'"));
+ assert.match(js,/adminDetails.append\(mk\('summary','','Организация приглашения'\)\)/);
+});
