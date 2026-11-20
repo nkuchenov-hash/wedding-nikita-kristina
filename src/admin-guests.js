@@ -9,6 +9,28 @@ const ANSWERS=[['','Не ответил'],['yes','Буду'],['maybe','Пока 
 const LANGUAGES=[['ru','Русский'],['en','English'],['de','Deutsch'],['other','Другой']];
 const PLANNING=[['main','Основной'],['reserve','Резерв']];
 const AGE=[['unknown','Не уточнено'],['adult','Взрослый'],['child','Ребёнок'],['infant','Младенец']];
+export const GUEST_TABLE_FIELDS=[
+ ['display_name','Гость'],['name_en','Имя EN'],['first_name','Имя'],['last_name','Фамилия'],
+ ['planning_status','Список'],['age_group','Возраст'],['side','Сторона'],
+ ['relation_to_couple','Кем приходится'],['relationship','Связи'],
+ ['community','Круг'],['seating_group','Рассадка'],['decision','Решение'],
+ ['invitation_sent_at','Приглашение'],['attendance','Ответ RSVP'],
+ ['adults','Взрослые RSVP'],['children','Дети RSVP'],['plus_one_allowed','Можно +1'],
+ ['city','Город'],['phone','Телефон'],['email','Email'],['language','Язык'],
+ ['about','Профиль RU'],['about_en','Профиль EN'],['private_notes','Личные заметки'],
+ ['source_person_id','ID'],['status','Статус'],['created_at','Создан'],
+ ['updated_at','Обновлён'],['profile_completed_at','Анкета заполнена'],
+ ['first_opened_at','Первое открытие'],['last_opened_at','Последнее открытие'],
+ ['invite_prepared_at','Ссылка создана'],['response_source','Источник RSVP'],
+ ['dietary_notes','Питание'],['other_notes','Другие пожелания']
+];
+export const DEFAULT_GUEST_TABLE_COLUMNS=['display_name','planning_status','side','relation_to_couple','seating_group','decision','attendance'];
+export function normalizeGuestTableColumns(value){
+ if(!Array.isArray(value))return [...DEFAULT_GUEST_TABLE_COLUMNS];
+ const allowed=new Set(GUEST_TABLE_FIELDS.map(([key])=>key)),columns=['display_name'];
+ for(const key of value)if(key!=='display_name'&&allowed.has(key)&&!columns.includes(key))columns.push(key);
+ return columns;
+}
 const SORT_FIELDS=[
  ['display_name','Имя'],['first_name','Имя (отдельно)'],['last_name','Фамилия'],['name_en','Имя EN'],
  ['planning_status','Список / резерв'],['age_group','Возрастная категория'],['side','Сторона'],
@@ -51,11 +73,8 @@ export async function activateGuestDirectory(root){
  heading.append(mk('span','ad-gb-eyebrow','ГОСТИ · ЕДИНАЯ БАЗА'),mk('h1','','Список гостей'),
    mk('p','','Все люди, семьи, приглашения и ответы — в одной системе. Изменения сохраняются в базе сайта.'));
  const actions=mk('div','ad-gb-top-actions');
- const add=mk('button','ad-gb-primary','+ Добавить гостя'),reload=mk('button','ad-gb-light','Обновить');
- const exportBtn=mk('button','ad-gb-light','Экспорт CSV');
- const childrenToggle=mk('button','ad-gb-light ad-gb-children-toggle','Дети: загрузка…');childrenToggle.type='button';childrenToggle.disabled=true;
- for(const b of [add,reload,exportBtn])b.type='button';
- actions.append(add,childrenToggle,exportBtn,reload);head.append(heading,actions);page.append(head);
+ const add=mk('button','ad-gb-primary','+ Добавить гостя');add.type='button';
+ actions.append(add);head.append(heading,actions);page.append(head);
  const metrics=mk('div','ad-gb-metrics');page.append(metrics);
  const bar=mk('div','ad-gb-bar'),search=mk('input','ad-gb-input'),side=select(SIDES,'all'),
        filter=select([['all','Все гости'],['base','В основном списке'],['question','Под вопросом'],['no-name','Нет имени'],['duplicates','Возможные дубли'],['reserve','Резерв'],['kids','Дети'],['yes','Будут'],['maybe','Не решили'],['no','Не придут'],['unsent','Не отправлено'],['archived','Архив']],'all');
@@ -64,7 +83,14 @@ export async function activateGuestDirectory(root){
  const sort=select(SORT_FIELDS,'display_name'),direction=mk('button','ad-gb-sort-direction','А → Я');
  sort.className='ad-gb-select ad-gb-sort-select';sort.setAttribute('aria-label','Сортировать по полю');
  direction.type='button';direction.title='Изменить направление сортировки';
- bar.append(search,side,filter,sort,direction);page.append(bar);
+ const columnPrefs=mk('div','ad-gb-column-prefs');
+ const columnsButton=mk('button','ad-gb-settings-icon');columnsButton.type='button';
+ columnsButton.title='Настроить столбцы';columnsButton.setAttribute('aria-label','Настроить отображаемые столбцы');
+ columnsButton.setAttribute('aria-expanded','false');columnsButton.setAttribute('aria-haspopup','true');
+ columnsButton.innerHTML='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.3" fill="white"/><circle cx="16" cy="17" r="2.3" fill="white"/></svg>';
+ const columnsMenu=mk('div','ad-gb-columns-menu');columnsMenu.hidden=true;
+ columnPrefs.append(columnsButton,columnsMenu);
+ bar.append(search,side,filter,sort,direction,columnPrefs);page.append(bar);
  const alert=mk('p','ad-gb-notice');alert.hidden=true;page.append(alert);
  const list=mk('div','ad-gb-list');page.append(list);
  const overlay=mk('div','ad-gb-shade');overlay.hidden=true;overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
@@ -72,6 +98,7 @@ export async function activateGuestDirectory(root){
  const detail=mk('div','ad-gb-details');panel.append(close,detail);overlay.append(panel);page.append(overlay);
  destination.append(page);
  let people=[],csrf='',activeId=null,editing=false,lastSnapshot='',lastRevision=0,refreshing=false,childrenEnabled=true,descending=false;
+ let visibleColumns=[...DEFAULT_GUEST_TABLE_COLUMNS],savingColumns=false;
  const notice=(message,error=false)=>{alert.textContent=message;alert.hidden=!message;alert.className='ad-gb-notice'+(error?' ad-gb-error':'')};
  const byId=id=>people.find(p=>p.id===id);
  const status=p=>p.attendance==='yes'?'Будет':p.attendance==='no'?'Не придёт':p.attendance==='maybe'?'Не решил':'Нет ответа';
@@ -91,12 +118,53 @@ export async function activateGuestDirectory(root){
      s(x).localeCompare(s(y),'ru',{numeric:true,sensitivity:'base'});
    return (descending?-result:result)||display(a).localeCompare(display(b),'ru')||s(a.id).localeCompare(s(b.id));
  }
- function updateChildrenButton(){
-   childrenToggle.disabled=!csrf;
-   childrenToggle.textContent=childrenEnabled?'Дети: участвуют':'Дети: отключены';
-   childrenToggle.classList.toggle('ad-gb-children-off',!childrenEnabled);
-   childrenToggle.setAttribute('aria-pressed',String(!childrenEnabled));
+ function closeColumns(){columnsMenu.hidden=true;columnsButton.setAttribute('aria-expanded','false')}
+ async function applyColumns(next){
+   if(savingColumns||!csrf)return;
+   savingColumns=true;
+   try{
+     const cols=normalizeGuestTableColumns(next);
+     await request('admin/settings',{method:'POST',csrf,body:{key:'guest_table_columns',value:cols}});
+     visibleColumns=cols;render();renderColumnMenu();notice('Столбцы сохранены');
+   }catch(error){notice(error.message,true);renderColumnMenu()}
+   finally{savingColumns=false}
  }
+ function renderColumnMenu(){
+   columnsMenu.replaceChildren();
+   columnsMenu.append(mk('strong','ad-gb-columns-heading','Отображаемые столбцы'),
+     mk('p','ad-gb-columns-hint','Выберите поля и порядок. Изменения сохраняются в настройках.'));
+   for(const [key,label] of GUEST_TABLE_FIELDS){
+     const checked=visibleColumns.includes(key),row=mk('div','ad-gb-columns-option');
+     const toggle=mk('label','ad-gb-columns-toggle'),check=mk('input');check.type='checkbox';check.checked=checked;
+     check.disabled=key==='display_name'||savingColumns;
+     check.addEventListener('change',()=>{
+       applyColumns(check.checked?[...visibleColumns,key]:visibleColumns.filter(v=>v!==key));
+     });
+     toggle.append(check,mk('span','',label));row.append(toggle);
+     if(checked&&key!=='display_name'){
+       const move=mk('div','ad-gb-columns-move');
+       for(const [symbol,delta]of [['↑',-1],['↓',1]]){
+         const b=mk('button','ad-gb-columns-move-button',symbol);b.type='button';
+         const i=visibleColumns.indexOf(key),j=i+delta;
+         b.disabled=j<=0||j>=visibleColumns.length||savingColumns;
+         b.title=delta<0?'Переместить левее':'Переместить правее';
+         b.addEventListener('click',()=>{const next=[...visibleColumns];[next[i],next[j]]=[next[j],next[i]];applyColumns(next)});
+         move.append(b);
+       }
+       row.append(move);
+     }
+     columnsMenu.append(row);
+   }
+   const foot=mk('div','ad-gb-columns-footer'),reset=mk('button','ad-gb-columns-reset','По умолчанию');
+   reset.type='button';reset.addEventListener('click',()=>applyColumns(DEFAULT_GUEST_TABLE_COLUMNS));
+   const more=mk('a','ad-gb-columns-settings-link','Все настройки');more.href='#/admin/settings';
+   more.addEventListener('click',closeColumns);foot.append(reset,more);columnsMenu.append(foot);
+ }
+ columnsButton.addEventListener('click',()=>{
+   const open=columnsMenu.hidden;
+   if(open){renderColumnMenu();columnsMenu.hidden=false}else closeColumns();
+   columnsButton.setAttribute('aria-expanded',String(open));
+ });
  function metric(label,value){const card=mk('div','ad-gb-metric');card.append(mk('strong','',value),mk('span','',label));metrics.append(card)}
  function badge(text,kind=''){return mk('span','ad-gb-stage'+(kind?' ad-gb-stage-'+kind:''),text)}
  async function saveFields(p,fields){
@@ -156,8 +224,7 @@ export async function activateGuestDirectory(root){
    metric('Будут',actual.filter(p=>p.attendance==='yes').length);
    metric('Под вопросом',actual.filter(isQuestion).length);
    metric('Всего записей',people.length);
-   updateChildrenButton();
-   const query=s(search.value).toLocaleLowerCase('ru');
+    const query=s(search.value).toLocaleLowerCase('ru');
    const duplicateCounts=new Map();
    for(const p of current){const key=display(p).toLocaleLowerCase('ru').replace(/\s+/g,' ').trim();duplicateCounts.set(key,(duplicateCounts.get(key)||0)+1)}
    const chosen=people.filter(p=>{
