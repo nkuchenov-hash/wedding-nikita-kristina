@@ -144,9 +144,6 @@ export async function renderWeddingProgram(host,api,days){
        down.setAttribute('aria-label','Опустить активность');actions.append(down);
      }
      if(actions.childElementCount)node.append(actions);
-   }else{
-     const hint=$('span','ad-tl-card-hint','Нажмите, чтобы изменить или включить в программу');
-     node.append(hint);
    }
    return node;
  }
