@@ -67,11 +67,13 @@ if(!in_array('gap_before_min',array_column($scheduleColumns,'name'),true))
     $database->exec("ALTER TABLE schedule_items ADD COLUMN gap_before_min INTEGER NOT NULL DEFAULT 0");
 
 if(!in_array('activity_date',array_column($scheduleColumns,'name'),true)){
-    $database->exec("ALTER TABLE schedule_items ADD COLUMN activity_date TEXT NOT NULL DEFAULT '2027-06-19'");
-    // Existing date-only draft items and timed events keep their actual wedding day.
+    $database->exec("ALTER TABLE schedule_items ADD COLUMN activity_date TEXT NOT NULL DEFAULT ''");
+    // Existing timed events keep their actual wedding day.
     $database->exec("UPDATE schedule_items SET activity_date=substr(start_at,1,10)
-      WHERE substr(start_at,1,10) IN ('2027-06-17','2027-06-18','2027-06-19')");
+      WHERE stage='program' AND substr(start_at,1,10) IN ('2027-06-17','2027-06-18','2027-06-19')");
 }
+// The idea pool is shared across all three wedding days; no date on ideas.
+$database->exec("UPDATE schedule_items SET activity_date='' WHERE stage='idea' AND activity_date<>''");
 if(!in_array('tags_json',array_column($scheduleColumns,'name'),true))
     $database->exec("ALTER TABLE schedule_items ADD COLUMN tags_json TEXT NOT NULL DEFAULT '[]'");
 $database->exec("CREATE INDEX IF NOT EXISTS idx_schedule_stage_day ON schedule_items(stage,activity_date,start_at,sort_order)");
