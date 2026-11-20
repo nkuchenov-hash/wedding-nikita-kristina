@@ -1,14 +1,4 @@
 // Wedding admin: day-first program and idea pool; same authenticated SQLite source.
-export const BASE_TYPES=[
- {id:'ceremony',label:'Церемония',color:'#E5EAD8'},
- {id:'social',label:'Общение с гостями',color:'#D7ECE8'},
- {id:'dance',label:'Танцы',color:'#F3DAE5'},
- {id:'speech',label:'Выступление гостя',color:'#E4DFF5'},
- {id:'music',label:'Музыка',color:'#E3EDCB'},
- {id:'food',label:'Ужин и фуршет',color:'#F2E8D2'},
- {id:'game',label:'Интерактив',color:'#DDE9F5'},
- {id:'other',label:'Другое',color:'#E8EBE8'}
-];
 const $=(tag,className='',value)=>{
  const node=document.createElement(tag);
  if(className)node.className=className;
@@ -37,7 +27,7 @@ export const itemTags=item=>{
  try{const tags=JSON.parse(item?.tags_json||'[]');return Array.isArray(tags)?tags.filter(x=>typeof x==='string'):[]}
  catch{return []}
 };
-const typeColor=type=>/^#[0-9a-fA-F]{6}$/.test(type?.color||'')?type.color:'#E8EBE8';
+const tagColor=type=>/^#[0-9a-fA-F]{6}$/.test(type?.color||'')?type.color:'#E8EBE8';
 export function cardTagColors(item,definitions){
  const ids=itemTags(item);
  const palette=new Map((Array.isArray(definitions)?definitions:[])
@@ -54,7 +44,6 @@ export function cardColorStyle(item,definitions){
  return {primary,stripe};
 }
 
-const safeTypes=(saved,fallback)=>Array.isArray(saved)&&saved.length?saved.map(x=>({...x})):fallback.map(x=>({...x}));
 
 // One fixed vertical time scale keeps start/end and stretch height in sync.
 export function cardDescription(item,isScheduled){
@@ -280,7 +269,7 @@ export async function renderWeddingProgram(host,api,days){
      const tag=tags.find(t=>t.id===id);
      if(!tag)continue;
      const pill=$('span','ad-tl-tag',tag.label);
-     pill.style.setProperty('--tag-color',typeColor(tag));pills.append(pill);
+     pill.style.setProperty('--tag-color',tagColor(tag));pills.append(pill);
    }
    if(pills.childElementCount){
      pills.setAttribute('aria-label','Теги');
@@ -388,7 +377,7 @@ export async function renderWeddingProgram(host,api,days){
      all.setAttribute('aria-pressed',String(filter==='all'));filters.append(all);
      for(const tag of tags){
        const b=makeButton(tag.label,()=>{filter=tag.id;render();},'ad-tl-filter'+(filter===tag.id?' selected':''));
-       b.style.setProperty('--tag-color',typeColor(tag));b.setAttribute('aria-pressed',String(filter===tag.id));filters.append(b);
+       b.style.setProperty('--tag-color',tagColor(tag));b.setAttribute('aria-pressed',String(filter===tag.id));filters.append(b);
      }
      host.append(filters);
    }
@@ -489,7 +478,7 @@ export async function renderWeddingProgram(host,api,days){
    const selected=new Set(itemTags(item));
    for(const tag of tags){
      const chip=makeButton(tag.label,()=>toggleTag(),'ad-tl-tag-select');
-     chip.style.setProperty('--tag-color',typeColor(tag));
+     chip.style.setProperty('--tag-color',tagColor(tag));
      const refresh=()=>{
        const active=selected.has(tag.id);
        chip.classList.toggle('is-selected',active);
@@ -528,7 +517,6 @@ export async function renderWeddingProgram(host,api,days){
      const checked=[...selected];
      const fields={
        title:name.value.trim(),notes:description.value.trim(),
-       // Legacy activity_type stays in the database for compatibility only.
        duration_min:n,tags_json:JSON.stringify(checked),
        stage:isProgram?'program':'idea',activity_date:chosenDay,
        start_at:isProgram?chosenDay+'T'+start.value+':00':null,
