@@ -152,7 +152,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $d=payload(16384);
         $allowed=['event_date','event_time','event_venue','venue_address','rsvp_deadline',
           'dress_code','transport_info','public_notes','menu_open','directory_open',
-          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','activity_types','activity_tags'];
+          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','activity_types','activity_tags','program_day_hours'];
         $key=choice($d,'key',$allowed,'');
         if(!array_key_exists('value',$d))
             fail(422,'field','Значение настройки недопустимо');
@@ -168,6 +168,23 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
                    !is_string($type['color'])||!preg_match('/^#[0-9a-fA-F]{6}$/',$type['color'])||
                    isset($seen[$type['id']]))fail(422,'field','Некорректный тип активности');
                 $seen[$type['id']]=true;
+            }
+        } elseif($key==='program_day_hours'){
+            $days=['2027-06-17','2027-06-18','2027-06-19'];
+            if(!is_array($value)||array_is_list($value)||count($value)!==3||
+               array_diff(array_keys($value),$days)||array_diff($days,array_keys($value)))
+                fail(422,'field','Для каждого дня задайте начало и конец отображения');
+            foreach($days as $date){
+                $hours=$value[$date];
+                if(!is_array($hours)||!isset($hours['from'],$hours['to'])||
+                   count($hours)!==2||!is_string($hours['from'])||!is_string($hours['to'])||
+                   !preg_match('/^([01][0-9]|2[0-3]):[0-5][0-9]$/',$hours['from'])||
+                   !preg_match('/^([01][0-9]|2[0-3]):[0-5][0-9]$/',$hours['to']))
+                    fail(422,'field','Укажите корректные часы начала и окончания');
+                $from=(int)substr($hours['from'],0,2)*60+(int)substr($hours['from'],3,2);
+                $to=(int)substr($hours['to'],0,2)*60+(int)substr($hours['to'],3,2);
+                if($to-$from<60)
+                    fail(422,'field','Диапазон отображения должен составлять не менее часа');
             }
         } elseif(!is_scalar($value) && $value!==null)
             fail(422,'field','Значение настройки недопустимо');
