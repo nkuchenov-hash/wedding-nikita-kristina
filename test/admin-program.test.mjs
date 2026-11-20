@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {assignedDay,scheduled,itemTags,parallelEventLayout,snapToFive,MINUTE_PX} from '../src/admin-program.js';
+import {assignedDay,scheduled,itemTags,parallelEventLayout,snapToFive,MINUTE_PX,cardDescription} from '../src/admin-program.js';
 
 const source=readFileSync(new URL('../src/admin-program.js',import.meta.url),'utf8');
 const schema=readFileSync(new URL('../backend/schema.sql',import.meta.url),'utf8');
@@ -88,8 +88,8 @@ test('triple parallel events have 3 lanes and time sizing is proportional to min
  ]);
  assert.deepEqual(layout.map(x=>x.laneCount),[3,3,3]);
  assert.deepEqual(layout.map(x=>x.lane).sort(),[0,1,2]);
- assert.equal(MINUTE_PX*30,90);
- assert.equal(MINUTE_PX*60,180);
+ assert.equal(MINUTE_PX*30,180);
+ assert.equal(MINUTE_PX*60,360);
  assert.equal(snapToFive(29),30);
  assert.equal(snapToFive(32),30);
 });
@@ -145,4 +145,24 @@ test('activity editor uses title, visual tag chips and program switch; global se
  assert.match(sidebar,/id:'settings'/);
  assert.match(gateway,/src\/admin-settings\.js/);
  assert.match(release,/admin-settings\.js/);
+});
+
+
+test('timeline cards present time once, large titles and a single row of actual tags',()=>{
+ assert.equal(cardDescription({notes:'Предложенный тайминг: 13:00–14:00.\nВстреча гостей'},true),'Встреча гостей');
+ assert.equal(cardDescription({notes:'Предложенный тайминг: 13:00–14:00.\nВстреча гостей'},false),'Предложенный тайминг: 13:00–14:00.\nВстреча гостей');
+ assert.equal(cardDescription({notes:'Обычная заметка'},true),'Обычная заметка');
+ assert.match(source,/const cardHead=\$\('div','ad-tl-card-head'\)/);
+ assert.match(source,/cardHead\.append\(lengthLabel\)/);
+ assert.doesNotMatch(source,/ad-tl-type/);
+ assert.doesNotMatch(source,/ad-tl-card-eyebrow/);
+ assert.match(source,/ad-tl-short-event/);
+ assert.match(source,/ad-tl-micro-event/);
+ const css=readFileSync(new URL('../src/admin-program.css',import.meta.url),'utf8');
+ assert.match(css,/\.ad-tl-calendar-card \.ad-tl-card-title\{font-size:18px!important/);
+ assert.match(css,/\.ad-tl-calendar-card \.ad-tl-card-description\{font-size:13\.5px/);
+ assert.match(css,/\.ad-tl-calendar-card \.ad-tl-length\{font-size:14px/);
+ assert.match(css,/\.ad-tl-calendar-card\.ad-tl-micro-event \.ad-tl-card-title/);
+ assert.match(css,/\.ad-tl-calendar-card\.ad-tl-short-event \.ad-tl-card-title/);
+ assert.match(css,/\.ad-tl-ideas-grid\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 });
