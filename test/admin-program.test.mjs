@@ -278,8 +278,9 @@ test('organizer sidebar never scrolls independently and settings stays visible',
 
 test('toolbar groups have their own spacing and independent visual separators',()=>{
  const css=readFileSync(new URL('../src/admin-program.css',import.meta.url),'utf8');
- assert.match(css,/\.ad-tl-section-controls\{column-gap:26px\}/);
- assert.match(css,/\.ad-tl-compact-tools\{column-gap:22px\}/);
+ assert.match(css,/\.ad-timeline-page \.ad-tl-section-controls\{[\s\S]*?column-gap:64px/);
+ assert.match(css,/\.ad-timeline-page \.ad-tl-compact-tools\{[\s\S]*?column-gap:36px/);
+ assert.match(css,/\.ad-timeline-page \.ad-tl-section-controls\{[\s\S]*?margin-bottom:20px/);
  assert.match(css,/\.ad-tl-section-controls \.ad-tl-main-switch::before/);
  assert.match(css,/\.ad-tl-compact-tools \.ad-tl-display-modes::before/);
 });
