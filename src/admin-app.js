@@ -74,30 +74,36 @@ render();
 // When REG.RU receives a newer private admin release, detect it without losing
 // unsaved guest/venue form edits. Never silently reload an active editor.
 const loadedRevision=new URL(import.meta.url).searchParams.get('v')||'';
-let latestRevision='',refreshChecking=false;
+let latestRevision='',refreshChecking=false,lastNotifiedRevision='';
 function showReleaseBanner(){
- if(document.querySelector('#ad-release-banner'))return;
- const banner=document.createElement('div');banner.id='ad-release-banner';
- banner.setAttribute('role','status');
- Object.assign(banner.style,{position:'fixed',top:'12px',left:'50%',transform:'translateX(-50%)',
-   width:'min(560px,calc(100% - 30px))',zIndex:'2147483600',background:'#204b37',
-   color:'#fff',borderRadius:'12px',boxShadow:'0 12px 32px #0004',
-   padding:'14px 16px',display:'flex',alignItems:'center',gap:'14px',
-   font:'500 14px/1.4 system-ui,Arial,sans-serif'});
- const text=document.createElement('span');
- text.textContent='Сайт обновлён. Перезагрузите страницу, чтобы увидеть исправления.';
- text.style.flex='1';
- const button=document.createElement('button');button.type='button';
- button.textContent='Обновить сейчас';
- Object.assign(button.style,{border:'0',borderRadius:'8px',cursor:'pointer',
-   padding:'10px 13px',color:'#153c29',background:'#eef5ee',fontWeight:'700'});
- button.addEventListener('click',()=>{
-   const unsaved=document.querySelector('.ad-gb-lock')||
-      document.querySelector('form input:focus,form textarea:focus,form select:focus');
-   if(unsaved&&!confirm('Обновить сайт? Несохранённые изменения в открытой форме могут потеряться.'))return;
+ document.querySelector('#ad-release-banner')?.remove();
+ const toast=document.createElement('div');toast.id='ad-release-banner';
+ toast.setAttribute('role','status');
+ Object.assign(toast.style,{
+   position:'fixed',bottom:'max(20px,env(safe-area-inset-bottom))',
+   left:'50%',transform:'translateX(-50%)',
+   width:'max-content',maxWidth:'calc(100% - 28px)',
+   zIndex:'2147483600',background:'#204b37',color:'#fff',
+   borderRadius:'12px',boxShadow:'0 10px 26px #0003',
+   padding:'11px 15px',display:'flex',alignItems:'center',gap:'12px',
+   font:'500 13px/1.4 system-ui,Arial,sans-serif'
+ });
+ const label=document.createElement('span');
+ label.textContent='Сайт обновлён — доступна новая версия.';
+ const action=document.createElement('button');action.type='button';
+ action.textContent='Обновить';
+ Object.assign(action.style,{
+   background:'#edf5ec',border:0,borderRadius:'8px',cursor:'pointer',
+   padding:'7px 12px',color:'#204b37',fontWeight:'700',whiteSpace:'nowrap'
+ });
+ action.addEventListener('click',()=>{
+   const editing=document.querySelector('.ad-gb-lock')||
+     document.querySelector('form input:focus,form textarea:focus,form select:focus');
+   if(editing&&!confirm('Обновить сайт? Несохранённые изменения могут потеряться.'))return;
    location.reload();
  });
- banner.append(text,button);document.body.append(banner);
+ toast.append(label,action);document.body.append(toast);
+ setTimeout(()=>toast.remove(),5500);
 }
 async function checkRelease(){
  if(!loadedRevision||refreshChecking||document.visibilityState!=='visible')return;
@@ -107,7 +113,10 @@ async function checkRelease(){
    if(!response.ok)return;
    const info=await response.json();
    latestRevision=String(info?.revision||'');
-   if(latestRevision&&latestRevision!==loadedRevision)showReleaseBanner();
+   if(latestRevision&&latestRevision!==loadedRevision&&latestRevision!==lastNotifiedRevision){
+     lastNotifiedRevision=latestRevision;
+     showReleaseBanner();
+   }
  }catch{/* Temporary network failure must never break the editor. */}
  finally{refreshChecking=false}
 }
