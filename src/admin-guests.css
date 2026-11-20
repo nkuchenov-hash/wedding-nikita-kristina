@@ -405,3 +405,10 @@ body.ad-gb-lock{overflow:hidden}
  .ad-gb-main-profile h4{font-size:17px}
  .ad-gb-main-profile .ad-gb-edit-field:first-child textarea{min-height:160px}
 }
+
+/* Live Excel export is a settings action, not another duplicate guest-table toolbar. */
+.ad-gb-live-excel{display:flex;flex-direction:column;align-items:flex-start;gap:12px;
+ margin-top:24px;padding-top:24px;border-top:1px solid #dce7dd}
+.ad-gb-live-excel h3{font-size:18px;margin:0;color:#244c35;font-weight:650}
+.ad-gb-live-excel a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;
+ padding:10px 16px;text-decoration:none;border-radius:9px;font-size:14px;white-space:normal}
