@@ -196,7 +196,7 @@ export async function renderWeddingProgram(host,call,weddingDays,venues){
    const notes=element('textarea');notes.value=item?.notes||'';notes.rows=4;notes.maxLength=3000;
    const type=element('select');for(const cat of types){const opt=element('option','',cat.label);opt.value=cat.id;type.append(opt);}
    type.value=item?.activity_type||'other';
-   const minutes=element('input');minutes.type='number';minutes.min='5';minutes.max='600';minutes.step='5';minutes.value=String(duration(item));
+   const minutes=element('input');minutes.type='number';minutes.min='5';minutes.max='600';minutes.step='1';minutes.value=String(duration(item));
    const stage=element('select');
    for(const [id,label] of [['idea','Пул идей — время не назначено'],['program','В программе — назначено время']]){
      const opt=element('option','',label);opt.value=id;stage.append(opt);
