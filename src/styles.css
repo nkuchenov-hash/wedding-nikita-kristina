@@ -190,3 +190,16 @@ body:not(.admin-body) .mobile-nav.app-dock a:focus-visible{outline:2px solid #C1
 .admin-main{min-width:0;width:100%}
 .admin-content{width:100%;max-width:none;margin:0;padding:30px clamp(16px,2.2vw,44px) 70px}
 @media(max-width:760px){.admin-layout{grid-template-columns:minmax(0,1fr)}.admin-content{padding:20px 14px 48px}}
+
+/* Keep global Settings as the last item, anchored to the bottom of the
+   desktop organizer sidebar. Preserve its last position on mobile. */
+.admin-side nav[aria-label="Разделы админки"]{flex:1;min-height:0}
+.admin-side nav[aria-label="Разделы админки"] .side-link[href="#/admin/settings"]{
+ margin-top:auto;border-top:1px solid #426052;border-radius:4px 4px 8px 8px;
+}
+@media(max-width:760px){
+ .admin-side nav[aria-label="Разделы админки"]{flex:none;min-height:unset}
+ .admin-side nav[aria-label="Разделы админки"] .side-link[href="#/admin/settings"]{
+   margin-top:0;border-top:0;border-radius:7px;
+ }
+}
