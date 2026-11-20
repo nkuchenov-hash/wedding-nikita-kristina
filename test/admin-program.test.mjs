@@ -284,11 +284,14 @@ test('toolbar groups have their own spacing and independent visual separators',(
  assert.match(css,/\.ad-tl-section-controls \.ad-tl-main-switch::before/);
  assert.match(css,/\.ad-tl-compact-tools \.ad-tl-display-modes::before/);
 });
-test('program confirmations render as bottom toasts and disappear automatically',()=>{
- const css=readFileSync(new URL('../src/admin-program.css',import.meta.url),'utf8');
- assert.match(source,/document\.body\.append\(toast\)/);
- assert.match(source,/setTimeout\(\(\)=>toast\.remove\(\),3800\)/);
+test('program confirmations use the shared transient bottom toast',()=>{
+ const notifier=readFileSync(new URL('../src/admin-toast.js',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../src/styles.css',import.meta.url),'utf8');
+ assert.match(source,/showAdminToast\(notification/);
+ assert.match(notifier,/document\.body\.append\(node\)/);
+ assert.match(notifier,/setTimeout\(\(\)=>\{/);
+ assert.match(notifier,/node\.remove\(\)/);
  assert.doesNotMatch(source,/host\.append\(n\)/);
- assert.match(css,/\.ad-tl-toast\{/);
- assert.match(css,/bottom:max\(20px,env\(safe-area-inset-bottom\)\)/);
+ assert.match(css,/\.ad-global-toast\{/);
+ assert.match(css,/bottom:max\(22px,env\(safe-area-inset-bottom\)\)/);
 });
