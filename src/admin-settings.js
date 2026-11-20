@@ -1,4 +1,4 @@
-import {itemTags} from './admin-program.js';
+import {itemTags,DEFAULT_DAY_HOURS,displayHoursForDay} from './admin-program.js';
 const $=(tag,cls='',value)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(value!==undefined)e.textContent=String(value);return e};
 const button=(label,fn,cls='')=>{const e=$('button','ad-tl-button '+cls,label);e.type='button';e.addEventListener('click',fn);return e};
 const color=value=>/^#[0-9a-fA-F]{6}$/.test(value||'')?value:'#DDE9DF';
@@ -13,10 +13,61 @@ export async function renderWeddingSettings(host,api){
  const panel=$('section','ad-tl-settings-content');
  panel.append($('h2','','Теги активностей'),$('p','ad-tl-settings-help','Теги объединяют классификацию и цвета карточек. У активности может быть несколько тегов.'));
  const list=$('div','ad-tl-settings-list'),actions=$('div','ad-tl-modal-actions');
+ const dayHours={};
+ for(const date of Object.keys(DEFAULT_DAY_HOURS))
+   dayHours[date]=displayHoursForDay(date,settings.settings?.program_day_hours);
  const message=$('p','ad-tl-form-error');message.setAttribute('role','status');
  panel.append(list,actions);
  host.classList.add('ad-timeline-page','ad-global-settings-page');
  host.replaceChildren(header,panel,message);
+ const hoursPanel=$('section','ad-tl-settings-content ad-tl-hours-panel');
+ hoursPanel.append($('h2','','Часы отображения программы'));
+ const hoursHelp=$('p','ad-tl-settings-help','У каждого дня свой временной диапазон таймлайна. Мероприятия за его пределами сохраняются в базе и доступны в режиме списка.');
+ hoursPanel.append(hoursHelp);
+ const hoursGrid=$('div','ad-tl-hours-grid');
+ const values=new Map();
+ for(const [date,label] of [['2027-06-17','17 июня'],['2027-06-18','18 июня'],['2027-06-19','19 июня']]){
+   const row=$('div','ad-tl-hours-row'),dayLabel=$('strong','ad-tl-hours-day',label);
+   const from=$('input');from.type='time';from.value=dayHours[date].from;from.step=300;
+   const to=$('input');to.type='time';to.value=dayHours[date].to;to.step=300;
+   from.setAttribute('aria-label',label+' — начало отображения');
+   to.setAttribute('aria-label',label+' — конец отображения');
+   const makeField=(label,input)=>{
+     const field=$('label','ad-tl-hours-field');
+     field.append($('span','',label),input);return field;
+   };
+   row.append(dayLabel,makeField('С',from),makeField('До',to));
+   hoursGrid.append(row);values.set(date,{from,to});
+ }
+ hoursPanel.append(hoursGrid);
+ const hourActions=$('div','ad-tl-modal-actions');
+ const hourStatus=$('p','ad-tl-form-error');
+ hourStatus.setAttribute('role','status');
+ const saveHours=button('Сохранить часы',async()=>{
+   if(saving)return;
+   const value={};
+   for(const [date,controls] of values){
+     const from=controls.from.value,to=controls.to.value;
+     const valid=displayHoursForDay(date,{[date]:{from,to}});
+     if(!from||!to||valid.from!==from||valid.to!==to){
+       hourStatus.textContent='Для каждого дня задайте корректный диапазон не короче одного часа.';
+       return;
+     }
+     value[date]={from,to};
+   }
+   saving=true;saveHours.disabled=true;
+   try{
+     await api('admin/settings',{method:'POST',body:{key:'program_day_hours',value}});
+     hourStatus.textContent='Интервалы сохранены. Они применятся к таймлайну при открытии программы.';
+     hourStatus.classList.add('ad-tl-setting-success');
+   }catch(error){
+     hourStatus.classList.remove('ad-tl-setting-success');
+     hourStatus.textContent=error.message||'Не удалось сохранить часы.';
+   }finally{saving=false;saveHours.disabled=false}
+ },'ad-tl-primary');
+ hourActions.append(saveHours);
+ hoursPanel.append(hourActions,hourStatus);
+ host.append(hoursPanel);
  function draw(){
    list.replaceChildren();actions.replaceChildren();
    for(const tag of tags){
