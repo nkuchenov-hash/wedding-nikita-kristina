@@ -132,7 +132,7 @@ function adminCollections(): array {
       'vendors'=>['category','name','contact','website','status','estimate_rub','contract_ref','notes'],
       'budget_lines'=>['category','description','planned_rub','committed_rub','paid_rub','due_at','vendor_id','notes'],
       'tasks'=>['title','description','status','priority','owner','due_at'],
-      'schedule_items'=>['title','start_at','end_at','place','notes','is_public','sort_order','venue_id','is_confirmed'],
+      'schedule_items'=>['title','start_at','end_at','place','notes','is_public','sort_order','venue_id','is_confirmed','stage','activity_type','duration_min'],
       'menu_options'=>['category','title','description','allergens','active','sort_order'],
       'documents'=>['category','label','reference','visibility'],
     ];
@@ -152,11 +152,25 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $d=payload(16384);
         $allowed=['event_date','event_time','event_venue','venue_address','rsvp_deadline',
           'dress_code','transport_info','public_notes','menu_open','directory_open',
-          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled'];
+          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','activity_types'];
         $key=choice($d,'key',$allowed,'');
-        if(!array_key_exists('value',$d) || (!is_scalar($d['value']) && $d['value']!==null))
+        if(!array_key_exists('value',$d))
             fail(422,'field','Значение настройки недопустимо');
         $value=$d['value'];
+        if($key==='activity_types'){
+            if(!is_array($value)||!array_is_list($value)||count($value)>30)
+                fail(422,'field','Неверный список типов активности');
+            $seen=[];
+            foreach($value as $type){
+                if(!is_array($type)||!isset($type['id'],$type['label'],$type['color'])||
+                   !is_string($type['id'])||!preg_match('/^[a-z][a-z0-9_-]{0,31}$/',$type['id'])||
+                   !is_string($type['label'])||mb_strlen(trim($type['label']))<1||mb_strlen($type['label'])>60||
+                   !is_string($type['color'])||!preg_match('/^#[0-9a-fA-F]{6}$/',$type['color'])||
+                   isset($seen[$type['id']]))fail(422,'field','Некорректный тип активности');
+                $seen[$type['id']]=true;
+            }
+        } elseif(!is_scalar($value) && $value!==null)
+            fail(422,'field','Значение настройки недопустимо');
         if($key==='children_enabled' && !is_bool($value))fail(422,'field','Участие детей должно быть включено или выключено');
         if(is_string($value)&&mb_strlen($value)>5000)fail(422,'field','Слишком длинное значение');
         $encoded=json_encode($value,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
@@ -532,6 +546,47 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         audit($db,'admin',$actor,$sent?'mark_sent':'mark_not_sent','guest',$guestId);
         json(['ok'=>true,'sent'=>$sent]);
     }
+
+    // Atomic server-side reorder: all events in one day move together, and end times
+    // are derived from their durations. Never perform partial client-side PATCH loops.
+    if ($route==='admin/schedule/arrange' && $method==='POST') {
+        $d=payload(18000);
+        $day=strval($d,'day',10,true);
+        $start=strval($d,'start_time',5,true);
+        $ids=$d['ids']??null;
+        if(!in_array($day,['2027-06-17','2027-06-18','2027-06-19'],true)||
+           !preg_match('/^([01]\\d|2[0-3]):[0-5]\\d$/',$start)||
+           !is_array($ids)||!array_is_list($ids)||count($ids)>250||
+           count($ids)!==count(array_unique($ids,SORT_REGULAR)))
+            fail(422,'schedule','Неверные параметры расписания');
+        $all=all($db,"SELECT id,duration_min FROM schedule_items
+            WHERE stage='program' AND substr(start_at,1,10)=?",[$day]);
+        $byId=[];foreach($all as $event)$byId[$event['id']]=$event;
+        if(count($ids)!==count($byId))fail(409,'schedule_changed','Программа изменилась. Обновите страницу');
+        foreach($ids as $id)if(!is_string($id)||!isset($byId[$id]))
+            fail(409,'schedule_changed','Программа изменилась. Обновите страницу');
+        $minute=(int)substr($start,0,2)*60+(int)substr($start,3,2);
+        $updates=[];
+        foreach($ids as $index=>$id){
+            $duration=(int)$byId[$id]['duration_min'];
+            if($duration<5||$duration>600||$minute+$duration>1440)
+                fail(422,'schedule','События не помещаются в выбранный день');
+            $finish=$minute+$duration;
+            $updates[]=[$day.'T'.sprintf('%02d:%02d:00',intdiv($minute,60),$minute%60),
+                $day.'T'.sprintf('%02d:%02d:00',intdiv($finish,60),$finish%60),
+                ($index+1)*10,$id];
+            $minute=$finish;
+        }
+        $db->beginTransaction();
+        try{
+            foreach($updates as $u)statement($db,
+                'UPDATE schedule_items SET start_at=?,end_at=?,sort_order=? WHERE id=?',$u);
+            audit($db,'admin',$actor,'arrange','schedule_items',$day,['count'=>count($updates)]);
+            $db->commit();
+        }catch(Throwable $e){$db->rollBack();throw $e;}
+        json(['ok'=>true,'day'=>$day,'count'=>count($updates)]);
+    }
+
     if ($route==='admin/records' && $method==='GET') {
         $collection=(string)($_GET['collection']??'');
         if (!isset(adminCollections()[$collection]))fail(404,'collection','Коллекция не найдена');
@@ -554,6 +609,17 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
                 if(!is_string($value))fail(422,'field','Ожидается JSON-строка');
                 try {json_decode($value,true,32,JSON_THROW_ON_ERROR);}
                 catch(Throwable $e){fail(422,'field','Некорректный JSON');}
+            }
+            if($collection==='schedule_items'){
+                if($field==='stage' && !in_array($value,['idea','program'],true))
+                    fail(422,'field','Неизвестный статус активности');
+                if($field==='activity_type' && (!is_string($value)||!preg_match('/^[a-z][a-z0-9_-]{0,31}$/',$value)))
+                    fail(422,'field','Неверный тип активности');
+                if($field==='duration_min' && (!is_int($value)||$value<5||$value>600))
+                    fail(422,'field','Длительность от 5 до 600 минут');
+                if(in_array($field,['start_at','end_at'],true) && $value!==null &&
+                   (!is_string($value)||($value!==''&&!preg_match('/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:00$/',$value))))
+                    fail(422,'field','Некорректное время');
             }
             if(is_bool($value))$value=$value?1:0;
             $set[]=$field;$values[]=$value;
