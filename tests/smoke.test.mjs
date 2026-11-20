@@ -94,8 +94,10 @@ test('three-day wedding itinerary contains only organizer-confirmed events',asyn
  assert.match(admin,/renderWeddingProgram\(host,call,weddingDays,PUBLIC_VENUES\)/);
  assert.match(admin,/section==='schedule'/);
  assert.match(program,/admin\/records\?collection=schedule_items/);
- assert.match(program,/admin\/schedule\/arrange/);
- assert.match(program,/dragstart/);
+ assert.match(program,/admin\/schedule\/slot/);
+ assert.match(program,/pointerdown/);
+ assert.match(program,/parallelEventLayout/);
+ assert.match(program,/ad-tl-resize-grip/);
  assert.match(program,/activity_tags/);
  assert.match(program,/tags_json/);
  assert.match(program,/startField,endField/);
