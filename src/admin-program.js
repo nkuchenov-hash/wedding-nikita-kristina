@@ -54,7 +54,7 @@ export const DEFAULT_DAY_HOURS={
 export function displayHoursForDay(date,saved){
  const fallback=DEFAULT_DAY_HOURS[date]||{from:'09:00',to:'23:00'};
  const value=saved?.[date];
- const pattern=/^([01]\\d|2[0-3]):[0-5]\\d$/;
+ const pattern=/^([01]\d|2[0-3]):[0-5]\d$/;
  if(!value||!pattern.test(value.from)||!pattern.test(value.to))return {...fallback};
  const from=mins(value.from),to=mins(value.to);
  return from!==null&&to!==null&&to-from>=60?{from:value.from,to:value.to}:{...fallback};
