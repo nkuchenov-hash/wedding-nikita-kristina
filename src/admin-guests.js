@@ -160,12 +160,25 @@ export async function activateGuestDirectory(root){
  const list=mk('div','ad-gb-list');page.append(list);
  const overlay=mk('div','ad-gb-shade');overlay.hidden=true;overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
  const panel=mk('section','ad-gb-panel'),panelHeader=mk('header','ad-gb-panel-header'),
-   titleArea=mk('div','ad-gb-panel-identity'),close=mk('button','ad-gb-close','Закрыть ×');close.type='button';
+   titleArea=mk('div','ad-gb-panel-identity'),close=mk('button','ad-gb-close','×');close.type='button';
+ close.title='Закрыть карточку';close.setAttribute('aria-label','Закрыть карточку');
  panelHeader.append(titleArea,close);
- const detail=mk('div','ad-gb-details');panel.append(panelHeader,detail);overlay.append(panel);page.append(overlay);
+ const detail=mk('div','ad-gb-details');
+ const footer=mk('div','ad-gb-panel-footer');
+ footer.hidden=true;
+ const footerFeedback=mk('span','ad-gb-footer-feedback');footerFeedback.setAttribute('role','status');
+ const footerDelete=mk('button','ad-gb-footer-delete','Удалить');
+ const footerCancel=mk('button','ad-gb-footer-cancel','Отмена');
+ const footerSave=mk('button','ad-gb-primary ad-gb-footer-save','Сохранить');
+ for(const b of [footerDelete,footerCancel,footerSave])b.type='button';
+ const footerControls=mk('div','ad-gb-footer-controls');
+ footerControls.append(footerDelete,footerCancel,footerSave);
+ footer.append(footerFeedback,footerControls);
+ panel.append(panelHeader,detail,footer);overlay.append(panel);page.append(overlay);
  destination.append(page);
  let people=[],csrf='',activeId=null,editing=false,lastSnapshot='',lastRevision=0,refreshing=false,childrenEnabled=true,descending=false;
  let visibleColumns=[...DEFAULT_GUEST_TABLE_COLUMNS],savingColumns=false,relationshipEdges=[];
+ let panelSave=null,panelDirty=null,panelDelete=null,panelBusy=false;
  const notice=(message,error=false)=>showAdminToast(message,{kind:error?'error':'success'});
  const byId=id=>people.find(p=>p.id===id);
  const status=p=>p.attendance==='yes'?'Будет':p.attendance==='no'?'Не придёт':p.attendance==='maybe'?'Не решил':'Нет ответа';
@@ -413,7 +426,27 @@ export async function activateGuestDirectory(root){
    table.append(body);holder.append(table);list.append(holder);
    list.append(mk('p','ad-gb-count','Показано '+chosen.length+' из '+people.length));
  }
- function closeGuest(){activeId=null;overlay.hidden=true;document.body.classList.remove('ad-gb-lock');detail.replaceChildren();titleArea.replaceChildren()}
+ function closeGuest(){
+   if(panelBusy)return;
+   activeId=null;panelSave=null;panelDelete=null;panelDirty=null;
+   overlay.hidden=true;footer.hidden=true;footerFeedback.textContent='';
+   document.body.classList.remove('ad-gb-lock');
+   detail.replaceChildren();titleArea.replaceChildren();
+ }
+ function closeWithCheck(){
+   if(panelBusy)return;
+   if(panelDirty?.()&&!confirm('Отменить несохранённые изменения?'))return;
+   closeGuest();
+ }
+ footerSave.addEventListener('click',()=>panelSave?.());
+ footerCancel.addEventListener('click',closeGuest);
+ footerDelete.addEventListener('click',()=>panelDelete?.());
+ function showGuestFooter(options={}){
+   footerFeedback.textContent='';
+   footerSave.textContent=options.saveText||'Сохранить';
+   footerDelete.hidden=options.showDelete===false;
+   footer.hidden=false;
+ }
  function field(parent,label,key,value,type='text',items=null){
    const wrapper=mk('label','ad-gb-edit-field');wrapper.append(mk('span','',label));
    const input=items?select(items,value):type==='textarea'?mk('textarea'):mk('input');
@@ -427,6 +460,7 @@ export async function activateGuestDirectory(root){
  async function openGuest(id){
    activeId=id;overlay.hidden=false;document.body.classList.add('ad-gb-lock');
    titleArea.replaceChildren(mk('span','ad-gb-loading-name','Загрузка…'));detail.scrollTop=0;
+   footer.hidden=true;panelSave=null;panelDirty=null;panelDelete=null;
    detail.replaceChildren(mk('p','ad-gb-note','Открываю карточку…'));
    try{
      const [data,companionsData]=await Promise.all([
@@ -444,30 +478,10 @@ export async function activateGuestDirectory(root){
      titleInput.setAttribute('aria-label','Имя гостя');
      titleEn.setAttribute('aria-label','Имя латиницей');
      const nameStatus=mk('span','ad-gb-name-status');
-     const saveTitle=async(key,input)=>{
-       if(activeId!==id)return;
-       const value=s(input.value),previous=s(g[key]);
-       if(value===previous)return;
-       if(key==='display_name'&&!value){
-         if(missingName(g)){nameStatus.textContent='';input.value='';return}
-         nameStatus.textContent='Введите имя';input.value=previous;return;
-       }
-       input.disabled=true;nameStatus.textContent='Сохраняю…';
-       editing=true;
-       try{
-         await request('admin/guest/fields',{method:'PATCH',csrf,body:{id,fields:{[key]:value}}});
-         g[key]=value;if(p)p[key]=value;
-         nameStatus.textContent='';showAdminToast('Имя гостя сохранено.');
-         await reloadData();
-       }catch(error){
-         input.value=previous;nameStatus.textContent=error.message||'Не удалось сохранить';
-       }finally{input.disabled=false;editing=false}
-     };
      for(const [key,input] of [['display_name',titleInput],['name_en',titleEn]]){
-       input.addEventListener('blur',()=>saveTitle(key,input));
        input.addEventListener('keydown',event=>{
          if(event.key==='Enter'){event.preventDefault();input.blur()}
-         if(event.key==='Escape'){event.preventDefault();input.value=s(g[key]);input.blur()}
+         if(event.key==='Escape'){event.preventDefault();input.value=key==='display_name'&&missingName(g)?'':s(g[key]);input.blur()}
        });
      }
      titleArea.replaceChildren(titleInput,titleEn,nameStatus);
@@ -528,26 +542,8 @@ export async function activateGuestDirectory(root){
        ['about_en','Описание на английском','textarea'],
        ['private_notes','Заметки организаторов','textarea']
      ],bioDetails);
-     const submit=mk('button','ad-gb-primary','Сохранить изменения');submit.type='submit';
-     const feedback=mk('span','ad-gb-feedback'),buttons=mk('div','ad-gb-edit-actions');
-     buttons.append(submit,feedback);form.append(buttons);profile.append(form);
-     form.addEventListener('submit',async ev=>{
-       ev.preventDefault();const changed={};
-       for(const key of Object.keys(controls)){
-         const value=s(controls[key].value);
-         if(value!==s(initial[key]))changed[key]=value;
-       }
-       if(!Object.keys(changed).length){showAdminToast('Изменений нет.');return}
-       submit.disabled=true;feedback.textContent='Сохраняю…';
-       try{
-         await saveFields(p,changed);
-         Object.assign(g,changed);
-         for(const key of Object.keys(changed))initial[key]=s(changed[key]);
-         feedback.textContent='';showAdminToast('Данные гостя сохранены.');
-         titleInput.value=display(g);
-       }catch(err){feedback.textContent=err.message}
-       finally{submit.disabled=false}
-     });
+     profile.append(form);
+     form.addEventListener('submit',event=>{event.preventDefault();panelSave?.()});
      const household=section('Семья и сопровождающие');
 
      const relList=mk('div','ad-gb-relations');
@@ -624,18 +620,8 @@ export async function activateGuestDirectory(root){
      r.children=field(rsp,'Детей, которые придут с гостем','children',g.children??0,'number');
      r.dietary_notes=field(rsp,'Питание и аллергии','dietary_notes',g.dietary_notes||'','textarea');
      r.other_notes=field(rsp,'Другие пожелания','other_notes',g.other_notes||'','textarea');
-     const saveR=mk('button','ad-gb-primary','Сохранить ответ'),msgR=mk('span','ad-gb-feedback');
-     saveR.type='submit';const f=mk('div','ad-gb-edit-actions');f.append(saveR,msgR);rsp.append(f);response.append(rsp);
-     rsp.addEventListener('submit',async ev=>{
-       ev.preventDefault();saveR.disabled=true;msgR.textContent='Сохраняю…';
-       const val=r.attendance.value;
-       if(val===''&&g.attendance&&!confirm('Удалить сохранённый ответ?')){saveR.disabled=false;msgR.textContent='';return}
-       try{const data=await request('admin/guest/rsvp',{method:'PATCH',csrf,body:{
-         id,attendance:val,adults:Number(r.adults.value),children:childrenEnabled?Number(r.children.value):0,
-         dietary_notes:s(r.dietary_notes.value),other_notes:s(r.other_notes.value)
-       }});Object.assign(g,{attendance:data.attendance});await reloadData();msgR.textContent='';showAdminToast('Ответ гостя сохранён.')}
-       catch(err){msgR.textContent=err.message}finally{saveR.disabled=false}
-     });
+     response.append(rsp);
+     rsp.addEventListener('submit',event=>{event.preventDefault();panelSave?.()});
      const invites=section('Приглашение');
      const inviteInfo=mk('p','ad-gb-note',g.invitation_sent_at?'Отправлено: '+g.invitation_sent_at:'Пока не отправлено');
      invites.append(inviteInfo);
@@ -684,6 +670,74 @@ export async function activateGuestDirectory(root){
        });
      }
 
+     const rsvpKeys=['attendance','adults','children','dietary_notes','other_notes'];
+     const rsvpBefore=Object.fromEntries(rsvpKeys.map(key=>[key,s(r[key].value)]));
+     const fieldsChanged=()=>{
+       const updated={};
+       for(const key of Object.keys(controls)){
+         const value=s(controls[key].value);
+         if(value!==s(initial[key]))updated[key]=value;
+       }
+       const ru=s(titleInput.value),en=s(titleEn.value);
+       if(ru!==s(g.display_name)&&ru!=='')updated.display_name=ru;
+       if(en!==s(g.name_en))updated.name_en=en;
+       return updated;
+     };
+     const rsvpChanged=()=>rsvpKeys.some(key=>s(r[key].value)!==rsvpBefore[key]);
+     panelDirty=()=>Object.keys(fieldsChanged()).length>0||rsvpChanged()||
+       (!missingName(g)&&!s(titleInput.value));
+     panelSave=async()=>{
+       if(panelBusy||activeId!==id)return;
+       if(!s(titleInput.value)){
+         footerFeedback.textContent='Укажите имя гостя';titleInput.focus();return;
+       }
+       if(!form.reportValidity()||!rsp.reportValidity())return;
+       const changed=fieldsChanged(),replyDirty=rsvpChanged();
+       if(!Object.keys(changed).length&&!replyDirty){showAdminToast('Изменений нет.');return}
+       if(replyDirty&&r.attendance.value===''&&g.attendance&&
+         !confirm('Очистить сохранённый ответ гостя?'))return;
+       if(replyDirty&&r.attendance.value===''&&!g.attendance){
+         footerFeedback.textContent='Чтобы сохранить детали ответа, сначала выберите участие';
+         return;
+       }
+       panelBusy=true;footerSave.disabled=footerCancel.disabled=footerDelete.disabled=true;
+       footerFeedback.textContent='Сохранение…';
+       try{
+         if(Object.keys(changed).length)
+           await request('admin/guest/fields',{method:'PATCH',csrf,body:{id,fields:changed}});
+         if(replyDirty)await request('admin/guest/rsvp',{method:'PATCH',csrf,body:{
+           id,attendance:r.attendance.value,adults:Number(r.adults.value),
+           children:childrenEnabled?Number(r.children.value):0,
+           dietary_notes:s(r.dietary_notes.value),other_notes:s(r.other_notes.value)
+         }});
+         await reloadData();
+         footerFeedback.textContent='';
+         panelBusy=false;closeGuest();
+         showAdminToast('Данные гостя сохранены.');
+       }catch(error){
+         footerFeedback.textContent='Не удалось сохранить все изменения: '+error.message+
+           '. Некоторые поля могли сохраниться. Проверьте перед повтором.';
+       }finally{
+         panelBusy=false;footerSave.disabled=footerCancel.disabled=footerDelete.disabled=false;
+       }
+     };
+     panelDelete=async()=>{
+       if(panelBusy||activeId!==id)return;
+       if(!confirm('Удалить гостя из списка? Запись будет перемещена в архив и её можно восстановить.'))return;
+       panelBusy=true;footerSave.disabled=footerCancel.disabled=footerDelete.disabled=true;
+       footerFeedback.textContent='Удаление…';
+       try{
+         await request('admin/guest/update',{method:'POST',csrf,body:{id,status:'archived'}});
+         await reloadData();panelBusy=false;closeGuest();
+         showAdminToast('Гость удалён из активного списка.');
+       }catch(error){
+         footerFeedback.textContent=error.message;
+       }finally{
+         panelBusy=false;footerSave.disabled=footerCancel.disabled=footerDelete.disabled=false;
+       }
+     };
+     showGuestFooter({showDelete:g.status!=='archived'});
+
    }catch(err){titleArea.replaceChildren(mk('h2','ad-gb-new-title','Гость'));detail.replaceChildren(mk('p','ad-gb-error','Не удалось открыть карточку: '+err.message))}
  }
  async function reloadData(quiet=false){
@@ -701,6 +755,9 @@ export async function activateGuestDirectory(root){
  async function createGuest(){
    activeId='new';overlay.hidden=false;document.body.classList.add('ad-gb-lock');
    titleArea.replaceChildren(mk('h2','ad-gb-new-title','Добавить гостя'));detail.scrollTop=0;detail.replaceChildren();
+   showGuestFooter({saveText:'Добавить',showDelete:false});
+   panelDirty=()=>Boolean(detail.querySelector('input')?.value?.trim());
+   panelDelete=null;
    const form=mk('form','ad-gb-edit-grid');
    const name=field(form,'Имя *','first_name','','text');
    const family=field(form,'Фамилия','last_name','','text');
@@ -708,18 +765,21 @@ export async function activateGuestDirectory(root){
    const side=field(form,'Сторона','side','other','select',SIDES.filter(([v])=>v!=='all'));
    const age=field(form,'Возраст','age_group','unknown','select',AGE);
    const planning=field(form,'Список','planning_status','main','select',PLANNING);
-   const btn=mk('button','ad-gb-primary','Добавить в базу');btn.type='submit';
-   const feedback=mk('span','ad-gb-feedback');const actions=mk('div','ad-gb-edit-actions');actions.append(btn,feedback);form.append(actions);detail.append(form);
+   detail.append(form);
+   panelSave=()=>form.requestSubmit();
    name.required=true;
    form.addEventListener('submit',async ev=>{
-     ev.preventDefault();btn.disabled=true;feedback.textContent='Сохраняю…';
+     ev.preventDefault();if(panelBusy)return;
+     panelBusy=true;footerSave.disabled=footerCancel.disabled=true;
+     footerFeedback.textContent='Сохранение…';
      try{
        const data=await request('admin/guests',{method:'POST',csrf,body:{
          first_name:s(name.value),last_name:s(family.value),display_name:s(display.value)||s([name.value,family.value].join(' ')),side:side.value,
          age_group:age.value,planning_status:planning.value
        }});
        await reloadData();await openGuest(data.id);
-     }catch(err){feedback.textContent=err.message}finally{btn.disabled=false}
+     }catch(err){footerFeedback.textContent=err.message}
+     finally{panelBusy=false;footerSave.disabled=footerCancel.disabled=false}
    });
  }
  for(const x of [search,side,filter])x.addEventListener(x===search?'input':'change',render);
@@ -731,10 +791,10 @@ export async function activateGuestDirectory(root){
  sort.addEventListener('change',()=>{descending=false;direction.textContent='А → Я';render();saveSortMode()});
  direction.addEventListener('click',()=>{descending=!descending;direction.textContent=descending?'Я → А':'А → Я';render()});
  add.addEventListener('click',createGuest);
- close.addEventListener('click',closeGuest);overlay.addEventListener('click',ev=>{if(ev.target===overlay)closeGuest()});
+ close.addEventListener('click',closeWithCheck);overlay.addEventListener('click',ev=>{if(ev.target===overlay)closeWithCheck()});
  const onKey=ev=>{
    if(ev.key!=='Escape')return;
-   if(!overlay.hidden&&!editing){closeGuest();return}
+   if(!overlay.hidden&&!editing){closeWithCheck();return}
    if(!columnsMenu.hidden){closeColumns();columnsButton.focus();return}
    if(!searchField.hidden){setSearchOpen(false);searchToggle.focus()}
  };
