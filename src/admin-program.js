@@ -188,7 +188,7 @@ export async function renderWeddingProgram(host,api,days){
    node.addEventListener('pointercancel',event=>{
      if(!pointer||pointer.pointerId!==event.pointerId)return;
      const state=pointer;
-     ignoreNextClick=state.armed;
+     ignoreNextClick=false;
      reset(state);node.classList.remove('ad-tl-resizing');
    });
    // Keyboard users can move by 5 minutes or resize with Shift + arrows.
@@ -254,7 +254,7 @@ export async function renderWeddingProgram(host,api,days){
  function renderTimeline(items){
    const container=$('section','ad-tl-calendar');
    if(!items.length){
-     container.append($('div','ad-tl-empty','Для этого дня программа пока не составлена. Добавьте активность или переведите идею в программу.'));
+     container.append($('div','ad-tl-empty','Для этого дня программа пока не составлена.'));
      return container;
    }
    const layout=parallelEventLayout(items);
@@ -344,15 +344,6 @@ export async function renderWeddingProgram(host,api,days){
    host.append(nav);
    if(notification){const n=$('p','ad-tl-notice',notification);n.setAttribute('role','status');host.append(n);}
    const current=entriesFor(view);
-   const toolbar=$('div','ad-tl-section-toolbar'),heading=$('div','ad-tl-section-heading');
-   heading.append($('h2','',view==='program'?'Программа · '+dateName(day):'Пул идей · '+dateName(day)));
-   heading.append($('span','ad-tl-help',view==='program'
-     ?'Удерживайте карточку для перемещения. Растягивайте её за нижний край для изменения длительности.'
-     :'Идеи принадлежат этому дню, но пока не имеют назначенного времени.'));
-   toolbar.append(heading);
-   const sum=$('span','ad-tl-summary',current.length+' '+(view==='program'?'событий':'идей'));
-   toolbar.append(sum);
-   host.append(toolbar);
    if(tags.length){
      const filters=$('div','ad-tl-tag-filters');filters.setAttribute('aria-label','Фильтр по тегу');
      const all=makeButton('Все теги',()=>{filter='all';render();},'ad-tl-filter'+(filter==='all'?' selected':''));
