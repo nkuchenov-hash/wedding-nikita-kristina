@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {assignedDay,scheduled,itemTags,parallelEventLayout,snapToFive,MINUTE_PX,cardDescription,cardColorStyle,cardTagColors} from '../src/admin-program.js';
+import {assignedDay,scheduled,itemTags,parallelEventLayout,snapToFive,MINUTE_PX,cardDescription,cardColorStyle,cardTagColors,DEFAULT_DAY_HOURS,displayHoursForDay} from '../src/admin-program.js';
 
 const source=readFileSync(new URL('../src/admin-program.js',import.meta.url),'utf8');
 const schema=readFileSync(new URL('../backend/schema.sql',import.meta.url),'utf8');
@@ -190,4 +190,49 @@ test('tag colors directly drive card color and multicolor stripe without a categ
  assert.match(source,/cardColorStyle\(item,tags\)/);
  assert.match(css,/var\(--activity-stripe/);
  assert.match(css,/color-mix\(in srgb,var\(--activity-color/);
+});
+
+
+test('three independent hour ranges are validated and bound to the selected calendar day',()=>{
+ assert.deepEqual(Object.keys(DEFAULT_DAY_HOURS),['2027-06-17','2027-06-18','2027-06-19']);
+ assert.deepEqual(displayHoursForDay('2027-06-19'),{from:'12:00',to:'23:00'});
+ const custom={
+  '2027-06-17':{from:'09:00',to:'17:00'},
+  '2027-06-18':{from:'11:30',to:'22:00'},
+  '2027-06-19':{from:'13:15',to:'23:30'}
+ };
+ assert.deepEqual(displayHoursForDay('2027-06-17',custom),custom['2027-06-17']);
+ assert.deepEqual(displayHoursForDay('2027-06-18',custom),custom['2027-06-18']);
+ assert.deepEqual(displayHoursForDay('2027-06-19',custom),custom['2027-06-19']);
+ assert.deepEqual(displayHoursForDay('2027-06-19',{'2027-06-19':{from:'20:00',to:'19:00'}}),DEFAULT_DAY_HOURS['2027-06-19']);
+ assert.match(source,/settings\.settings\?\.program_day_hours/);
+ assert.match(source,/const interval=displayHoursForDay\(day,dayHours\)/);
+ assert.match(source,/visible=layout\.filter\(slot=>slot\.end>axisStart&&slot\.start<axisEnd\)/);
+ assert.match(api,/program_day_hours/);
+ assert.match(api,/to-\$from<60/);
+});
+test('the program has list and timeline views, independently from day and idea tabs',()=>{
+ assert.match(source,/programDisplay='timeline'/);
+ assert.match(source,/\['timeline','Таймлайн'\]/);
+ assert.match(source,/\['list','Список'\]/);
+ assert.match(source,/if\(programDisplay==='timeline'\)host\.append\(renderTimeline\(visibleRows\)\)/);
+ assert.match(source,/ad-tl-program-list/);
+ assert.match(source,/view==='program'&&programDisplay==='timeline'/);
+ const css=readFileSync(new URL('../src/admin-program.css',import.meta.url),'utf8');
+ assert.match(css,/\.ad-tl-display-modes\{/);
+ assert.match(css,/\.ad-tl-program-list\{/);
+});
+test('settings saves daily visible hours, and the left sidebar places settings last',()=>{
+ const settings=readFileSync(new URL('../src/admin-settings.js',import.meta.url),'utf8');
+ const data=readFileSync(new URL('../src/data.js',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../src/styles.css',import.meta.url),'utf8');
+ assert.match(settings,/Часы отображения программы/);
+ assert.match(settings,/Сохранить часы/);
+ assert.match(settings,/program_day_hours/);
+ assert.match(settings,/input.*type='time'/);
+ for(const day of ['2027-06-17','2027-06-18','2027-06-19'])assert.ok(settings.includes(day));
+ const list=data.slice(data.indexOf('export const adminModules'));
+ assert.ok(list.lastIndexOf("id:'settings'")>list.lastIndexOf("id:'tasks'"));
+ assert.match(css,/\.side-link\[href="#\/admin\/settings"\]/);
+ assert.match(css,/margin-top:auto/);
 });
