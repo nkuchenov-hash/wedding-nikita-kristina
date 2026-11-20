@@ -13,7 +13,7 @@ function galleryCategory(string $value): string {
 function approvedGalleryVenueIds(PDO $db): array {
     $rows=all($db,"SELECT DISTINCT s.venue_id FROM schedule_items s
        INNER JOIN venues v ON v.id=s.venue_id
-       WHERE s.is_confirmed=1 AND s.venue_id IS NOT NULL AND s.venue_id!=''");
+       WHERE s.stage='program' AND s.is_confirmed=1 AND s.venue_id IS NOT NULL AND s.venue_id!=''");
     return array_values(array_column($rows,'venue_id'));
 }
 function adminGallery(PDO $db,string $actor,string $route,string $method): never {
