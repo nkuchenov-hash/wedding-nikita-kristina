@@ -423,3 +423,19 @@ body.ad-gb-lock{overflow:hidden}
 .ad-gb-secondary-section[open]{padding-bottom:19px}
 .ad-gb-secondary-section>summary:hover{color:#1b482e}
 .ad-gb-secondary-section>summary:focus-visible{outline:2px solid #96c7a1;outline-offset:2px}
+
+/* Profile structure: identity, essential facts, personal story, optional details, registration. */
+.ad-gb-main-details{padding:2px 0 18px}
+.ad-gb-main-details .ad-gb-edit-grid{gap:13px 18px}
+.ad-gb-main-details h4{font-size:18px;line-height:1.35;margin:0 0 17px;color:#285139}
+.ad-gb-main-profile{border-top:1px solid #e0ebe3;padding:24px 0 20px}
+.ad-gb-main-profile h4{font-size:18px}
+.ad-gb-registration{margin-top:20px;padding-top:22px;border-top:1px solid #dce8dd}
+.ad-gb-registration h3{font-size:17px;margin:0 0 13px}
+.ad-gb-registration-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.ad-gb-registration-item{display:flex;flex-direction:column;gap:7px;min-width:0;
+  background:#f1f6f1;border:1px solid #dee9df;border-radius:10px;padding:12px 14px}
+.ad-gb-registration-item span{font-size:12px;line-height:1.35;color:#6c8572}
+.ad-gb-registration-item strong{font-size:13px;line-height:1.45;font-weight:650;color:#214b35}
+@media(max-width:640px){.ad-gb-registration-grid{grid-template-columns:1fr;gap:8px}
+ .ad-gb-registration-item{flex-direction:row;justify-content:space-between;gap:16px;align-items:center}}
