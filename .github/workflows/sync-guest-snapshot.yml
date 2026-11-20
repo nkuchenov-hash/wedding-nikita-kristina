@@ -70,5 +70,7 @@ jobs:
           php "$root/backend/bin/backup.php"
           php "$imports/sync-guest-snapshot.php" "$imports/guest-snapshot.csv" --apply
           php "$imports/sync-guest-snapshot.php" "$imports/guest-snapshot.csv" --dry-run
+          php "$root/backend/bin/test-unified-guests.php"
+          php "$root/backend/bin/status.php"
           echo 'PRIVATE_GUEST_SQLITE_RECONCILIATION_COMPLETE'
           REMOTE
