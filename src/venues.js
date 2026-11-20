@@ -1,3 +1,4 @@
+import {showAdminToast} from './admin-toast.js';
 
 /* Venue comparison — browser-side prototype hosted on public GitHub Pages.
  * Selected venue quote amounts supplied by the couple are deliberately preloaded
@@ -196,6 +197,7 @@ async function commitVenueDate(id,day,status,root){
  venueDb.dates.set(id,current);
  ui.savedVenue=id;
  redraw(root);
+ showAdminToast('Доступность даты сохранена.');
 }
 let venuePersistQueue=Promise.resolve();
 function queueVenuePersist(id){
@@ -271,16 +273,10 @@ async function commitInlineChanges(id,updates,root){
   await queueVenuePersist(id);
   save();ui.savedVenue=id;
   redraw(root);
+  showAdminToast('Изменения площадки сохранены.');
  }catch(error){
   if(had)state.venues[id]=previous;else delete state.venues[id];
   save();redraw(root);
-  const node=root.querySelector('.vdp-page');
-  if(node){
-   const alert=document.createElement('p');alert.className='vdp-sync-error';
-   alert.setAttribute('role','alert');
-   alert.textContent='Не сохранено в базе: '+error.message;
-   node.prepend(alert);
-  }
   throw error;
  }
 }
@@ -557,10 +553,7 @@ export function activateVenueAdmin(root){
  root.addEventListener('click',event=>{
   const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-venue-inline],[data-inline-quote],[data-add-inline-quote],[data-cancel-inline],[data-remove-venue-quote],[data-venue-retry]');if(!target)return;
   const venueBase=PUBLIC_VENUES.find(x=>x.id===ui.expanded);
-  const showError=message=>{
-   const page=root.querySelector('.vdp-page');if(!page)return;
-   const alert=document.createElement('p');alert.className='vdp-sync-error';alert.setAttribute('role','alert');alert.textContent=message;page.prepend(alert);
-  };
+  const showError=message=>showAdminToast(message,{kind:'error'});
   if(target.hasAttribute('data-venue-retry')){initVenueDatabase(root,true);}
   else if(target.hasAttribute('data-cancel-inline')){redraw(root);}
   else if(target.hasAttribute('data-venue-inline')){
@@ -680,7 +673,7 @@ export function activateVenueAdmin(root){
   if(t.dataset.listDate){
    t.disabled=true;
    try{await commitVenueDate(t.dataset.venueId,t.dataset.listDate,t.value,root);}
-   catch(error){redraw(root);const board=root.querySelector('.vw-panel');if(board){const alert=document.createElement('p');alert.className='vw-save-error';alert.setAttribute('role','alert');alert.textContent='Не сохранено: '+error.message;board.prepend(alert);}}
+   catch(error){redraw(root);showAdminToast('Не сохранено: '+error.message,{kind:'error'});}
    finally{if(t.isConnected)t.disabled=false;}
    return;
   }
@@ -708,13 +701,7 @@ export function activateVenueAdmin(root){
     await commitInlineChanges(id,changes,root);
    }catch(error){
     redraw(root);
-    const card=root.querySelector('.vdp-page')||root.querySelector('.vw-page');
-    if(card){
-     const notice=document.createElement('p');notice.className='vdp-editor-feedback vdp-sync-error';
-     notice.setAttribute('role','alert');
-     notice.textContent='Не сохранено в общей базе: '+error.message;
-     card.prepend(notice);
-    }
+    showAdminToast('Не сохранено в общей базе: '+error.message,{kind:'error'});
    }finally{if(t.isConnected)t.disabled=false;}
   }
  });
