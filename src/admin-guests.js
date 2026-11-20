@@ -131,23 +131,31 @@ export async function activateGuestDirectory(root){
  heading.append(mk('h1','','Список гостей'));
  const actions=mk('div','ad-gb-top-actions');
  const add=mk('button','ad-gb-primary','+ Добавить гостя');add.type='button';
- actions.append(add);head.append(heading,actions);page.append(head);
- const metrics=mk('div','ad-gb-metrics');page.append(metrics);
- const bar=mk('div','ad-gb-bar'),search=mk('input','ad-gb-input'),side=select(SIDES,'all'),
-       filter=select([['all','Все гости'],['base','В основном списке'],['question','Под вопросом'],['no-name','Нет имени'],['duplicates','Возможные дубли'],['reserve','Резерв'],['kids','Дети'],['yes','Будут'],['maybe','Не решили'],['no','Не придут'],['unsent','Не отправлено'],['archived','Архив']],'all');
- search.type='search';search.placeholder='Поиск по имени, связям, группе, контактам';search.setAttribute('aria-label','Найти гостя');
+ const searchWrap=mk('div','ad-gb-search-wrap'),searchToggle=mk('button','ad-gb-settings-icon ad-gb-search-icon');
+ searchToggle.type='button';searchToggle.title='Поиск гостей';
+ searchToggle.setAttribute('aria-label','Открыть поиск гостей');
+ searchToggle.setAttribute('aria-expanded','false');
+ searchToggle.setAttribute('aria-controls','ad-gb-search-field');
+ searchToggle.innerHTML='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 5 5"/></svg>';
+ const searchField=mk('div','ad-gb-search-field');searchField.id='ad-gb-search-field';searchField.hidden=true;
+ const search=mk('input','ad-gb-input ad-gb-search-input');
+ search.type='search';search.placeholder='Найти гостя';search.setAttribute('aria-label','Поиск по имени, связям, группе, контактам');
+ search.autocomplete='off';searchField.append(search);searchWrap.append(searchToggle,searchField);
+ const side=select(SIDES,'all'),
+   filter=select([['all','Все гости'],['base','В основном списке'],['question','Под вопросом'],['no-name','Нет имени'],['duplicates','Возможные дубли'],['reserve','Резерв'],['kids','Дети'],['yes','Будут'],['maybe','Не решили'],['no','Не придут'],['unsent','Не отправлено'],['archived','Архив']],'all');
  side.className=filter.className='ad-gb-select';
  const sort=select(SORT_FIELDS,'display_name'),direction=mk('button','ad-gb-sort-direction','А → Я');
  sort.className='ad-gb-select ad-gb-sort-select';sort.setAttribute('aria-label','Сортировать по полю');
  direction.type='button';direction.title='Изменить направление сортировки';
  const columnPrefs=mk('div','ad-gb-column-prefs');
  const columnsButton=mk('button','ad-gb-settings-icon');columnsButton.type='button';
- columnsButton.title='Настроить столбцы';columnsButton.setAttribute('aria-label','Настроить отображаемые столбцы');
+ columnsButton.title='Настройки списка гостей';columnsButton.setAttribute('aria-label','Настройки списка гостей');
  columnsButton.setAttribute('aria-expanded','false');columnsButton.setAttribute('aria-haspopup','true');
  columnsButton.innerHTML='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.3" fill="white"/><circle cx="16" cy="17" r="2.3" fill="white"/></svg>';
  const columnsMenu=mk('div','ad-gb-columns-menu');columnsMenu.hidden=true;
  columnPrefs.append(columnsButton,columnsMenu);
- bar.append(search,side,filter,sort,direction,columnPrefs);page.append(bar);
+ actions.append(add,searchWrap,columnPrefs);head.append(heading,actions);page.append(head);
+ const metrics=mk('div','ad-gb-metrics');page.append(metrics);
  const alert=mk('p','ad-gb-notice');alert.hidden=true;page.append(alert);
  const list=mk('div','ad-gb-list');page.append(list);
  const overlay=mk('div','ad-gb-shade');overlay.hidden=true;overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
@@ -178,6 +186,15 @@ export async function activateGuestDirectory(root){
    return (descending?-result:result)||display(a).localeCompare(display(b),'ru')||s(a.id).localeCompare(s(b.id));
  }
  function closeColumns(){columnsMenu.hidden=true;columnsButton.setAttribute('aria-expanded','false')}
+ function setSearchOpen(open){
+   searchField.hidden=!open;
+   searchToggle.setAttribute('aria-expanded',String(open));
+   searchToggle.setAttribute('aria-label',open?'Закрыть поиск гостей':'Открыть поиск гостей');
+   searchWrap.classList.toggle('ad-gb-search-open',open);
+   if(open)search.focus();
+   else if(search.value){search.value='';render()}
+ }
+ searchToggle.addEventListener('click',()=>{closeColumns();setSearchOpen(searchField.hidden)});
  async function applyColumns(next){
    if(savingColumns||!csrf)return;
    savingColumns=true;
@@ -190,6 +207,26 @@ export async function activateGuestDirectory(root){
  }
  function renderColumnMenu(){
    columnsMenu.replaceChildren();
+   const filters=mk('div','ad-gb-menu-filters');
+   filters.append(mk('strong','ad-gb-columns-heading','Порядок и фильтры'));
+   const filterField=(label,control)=>{
+     const row=mk('label','ad-gb-menu-filter-row');
+     row.append(mk('span','',label),control);filters.append(row);
+   };
+   filterField('Сторона',side);
+   filterField('Показать',filter);
+   filterField('Сортировка',sort);
+   const directionRow=mk('div','ad-gb-menu-sort-direction');
+   directionRow.append(mk('span','','Направление'),direction);
+   filters.append(directionRow);
+   const clearFilters=mk('button','ad-gb-columns-reset','Сбросить фильтры');
+   clearFilters.type='button';
+   clearFilters.addEventListener('click',()=>{
+     side.value='all';filter.value='all';sort.value='display_name';descending=false;
+     direction.textContent='А → Я';render();saveSortMode();
+   });
+   filters.append(clearFilters);
+   columnsMenu.append(filters);
    columnsMenu.append(mk('strong','ad-gb-columns-heading','Отображаемые столбцы'),
      mk('p','ad-gb-columns-hint','Выберите поля и порядок. Изменения сохраняются в настройках.'));
    for(const [key,label] of GUEST_TABLE_FIELDS){
@@ -697,8 +734,9 @@ export async function activateGuestDirectory(root){
  close.addEventListener('click',closeGuest);overlay.addEventListener('click',ev=>{if(ev.target===overlay)closeGuest()});
  const onKey=ev=>{
    if(ev.key!=='Escape')return;
-   if(!columnsMenu.hidden){closeColumns();return}
-   if(!overlay.hidden&&!editing)closeGuest();
+   if(!overlay.hidden&&!editing){closeGuest();return}
+   if(!columnsMenu.hidden){closeColumns();columnsButton.focus();return}
+   if(!searchField.hidden){setSearchOpen(false);searchToggle.focus()}
  };
  const onOutsideColumns=ev=>{if(!columnsMenu.hidden&&!columnPrefs.contains(ev.target))closeColumns()};
  document.addEventListener('pointerdown',onOutsideColumns);
