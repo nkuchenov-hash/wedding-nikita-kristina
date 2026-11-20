@@ -623,7 +623,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
             }
             if($collection==='schedule_items'){
                 if($field==='activity_date' &&
-                   (!is_string($value)||!in_array($value,['2027-06-17','2027-06-18','2027-06-19'],true)))
+                   (!is_string($value)||!in_array($value,['','2027-06-17','2027-06-18','2027-06-19'],true)))
                     fail(422,'field','Выберите день свадьбы');
                 if($field==='tags_json'){
                     if(!is_string($value))fail(422,'field','Неверный набор тегов');
