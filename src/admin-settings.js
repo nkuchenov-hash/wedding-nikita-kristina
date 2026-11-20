@@ -98,7 +98,7 @@ export async function renderWeddingSettings(host,api){
        status.classList.add('ad-tl-setting-success');
      }catch(e){status.classList.remove('ad-tl-setting-success');status.textContent=e.message||'Ошибка сохранения'}
      finally{saving=false;save.disabled=false}
-   },'ad-tl-primary'));
+   },'ad-tl-primary');
    actions.append(save);content.append(actions);
  };
  host.classList.add('ad-timeline-page','ad-global-settings-page');
