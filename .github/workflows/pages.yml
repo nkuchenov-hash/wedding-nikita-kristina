@@ -28,7 +28,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify static code and prepared admin
         run: |
-          node --check src/admin-program.js
+          # A single syntax error in any imported module blanks the entire admin.
+          # Verify the full protected ESM entrypoint chain before deployment.
+          for asset in src/admin-app.js src/admin-data-ui.js src/admin-settings.js src/admin-program.js src/admin-photos.js src/admin-guests.js src/venues.js src/venue-detail-ui.js src/venue-files-ui.js src/venue-evaluation.js src/venues-pricing.js; do
+            node --check "$asset"
+          done
           npm run check
           node --check src/admin-app.js
           node --check src/admin-data-ui.js
