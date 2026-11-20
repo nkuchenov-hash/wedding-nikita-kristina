@@ -63,6 +63,8 @@ if(!in_array('activity_type',array_column($scheduleColumns,'name'),true))
     $database->exec("ALTER TABLE schedule_items ADD COLUMN activity_type TEXT NOT NULL DEFAULT 'other'");
 if(!in_array('duration_min',array_column($scheduleColumns,'name'),true))
     $database->exec("ALTER TABLE schedule_items ADD COLUMN duration_min INTEGER NOT NULL DEFAULT 30");
+if(!in_array('gap_before_min',array_column($scheduleColumns,'name'),true))
+    $database->exec("ALTER TABLE schedule_items ADD COLUMN gap_before_min INTEGER NOT NULL DEFAULT 0");
 $database->exec("CREATE INDEX IF NOT EXISTS idx_schedule_stage_date ON schedule_items(stage,start_at,sort_order)");
 $tables=(int)$database->query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")->fetchColumn();
 chmod($root.'/wedding.sqlite3',0600);
