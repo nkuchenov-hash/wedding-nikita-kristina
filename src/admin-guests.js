@@ -17,10 +17,8 @@ export const GUEST_TABLE_FIELDS=[
  ['relation_to_couple','Кем приходится'],
  ['about','Профиль гостя'],
  ['about_en','Профиль EN'],
- ['city','Город / регион'],
- ['country','Страна'],
- ['origin_place','Откуда родом'],
- ['origin_country','Страна происхождения'],
+ ['city','Город проживания'],
+ ['country','Страна проживания'],
  ['planning_status','Состав'],
  ['age_group','Возраст'],
  ['decision','Приглашение'],
@@ -54,11 +52,14 @@ export function normalizeGuestTableColumns(value){
  if(!Array.isArray(value))return [...DEFAULT_GUEST_TABLE_COLUMNS];
  const allowed=new Set(GUEST_TABLE_FIELDS.map(([key])=>key));
  const oldDefault=['display_name','planning_status','side','relation_to_couple','seating_group','decision','attendance'];
- // The previous seven-column default and obsolete technical selections get a readable upgrade.
- if(value.join('|')===oldDefault.join('|')||value.some(key=>!allowed.has(key)))
+ // Migrate previously saved "from" columns to the two unambiguous city/country fields.
+ // Preserve ordering and existing widths rather than resetting valid selections.
+ const legacy={origin_place:'birth_city',origin_country:'birth_country'};
+ const migrated=value.map(key=>legacy[key]||key);
+ if(value.join('|')===oldDefault.join('|')||migrated.some(key=>!allowed.has(key)))
    return [...DEFAULT_GUEST_TABLE_COLUMNS];
  const columns=['display_name'];
- for(const key of value)if(key!=='display_name'&&allowed.has(key)&&!columns.includes(key))columns.push(key);
+ for(const key of migrated)if(key!=='display_name'&&allowed.has(key)&&!columns.includes(key))columns.push(key);
  return columns;
 }
 // Display-only grouping: never modifies guest rows, IDs, families or seating plans.
@@ -122,7 +123,9 @@ export function groupGuestsByConnections(selected,allGuests,links,descending=fal
 const SORT_FIELDS=[
  ['display_name','Имя'],['__connections','По семьям и кругам'],['side','Сторона'],
  ['community','Круг'],['planning_status','Состав'],['attendance','Ответ RSVP'],
- ['city','Город'],['country','Страна'],['decision','Решение о приглашении'],['about','Профиль'],
+ ['city','Город проживания'],['birth_city','Город рождения'],
+ ['country','Страна проживания'],['birth_country','Страна рождения'],
+ ['decision','Решение о приглашении'],['about','Профиль'],
  ['seating_group','Рассадка']
 ];
 const SIDENAME=Object.fromEntries(SIDES);
@@ -684,9 +687,9 @@ export async function activateGuestDirectory(root){
      const basics=group('О человеке',[
        ['relation_to_couple','Кем приходится','text'],
        ['community','Круг общения','text'],
-       ['origin_place','Откуда родом — город / регион','text'],
-       ['origin_country','Страна происхождения','text'],
-       ['city','Где живёт сейчас — город / регион','text'],
+       ['birth_city','Город рождения','text'],
+       ['birth_country','Страна рождения','text'],
+       ['city','Город проживания','text'],
        ['country','Страна проживания','text']
      ]);
      basics.classList.add('ad-gb-main-details');
@@ -711,13 +714,6 @@ export async function activateGuestDirectory(root){
      notesDetails.append(mk('summary','','Дополнительные заметки организаторов'));
      form.append(notesDetails);
      group('Заметки',[['private_notes','Что важно учесть на свадьбе','textarea']],notesDetails);
-     const birthDetails=mk('details','ad-gb-legacy-details ad-gb-birth-details');
-     birthDetails.append(mk('summary','','Место рождения (дополнительно)'));
-     form.append(birthDetails);
-     group('Место рождения',[
-       ['birth_city','Город рождения','text'],
-       ['birth_country','Страна рождения','text']
-     ],birthDetails);
      const englishDetails=mk('details','ad-gb-legacy-details ad-gb-english-details');
      englishDetails.append(mk('summary','','Профиль на английском'));
      form.append(englishDetails);
