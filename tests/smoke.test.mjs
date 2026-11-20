@@ -88,7 +88,7 @@ test('three-day wedding itinerary contains only organizer-confirmed events',asyn
  assert.ok(!seed.schedule.some(e=>e.id.startsWith('draft-schedule-')));
  const backend=await read('../backend/bin/seed-planning.php');
  assert.match(backend,/DELETE FROM schedule_items WHERE id=/);
- assert.match(backend,/INSERT OR IGNORE INTO schedule_items\(id,title,start_at,place,notes,is_public,sort_order,stage,activity_type,duration_min\)/);
+ assert.match(backend,/INSERT OR IGNORE INTO schedule_items\(id,title,start_at,place,notes,is_public,sort_order,stage,activity_type,duration_min,activity_date\)/);
  const admin=await read('../src/admin-data-ui.js');
  const program=await read('../src/admin-program.js');
  assert.match(admin,/renderWeddingProgram\(host,call,weddingDays,PUBLIC_VENUES\)/);
@@ -96,6 +96,14 @@ test('three-day wedding itinerary contains only organizer-confirmed events',asyn
  assert.match(program,/admin\/records\?collection=schedule_items/);
  assert.match(program,/admin\/schedule\/arrange/);
  assert.match(program,/dragstart/);
+ assert.match(program,/activity_tags/);
+ assert.match(program,/tags_json/);
+ assert.match(program,/startField,endField/);
+ assert.match(program,/openCard\(item\)/);
+ assert.doesNotMatch(program,/field\('Место/);
+ const schema=await read('../backend/schema.sql');
+ assert.match(schema,/activity_date TEXT/);
+ assert.match(schema,/tags_json TEXT/);
 });
 
 test('protected guest roster edits any core field inline and separates relationship to the couple',async()=>{
