@@ -38,10 +38,9 @@ export function cardTagColors(item,definitions){
 export function cardColorStyle(item,definitions){
  const colors=cardTagColors(item,definitions);
  const primary=colors[0]||'#ECF2EC';
- const stripe=colors.length>1?'linear-gradient(to bottom,'+
-   colors.map((color,i)=>color+' '+(i/colors.length*100)+'% '+((i+1)/colors.length*100)+'%').join(',')+')'
-   :primary;
- return {primary,stripe};
+ // The first selected tag alone determines the card background and accent.
+ // Additional tags remain visible as labels but do not blend colors.
+ return {primary,stripe:primary};
 }
 
 
@@ -290,6 +289,8 @@ export async function renderWeddingProgram(host,api,days){
    if(pills.childElementCount){
      pills.setAttribute('aria-label','Теги');
      node.append(pills);
+     // Do not clip tag chips when the time slot is shorter than the label area.
+     if(scheduledCard && duration(item)<25)node.classList.add('ad-tl-has-short-tags');
    }
    if(view==='program'&&programDisplay==='timeline')attachTimelineHandles(node,item,clockLabel,lengthLabel);
    return node;
@@ -388,7 +389,14 @@ export async function renderWeddingProgram(host,api,days){
    }
    sectionControls.append(daysBar,nav);
    host.append(sectionControls);
-   if(notification){const n=$('p','ad-tl-notice',notification);n.setAttribute('role','status');host.append(n);}
+   if(notification){
+     document.querySelector('.ad-tl-toast')?.remove();
+     const toast=$('div','ad-tl-toast',notification);
+     toast.setAttribute('role','status');
+     document.body.append(toast);
+     setTimeout(()=>toast.remove(),3800);
+     notification='';
+   }
    const current=entriesFor(view);
    const compactTools=$('div','ad-tl-compact-tools');
    if(tags.length){
