@@ -11,21 +11,22 @@ const LANGUAGES=[['ru','Русский'],['en','English'],['de','Deutsch'],['oth
 const PLANNING=[['main','Основной'],['reserve','Резерв']];
 const AGE=[['unknown','Не уточнено'],['adult','Взрослый'],['child','Ребёнок'],['infant','Младенец']];
 export const GUEST_TABLE_FIELDS=[
- ['display_name','Гость'],['name_en','Имя EN'],['first_name','Имя'],['last_name','Фамилия'],
- ['planning_status','Список'],['age_group','Возраст'],['side','Сторона'],
- ['relation_to_couple','Кем приходится'],['relationship','Связи'],
- ['community','Круг'],['seating_group','Рассадка'],['decision','Решение'],
- ['invitation_sent_at','Приглашение'],['attendance','Ответ RSVP'],
- ['adults','Взрослые RSVP'],['children','Дети RSVP'],['plus_one_allowed','Можно +1'],
- ['city','Город'],['phone','Телефон'],['email','Email'],['language','Язык'],
- ['about','Профиль RU'],['about_en','Профиль EN'],['private_notes','Личные заметки'],
- ['source_person_id','ID'],['status','Статус'],['created_at','Создан'],
- ['updated_at','Обновлён'],['profile_completed_at','Анкета заполнена'],
- ['first_opened_at','Первое открытие'],['last_opened_at','Последнее открытие'],
- ['invite_prepared_at','Ссылка создана'],['response_source','Источник RSVP'],
- ['dietary_notes','Питание'],['other_notes','Другие пожелания']
+ ['display_name','Гость'],
+ ['side','Сторона'],
+ ['community','Круг / группа'],
+ ['relation_to_couple','Кем приходится'],
+ ['about','Профиль гостя'],
+ ['about_en','Профиль EN'],
+ ['city','Город'],
+ ['planning_status','Состав'],
+ ['age_group','Возраст'],
+ ['decision','Приглашение'],
+ ['attendance','Ответ'],
+ ['seating_group','Рассадка'],
+ ['phone','Телефон'],
+ ['email','Email']
 ];
-export const DEFAULT_GUEST_TABLE_COLUMNS=['display_name','planning_status','side','relation_to_couple','seating_group','decision','attendance'];
+export const DEFAULT_GUEST_TABLE_COLUMNS=['display_name','side','community','about','planning_status','attendance'];
 export function normalizeGuestTableColumns(value){
  if(!Array.isArray(value))return [...DEFAULT_GUEST_TABLE_COLUMNS];
  const allowed=new Set(GUEST_TABLE_FIELDS.map(([key])=>key)),columns=['display_name'];
@@ -91,20 +92,10 @@ export function groupGuestsByConnections(selected,allGuests,links,descending=fal
  });
 }
 const SORT_FIELDS=[
- ['display_name','Имя'],['__connections','По связям и кругам'],['first_name','Имя (отдельно)'],['last_name','Фамилия'],['name_en','Имя EN'],
- ['planning_status','Список / резерв'],['age_group','Возрастная категория'],['side','Сторона'],
- ['relation_to_couple','Кем приходится'],['relationship','Другие связи'],['community','Круг'],
- ['seating_group','Компания для рассадки'],['decision','Решение о приглашении'],
- ['invitation_sent_at','Дата отправки приглашения'],['attendance','Ответ RSVP'],
- ['adults','Взрослые (RSVP)'],['children','Дети (RSVP)'],
- ['plus_one_allowed','Можно +1'],
- ['city','Город'],['phone','Телефон'],['email','Email'],['language','Язык'],
- ['about','Профиль RU'],['about_en','Профиль EN'],['source_person_id','ID'],
- ['created_at','Создан'],['updated_at','Обновлён'],['response_source','Источник RSVP'],
- ['profile_completed_at','Анкета заполнена'],['first_opened_at','Первое открытие'],
- ['last_opened_at','Последнее открытие'],['invite_prepared_at','Ссылка создана'],
- ['private_notes','Личные заметки'],['dietary_notes','Питание'],
- ['other_notes','Другие пожелания'],['status','Статус профиля']
+ ['display_name','Имя'],['__connections','По семьям и кругам'],['side','Сторона'],
+ ['community','Круг'],['planning_status','Состав'],['attendance','Ответ RSVP'],
+ ['city','Город'],['decision','Решение о приглашении'],['about','Профиль'],
+ ['seating_group','Рассадка']
 ];
 const SIDENAME=Object.fromEntries(SIDES);
 function option(value,title){const o=mk('option','',title);o.value=value;return o}
@@ -461,7 +452,7 @@ export async function activateGuestDirectory(root){
    const wrapper=mk('label','ad-gb-edit-field');wrapper.append(mk('span','',label));
    const input=items?select(items,value):type==='textarea'?mk('textarea'):mk('input');
    if(!items&&type!=='textarea'){input.type=type;input.maxLength=320}
-   if(type==='textarea'){input.rows=2;input.maxLength=key==='private_notes'?12000:5000}
+   if(type==='textarea'){input.rows=key==='about'?6:key==='about_en'?4:3;input.maxLength=key==='private_notes'?12000:5000}
    if(type==='number'){input.min='0';input.max='15'}
    if(!items)input.value=s(value);
    input.name=key;wrapper.append(input);parent.append(wrapper);return input;
@@ -518,6 +509,11 @@ export async function activateGuestDirectory(root){
        }
        wrapper.append(body);container.append(wrapper);return wrapper;
      }
+     const bio=group('Профиль гостя',[
+       ['about','О человеке: характер, работа, увлечения, интересы','textarea'],
+       ['about_en','Профиль на английском','textarea']
+     ]);
+     bio.classList.add('ad-gb-main-profile');
      const decisionOptions=[['','Не решено'],...
        [...new Set([s(g.decision),...DECISIONS])].filter(Boolean).map(v=>[v,v])];
      group('Данные гостя',[
@@ -544,14 +540,10 @@ export async function activateGuestDirectory(root){
      const seatingGroup=group('План рассадки',[
        ['seating_group','С кем посадить / компания для стола','text']
      ],seatingDetails);
-     const bioDetails=mk('details','ad-gb-legacy-details ad-gb-bio-details');
-     bioDetails.append(mk('summary','','Описания на русском и английском, заметки организаторов'));
-     form.append(bioDetails);
-     const bio=group('О человеке',[ 
-       ['about','Описание на русском','textarea'],
-       ['about_en','Описание на английском','textarea'],
-       ['private_notes','Заметки организаторов','textarea']
-     ],bioDetails);
+     const notesDetails=mk('details','ad-gb-legacy-details ad-gb-bio-details');
+     notesDetails.append(mk('summary','','Дополнительные заметки организаторов'));
+     form.append(notesDetails);
+     group('Заметки',[['private_notes','Что важно учесть на свадьбе','textarea']],notesDetails);
      profile.append(form);
      form.addEventListener('submit',event=>{event.preventDefault();panelSave?.()});
      const household=section('Семья и сопровождающие');
