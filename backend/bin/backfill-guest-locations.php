@@ -61,6 +61,16 @@ $origins=[
  'P129'=>['Санкт-Петербург','Россия']
 ];
 
+/* Birthplaces provided explicitly by the organiser; not current residence. */
+$explicitBirthPlaces=[
+ 'P001'=>'Северодвинск',
+ 'P002'=>'Емва',
+ 'P004'=>'Емва',
+ 'P006'=>'Сыктывкар',
+ 'P010'=>'Сыктывкар',
+ 'P025'=>'Ижевск'
+];
+
 $guests=all($db,'SELECT g.id,g.city,g.country,g.origin_place,g.origin_country,g.birth_city,g.birth_country,g.about,p.source_person_id
  FROM guests g LEFT JOIN guest_profile_details p ON p.guest_id=g.id');
 $updates=0;$countryUpdates=0;$birthUpdates=0;$cityCleared=0;$unresolved=0;
@@ -93,6 +103,21 @@ try{
     // Legacy city entries containing *only a country* must not be presented as cities.
     if(isset($countryOnly[$city])&&$country===$city){
         $city='';$changes['city']=$city;$cityCleared++;
+    }
+    // The earlier provisional hometown->birthplace copy is not authoritative.
+    // Correct only a blank field or the known provisional P025 assignment.
+    if(isset($explicitBirthPlaces[$sourceId])){
+        $confirmed=$explicitBirthPlaces[$sourceId];
+        $correctProvisional=($sourceId==='P025'&&$birthCity==='Северодвинск');
+        if($birthCity===''||$correctProvisional){
+            $birthCity=$confirmed;
+            $changes['birth_city']=$confirmed;
+            $birthUpdates++;
+        }
+        if($birthCity===$confirmed&&$birthCountry===''){
+            $birthCountry='Россия';
+            $changes['birth_country']=$birthCountry;
+        }
     }
     if($birthCity===''
        &&preg_match('/(?:родился|родилась)\s+в\s+(Москве|Северодвинске)/iu',(string)$g['about'],$m)){
