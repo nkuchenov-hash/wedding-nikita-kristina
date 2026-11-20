@@ -93,6 +93,7 @@ jobs:
             php bin/reconcile-palma-pricing-20261118.php
             php bin/import-venue-files.php
             php bin/seed-planning.php
+            php bin/import-kristina-ideas-20261120.php
             php bin/backfill-couple-relation.php
             php bin/smoke.php
             test -f '$PRIVATE/wedding.sqlite3'
