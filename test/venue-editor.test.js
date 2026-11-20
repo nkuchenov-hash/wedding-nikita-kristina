@@ -95,7 +95,8 @@ test('in-place editing persists to protected database and keeps validation',()=>
  assert.match(source,/updateInlineOverrides/);
  assert.match(source,/commitInlineChanges/);
  assert.match(source,/queueVenuePersist/);
- assert.match(source,/Не сохранено в базе/);
+ assert.match(source,/showAdminToast\('Не сохранено/);
+ assert.doesNotMatch(source,/page\.prepend\(alert\)/);
  assert.match(source,/select\[data-inline-control\]/);
  assert.doesNotMatch(source,/function collectVenueEdit/);
 });
