@@ -16,8 +16,8 @@ permissions:
   pages: write
   id-token: write
 concurrency:
-  group: wedding-admin-recovery-20261120
-  cancel-in-progress: false
+  group: wedding-admin-recovery-20261120-final
+  cancel-in-progress: true
 jobs:
   deploy:
     environment:
@@ -27,6 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Verify static code and prepared admin
+        timeout-minutes: 3
         run: |
           # A single syntax error in any imported module blanks the entire admin.
           # Verify the full protected ESM entrypoint chain before deployment.
