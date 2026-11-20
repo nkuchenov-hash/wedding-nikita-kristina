@@ -28,6 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify static code and prepared admin
         run: |
+          node --check src/admin-program.js
           npm run check
           node --check src/admin-app.js
           node --check src/admin-data-ui.js
