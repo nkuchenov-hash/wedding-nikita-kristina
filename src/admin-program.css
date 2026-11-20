@@ -512,7 +512,9 @@
 /* Clear visual groups: the date buttons and Program / Ideas are separate
    controls, not one continuous segmented strip. Keep the rows breathing. */
 .ad-timeline-page .ad-tl-section-controls{
-  column-gap:64px;
+  /* Deliberate open space between date selection and Program / Ideas.
+     At a 2000px workspace this is 200px, not a cosmetic 20px separator. */
+  column-gap:clamp(110px,10vw,220px);
   row-gap:18px;
   margin-bottom:20px;
 }
@@ -526,6 +528,9 @@
 }
 .ad-timeline-page .ad-tl-compact-tools .ad-tl-display-modes::before{
   display:none;
+}
+@media (min-width:901px) and (max-width:1350px){
+  .ad-timeline-page .ad-tl-section-controls{column-gap:clamp(54px,6vw,90px)}
 }
 @media (min-width:761px) and (max-width:900px), (max-width:600px){
   .ad-timeline-page .ad-tl-section-controls{
