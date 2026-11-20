@@ -1,4 +1,4 @@
-// Wedding admin: separate per-day ideas and timed program; same private SQLite source.
+// Wedding admin: day-first program and idea pool; same authenticated SQLite source.
 const BASE_TYPES=[
  {id:'ceremony',label:'Церемония',color:'#E5EAD8'},
  {id:'social',label:'Общение с гостями',color:'#D7ECE8'},
@@ -32,7 +32,7 @@ const mins=value=>{
 const clock=minutes=>String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0');
 const duration=entry=>Math.max(5,Number(entry?.duration_min)||30);
 export const scheduled=entry=>entry?.stage==='program'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d/.test(entry.start_at||'');
-export const assignedDay=entry=>scheduled(entry)?(entry.activity_date||String(entry.start_at).slice(0,10)):'';
+export const assignedDay=entry=>{const date=entry?.activity_date||String(entry?.start_at||'').slice(0,10);return /^2027-06-(17|18|19)$/.test(date)?date:'2027-06-19';};
 export const itemTags=item=>{
  try{const tags=JSON.parse(item?.tags_json||'[]');return Array.isArray(tags)?tags.filter(x=>typeof x==='string'):[]}
  catch{return []}
@@ -44,7 +44,7 @@ export async function renderWeddingProgram(host,api,days){
  let entries=[],types=BASE_TYPES.map(t=>({...t})),tags=[],day='2027-06-19',view='program';
  let filter='all',notification='',busy=false,dragged='';
  const dateName=value=>days.find(d=>d.date===value)?.label||value;
- const entriesFor=which=>entries.filter(e=>which==='program'?(scheduled(e)&&assignedDay(e)===day):!scheduled(e))
+ const entriesFor=which=>entries.filter(e=>assignedDay(e)===day&&(which==='program'?scheduled(e):!scheduled(e)))
    .sort((a,b)=>which==='program'
       ?String(a.start_at||'').localeCompare(String(b.start_at||''))||(Number(a.sort_order)||0)-(Number(b.sort_order)||0)
       :String(b.created_at||'').localeCompare(String(a.created_at||'')));
@@ -155,35 +155,44 @@ export async function renderWeddingProgram(host,api,days){
    host.classList.add('ad-timeline-page');
    const header=$('header','ad-tl-header'),intro=$('div');
    intro.append($('span','ad-tl-kicker','СВАДЬБА · СЦЕНАРИЙ'),$('h1','','Программа мероприятия'),
-     $('p','','У каждого дня — собственные идеи и расписание. Нажмите на карточку, чтобы изменить её.'));
+     $('p','','Выберите день, затем откройте его программу или пул идей. Каждая карточка редактируется нажатием.'));
    const commands=$('div','ad-tl-top-actions');
    commands.append(makeButton('+ '+(view==='program'?'Активность':'Идея'),
      ()=>openCard(null,{stage:view}),'ad-tl-primary'),
      makeButton('Категории и теги',openTaxonomy,'ad-tl-secondary'));
    header.append(intro,commands);host.append(header);
-   const nav=$('nav','ad-tl-main-switch');nav.setAttribute('aria-label','Идеи или программа');
-   for(const [id,label,desc] of [
-     ['program','Программа','Таймлайн'],
-     ['idea','Пул идей','Без назначенного времени']]){
-     const count=entries.filter(e=>id==='program'?(scheduled(e)&&assignedDay(e)===day):!scheduled(e)).length;
-     const button=makeButton(label+' · '+count,()=>{view=id;filter='all';notification='';render();},'ad-tl-main-tab'+(view===id?' is-active':''));
-     button.setAttribute('aria-pressed',String(view===id));button.title=desc;nav.append(button);
-   }
-   host.append(nav);
-   const daysBar=$('div','ad-tl-day-nav');
+   // Day is the first-level navigation; program and ideas live inside each day.
+   const daysBar=$('nav','ad-tl-day-nav');
+   daysBar.setAttribute('aria-label','Выбор дня свадьбы');
    for(const d of days){
-     const b=makeButton(d.label,()=>{day=d.date;filter='all';notification='';render();},'ad-tl-day-tab'+(day===d.date?' is-active':''));
+     const b=makeButton(d.label,()=>{
+       day=d.date;filter='all';notification='';render();
+     },'ad-tl-day-tab'+(day===d.date?' is-active':''));
      b.setAttribute('aria-pressed',String(day===d.date));
      daysBar.append(b);
    }
-   if(view==='program')host.append(daysBar);
+   host.append(daysBar);
+   const nav=$('nav','ad-tl-main-switch');
+   nav.setAttribute('aria-label','Раздел выбранного дня');
+   for(const [id,label,desc] of [
+     ['program','Программа','Таймлайн'],
+     ['idea','Пул идей','Активности без назначенного времени']]){
+     const count=entries.filter(e=>assignedDay(e)===day&&(id==='program'?scheduled(e):!scheduled(e))).length;
+     const button=makeButton(label+' · '+count,()=>{
+       view=id;filter='all';notification='';render();
+     },'ad-tl-main-tab'+(view===id?' is-active':''));
+     button.setAttribute('aria-pressed',String(view===id));
+     button.title=desc;
+     nav.append(button);
+   }
+   host.append(nav);
    if(notification){const n=$('p','ad-tl-notice',notification);n.setAttribute('role','status');host.append(n);}
    const current=entriesFor(view);
    const toolbar=$('div','ad-tl-section-toolbar'),heading=$('div','ad-tl-section-heading');
-   heading.append($('h2','',view==='program'?'Программа · '+dateName(day):'Общий пул идей'));
+   heading.append($('h2','',view==='program'?'Программа · '+dateName(day):'Пул идей · '+dateName(day)));
    heading.append($('span','ad-tl-help',view==='program'
      ?'Перетаскивайте карточки для изменения порядка. Время пересчитывается автоматически.'
-     :'Идеи не привязаны к дате или времени. Любую карточку можно включить в программу нужного дня.'));
+     :'Идеи принадлежат этому дню, но пока не имеют назначенного времени.'));
    toolbar.append(heading);
    const sum=$('span','ad-tl-summary',current.length+' '+(view==='program'?'событий':'идей'));
    toolbar.append(sum);
@@ -243,7 +252,7 @@ export async function renderWeddingProgram(host,api,days){
    durationInput.min='5';durationInput.max='600';durationInput.value=String(duration(item));
    const targetDay=$('select');
    for(const d of days){const option=$('option','',d.label);option.value=d.date;targetDay.append(option)}
-   targetDay.value=item&&scheduled(item)?assignedDay(item):day;
+   targetDay.value=item?assignedDay(item):day;
    const placement=$('select');
    for(const [id,label] of [['idea','Пул идей'],['program','В программе']]){
      const option=$('option','',label);option.value=id;placement.append(option)
@@ -258,7 +267,7 @@ export async function renderWeddingProgram(host,api,days){
    const timeHint=$('p','ad-tl-end-preview','');
    function updateVisible(){
      const enabled=placement.value==='program';
-     dayField.hidden=!enabled;startField.hidden=!enabled;endField.hidden=!enabled;
+     dayField.hidden=false;startField.hidden=!enabled;endField.hidden=!enabled;
      start.required=enabled;end.required=enabled;
      timeHint.textContent=enabled?'Время начала и окончания можно менять. Длительность синхронизируется автоматически.'
        :'У идеи есть длительность, но нет назначенного времени.';
@@ -319,7 +328,7 @@ export async function renderWeddingProgram(host,api,days){
      const fields={
        title:name.value.trim(),notes:description.value.trim(),
        activity_type:category.value,duration_min:n,tags_json:JSON.stringify(checked),
-       stage:isProgram?'program':'idea',activity_date:isProgram?chosenDay:'',
+       stage:isProgram?'program':'idea',activity_date:chosenDay,
        start_at:isProgram?chosenDay+'T'+start.value+':00':null,
        end_at:isProgram?chosenDay+'T'+end.value+':00':null,
        gap_before_min:0,sort_order:isProgram?(startN||0):0
@@ -329,7 +338,7 @@ export async function renderWeddingProgram(host,api,days){
        await api('admin/records',{method:item?.id?'PATCH':'POST',body:{
          collection:'schedule_items',...(item?.id?{id:item.id}:{}),fields
        }});
-       if(isProgram)day=chosenDay;view=isProgram?'program':'idea';filter='all';
+       day=chosenDay;view=isProgram?'program':'idea';filter='all';
        shade.remove();await reload('Карточка сохранена.');
      }catch(error){feedback.textContent=error.message||'Не удалось сохранить.';}
      finally{busy=false;save.disabled=false}
