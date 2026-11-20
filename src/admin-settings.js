@@ -1,4 +1,5 @@
 import {itemTags,DEFAULT_DAY_HOURS,displayHoursForDay} from './admin-program.js';
+import {GUEST_TABLE_FIELDS,DEFAULT_GUEST_TABLE_COLUMNS,normalizeGuestTableColumns} from './admin-guests.js';
 const $=(tag,cls='',value)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(value!==undefined)e.textContent=String(value);return e};
 const button=(label,fn,cls='')=>{const e=$('button','ad-tl-button '+cls,label);e.type='button';e.addEventListener('click',fn);return e};
 const color=value=>/^#[0-9a-fA-F]{6}$/.test(value||'')?value:'#DDE9DF';
@@ -68,6 +69,85 @@ export async function renderWeddingSettings(host,api){
  hourActions.append(saveHours);
  hoursPanel.append(hourActions,hourStatus);
  host.append(hoursPanel);
+ // Guest roster display is a real server setting, shared with the icon in the roster.
+ const guestPanel=$('section','ad-tl-settings-content ad-gb-global-settings');
+ guestPanel.append($('h2','','Гости · отображение таблицы'),
+   $('p','ad-tl-settings-help','Выберите столбцы и их порядок. Имя гостя остаётся первым, остальные поля можно скрыть или переставить.'));
+ const guestRows=$('div','ad-gb-global-settings-list');
+ let chosen=normalizeGuestTableColumns(settings.settings?.guest_table_columns);
+ let savingGuests=false;
+ const guestActions=$('div','ad-tl-modal-actions');
+ const guestNotice=$('p','ad-tl-form-error');guestNotice.setAttribute('role','status');
+ const saveGuest=button('Сохранить столбцы',async()=>{
+   if(savingGuests)return;
+   savingGuests=true;saveGuest.disabled=true;
+   try{
+     await api('admin/settings',{method:'POST',body:{key:'guest_table_columns',value:chosen}});
+     guestNotice.textContent='Сохранено. Выбранные поля появятся в списке гостей.';
+     guestNotice.classList.add('ad-tl-setting-success');
+   }catch(err){
+     guestNotice.classList.remove('ad-tl-setting-success');
+     guestNotice.textContent=err.message||'Не удалось сохранить столбцы';
+   }finally{savingGuests=false;saveGuest.disabled=false}
+ },'ad-tl-primary');
+ const resetGuest=button('Сбросить',()=>{chosen=[...DEFAULT_GUEST_TABLE_COLUMNS];drawGuestRows()},'ad-tl-muted');
+ guestActions.append(resetGuest,saveGuest);
+ function drawGuestRows(){
+   guestRows.replaceChildren();
+   for(const [key,label] of GUEST_TABLE_FIELDS){
+     const line=$('div','ad-gb-global-setting-row');
+     const control=$('label','ad-gb-global-setting-choice');
+     const check=$('input');check.type='checkbox';check.checked=chosen.includes(key);
+     check.disabled=key==='display_name';
+     check.addEventListener('change',()=>{
+       chosen=normalizeGuestTableColumns(check.checked?[...chosen,key]:chosen.filter(item=>item!==key));
+       drawGuestRows();
+     });
+     control.append(check,$('span','',label));line.append(control);
+     if(chosen.includes(key)&&key!=='display_name'){
+       const order=$('div','ad-gb-global-setting-order');
+       for(const [arrow,delta]of [['↑',-1],['↓',1]]){
+         const move=button(arrow,()=>{
+           const i=chosen.indexOf(key),j=i+delta;
+           if(j<=0||j>=chosen.length)return;
+           const next=[...chosen];[next[i],next[j]]=[next[j],next[i]];chosen=next;drawGuestRows();
+         },'ad-gb-global-setting-move');
+         const i=chosen.indexOf(key);move.disabled=i+delta<=0||i+delta>=chosen.length;
+         move.title=delta<0?'Переместить левее':'Переместить правее';
+         order.append(move);
+       }
+       line.append(order);
+     }
+     guestRows.append(line);
+   }
+ }
+ guestPanel.append(guestRows,guestActions,guestNotice);
+ drawGuestRows();
+ const childrenPanel=$('div','ad-gb-global-children');
+ childrenPanel.append($('h3','','Участие детей'),
+   $('p','ad-tl-settings-help','Отключение исключает детей из расчётов и новых ответов RSVP, но сохраняет все записи и ранее введённые данные.'));
+ const childrenLabel=$('label','ad-gb-global-children-choice');
+ const childrenCheck=$('input');childrenCheck.type='checkbox';
+ childrenCheck.checked=settings.settings?.children_enabled!==false;
+ childrenLabel.append(childrenCheck,$('span','','Учитывать детей в планировании'));
+ const childrenStatus=$('p','ad-tl-form-error');childrenStatus.setAttribute('role','status');
+ childrenCheck.addEventListener('change',async()=>{
+   const next=childrenCheck.checked;
+   if(!next&&!confirm('Отключить учёт детей в расчётах и приглашениях? Данные сохранятся.')){
+     childrenCheck.checked=true;return;
+   }
+   childrenCheck.disabled=true;
+   try{
+     await api('admin/settings',{method:'POST',body:{key:'children_enabled',value:next}});
+     childrenStatus.textContent=next?'Учёт детей включён.':'Учёт детей отключён, записи сохранены.';
+     childrenStatus.classList.add('ad-tl-setting-success');
+   }catch(err){
+     childrenCheck.checked=!next;childrenStatus.classList.remove('ad-tl-setting-success');
+     childrenStatus.textContent=err.message||'Не удалось сохранить настройку';
+   }finally{childrenCheck.disabled=false}
+ });
+ childrenPanel.append(childrenLabel,childrenStatus);guestPanel.append(childrenPanel);
+ host.append(guestPanel);
  function draw(){
    list.replaceChildren();actions.replaceChildren();
    for(const tag of tags){
