@@ -369,7 +369,7 @@ export async function activateGuestDirectory(root){
    const td=mk('td','ad-gb-edit-cell'),btn=mk('button','ad-gb-cell-edit');
    btn.type='button';const raw=s(p[key]);
    const labels=Object.fromEntries(options||[]);
-   btn.append(mk('span','',labels[raw]||raw||placeholder),mk('span','ad-gb-pencil','✎'));
+   btn.append(mk('span','ad-gb-cell-value',labels[raw]||raw||placeholder));
    btn.title='Изменить';td.append(btn);
    btn.addEventListener('click',()=>{
      if(editing)return;
@@ -396,7 +396,7 @@ export async function activateGuestDirectory(root){
    return td;
  }
  function render(){
-   metrics.replaceChildren();
+   hideClippedTooltip();metrics.replaceChildren();
    const current=people.filter(p=>p.status!=='archived');
    const actual=current.filter(eligible);
    const children=current.filter(isChild);
@@ -432,14 +432,63 @@ export async function activateGuestDirectory(root){
    const holder=mk('div','ad-gb-scroll'),table=mk('table','ad-gb-table'),thead=mk('thead'),tr=mk('tr');
    const headings=visibleColumns.map(key=>GUEST_TABLE_FIELDS.find(([field])=>field===key))
      .filter(Boolean).map(([key,label])=>[label,key]);
-   table.style.minWidth=Math.max(620,225+(headings.length-1)*160)+'px';
+   table.classList.toggle('ad-gb-rows-clipped',tableLayout.truncate&&tableLayout.row_height!==0);
+   table.classList.toggle('ad-gb-rows-wrapped',!tableLayout.truncate||tableLayout.row_height===0);
+   table.style.setProperty('--guest-row-height',(tableLayout.row_height||72)+'px');
+   table.style.setProperty('--guest-line-count',String(
+     tableLayout.row_height<=56?2:tableLayout.row_height<=72?3:tableLayout.row_height<=96?4:6
+   ));
+   const colgroup=mk('colgroup'),colWidths={},columnElements={};
+   for(const [,field] of headings){
+     colWidths[field]=tableLayout.widths[field]||GUEST_TABLE_WIDTHS[field]||180;
+     const col=mk('col');col.style.width=colWidths[field]+'px';columnElements[field]=col;colgroup.append(col);
+   }
+   const setPhysicalWidths=()=>{
+     for(const key of Object.keys(columnElements))columnElements[key].style.width=colWidths[key]+'px';
+     const total=Object.values(colWidths).reduce((sum,width)=>sum+width,0);
+     table.style.width=total+'px';table.style.minWidth=total+'px';
+   };
+   setPhysicalWidths();table.append(colgroup);
    for(const [label,key] of headings){
      const th=mk('th'),button=mk('button','ad-gb-th-sort',label+(sort.value===key?(descending?' ↓':' ↑'):''));
      button.type='button';button.title='Сортировать: '+label;
      button.addEventListener('click',()=>{
        if(sort.value===key)descending=!descending;else{sort.value=key;descending=false}
        direction.textContent=descending?'Я → А':'А → Я';render();saveSortMode();
-     });th.append(button);tr.append(th);
+     });
+     const resize=mk('span','ad-gb-col-resize');
+     resize.setAttribute('role','separator');resize.setAttribute('tabindex','0');
+     resize.setAttribute('aria-orientation','vertical');
+     resize.setAttribute('aria-label','Ширина: '+label);
+     resize.title='Потяните, чтобы изменить ширину столбца';
+     const persistWidth=()=>applyTableLayout({...tableLayout,widths:{...tableLayout.widths,
+       [key]:colWidths[key]}});
+     resize.addEventListener('pointerdown',ev=>{
+       if(ev.button!==0)return;ev.preventDefault();ev.stopPropagation();
+       const startX=ev.clientX,startWidth=colWidths[key];
+       resize.classList.add('ad-gb-col-resizing');
+       const move=event=>{
+         colWidths[key]=Math.max(100,Math.min(900,Math.round(startWidth+event.clientX-startX)));
+         setPhysicalWidths();hideClippedTooltip();
+       };
+       const end=()=>{
+         window.removeEventListener('pointermove',move);
+         window.removeEventListener('pointerup',end);
+         window.removeEventListener('pointercancel',end);
+         resize.classList.remove('ad-gb-col-resizing');
+         if(startWidth!==colWidths[key])persistWidth();
+       };
+       window.addEventListener('pointermove',move);
+       window.addEventListener('pointerup',end,{once:true});
+       window.addEventListener('pointercancel',end,{once:true});
+     });
+     resize.addEventListener('keydown',ev=>{
+       if(ev.key!=='ArrowLeft'&&ev.key!=='ArrowRight')return;
+       ev.preventDefault();ev.stopPropagation();
+       colWidths[key]=Math.max(100,Math.min(900,colWidths[key]+(ev.key==='ArrowRight'?20:-20)));
+       setPhysicalWidths();persistWidth();
+     });
+     th.append(button,resize);tr.append(th);
    }
    thead.append(tr);table.append(thead);
    const body=mk('tbody');
@@ -475,11 +524,13 @@ export async function activateGuestDirectory(root){
      const content=key==='status'?({'draft':'Черновик','invited':'Приглашён','registered':'Зарегистрирован','archived':'Архив'}[p[key]]||p[key]):
        key==='adults'||key==='children'?s(p[key]??'—'):s(p[key]);
      if(['about','about_en','private_notes','dietary_notes','other_notes'].includes(key)){
-       const preview=mk('button','ad-gb-text-preview',content.length>110?content.slice(0,107)+'…':content||'—');
-       preview.type='button';preview.title='Открыть карточку гостя';preview.addEventListener('click',()=>openGuest(p.id));
+       const preview=mk('button','ad-gb-text-preview');
+       const text=mk('span','ad-gb-cell-value',content||'—');
+       preview.type='button';preview.setAttribute('aria-label','Открыть профиль гостя');
+       preview.append(text);preview.addEventListener('click',()=>openGuest(p.id));
        td.append(preview);
      }else{
-       const span=mk('span','ad-gb-plain-value',content||'—');span.title=content;td.append(span);
+       const span=mk('span','ad-gb-plain-value ad-gb-cell-value',content||'—');td.append(span);
      }
      return td;
    }
@@ -497,6 +548,17 @@ export async function activateGuestDirectory(root){
      }
    }
    table.append(body);holder.append(table);list.append(holder);
+   table.addEventListener('pointerover',event=>{
+     const el=event.target.closest?.('.ad-gb-cell-value');
+     if(el&&table.contains(el))showClippedTooltip(el);
+   });
+   table.addEventListener('pointerout',hideClippedTooltip);
+   table.addEventListener('focusin',event=>{
+     const el=event.target.querySelector?.('.ad-gb-cell-value');
+     if(el)showClippedTooltip(el);
+   });
+   table.addEventListener('focusout',hideClippedTooltip);
+   holder.addEventListener('scroll',hideClippedTooltip,{passive:true});
    list.append(mk('p','ad-gb-count','Показано '+chosen.length+' из '+people.length));
  }
  function closeGuest(){
