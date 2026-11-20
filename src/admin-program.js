@@ -393,13 +393,29 @@ export async function renderWeddingProgram(host,api,days){
    const end=$('input');end.type='time';
    end.value=hm(item?.end_at)||(mins(start.value)!==null&&mins(start.value)+duration(item)<1440
      ?clock(mins(start.value)+duration(item)):'');
+   const parallel=$('select');
+   const free=$('option','','Не привязывать — время вручную');
+   free.value='';parallel.append(free);
+   for(const other of entriesFor('program')){
+     if(other.id===item?.id)continue;
+     const option=$('option','',hm(other.start_at)+' · '+other.title);
+     option.value=other.id;parallel.append(option);
+   }
+   const parallelField=field('Параллельно с',parallel);
    const startField=field('Начало',start),endField=field('Окончание',end);
    const timeHint=$('p','ad-tl-end-preview','');
    function updateVisible(){
      const enabled=placement.value==='program';
-     startField.hidden=!enabled;endField.hidden=!enabled;
+     parallelField.hidden=!enabled;startField.hidden=!enabled;endField.hidden=!enabled;
      start.required=enabled;end.required=enabled;
-     timeHint.textContent=enabled?'Время начала и окончания можно менять. Длительность синхронизируется автоматически.'
+     if(enabled&&!start.value){
+       const last=Math.max(780,...entriesFor('program')
+         .filter(other=>other.id!==item?.id)
+         .map(other=>mins(hm(other.end_at))??(mins(hm(other.start_at))??0)+duration(other)));
+       start.value=clock(Math.min(1380,last));
+       fromStartOrDuration();
+     }
+     timeHint.textContent=enabled?'Пересечения разрешены: мероприятия можно проводить одновременно. Начало и конец можно менять вручную.'
        :'У идеи есть длительность, но нет назначенного времени.';
    }
    function fromStartOrDuration(){
@@ -407,7 +423,13 @@ export async function renderWeddingProgram(host,api,days){
      if(a!==null&&Number.isInteger(d)&&d>=5&&d<=600&&a+d<1440)end.value=clock(a+d);
      else end.value='';
    }
-   start.addEventListener('change',fromStartOrDuration);
+   parallel.addEventListener('change',()=>{
+     const other=entries.find(x=>x.id===parallel.value);
+     if(!other)return;
+     start.value=hm(other.start_at);
+     fromStartOrDuration();
+   });
+   start.addEventListener('change',()=>{parallel.value='';fromStartOrDuration()});
    durationInput.addEventListener('change',fromStartOrDuration);
    end.addEventListener('change',()=>{
      const a=mins(start.value),b=mins(end.value);
@@ -428,7 +450,7 @@ export async function renderWeddingProgram(host,api,days){
    form.append(field('Название',name),field('Описание',description),field('Категория',category),
      field('Длительность, минут',durationInput),tagsField,
      field('Раздел',placement),
-     startField,endField,timeHint);
+     parallelField,startField,endField,timeHint);
    const feedback=$('p','ad-tl-form-error');feedback.setAttribute('role','alert');
    const buttons=$('div','ad-tl-modal-actions');
    const save=$('button','ad-tl-button ad-tl-primary','Сохранить');save.type='submit';
@@ -449,12 +471,6 @@ export async function renderWeddingProgram(host,api,days){
      if(isProgram&&endN>=1440){feedback.textContent='Событие должно завершиться до полуночи.';return}
      // An activity never changes its wedding day from within the card editor.
      const chosenDay=item?assignedDay(item):day;
-     if(isProgram){
-       const conflict=entries.find(x=>x.id!==item?.id&&scheduled(x)&&assignedDay(x)===chosenDay&&
-         startN<mins(hm(x.end_at)||clock(Math.min(1439,mins(hm(x.start_at))+duration(x))))&&
-         endN>mins(hm(x.start_at)));
-       if(conflict){feedback.textContent='Время пересекается с «'+conflict.title+'». Исправьте расписание.';return}
-     }
      const checked=[...tagBox.querySelectorAll('input:checked')].map(x=>x.value);
      const fields={
        title:name.value.trim(),notes:description.value.trim(),
