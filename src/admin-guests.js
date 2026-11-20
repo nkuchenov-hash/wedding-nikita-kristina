@@ -529,13 +529,13 @@ export async function activateGuestDirectory(root){
            if(forward===null)return;
            const reverse=prompt('Кем второй человек приходится первому?',link.relation_2_to_1||'');
            if(reverse===null)return;
-           try{await request('admin/guest/connections',{method:'PATCH',csrf,body:{id:link.id,relation_1_to_2:forward,relation_2_to_1:reverse}});await refreshRel()}
+           try{await request('admin/guest/connections',{method:'PATCH',csrf,body:{id:link.id,relation_1_to_2:forward,relation_2_to_1:reverse}});await refreshRel();await reloadData()}
            catch(err){notice(err.message,true)}
          });
          const remove=mk('button','ad-gb-small ad-gb-danger','Убрать связь');remove.type='button';
          remove.addEventListener('click',async()=>{
            if(!confirm('Удалить эту связь? Сами гости сохранятся.'))return;
-           try{await request('admin/guest/connections',{method:'DELETE',csrf,body:{id:link.id}});await refreshRel()}
+           try{await request('admin/guest/connections',{method:'DELETE',csrf,body:{id:link.id}});await refreshRel();await reloadData()}
            catch(err){notice(err.message,true)}
          });
          line.append(go,relation,edit,remove);relList.append(line);
@@ -554,7 +554,7 @@ export async function activateGuestDirectory(root){
        try{await request('admin/guest/connections',{method:'POST',csrf,body:{
          guest_id:id,other_guest_id:linkSelect.value,relation_to_other:s(relText.value),
          other_relation_to_guest:s(relBack.value),relation_type:'other'
-       }});relText.value='';relBack.value='';await refreshRel()}
+       }});relText.value='';relBack.value='';await refreshRel();await reloadData()}
        catch(err){notice(err.message,true)}finally{linkBtn.disabled=false}
      });
      const companions=mk('div','ad-gb-relations');household.append(mk('h4','','Сопровождающие'),companions);
