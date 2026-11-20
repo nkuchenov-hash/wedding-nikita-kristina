@@ -1,0 +1,65 @@
+name: Encrypted private guest snapshot for one-sheet reconciliation
+on:
+  push:
+    paths:
+      - 'backend/bin/export-guests-json.php'
+      - 'tools/guest-export-public-cert.pem'
+      - '.github/workflows/guest-export-encrypted.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: wedding-guest-export
+  cancel-in-progress: false
+jobs:
+  read_only_snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate read-only exporter
+        run: php -l backend/bin/export-guests-json.php
+      - name: Read live private SQLite and emit ONLY CMS-encrypted snapshot
+        shell: bash
+        env:
+          HOST: ${{ secrets.WEDDING_SFTP_HOST }}
+          USERNAME: ${{ secrets.WEDDING_SFTP_USER }}
+          SSH_KEY: ${{ secrets.WEDDING_SFTP_SSH_KEY }}
+          HOST_KEYS: ${{ secrets.WEDDING_SFTP_KNOWN_HOSTS }}
+          PORT: ${{ secrets.WEDDING_SFTP_PORT }}
+        run: |
+          set -euo pipefail
+          test -n "$HOST" && test -n "$USERNAME" && test -n "$SSH_KEY" && test -n "$HOST_KEYS"
+          : "${PORT:=22}"
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/wedding_guest_export"
+          printf '%s\n' "$HOST_KEYS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/wedding_guest_export" "$HOME/.ssh/known_hosts"
+          SSH_OPTS="-4 -i $HOME/.ssh/wedding_guest_export -p $PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -o ConnectionAttempts=2"
+          ROOT=/var/www/u3728035/data/wedding-private
+          ssh $SSH_OPTS "$USERNAME@$HOST" "set -eu; umask 077; mkdir -p '$ROOT/imports'; test -s '$ROOT/backend/src/core.php'"
+          scp -4 -i "$HOME/.ssh/wedding_guest_export" -P "$PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            backend/bin/export-guests-json.php \
+            "$USERNAME@$HOST:$ROOT/backend/bin/export-guests-json.php"
+          scp -4 -i "$HOME/.ssh/wedding_guest_export" -P "$PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            tools/guest-export-public-cert.pem \
+            "$USERNAME@$HOST:$ROOT/imports/guest-export-public-cert.pem"
+          ssh $SSH_OPTS "$USERNAME@$HOST" 'bash -se' <<'REMOTE'
+          set -euo pipefail
+          umask 077
+          ROOT=/var/www/u3728035/data/wedding-private
+          tmp="$ROOT/imports/guest-export-encrypted.cms"
+          cert="$ROOT/imports/guest-export-public-cert.pem"
+          trap 'rm -f "$tmp" "$cert"' EXIT
+          test -s "$cert"
+          php -l "$ROOT/backend/bin/export-guests-json.php" 1>&2
+          php "$ROOT/backend/bin/export-guests-json.php" |
+            gzip -c |
+            openssl smime -encrypt -binary -aes-256-cbc -outform DER -out "$tmp" "$cert"
+          test -s "$tmp"
+          echo 'ENCRYPTED_GUEST_SNAPSHOT_START'
+          base64 -w0 "$tmp"
+          echo
+          echo 'ENCRYPTED_GUEST_SNAPSHOT_END'
+          REMOTE
