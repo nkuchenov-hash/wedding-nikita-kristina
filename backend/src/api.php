@@ -132,7 +132,7 @@ function adminCollections(): array {
       'vendors'=>['category','name','contact','website','status','estimate_rub','contract_ref','notes'],
       'budget_lines'=>['category','description','planned_rub','committed_rub','paid_rub','due_at','vendor_id','notes'],
       'tasks'=>['title','description','status','priority','owner','due_at'],
-      'schedule_items'=>['title','start_at','end_at','place','notes','is_public','sort_order','venue_id','is_confirmed','stage','activity_type','duration_min','gap_before_min'],
+      'schedule_items'=>['title','start_at','end_at','place','notes','is_public','sort_order','venue_id','is_confirmed','stage','activity_type','duration_min','gap_before_min','activity_date','tags_json'],
       'menu_options'=>['category','title','description','allergens','active','sort_order'],
       'documents'=>['category','label','reference','visibility'],
     ];
@@ -152,12 +152,12 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $d=payload(16384);
         $allowed=['event_date','event_time','event_venue','venue_address','rsvp_deadline',
           'dress_code','transport_info','public_notes','menu_open','directory_open',
-          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','activity_types'];
+          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','activity_types','activity_tags'];
         $key=choice($d,'key',$allowed,'');
         if(!array_key_exists('value',$d))
             fail(422,'field','Значение настройки недопустимо');
         $value=$d['value'];
-        if($key==='activity_types'){
+        if(in_array($key,['activity_types','activity_tags'],true)){
             if(!is_array($value)||!array_is_list($value)||count($value)>30)
                 fail(422,'field','Неверный список типов активности');
             $seen=[];
@@ -560,7 +560,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
            count($ids)!==count(array_unique($ids,SORT_REGULAR)))
             fail(422,'schedule','Неверные параметры расписания');
         $all=all($db,"SELECT id,duration_min,gap_before_min FROM schedule_items
-            WHERE stage='program' AND substr(start_at,1,10)=?",[$day]);
+            WHERE stage='program' AND substr(start_at,1,10)=?",[$day,$day]);
         $byId=[];foreach($all as $event)$byId[$event['id']]=$event;
         if(count($ids)!==count($byId))fail(409,'schedule_changed','Программа изменилась. Обновите страницу');
         foreach($ids as $id)if(!is_string($id)||!isset($byId[$id]))
@@ -612,6 +612,20 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
                 catch(Throwable $e){fail(422,'field','Некорректный JSON');}
             }
             if($collection==='schedule_items'){
+                if($field==='activity_date' &&
+                   (!is_string($value)||!in_array($value,['2027-06-17','2027-06-18','2027-06-19'],true)))
+                    fail(422,'field','Выберите день свадьбы');
+                if($field==='tags_json'){
+                    if(!is_string($value))fail(422,'field','Неверный набор тегов');
+                    try{$tags=json_decode($value,true,16,JSON_THROW_ON_ERROR);}
+                    catch(Throwable $e){fail(422,'field','Неверный набор тегов');}
+                    if(!is_array($tags)||!array_is_list($tags)||count($tags)>30||
+                        count(array_unique($tags,SORT_REGULAR))!==count($tags))
+                        fail(422,'field','Неверный набор тегов');
+                    foreach($tags as $tag)if(!is_string($tag)||
+                      !preg_match('/^[a-z][a-z0-9_-]{0,31}$/',$tag))
+                        fail(422,'field','Неверный идентификатор тега');
+                }
                 if($field==='stage' && !in_array($value,['idea','program'],true))
                     fail(422,'field','Неизвестный статус активности');
                 if($field==='activity_type' && (!is_string($value)||!preg_match('/^[a-z][a-z0-9_-]{0,31}$/',$value)))
