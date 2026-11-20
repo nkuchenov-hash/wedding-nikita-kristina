@@ -1,0 +1,75 @@
+/* Private wedding-program editor. Scoped to the existing admin's live-data area. */
+.ad-live-panel.ad-timeline-page{padding:0;margin:0;background:transparent;border:0;box-shadow:none;max-width:none;color:#213a2e}
+.ad-tl-header{display:flex;justify-content:space-between;align-items:end;gap:20px;padding:2px 0 26px;border-bottom:1px solid #dce6df}
+.ad-tl-kicker{color:#738b7a;font-size:11px;font-weight:800;letter-spacing:.17em}
+.ad-tl-header h1{font:normal clamp(30px,4vw,47px)/1.1 Georgia,"Times New Roman",serif;color:#214631;letter-spacing:-.035em;margin:7px 0 10px}
+.ad-tl-header p{font-size:14px;line-height:1.65;color:#697b6d;margin:0;max-width:640px}
+.ad-tl-top-actions{display:flex;flex-wrap:wrap;gap:9px}
+.ad-tl-button{font:650 12px/1.3 Manrope,system-ui,sans-serif;border:1px solid #cfddd1;background:white;color:#345c41;padding:10px 13px;border-radius:10px;cursor:pointer;white-space:nowrap;transition:background .12s ease,transform .12s ease;max-width:100%}
+.ad-tl-button:hover{background:#eef6ee}
+.ad-tl-button:focus-visible,.ad-tl-field input:focus-visible,.ad-tl-field select:focus-visible,.ad-tl-field textarea:focus-visible{outline:2px solid #407651;outline-offset:2px}
+.ad-tl-button:disabled{opacity:.4;cursor:not-allowed}
+.ad-tl-primary{background:#255c3b;border-color:#255c3b;color:white}
+.ad-tl-primary:hover{background:#194b2d}
+.ad-tl-secondary{background:#f3f8f2}
+.ad-tl-muted{color:#7c807b;background:transparent;border-color:transparent}
+.ad-tl-green{background:#e6f2e7;color:#225634;border-color:#d3e6d5}
+.ad-tl-layout{display:grid;grid-template-columns:minmax(275px,335px) minmax(0,1fr);gap:22px;align-items:start;margin-top:25px}
+.ad-tl-pool,.ad-tl-timeline{min-width:0;border:1px solid #dbe5dc;border-radius:18px;padding:20px;background:#fff;box-shadow:0 7px 28px #204c3210}
+.ad-tl-pool{background:#f7faf6;position:sticky;top:14px;max-height:calc(100vh - 28px);display:flex;flex-direction:column}
+.ad-tl-section-head{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.ad-tl-section-head h2{font:normal 26px/1.2 Georgia,serif!important;letter-spacing:-.025em;margin:0!important;color:#294b34}
+.ad-tl-count{background:#e4eee5;color:#315d3d;padding:4px 10px;border-radius:99px;font-weight:700;font-size:12px}
+.ad-tl-help{font:400 12px/1.6 Manrope,system-ui,sans-serif;color:#718274;margin:10px 0 19px}
+.ad-tl-pool-list{overflow-y:auto;min-height:70px;display:flex;flex-direction:column;gap:12px;padding-right:3px}
+.ad-tl-timeline{padding:22px}
+.ad-tl-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:22px 0 15px;background:#f0f5ef;border-radius:12px;padding:5px}
+.ad-tl-tab{flex:1;min-width:95px;background:transparent;border:0}
+.ad-tl-tab.active{background:#fff;color:#24563a;box-shadow:0 1px 7px #294f311a}
+.ad-tl-summary{display:flex;flex-wrap:wrap;gap:10px 23px;font-size:12px;color:#6b806f;border-bottom:1px solid #e5ede5;padding:0 0 18px}
+.ad-tl-track{position:relative;min-height:230px;padding:18px 0 20px 33px;display:flex;flex-direction:column;gap:15px}
+.ad-tl-track:before{content:"";position:absolute;top:0;bottom:0;left:13px;width:2px;background:linear-gradient(#9bbca1,#dfeadf)}
+.ad-tl-target-over{outline:2px dashed #4d9465;outline-offset:5px;border-radius:12px}
+.ad-tl-card{position:relative;min-width:0;border:1px solid #e0e6df;border-left:5px solid var(--activity-color);border-radius:12px;background:linear-gradient(105deg,var(--activity-color),#fff 70%);padding:15px 16px 13px;box-shadow:0 2px 10px #28442f0b;cursor:grab;transition:box-shadow .14s ease,transform .14s ease}
+.ad-tl-card:hover{box-shadow:0 7px 22px #28442f17}
+.ad-tl-track>.ad-tl-card:before{content:"";position:absolute;left:-27px;top:23px;width:13px;height:13px;background:var(--activity-color);border:3px solid #fff;outline:1px solid #91b79c;border-radius:50%}
+.ad-tl-dragging{opacity:.55;cursor:grabbing}
+.ad-tl-over{outline:2px dashed #27683e;outline-offset:4px}
+.ad-tl-card-eyebrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.ad-tl-type{display:inline-block;background:#ffffffba;border:1px solid #ffffffa0;padding:4px 8px;border-radius:20px;color:#405646;font-size:10px;font-weight:750}
+.ad-tl-length{margin-left:auto;color:#6c786e;font-size:11px}
+.ad-tl-card-title{font:600 16px/1.35 Manrope,system-ui,sans-serif!important;color:#284532;margin:11px 0 7px!important;overflow-wrap:anywhere}
+.ad-tl-card-description{color:#586b5e;font-size:12px;line-height:1.55;margin:0 0 10px;white-space:pre-line;overflow-wrap:anywhere}
+.ad-tl-card .ad-tl-place,.ad-tl-break{display:block;color:#607665;font-size:11px;margin-top:7px}
+.ad-tl-clock{font:750 16px/1.25 Manrope,system-ui,sans-serif;color:#234b34;margin:0 0 10px;letter-spacing:.005em}
+.ad-tl-card-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:12px;border-top:1px solid #ffffffba;padding-top:10px}
+.ad-tl-card-actions .ad-tl-button{font-size:11px;padding:6px 9px}
+.ad-tl-card-actions .ad-tl-icon{font-size:16px;line-height:1;min-width:28px;padding:5px}
+.ad-tl-empty{font-size:13px;line-height:1.6;color:#87968a;background:#f6faf5;padding:18px;border:1px dashed #cfded0;border-radius:12px;margin:0}
+.ad-tl-track .ad-tl-empty{margin-top:18px}
+.ad-tl-notice{background:#f2f7f1;color:#366147;font-size:13px;line-height:1.5;border:1px solid #dce9de;padding:13px 16px;border-radius:12px;margin:18px 0 0}
+.ad-tl-warning{color:#925a22;border:1px solid #ead8b7;background:#fff8ed;border-radius:10px;padding:12px;font-size:12px}
+.ad-tl-modal-cover{position:fixed;inset:0;z-index:12000;background:#14251bb8;display:flex;justify-content:center;align-items:center;padding:20px;overflow:auto}
+.ad-tl-modal{background:#fff;border-radius:19px;width:min(100%,660px);max-height:calc(100vh - 35px);overflow:auto;padding:26px;box-shadow:0 25px 80px #061a1190}
+.ad-tl-modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:17px}
+.ad-tl-modal h2{font:normal 26px/1.2 Georgia,serif!important;color:#234b32;margin:0!important}
+.ad-tl-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 17px}
+.ad-tl-field{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:700;color:#47634e;min-width:0}
+.ad-tl-field>span{line-height:1.4}
+.ad-tl-field input,.ad-tl-field textarea,.ad-tl-field select{width:100%;min-width:0;max-width:100%;border:1px solid #cfdfd2;background:#fff;color:#234330;border-radius:9px;padding:11px 12px;font:400 14px/1.4 Manrope,system-ui,sans-serif}
+.ad-tl-field textarea{resize:vertical;min-height:100px}
+.ad-tl-field:has(textarea){grid-column:1/-1}
+.ad-tl-field[hidden]{display:none}
+.ad-tl-field.ad-tl-checkbox{flex-direction:row;align-items:center;gap:10px}
+.ad-tl-checkbox input{width:16px;height:16px;order:1}
+.ad-tl-end-preview{color:#3d694e;margin:4px 0;font-size:12px;align-self:center}
+.ad-tl-modal-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.ad-tl-form-error{grid-column:1/-1;font-size:12px;color:#b04437;line-height:1.5}
+.ad-tl-types{display:flex;flex-direction:column;gap:9px;max-height:50vh;overflow:auto}
+.ad-tl-type-row{display:flex;align-items:center;gap:10px}
+.ad-tl-type-row input:not([type=color]){flex:1;min-width:0;border:1px solid #d4e0d6;border-radius:9px;padding:10px;font:inherit}
+.ad-tl-type-row input[type=color]{width:44px;height:42px;border:0;background:none;cursor:pointer}
+@media(max-width:1050px){.ad-tl-layout{grid-template-columns:minmax(230px,290px) minmax(0,1fr);gap:13px}.ad-tl-pool,.ad-tl-timeline{padding:15px}}
+@media(max-width:760px){.ad-tl-layout{grid-template-columns:minmax(0,1fr)}.ad-tl-pool{position:static;max-height:none}.ad-tl-pool-list{overflow:visible;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ad-tl-header{align-items:start;flex-direction:column}.ad-tl-top-actions{width:100%}.ad-tl-top-actions .ad-tl-button{flex:1}.ad-tl-track{padding-left:26px}.ad-tl-track:before{left:9px}.ad-tl-track>.ad-tl-card:before{left:-24px}}
+@media(max-width:480px){.ad-tl-pool-list{grid-template-columns:1fr}.ad-tl-modal{padding:17px}.ad-tl-form{grid-template-columns:1fr}.ad-tl-field:has(textarea){grid-column:auto}.ad-tl-modal-actions{grid-column:auto}.ad-tl-form-error{grid-column:auto}.ad-tl-tabs{gap:3px}.ad-tl-tab{min-width:80px;padding:9px 7px}.ad-tl-header h1{font-size:32px}.ad-tl-track{padding-right:2px}}
+@media(prefers-reduced-motion:reduce){.ad-tl-card,.ad-tl-button{transition:none}}
