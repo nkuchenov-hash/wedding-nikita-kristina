@@ -104,6 +104,27 @@ test('roster has no pencil icons and exposes true table resizers and tooltip for
  assert.match(css,/\.ad-gb-table\.ad-gb-rows-clipped \.ad-gb-cell-value\{/);
 });
 
+test('birthplace and residence are distinct columns and neither has a misleading region label',async()=>{
+ const ui=await readFile(new URL('../src/admin-guests.js',import.meta.url),'utf8');
+ const {GUEST_TABLE_FIELDS}=await import('../src/admin-guests.js');
+ const byKey=new Map(GUEST_TABLE_FIELDS);
+ assert.equal(byKey.get('city'),'Город проживания');
+ assert.equal(byKey.get('birth_city'),'Город рождения');
+ assert.equal(byKey.get('country'),'Страна проживания');
+ assert.equal(byKey.get('birth_country'),'Страна рождения');
+ assert.equal(byKey.has('origin_place'),false);
+ assert.equal(byKey.has('origin_country'),false);
+ assert.deepEqual(normalizeGuestTableColumns(['city','origin_place','origin_country']),[
+   'display_name','city','birth_city','birth_country'
+ ]);
+ assert.doesNotMatch(ui,/Город \/ регион/);
+ assert.doesNotMatch(ui,/Где живёт сейчас — город \/ регион/);
+ const main=ui.slice(ui.indexOf("const basics=group('О человеке'"),ui.indexOf("basics.classList.add"));
+ for(const field of ['birth_city','birth_country','city','country'])
+   assert.ok(main.includes("['"+field+"'"));
+ assert.ok(!ui.includes('ad-gb-birth-details'));
+});
+
 test('guest identity and biography precede collapsed organizer invitation fields',async()=>{
  const js=await readFile(new URL('../src/admin-guests.js',import.meta.url),'utf8');
  const start=js.indexOf("const basics=group('О человеке'");
@@ -111,7 +132,7 @@ test('guest identity and biography precede collapsed organizer invitation fields
  const organizational=js.indexOf("const adminDetails=mk('details'",bio);
  assert.ok(start>0&&bio>start&&organizational>bio);
  const main=js.slice(start,bio);
- for(const field of ['relation_to_couple','community','origin_place','origin_country','city','country'])
+ for(const field of ['relation_to_couple','community','birth_city','birth_country','city','country'])
    assert.match(main,new RegExp("'"+field+"'"));
  for(const field of ['planning_status','age_group','plus_one_allowed','decision','side'])
    assert.doesNotMatch(main,new RegExp("'"+field+"'"));
@@ -125,7 +146,7 @@ test('guest identity is free of organizer-only fields, which appear at the end o
  for(const field of ['planning_status','age_group','plus_one_allowed','decision','side']){
    assert.doesNotMatch(first,new RegExp("\\['"+field+"'"));
  }
- for(const field of ['relation_to_couple','community','origin_place','origin_country','city','country']){
+ for(const field of ['relation_to_couple','community','birth_city','birth_country','city','country']){
    assert.match(first,new RegExp("\\['"+field+"'"));
  }
  const biography=ui.indexOf("const bio=group('Профиль гостя'");
