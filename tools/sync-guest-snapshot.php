@@ -64,7 +64,7 @@ try {
     foreach(all($db,"SELECT entity_id FROM audit_log
              WHERE actor_type='admin' AND entity_type='guest' AND created_at>?",[$cutoff]) as $entry)
         $manual[(string)$entry['entity_id']]=true;
-    $notesChanged=['P042'=>true,'P114'=>true,'P118'=>true,'P127'=>true,'P129'=>true];
+    $notesChanged=['P003'=>true,'P042'=>true,'P048'=>true,'P049'=>true,'P050'=>true,'P067'=>true,'P068'=>true,'P114'=>true,'P118'=>true,'P127'=>true,'P129'=>true];
     $seatingChanged=['P118'=>true,'P129'=>true];
     foreach($items as $pid=>$source){
         if($source['Сторона']!=='Никита')continue; // Kristina updates her own guests.
