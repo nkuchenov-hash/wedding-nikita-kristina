@@ -45,6 +45,21 @@ export function cardColorStyle(item,definitions){
 }
 
 
+// Editable timeline viewport for each wedding date; not a hard event constraint.
+export const DEFAULT_DAY_HOURS={
+ '2027-06-17':{from:'11:00',to:'22:00'},
+ '2027-06-18':{from:'10:00',to:'23:00'},
+ '2027-06-19':{from:'12:00',to:'23:00'}
+};
+export function displayHoursForDay(date,saved){
+ const fallback=DEFAULT_DAY_HOURS[date]||{from:'09:00',to:'23:00'};
+ const value=saved?.[date];
+ const pattern=/^([01]\\d|2[0-3]):[0-5]\\d$/;
+ if(!value||!pattern.test(value.from)||!pattern.test(value.to))return {...fallback};
+ const from=mins(value.from),to=mins(value.to);
+ return from!==null&&to!==null&&to-from>=60?{from:value.from,to:value.to}:{...fallback};
+}
+
 // One fixed vertical time scale keeps start/end and stretch height in sync.
 export function cardDescription(item,isScheduled){
  const notes=String(item?.notes||'');
@@ -87,7 +102,7 @@ export function parallelEventLayout(items){
 }
 
 export async function renderWeddingProgram(host,api,days){
- let entries=[],tags=[],day='2027-06-19',view='program';
+ let entries=[],tags=[],day='2027-06-19',view='program',programDisplay='timeline',dayHours={...DEFAULT_DAY_HOURS};
  let filter='all',notification='',busy=false;
  const timelineScrollByDay=new Map();
  const dateName=value=>days.find(d=>d.date===value)?.label||value;
@@ -102,6 +117,7 @@ export async function renderWeddingProgram(host,api,days){
    ]);
    entries=(records.items||[]).filter(e=>e&&typeof e.title==='string');
    tags=Array.isArray(settings.settings?.activity_tags)?settings.settings.activity_tags.map(t=>({...t})):[];
+   dayHours=settings.settings?.program_day_hours||DEFAULT_DAY_HOURS;
  }
  async function reload(message=''){notification=message;await load();render();}
  async function saveSlot(item,startMinute,newLength,success='Время обновлено.'){
@@ -275,21 +291,17 @@ export async function renderWeddingProgram(host,api,days){
      pills.setAttribute('aria-label','Теги');
      node.append(pills);
    }
-   if(view==='program')attachTimelineHandles(node,item,clockLabel,lengthLabel);
+   if(view==='program'&&programDisplay==='timeline')attachTimelineHandles(node,item,clockLabel,lengthLabel);
    return node;
  }
  function renderTimeline(items){
    const container=$('section','ad-tl-calendar');
-   if(!items.length){
-     container.append($('div','ad-tl-empty','Для этого дня программа пока не составлена.'));
-     return container;
-   }
    const layout=parallelEventLayout(items);
-   const earliest=Math.min(...layout.map(x=>x.start));
-   const latest=Math.max(...layout.map(x=>x.end));
-   const axisStart=Math.max(0,Math.floor((earliest-75)/30)*30);
-   const axisEnd=Math.min(1440,Math.max(axisStart+180,Math.ceil((latest+90)/30)*30));
+   const interval=displayHoursForDay(day,dayHours);
+   const axisStart=mins(interval.from),axisEnd=mins(interval.to);
    const height=(axisEnd-axisStart)*MINUTE_PX;
+   const visible=layout.filter(slot=>slot.end>axisStart&&slot.start<axisEnd);
+   const outside=layout.length-visible.length;
    const scroller=$('div','ad-tl-calendar-scroll');
    scroller.setAttribute('aria-label','Расписание по часам с параллельными дорожками');
    const grid=$('div','ad-tl-calendar-grid');
@@ -305,13 +317,15 @@ export async function renderWeddingProgram(host,api,days){
      line.style.top=top+'px';board.append(line);
    }
    const byId=new Map(items.map(x=>[x.id,x]));
-   for(const slot of layout){
+   for(const slot of visible){
      const item=byId.get(slot.id);
      if(!item)continue;
      const tile=card(item,items);
      tile.classList.add('ad-tl-calendar-card');
-     tile.style.top=((slot.start-axisStart)*MINUTE_PX)+'px';
-     tile.style.height=((slot.end-slot.start)*MINUTE_PX)+'px';
+     // Clip entries that cross the configured visible-hour boundary.
+     const shownStart=Math.max(slot.start,axisStart),shownEnd=Math.min(slot.end,axisEnd);
+     tile.style.top=((shownStart-axisStart)*MINUTE_PX)+'px';
+     tile.style.height=((shownEnd-shownStart)*MINUTE_PX)+'px';
      tile.style.left=(slot.lane/slot.laneCount*100)+'%';
      tile.style.width='calc('+(100/slot.laneCount)+'% - 8px)';
      tile.setAttribute('data-parallel-lane',String(slot.lane));
@@ -321,13 +335,16 @@ export async function renderWeddingProgram(host,api,days){
    }
    grid.append(board);scroller.append(grid);container.append(scroller);
    const footer=$('p','ad-tl-timeline-foot',
-     clock(earliest)+'–'+clock(latest)+' · '+items.length+' событий · '+
-     (layout.some(x=>x.laneCount>1)?'Есть параллельные активности':'Без пересечений'));
+     interval.from+'–'+interval.to+' · '+visible.length+' событий'+
+     (layout.some(x=>x.laneCount>1)?' · Есть параллельные активности':''));
    container.append(footer);
+   if(!items.length)container.append($('p','ad-tl-help','Для этого дня программа пока не составлена.'));
+   if(outside)container.append($('p','ad-tl-warning',
+     'За пределами выбранных часов: '+outside+' событий. Измените интервал в общих настройках, чтобы увидеть их на таймлайне.'));
    // Initial scroll keeps the first event in sight without a blank prelude.
    const savedScroll=timelineScrollByDay.has(day)
      ?timelineScrollByDay.get(day)
-     :Math.max(0,(earliest-axisStart)*MINUTE_PX-84);
+     :Math.max(0,((visible[0]?.start??axisStart)-axisStart)*MINUTE_PX-84);
    // The scrollable element receives real dimensions only after it joins the DOM.
    requestAnimationFrame(()=>{
      if(scroller.isConnected)scroller.scrollTop=savedScroll;
@@ -383,7 +400,24 @@ export async function renderWeddingProgram(host,api,days){
    }
    const visibleRows=current.filter(visible);
    if(view==='program'){
-     host.append(renderTimeline(visibleRows));
+     const modes=$('div','ad-tl-display-modes');
+     modes.setAttribute('role','group');
+     modes.setAttribute('aria-label','Вид программы');
+     for(const [mode,label] of [['timeline','Таймлайн'],['list','Список']]){
+       const btn=makeButton(label,()=>{
+         programDisplay=mode;render();
+       },'ad-tl-display-option'+(programDisplay===mode?' is-active':''));
+       btn.setAttribute('aria-pressed',String(programDisplay===mode));
+       modes.append(btn);
+     }
+     host.append(modes);
+     if(programDisplay==='timeline')host.append(renderTimeline(visibleRows));
+     else{
+       const list=$('div','ad-tl-single-content ad-tl-ideas-grid ad-tl-program-list');
+       if(!visibleRows.length)list.append($('div','ad-tl-empty','Для этого дня программа пока не составлена.'));
+       else for(const item of visibleRows)list.append(card(item,current));
+       host.append(list);
+     }
    }else{
      const content=$('div','ad-tl-single-content ad-tl-ideas-grid');
      if(!visibleRows.length)content.append($('div','ad-tl-empty',
