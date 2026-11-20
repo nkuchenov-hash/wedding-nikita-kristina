@@ -53,6 +53,17 @@ if(!in_array('venue_id',array_column($scheduleColumns,'name'),true))
     $database->exec("ALTER TABLE schedule_items ADD COLUMN venue_id TEXT NOT NULL DEFAULT ''");
 if(!in_array('is_confirmed',array_column($scheduleColumns,'name'),true))
     $database->exec("ALTER TABLE schedule_items ADD COLUMN is_confirmed INTEGER NOT NULL DEFAULT 0");
+
+if(!in_array('stage',array_column($scheduleColumns,'name'),true)){
+    $database->exec("ALTER TABLE schedule_items ADD COLUMN stage TEXT NOT NULL DEFAULT 'idea'");
+    // Preserve timed existing events as scheduled; date-only notes stay in the idea pool.
+    $database->exec("UPDATE schedule_items SET stage='program' WHERE start_at GLOB '????-??-??T??:??*'");
+}
+if(!in_array('activity_type',array_column($scheduleColumns,'name'),true))
+    $database->exec("ALTER TABLE schedule_items ADD COLUMN activity_type TEXT NOT NULL DEFAULT 'other'");
+if(!in_array('duration_min',array_column($scheduleColumns,'name'),true))
+    $database->exec("ALTER TABLE schedule_items ADD COLUMN duration_min INTEGER NOT NULL DEFAULT 30");
+$database->exec("CREATE INDEX IF NOT EXISTS idx_schedule_stage_date ON schedule_items(stage,start_at,sort_order)");
 $tables=(int)$database->query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")->fetchColumn();
 chmod($root.'/wedding.sqlite3',0600);
 foreach(['-wal','-shm'] as $suffix)if(is_file($root.'/wedding.sqlite3'.$suffix))
