@@ -43,7 +43,10 @@ test('the day is primary navigation with program and idea sub-tabs',()=>{
  assert.match(source,/assignedDay\(e\)===day&&\(which==='program'\?scheduled\(e\):!scheduled\(e\)\)/);
  assert.match(source,/id==='program'\?scheduled\(e\):!scheduled\(e\)/);
  assert.match(source,/activity_date:chosenDay/);
- assert.match(source,/dayField\.hidden=false/);
+ assert.match(source,/const chosenDay=item\?assignedDay\(item\):day/);
+ assert.doesNotMatch(source,/targetDay/);
+ assert.doesNotMatch(source,/dayField/);
+ assert.doesNotMatch(source,/День мероприятия/);
  assert.match(source,/field\('Начало',start\)/);
  assert.match(source,/field\('Окончание',end\)/);
  assert.match(source,/card\(item,rows\)/);
