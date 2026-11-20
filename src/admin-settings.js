@@ -1,3 +1,4 @@
+import {showAdminToast} from './admin-toast.js';
 import {itemTags,DEFAULT_DAY_HOURS,displayHoursForDay} from './admin-program.js';
 import {GUEST_TABLE_FIELDS,DEFAULT_GUEST_TABLE_COLUMNS,normalizeGuestTableColumns} from './admin-guests.js';
 const $=(tag,cls='',value)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(value!==undefined)e.textContent=String(value);return e};
@@ -59,11 +60,9 @@ export async function renderWeddingSettings(host,api){
    saving=true;saveHours.disabled=true;
    try{
      await api('admin/settings',{method:'POST',body:{key:'program_day_hours',value}});
-     hourStatus.textContent='Интервалы сохранены. Они применятся к таймлайну при открытии программы.';
-     hourStatus.classList.add('ad-tl-setting-success');
+     showAdminToast('Интервалы часов сохранены.');
    }catch(error){
-     hourStatus.classList.remove('ad-tl-setting-success');
-     hourStatus.textContent=error.message||'Не удалось сохранить часы.';
+     showAdminToast(error.message||'Не удалось сохранить часы.',{kind:'error'});
    }finally{saving=false;saveHours.disabled=false}
  },'ad-tl-primary');
  hourActions.append(saveHours);
@@ -84,8 +83,8 @@ export async function renderWeddingSettings(host,api){
    try{
      await api('admin/settings',{method:'POST',body:{key:'guest_sort_mode',
        value:checked?'connections':'alphabetical'}});
-     groupResult.textContent='Сохранено';
-   }catch(error){groupCheck.checked=!checked;groupResult.textContent=error.message||'Ошибка сохранения'}
+     showAdminToast('Настройка группировки гостей сохранена.');
+   }catch(error){groupCheck.checked=!checked;showAdminToast(error.message||'Ошибка сохранения',{kind:'error'})}
    finally{groupCheck.disabled=false}
  });
  groupMode.append(groupLabel,groupResult);guestPanel.append(groupMode);
@@ -99,11 +98,9 @@ export async function renderWeddingSettings(host,api){
    savingGuests=true;saveGuest.disabled=true;
    try{
      await api('admin/settings',{method:'POST',body:{key:'guest_table_columns',value:chosen}});
-     guestNotice.textContent='Сохранено. Выбранные поля появятся в списке гостей.';
-     guestNotice.classList.add('ad-tl-setting-success');
+     showAdminToast('Столбцы списка гостей сохранены.');
    }catch(err){
-     guestNotice.classList.remove('ad-tl-setting-success');
-     guestNotice.textContent=err.message||'Не удалось сохранить столбцы';
+     showAdminToast(err.message||'Не удалось сохранить столбцы',{kind:'error'});
    }finally{savingGuests=false;saveGuest.disabled=false}
  },'ad-tl-primary');
  const resetGuest=button('Сбросить',()=>{chosen=[...DEFAULT_GUEST_TABLE_COLUMNS];drawGuestRows()},'ad-tl-muted');
@@ -155,11 +152,10 @@ export async function renderWeddingSettings(host,api){
    childrenCheck.disabled=true;
    try{
      await api('admin/settings',{method:'POST',body:{key:'children_enabled',value:next}});
-     childrenStatus.textContent=next?'Учёт детей включён.':'Учёт детей отключён, записи сохранены.';
-     childrenStatus.classList.add('ad-tl-setting-success');
+     showAdminToast(next?'Учёт детей включён.':'Учёт детей отключён.');
    }catch(err){
-     childrenCheck.checked=!next;childrenStatus.classList.remove('ad-tl-setting-success');
-     childrenStatus.textContent=err.message||'Не удалось сохранить настройку';
+     childrenCheck.checked=!next;
+     showAdminToast(err.message||'Не удалось сохранить настройку',{kind:'error'});
    }finally{childrenCheck.disabled=false}
  });
  childrenPanel.append(childrenLabel,childrenStatus);guestPanel.append(childrenPanel);
@@ -197,9 +193,8 @@ export async function renderWeddingSettings(host,api){
      try{
        await api('admin/settings',{method:'POST',body:{key:'activity_tags',
          value:tags.map(x=>({id:x.id,label:x.label.trim(),color:color(x.color)}))}});
-       message.textContent='Теги сохранены. Цвета карточек обновлены в базе.';
-       message.classList.add('ad-tl-setting-success');
-     }catch(err){message.classList.remove('ad-tl-setting-success');message.textContent=err.message||'Ошибка сохранения'}
+       showAdminToast('Теги сохранены.');
+     }catch(err){showAdminToast(err.message||'Ошибка сохранения',{kind:'error'})}
      finally{saving=false;save.disabled=false}
    },'ad-tl-primary');
    actions.append(save);
