@@ -152,7 +152,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $d=payload(16384);
         $allowed=['event_date','event_time','event_venue','venue_address','rsvp_deadline',
           'dress_code','transport_info','public_notes','menu_open','directory_open',
-          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','guest_table_columns','activity_types','activity_tags','program_day_hours'];
+          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','guest_table_columns','guest_sort_mode','activity_types','activity_tags','program_day_hours'];
         $key=choice($d,'key',$allowed,'');
         if(!array_key_exists('value',$d))
             fail(422,'field','Значение настройки недопустимо');
@@ -169,6 +169,9 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
                    isset($seen[$type['id']]))fail(422,'field','Некорректный тип активности');
                 $seen[$type['id']]=true;
             }
+        } elseif($key==='guest_sort_mode'){
+            if(!in_array($value,['alphabetical','connections'],true))
+                fail(422,'field','Недопустимый порядок гостей');
         } elseif($key==='guest_table_columns'){
             $columns=['display_name','first_name','last_name','name_en','planning_status','age_group',
                 'side','relation_to_couple','relationship','community','seating_group','decision',
@@ -349,7 +352,14 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
             LEFT JOIN guest_profile_details p ON p.guest_id=g.id
             LEFT JOIN guest_progress t ON t.guest_id=g.id
             ORDER BY g.display_name LIMIT 1500");
-        json(['ok'=>true,'guests'=>$items,'children_enabled'=>childrenEnabled($db),
+        // Only links between existing records. No private relationship narratives are exposed.
+        $links=all($db,"SELECT r.guest_id_1,r.guest_id_2,r.relation_type,
+            r.relation_1_to_2,r.relation_2_to_1
+            FROM guest_relationships r
+            JOIN guests a ON a.id=r.guest_id_1
+            JOIN guests b ON b.id=r.guest_id_2
+            ORDER BY r.id LIMIT 3000");
+        json(['ok'=>true,'guests'=>$items,'relationships'=>$links,'children_enabled'=>childrenEnabled($db),
            'revision'=>(int)$db->query('SELECT COALESCE(MAX(id),0) FROM audit_log')->fetchColumn()]);
     }
     if($route==='admin/guest-profile' && $method==='GET'){
