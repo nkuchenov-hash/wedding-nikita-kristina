@@ -1,3 +1,4 @@
+import {showAdminToast} from './admin-toast.js';
 // Wedding admin: day-first program and idea pool; same authenticated SQLite source.
 const $=(tag,className='',value)=>{
  const node=document.createElement(tag);
@@ -390,11 +391,9 @@ export async function renderWeddingProgram(host,api,days){
    sectionControls.append(daysBar,nav);
    host.append(sectionControls);
    if(notification){
-     document.querySelector('.ad-tl-toast')?.remove();
-     const toast=$('div','ad-tl-toast',notification);
-     toast.setAttribute('role','status');
-     document.body.append(toast);
-     setTimeout(()=>toast.remove(),3800);
+     showAdminToast(notification,{
+       kind:/^(Не удалось|Время выходит|Ошибка)/.test(notification)?'error':'success'
+     });
      notification='';
    }
    const current=entriesFor(view);
