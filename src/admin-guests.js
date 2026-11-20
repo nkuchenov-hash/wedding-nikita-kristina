@@ -598,39 +598,27 @@ export async function activateGuestDirectory(root){
      }catch(err){feedback.textContent=err.message}finally{btn.disabled=false}
    });
  }
- function exportCsv(){
-   if(!people.length)return;
-   const fields=[['source_person_id','ID'],['display_name','Гость'],['name_en','Имя EN'],['planning_status','Список'],['age_group','Возраст'],['side','Сторона'],
-     ['relation_to_couple','Кем приходится'],['relationship','Связи'],['seating_group','Рассадка'],
-     ['decision','Решение'],['invitation_sent_at','Отправлено'],
-     ['attendance','RSVP'],['adults','Взрослые'],['children','Дети'],['plus_one_allowed','Можно +1'],
-     ['city','Город'],['phone','Телефон'],['email','Email'],
-     ['community','Круг'],['about','О человеке'],['about_en','О человеке EN'],['private_notes','Заметки']];
-   const safe=v=>{let t=s(v);if(/^[=+\-@\t\r]/.test(t))t="'"+t;return '"'+t.replace(/"/g,'""')+'"';};
-   const contents='\uFEFF'+[fields.map(x=>safe(x[1])).join(';'),...people.map(p=>fields.map(([k])=>safe(p[k])).join(';'))].join('\r\n');
-   const url=URL.createObjectURL(new Blob([contents],{type:'text/csv;charset=utf-8'}));
-   const a=mk('a');a.href=url;a.download='wedding-guests-export.csv';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
- }
  for(const x of [search,side,filter,sort])x.addEventListener(x===search?'input':'change',render);
  direction.addEventListener('click',()=>{descending=!descending;direction.textContent=descending?'Я → А':'А → Я';render()});
- childrenToggle.addEventListener('click',async()=>{
-   if(!csrf)return;
-   const next=!childrenEnabled;
-   const message=next?'Включить детей обратно в расчёты и анкеты?':
-     'Отключить детей во всех активных приглашениях и расчётах? Данные детей сохранятся.';
-   if(!confirm(message))return;
-   childrenToggle.disabled=true;
-   try{
-     await request('admin/settings',{method:'POST',csrf,body:{key:'children_enabled',value:next}});
-     await reloadData();notice(next?'Участие детей включено':'Участие детей отключено. Записи сохранены.');
-   }catch(err){notice(err.message,true)}finally{childrenToggle.disabled=false}
- });
- add.addEventListener('click',createGuest);reload.addEventListener('click',async()=>{try{await reloadData();notice('Данные обновлены')}catch(err){notice(err.message,true)}});
- exportBtn.addEventListener('click',exportCsv);
+ add.addEventListener('click',createGuest);
  close.addEventListener('click',closeGuest);overlay.addEventListener('click',ev=>{if(ev.target===overlay)closeGuest()});
- const onKey=ev=>{if(ev.key==='Escape'&&!overlay.hidden&&!editing)closeGuest()};
+ const onKey=ev=>{
+   if(ev.key!=='Escape')return;
+   if(!columnsMenu.hidden){closeColumns();return}
+   if(!overlay.hidden&&!editing)closeGuest();
+ };
+ const onOutsideColumns=ev=>{if(!columnsMenu.hidden&&!columnPrefs.contains(ev.target))closeColumns()};
+ document.addEventListener('pointerdown',onOutsideColumns);
  document.addEventListener('keydown',onKey);
- try{const [session]=await Promise.all([request('auth/session')]);csrf=session.csrf;if(session.role!=='admin')throw Error('Требуется вход организатора');await reloadData()}
+ try{
+   const session=await request('auth/session');csrf=session.csrf;
+   if(session.role!=='admin')throw Error('Требуется вход организатора');
+   try{
+     const saved=await request('admin/settings');
+     visibleColumns=normalizeGuestTableColumns(saved.settings?.guest_table_columns);
+   }catch(error){notice('Настройки столбцов недоступны; выбран стандартный вид.',true)}
+   await reloadData();
+ }
  catch(err){list.replaceChildren(mk('p','ad-gb-error','Не удалось открыть базу: '+err.message))}
  const updateFromServer=async()=>{
    if(!page.isConnected){cleanupPreviousGuestView?.();return;}
@@ -652,6 +640,7 @@ export async function activateGuestDirectory(root){
    window.removeEventListener('focus',onFocus);
    document.removeEventListener('visibilitychange',onVisible);
    document.removeEventListener('keydown',onKey);
+   document.removeEventListener('pointerdown',onOutsideColumns);
    if(page.isConnected)closeGuest();
    cleanupPreviousGuestView=null;
  };
