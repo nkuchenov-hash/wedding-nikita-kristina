@@ -465,8 +465,6 @@ export async function activateGuestDirectory(root){
        ['decision','Решение об отправке приглашения','select',decisionOptions]
      ]);
      group('Контакты',[
-       ['first_name','Имя (отдельное поле)','text'],
-       ['last_name','Фамилия (отдельное поле)','text'],
        ['city','Город','text'],['phone','Телефон','tel'],['email','Email','email'],
        ['language','Язык общения','select',LANGUAGES]
      ]);
@@ -479,10 +477,7 @@ export async function activateGuestDirectory(root){
      // Preserve values imported from spreadsheets, but don't present them
      // alongside the social circle as two equivalent identity fields.
      const seatingDetails=mk('details','ad-gb-legacy-details ad-gb-seating-details');
-     const seatingMatchesCommunity=s(g.seating_group)!==''&&
-       s(g.seating_group).toLocaleLowerCase('ru')===s(g.community).toLocaleLowerCase('ru');
-     seatingDetails.append(mk('summary','',
-       'Рассадка за столами'+(seatingMatchesCommunity?' · значение совпадает с кругом общения':'')));
+     seatingDetails.append(mk('summary','','Рассадка за столами'));
      form.append(seatingDetails);
      const seatingGroup=group('План рассадки',[
        ['seating_group','С кем посадить / компания для стола','text']
