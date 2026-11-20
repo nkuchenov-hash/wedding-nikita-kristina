@@ -95,10 +95,10 @@ test('roster has no pencil icons and exposes true table resizers and tooltip for
  assert.match(ui,/key:'guest_table_layout'/);
  assert.match(ui,/showClippedTooltip/);
  assert.match(ui,/cellIsClipped/);
-  assert.match(ui,/node\\.scrollHeight>node\\.clientHeight/);
-  assert.match(ui,/probe\\.getBoundingClientRect\\(\\)\\.height/);
-  assert.match(ui,/row_height<=56\\?1:tableLayout\\.row_height<=72\\?2/);
-  assert.match(css,/max-height:calc\\(var\\(--guest-line-count,2\\) \\* 1\\.5em\\)/);
+ assert.ok(ui.includes('node.scrollHeight>node.clientHeight'));
+ assert.ok(ui.includes('probe.getBoundingClientRect().height'));
+ assert.ok(ui.includes('row_height<=56?1:tableLayout.row_height<=72?2'));
+ assert.ok(css.includes('max-height:calc(var(--guest-line-count,2) * 1.5em)'));
  assert.match(ui,/ad-gb-menu-layout/);
  assert.match(css,/\.ad-gb-clipped-tooltip\{/);
  assert.match(css,/\.ad-gb-table\.ad-gb-rows-clipped \.ad-gb-cell-value\{/);
