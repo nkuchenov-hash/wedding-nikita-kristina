@@ -36,7 +36,8 @@ test('the organizer app starts, shows the navigation and supports every route',a
  }
  assert.match(container.markup,/class="admin-layout"/);
  assert.match(container.markup,/class="admin-side"/);
- assert.match(container.markup,/Панель организаторов/);
+ assert.doesNotMatch(container.markup,/Панель организаторов|admin-topbar/);
+  assert.match(container.markup,/admin-page-heading/);
  assert.match(container.markup,/#\/admin\/overview/);
  assert.match(container.markup,/#\/admin\/schedule/);
  assert.match(container.markup,/#\/admin\/settings/);
