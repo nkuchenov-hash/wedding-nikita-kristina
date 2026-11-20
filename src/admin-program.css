@@ -31,12 +31,10 @@
 .ad-tl-single-content{min-height:145px}
 .ad-tl-ideas-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:16px}
 .ad-tl-track{position:relative;display:flex;flex-direction:column;gap:12px;padding:3px 0 17px 34px;min-height:160px}
-.ad-tl-track:before{content:"";position:absolute;left:11px;top:0;bottom:0;width:2px;background:linear-gradient(#9dbca4,#d9e8dc)}
-.ad-tl-card{background:linear-gradient(105deg,var(--activity-color,#edf4ed),#fff 82%);border:1px solid #dce6dd;border-left:5px solid var(--activity-color,#d8e4d8);border-radius:14px;padding:20px 22px;min-width:0;box-shadow:0 4px 15px #20472b0d;transition:box-shadow .15s,transform .15s}
+.ad-tl-card{background:linear-gradient(105deg,var(--activity-color,#edf4ed),#fff 82%);border:1px solid #dce6dd;border-radius:14px;padding:20px 22px;min-width:0;box-shadow:0 4px 15px #20472b0d;transition:box-shadow .15s,transform .15s}
 .ad-tl-card-clickable{cursor:pointer}
 .ad-tl-card-clickable:hover{box-shadow:0 8px 25px #244c351b}
 .ad-tl-card-clickable:active{transform:translateY(1px)}
-.ad-tl-track>.ad-tl-card:before{content:"";position:absolute;left:-30px;top:23px;width:13px;height:13px;border-radius:50%;background:var(--activity-color,#d8e4d8);outline:1px solid #91b99b;border:3px solid white}
 .ad-tl-track>.ad-tl-card{position:relative}
 .ad-tl-dragging{opacity:.5}
 .ad-tl-over{outline:2px dashed #377d50;outline-offset:4px}
@@ -79,7 +77,7 @@
 .ad-tl-settings-modal>.ad-tl-modal-actions{margin-top:16px}
 @media(max-width:1000px){.ad-tl-ideas-grid{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:680px){.ad-tl-header{align-items:stretch;flex-direction:column;gap:16px}.ad-tl-top-actions .ad-tl-button{flex:1}.ad-tl-ideas-grid{grid-template-columns:minmax(0,1fr)}.ad-tl-main-tab{padding:12px 7px;font-size:12px}.ad-tl-day-tab{min-width:0;padding:10px 7px;font-size:12px}.ad-tl-header h1{font-size:33px}.ad-tl-section-toolbar{align-items:start;flex-direction:column;gap:10px}}
-@media(max-width:460px){.ad-tl-modal-cover{padding:8px}.ad-tl-modal{border-radius:13px;padding:16px;max-height:calc(100svh - 16px)}.ad-tl-form{grid-template-columns:minmax(0,1fr)}.ad-tl-field:has(textarea),.ad-tl-tags-field,.ad-tl-end-preview,.ad-tl-modal-actions,.ad-tl-form-error{grid-column:auto}.ad-tl-track{padding-left:25px}.ad-tl-track:before{left:7px}.ad-tl-track>.ad-tl-card:before{left:-24px}.ad-tl-card{padding:14px}.ad-tl-settings-row .ad-tl-button{padding:8px}.ad-tl-modal h2{font-size:22px}}
+@media(max-width:460px){.ad-tl-modal-cover{padding:8px}.ad-tl-modal{border-radius:13px;padding:16px;max-height:calc(100svh - 16px)}.ad-tl-form{grid-template-columns:minmax(0,1fr)}.ad-tl-field:has(textarea),.ad-tl-tags-field,.ad-tl-end-preview,.ad-tl-modal-actions,.ad-tl-form-error{grid-column:auto}.ad-tl-track{padding-left:25px}.ad-tl-track:before{left:7px}.ad-tl-card{padding:14px}.ad-tl-settings-row .ad-tl-button{padding:8px}.ad-tl-modal h2{font-size:22px}}
 @media(prefers-reduced-motion:reduce){.ad-tl-card,.ad-tl-button{transition:none}}
 
 /* Day is primary; program and ideas are secondary views of the selected day. */
@@ -230,21 +228,13 @@
 }
 
 
-/* Single taxonomy: the actual selected tags color the whole activity.
-   With multiple tags the left stripe contains every selected tag color. */
+/* The first tag colors the card background, with a uniform neutral border.
+   No left accent stripe or pseudo-element in timeline, list, or ideas view. */
 .ad-tl-card{
  position:relative;
- border-left:1px solid #dce6dd;
+ border:1px solid #dce6dd;
  background:linear-gradient(102deg,color-mix(in srgb,var(--activity-color,#ecf2ec) 68%,white) 0%,#fff 85%);
 }
-.ad-tl-card::before{
- content:"";position:absolute;left:0;top:0;bottom:0;width:7px;
- background:var(--activity-stripe,var(--activity-color,#ecf2ec));
- border-radius:13px 0 0 13px;
- pointer-events:none;z-index:0;
-}
-.ad-tl-card > *{position:relative;z-index:1}
-.ad-tl-calendar-card::before{border-radius:13px 0 0 13px}
 .ad-tl-ideas-grid .ad-tl-card:hover,.ad-tl-calendar-card:hover{
  background:linear-gradient(102deg,color-mix(in srgb,var(--activity-color,#ecf2ec) 78%,white) 0%,#fff 92%);
 }
@@ -405,12 +395,6 @@
   .ad-tl-compact-tools .ad-tl-tag-filters{gap:4px}
   .ad-tl-compact-tools .ad-tl-filter{font-size:10.5px;padding:6px 8px}
   .ad-tl-compact-tools .ad-tl-display-option{min-width:63px;padding:7px 6px;font-size:11px}
-}
-
-/* One dominant card color: never form a multicolored accent from multiple tags.
-   The other selected tags are shown as labeled chips, not extra card bands. */
-.ad-tl-card::before{
-  background:var(--activity-color,#ecf2ec);
 }
 
 /* All assigned tags stay visible, including on short timeline entries.
