@@ -125,6 +125,7 @@ CREATE TABLE IF NOT EXISTS schedule_items (
   venue_id TEXT NOT NULL DEFAULT '', is_confirmed INTEGER NOT NULL DEFAULT 0,
   stage TEXT NOT NULL DEFAULT 'idea', activity_type TEXT NOT NULL DEFAULT 'other',
   duration_min INTEGER NOT NULL DEFAULT 30, gap_before_min INTEGER NOT NULL DEFAULT 0,
+  activity_date TEXT NOT NULL DEFAULT '2027-06-19', tags_json TEXT NOT NULL DEFAULT '[]',
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE TABLE IF NOT EXISTS documents (
