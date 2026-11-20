@@ -412,3 +412,14 @@ body.ad-gb-lock{overflow:hidden}
 .ad-gb-live-excel h3{font-size:18px;margin:0;color:#244c35;font-weight:650}
 .ad-gb-live-excel a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;
  padding:10px 16px;text-decoration:none;border-radius:9px;font-size:14px;white-space:normal}
+
+/* Optional guest administration blocks stay accessible without burying the profile. */
+.ad-gb-secondary-section{border-top:1px solid #e1e9e2;padding:0;margin:0}
+.ad-gb-secondary-section>summary{display:flex;align-items:center;justify-content:space-between;
+ padding:18px 4px;cursor:pointer;list-style:none;color:#2c573c;font-size:15px;font-weight:650}
+.ad-gb-secondary-section>summary::-webkit-details-marker{display:none}
+.ad-gb-secondary-section>summary::after{content:"+";font-size:21px;font-weight:400;color:#698875}
+.ad-gb-secondary-section[open]>summary::after{content:"−"}
+.ad-gb-secondary-section[open]{padding-bottom:19px}
+.ad-gb-secondary-section>summary:hover{color:#1b482e}
+.ad-gb-secondary-section>summary:focus-visible{outline:2px solid #96c7a1;outline-offset:2px}
