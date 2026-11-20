@@ -361,7 +361,9 @@ export async function renderWeddingProgram(host,api,days){
    commands.append(makeButton('+ '+(view==='program'?'Активность':'Идея'),
      ()=>openCard(null,{stage:view}),'ad-tl-primary'));
    header.append(intro,commands);host.append(header);
-   // Day is the first-level navigation; program and ideas live inside each day.
+   // One compact navigation row: the date is primary, the program/idea
+   // selector is secondary, and both remain visible without tall stacked bars.
+   const sectionControls=$('div','ad-tl-section-controls');
    const daysBar=$('nav','ad-tl-day-nav');
    daysBar.setAttribute('aria-label','Выбор дня свадьбы');
    for(const d of days){
@@ -371,7 +373,6 @@ export async function renderWeddingProgram(host,api,days){
      b.setAttribute('aria-pressed',String(day===d.date));
      daysBar.append(b);
    }
-   host.append(daysBar);
    const nav=$('nav','ad-tl-main-switch');
    nav.setAttribute('aria-label','Раздел выбранного дня');
    for(const [id,label,desc] of [
@@ -385,9 +386,11 @@ export async function renderWeddingProgram(host,api,days){
      button.title=desc;
      nav.append(button);
    }
-   host.append(nav);
+   sectionControls.append(daysBar,nav);
+   host.append(sectionControls);
    if(notification){const n=$('p','ad-tl-notice',notification);n.setAttribute('role','status');host.append(n);}
    const current=entriesFor(view);
+   const compactTools=$('div','ad-tl-compact-tools');
    if(tags.length){
      const filters=$('div','ad-tl-tag-filters');filters.setAttribute('aria-label','Фильтр по тегу');
      const all=makeButton('Все теги',()=>{filter='all';render();},'ad-tl-filter'+(filter==='all'?' selected':''));
@@ -396,7 +399,7 @@ export async function renderWeddingProgram(host,api,days){
        const b=makeButton(tag.label,()=>{filter=tag.id;render();},'ad-tl-filter'+(filter===tag.id?' selected':''));
        b.style.setProperty('--tag-color',tagColor(tag));b.setAttribute('aria-pressed',String(filter===tag.id));filters.append(b);
      }
-     host.append(filters);
+     compactTools.append(filters);
    }
    const visibleRows=current.filter(visible);
    if(view==='program'){
@@ -410,7 +413,10 @@ export async function renderWeddingProgram(host,api,days){
        btn.setAttribute('aria-pressed',String(programDisplay===mode));
        modes.append(btn);
      }
-     host.append(modes);
+     compactTools.append(modes);
+   }
+   if(compactTools.childElementCount)host.append(compactTools);
+   if(view==='program'){
      if(programDisplay==='timeline')host.append(renderTimeline(visibleRows));
      else{
        const list=$('div','ad-tl-single-content ad-tl-ideas-grid ad-tl-program-list');
