@@ -159,6 +159,13 @@ export async function renderWeddingSettings(host,api){
    }finally{childrenCheck.disabled=false}
  });
  childrenPanel.append(childrenLabel,childrenStatus);guestPanel.append(childrenPanel);
+ const exportPanel=$('div','ad-gb-live-excel');
+ exportPanel.append($('h3','','Единая база гостей'));
+ const exportButton=$('a','ad-tl-button ad-tl-primary','Скачать актуальный Excel · 1 вкладка');
+ exportButton.href='/admin/index.php?api='+encodeURIComponent('admin/guests/excel');
+ exportButton.setAttribute('download','wedding-guests.xlsx');
+ exportPanel.append(exportButton);
+ guestPanel.append(exportPanel);
  host.append(guestPanel);
  function draw(){
    list.replaceChildren();actions.replaceChildren();
