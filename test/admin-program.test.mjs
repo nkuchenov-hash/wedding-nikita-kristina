@@ -53,6 +53,8 @@ test('the day is primary navigation with program and idea sub-tabs',()=>{
  assert.match(source,/openCard\(item\)/);
  assert.doesNotMatch(source,/Общий пул идей/);
  assert.doesNotMatch(source,/field\('Место/);
+ assert.doesNotMatch(source,/Нажмите, чтобы изменить или включить в программу/);
+ assert.doesNotMatch(source,/ad-tl-card-hint/);
 });
 
 test('program page omits redundant admin bar and explanatory header text',()=>{
