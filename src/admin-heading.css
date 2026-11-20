@@ -1,0 +1,36 @@
+/* Shared admin page-heading design-system component, loaded after module CSS. */
+body.admin-body{
+ --admin-page-title-font:Georgia,"Times New Roman",serif;
+ --admin-page-title-color:#214734;
+ --admin-page-title-size:clamp(29px,2.7vw,36px);
+ --admin-page-subtitle-color:#6d8070;
+ --admin-page-kicker-color:#668974;
+ --admin-section-title-size:18px;
+}
+body.admin-body .admin-page-heading h1{
+ font-family:var(--admin-page-title-font);
+ font-size:var(--admin-page-title-size);
+ font-weight:400;line-height:1.16;letter-spacing:-.035em;
+ color:var(--admin-page-title-color);margin:0;
+}
+body.admin-body .admin-page-heading :is(.eyebrow,.ad-overview-kicker,.ad-photo-eyebrow){
+ font:750 10px/1.4 Manrope,Arial,sans-serif;
+ letter-spacing:.15em;text-transform:uppercase;
+ color:var(--admin-page-kicker-color);margin:0 0 6px;
+}
+body.admin-body .admin-page-heading p{
+ font:400 12px/1.5 Manrope,Arial,sans-serif;
+ color:var(--admin-page-subtitle-color);margin:5px 0 0;max-width:830px;
+}
+body.admin-body :is(.panel-header h2,.ad-overview-card-head h2,.vw-table-panel-title h2,.ad-photo-upload-form h2,.ad-tl-settings-content>h2){
+ font-family:Manrope,Arial,sans-serif;
+ font-size:var(--admin-section-title-size);font-weight:700;
+ line-height:1.3;letter-spacing:-.025em;color:var(--admin-page-title-color);
+}
+body.admin-body .vdp-hero h1{
+ font-family:var(--admin-page-title-font);
+ font-weight:400;letter-spacing:-.035em;
+}
+@media(max-width:680px){
+ body.admin-body{--admin-page-title-size:clamp(27px,7vw,32px)}
+}

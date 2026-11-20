@@ -264,6 +264,7 @@ $types = [
     'src/admin-photos.css' => 'text/css; charset=UTF-8',
     'src/venue-files-ui.css' => 'text/css; charset=UTF-8',
     'src/admin-guests.css' => 'text/css; charset=UTF-8',
+    'src/admin-heading.css' => 'text/css; charset=UTF-8',
 ];
 $asset = $_GET['asset'] ?? 'index.html';
 if (!is_string($asset) || !isset($types[$asset])) {

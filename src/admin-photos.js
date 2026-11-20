@@ -40,7 +40,7 @@ export function activatePhotoArchive(root){
   const ui={category:'all',query:'',cols:3,limit:72,assets:[],approved:new Set(),
     csrf:'',busy:false,view:null,loaded:false,disposed:false};
   const page=element('section','ad-photo-archive ad-guest-curation');
-  const head=element('header','ad-photo-head');
+  const head=element('header','ad-photo-head admin-page-heading');
   head.append(element('div','ad-photo-eyebrow','ГОСТЕВАЯ ГАЛЕРЕЯ'),
     element('h1','','Фотографии для гостей'));
   const intro=element('p','ad-photo-lead',

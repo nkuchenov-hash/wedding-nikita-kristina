@@ -49,7 +49,7 @@ async function overview(host){
  // The home screen is a balanced overview of the whole wedding, not a guest-only funnel.
  host.classList.add('ad-overview-shell');
  const page=$('div','ad-overview-dashboard');
- const head=$('header','ad-overview-heading');
+ const head=$('header','ad-overview-heading admin-page-heading');
  const headingText=$('div');
  headingText.append($('span','ad-overview-kicker','ЦЕНТР ПОДГОТОВКИ СВАДЬБЫ'),
    $('h1','','Никита и Кристина'),

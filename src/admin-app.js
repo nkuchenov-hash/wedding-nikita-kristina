@@ -19,14 +19,14 @@ function adminSidebar(active){
  const settings=adminModules.find(m=>m.id==='settings');
  const navLink=m=>`<a href="#/admin/${m.id}" class="side-link ${active===m.id?'selected':''}"><span class="side-icon">${m.icon}</span>${m.label}</a>`;
  return `<aside class="admin-side">
-   <a href="#/admin/overview" class="admin-brand"><span class="admin-brand-logo">НК</span><span>Wedding<br/><small>Панель организаторов</small></span></a>
+   <a href="#/admin/overview" class="admin-brand"><span class="admin-brand-logo">НК</span><span>Wedding</span></a>
    <div class="side-caption">УПРАВЛЕНИЕ</div>
    <nav aria-label="Разделы админки">${items.map(navLink).join('')}</nav>
    ${settings?`<div class="admin-settings-footer">${navLink(settings)}</div>`:''}
  </aside>`;
 }
 function adminOverview(){
- return `<div class="dashboard-heading"><div><div class="eyebrow">ПОДГОТОВКА СВАДЬБЫ</div><h1>Никита и Кристина</h1><p>Площадки, условия и бюджет праздника</p></div></div>
+ return `<div class="dashboard-heading admin-page-heading"><div><div class="eyebrow">ПОДГОТОВКА СВАДЬБЫ</div><h1>Никита и Кристина</h1><p>Площадки, условия и бюджет праздника</p></div></div>
  <div class="metrics-grid">
   <article class="metric"><span>Площадок</span><strong>${venueSummary.total}</strong><small>В сравнении</small></article>
   <article class="metric"><span>Посмотрели</span><strong>${venueSummary.inspected}</strong><small>По материалам осмотров</small></article>
@@ -45,11 +45,11 @@ function adminOverview(){
  </div>`;
 }
 function adminProgram(){
- return `<div class="dashboard-heading"><div><div class="eyebrow">17—19 ИЮНЯ 2027</div><h1>Программа свадьбы</h1><p>Три дня · место торжества выбирается</p></div></div>
+ return `<div class="dashboard-heading admin-page-heading"><div><div class="eyebrow">17—19 ИЮНЯ 2027</div><h1>Программа свадьбы</h1><p>Три дня · место торжества выбирается</p></div></div>
  <div class="ad-wedding-days">${weddingDays.map((day,i)=>`<article class="ad-day-card"><div class="ad-day-number">0${i+1}</div><div class="ad-day-date"><span>${day.weekday}</span><strong>${day.label}</strong></div><div class="ad-day-content"><h2>${escapeHtml(day.title)}</h2><p>${escapeHtml(day.description)}</p><div class="ad-day-facts"><span>${day.time||'Время уточняется'}</span><span>${escapeHtml(day.place||'Место не определено')}</span></div></div></article>`).join('')}</div>`;
 }
-function adminGeneric(active){const m=adminModules.find(m=>m.id===active);if(!m)return adminOverview();if(active==='guests')return '';if(active==='venues')return renderVenueAdmin();if(active==='overview')return adminOverview();if(active==='schedule')return adminProgram();if(active==='settings')return '';return `<div class="dashboard-heading"><div><div class="eyebrow">ОРГАНИЗАЦИЯ</div><h1>${m.label}</h1><p>${m.text}</p></div></div><div class="admin-panel module-empty"><div class="module-symbol">${m.icon}</div><h2>${m.label}</h2></div>`;}
-function admin(active='overview'){return `<div class="admin-layout">${adminSidebar(active)}<main class="admin-main">${active==='schedule'||active==='guests'?'':'<div class="admin-topbar"><span>Панель организаторов</span></div>'}<div class="admin-content">${adminGeneric(active)}</div></main></div>`;}
+function adminGeneric(active){const m=adminModules.find(m=>m.id===active);if(!m)return adminOverview();if(active==='guests')return '';if(active==='venues')return renderVenueAdmin();if(active==='overview')return adminOverview();if(active==='schedule')return adminProgram();if(active==='settings')return '';return `<div class="dashboard-heading admin-page-heading"><div><div class="eyebrow">ОРГАНИЗАЦИЯ</div><h1>${m.label}</h1><p>${m.text}</p></div></div><div class="admin-panel module-empty"><div class="module-symbol">${m.icon}</div><h2>${m.label}</h2></div>`;}
+function admin(active='overview'){return `<div class="admin-layout">${adminSidebar(active)}<main class="admin-main"><div class="admin-content">${adminGeneric(active)}</div></main></div>`;}
 
 function render(){
  const p=decodeURIComponent((location.hash||'#/admin/overview').slice(1)).replace(/\/+$/,'')||'/admin';
@@ -64,7 +64,7 @@ function render(){
  if(section==='guests')activateGuestDirectory(app);
  activateAdminData(app,section).catch(e=>console.warn('Admin data initialization failed',e));
  document.body.classList.add('admin-body');
- document.title='Панель организаторов — Никита и Кристина';
+ document.title='Никита и Кристина — управление свадьбой';
  window.scrollTo(0,0);
 }
 window.addEventListener('hashchange',render);

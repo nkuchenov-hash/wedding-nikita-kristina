@@ -9,7 +9,7 @@ export async function renderWeddingSettings(host,api){
  const tags=Array.isArray(settings.settings?.activity_tags)?settings.settings.activity_tags.map(x=>({...x})):[];
  const used=id=>(records.items||[]).some(item=>itemTags(item).includes(id));
  let saving=false;
- const header=$('header','ad-tl-settings-head');
+ const header=$('header','ad-tl-settings-head admin-page-heading');
  header.append($('h1','','Настройки'),$('p','','Общие теги для программы и пула идей.'));
  const panel=$('section','ad-tl-settings-content');
  panel.append($('h2','','Теги активностей'),$('p','ad-tl-settings-help','Теги объединяют классификацию и цвета карточек. У активности может быть несколько тегов.'));

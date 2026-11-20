@@ -356,7 +356,7 @@ export async function renderWeddingProgram(host,api,days){
  function render(){
    host.replaceChildren();
    host.classList.add('ad-timeline-page');
-   const header=$('header','ad-tl-header'),intro=$('div');
+   const header=$('header','ad-tl-header admin-page-heading'),intro=$('div');
    intro.append($('h1','','Программа мероприятия'));
    const commands=$('div','ad-tl-top-actions');
    commands.append(makeButton('+ '+(view==='program'?'Активность':'Идея'),

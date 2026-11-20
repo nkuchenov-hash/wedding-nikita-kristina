@@ -127,7 +127,7 @@ export async function activateGuestDirectory(root){
  if(!destination)return;
  destination.replaceChildren();
  const page=mk('section','ad-guestbook');
- const head=mk('div','ad-gb-top'),heading=mk('div');
+ const head=mk('div','ad-gb-top admin-page-heading'),heading=mk('div');
  heading.append(mk('h1','','Список гостей'));
  const actions=mk('div','ad-gb-top-actions');
  const add=mk('button','ad-gb-primary','+ Добавить гостя');add.type='button';
