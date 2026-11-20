@@ -40,6 +40,13 @@ test('the organizer app starts, shows the navigation and supports every route',a
  assert.match(container.markup,/#\/admin\/overview/);
  assert.match(container.markup,/#\/admin\/schedule/);
  assert.match(container.markup,/#\/admin\/settings/);
+ assert.match(container.markup,/class="admin-settings-footer"/);
+ assert.match(container.markup,/<nav aria-label="Разделы админки">[\s\S]*<\/nav>[\s\S]*class="admin-settings-footer"/);
+ const sidebarNav=container.markup.match(/<nav aria-label="Разделы админки">([\s\S]*?)<\/nav>/);
+ assert.ok(sidebarNav,'scrollable sidebar navigation exists');
+ assert.doesNotMatch(sidebarNav[1],/#\/admin\/settings/);
+ assert.equal((container.markup.match(/href="#\/admin\/settings"/g)||[]).length,1);
+
  assert.match(container.markup,/Никита и Кристина/);
  assert.equal(typeof listeners.get('hashchange'),'function');
  for(const section of ['schedule','settings','budget','menu','tasks','overview']){
@@ -50,3 +57,4 @@ test('the organizer app starts, shows the navigation and supports every route',a
    assert.match(container.markup,/side-link/,section+' navigation');
  }
 });
+
