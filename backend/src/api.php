@@ -557,6 +557,43 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         json(['ok'=>true,'id'=>$id]);
     }
 
+    // Edit one calendar slot independently. Overlap is intentional: simultaneous
+    // activities are displayed in adjacent lanes rather than shifting other events.
+    if ($route==='admin/schedule/slot' && $method==='POST') {
+        $d=payload(4096);
+        $id=strval($d,'id',40,true);
+        $day=strval($d,'day',10,true);
+        $start=strval($d,'start_time',5,true);
+        $length=intvalField($d,'duration_min',5,600);
+        if(!in_array($day,['2027-06-17','2027-06-18','2027-06-19'],true)||
+           !preg_match('/^([01]\\d|2[0-3]):[0-5]\\d$/',$start))
+            fail(422,'schedule','Некорректные дата или время');
+        $first=(int)substr($start,0,2)*60+(int)substr($start,3,2);
+        if($first+$length>=1440)
+            fail(422,'schedule','Мероприятие должно закончиться до полуночи');
+        $begin=$day.'T'.sprintf('%02d:%02d:00',intdiv($first,60),$first%60);
+        $last=$first+$length;
+        $finish=$day.'T'.sprintf('%02d:%02d:00',intdiv($last,60),$last%60);
+        $db->beginTransaction();
+        try{
+            $event=one($db,'SELECT id,start_at,activity_date,stage FROM schedule_items WHERE id=?',[$id]);
+            if(!$event||$event['stage']!=='program'||
+               $event['activity_date']!==$day||substr((string)$event['start_at'],0,10)!==$day){
+                $db->rollBack();
+                fail(409,'schedule_changed','Мероприятие отсутствует в программе выбранного дня');
+            }
+            statement($db,'UPDATE schedule_items SET start_at=?,end_at=?,duration_min=?,sort_order=?,gap_before_min=0 WHERE id=?',
+                [$begin,$finish,$length,$first,$id]);
+            audit($db,'admin',$actor,'edit_slot','schedule_items',$id,
+                ['day'=>$day,'start'=>$start,'duration_min'=>$length]);
+            $db->commit();
+        }catch(Throwable $e){
+            if($db->inTransaction())$db->rollBack();
+            throw $e;
+        }
+        json(['ok'=>true,'id'=>$id,'start_at'=>$begin,'end_at'=>$finish,'duration_min'=>$length]);
+    }
+
     // Atomic server-side reorder: all events in one day move together, and end times
     // are derived from their durations. Never perform partial client-side PATCH loops.
     if ($route==='admin/schedule/arrange' && $method==='POST') {
