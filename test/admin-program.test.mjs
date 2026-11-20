@@ -8,17 +8,20 @@ const schema=readFileSync(new URL('../backend/schema.sql',import.meta.url),'utf8
 const migrate=readFileSync(new URL('../backend/bin/migrate.php',import.meta.url),'utf8');
 const api=readFileSync(new URL('../backend/src/api.php',import.meta.url),'utf8');
 
-test('idea pool is shared; program activities carry their selected wedding day',()=>{
- assert.equal(assignedDay({activity_date:'2027-06-17',stage:'idea',start_at:null}),'');
- assert.equal(assignedDay({activity_date:'2027-06-18',stage:'idea',start_at:null}),'');
- assert.equal(assignedDay({activity_date:'',stage:'idea',start_at:'2027-06-19'}),'');
+test('each idea and scheduled activity belongs to one wedding day',()=>{
+ assert.equal(assignedDay({activity_date:'2027-06-17',stage:'idea',start_at:null}),'2027-06-17');
+ assert.equal(assignedDay({activity_date:'2027-06-18',stage:'idea',start_at:null}),'2027-06-18');
+ assert.equal(assignedDay({activity_date:'2027-06-19',stage:'idea',start_at:null}),'2027-06-19');
  assert.equal(assignedDay({activity_date:'2027-06-17',stage:'program',start_at:'2027-06-17T14:00:00'}),'2027-06-17');
  assert.equal(assignedDay({activity_date:'2027-06-18',stage:'program',start_at:'2027-06-18T15:00:00'}),'2027-06-18');
  assert.equal(assignedDay({stage:'program',start_at:'2027-06-19T18:00:00'}),'2027-06-19');
- assert.match(schema,/activity_date TEXT NOT NULL DEFAULT ''/);
+ assert.equal(assignedDay({stage:'idea',start_at:'2027-06-17'}),'2027-06-17');
+ assert.equal(assignedDay({stage:'idea',start_at:null}),'2027-06-19');
+ assert.match(schema,/activity_date TEXT NOT NULL DEFAULT '2027-06-19'/);
  assert.match(migrate,/ADD COLUMN activity_date/);
- assert.match(migrate,/SET activity_date='' WHERE stage='idea'/);
+ assert.match(migrate,/WHERE stage='idea' AND \(activity_date='' OR activity_date IS NULL\)/);
 });
+
 test('ideas are not scheduled just because a day was assigned',()=>{
  assert.equal(scheduled({activity_date:'2027-06-19',stage:'idea',start_at:null}),false);
  assert.equal(scheduled({activity_date:'2027-06-19',stage:'idea',start_at:'2027-06-19'}),false);
@@ -32,16 +35,19 @@ test('tags are stored as arrays on activity cards and are independently editable
  assert.match(api,/tags_json/);
  assert.match(source,/itemTags\(e\)\.includes\(filter\)/);
 });
-test('program has day tabs; idea pool is global and undated with editable program times',()=>{
+test('the day is primary navigation with program and idea sub-tabs',()=>{
+ assert.match(source,/const daysBar=\$\('nav','ad-tl-day-nav'\)/);
+ assert.match(source,/host\.append\(daysBar\);\s*const nav=/);
  assert.match(source,/\['program','Программа'/);
  assert.match(source,/\['idea','Пул идей'/);
- assert.match(source,/which==='program'\?\(scheduled\(e\)&&assignedDay\(e\)===day\):!scheduled\(e\)/);
- assert.match(source,/if\(view==='program'\)host.append\(daysBar\)/);
- assert.match(source,/activity_date:isProgram\?chosenDay:''/);
+ assert.match(source,/assignedDay\(e\)===day&&\(which==='program'\?scheduled\(e\):!scheduled\(e\)\)/);
+ assert.match(source,/id==='program'\?scheduled\(e\):!scheduled\(e\)/);
+ assert.match(source,/activity_date:chosenDay/);
+ assert.match(source,/dayField\.hidden=false/);
  assert.match(source,/field\('Начало',start\)/);
  assert.match(source,/field\('Окончание',end\)/);
  assert.match(source,/card\(item,rows\)/);
  assert.match(source,/openCard\(item\)/);
+ assert.doesNotMatch(source,/Общий пул идей/);
  assert.doesNotMatch(source,/field\('Место/);
- assert.doesNotMatch(source,/В программу',\s*\(\)=>openCard/);
 });
