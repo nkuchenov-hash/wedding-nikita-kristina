@@ -100,10 +100,10 @@ test('calendar supports vertical time dragging, bottom-edge resizing and manual 
  assert.match(source,/pointerdown/);
  assert.match(source,/pointermove/);
  assert.match(source,/pointerup/);
- assert.match(source,/admin\\/schedule\\/slot/);
+ assert.match(source,/admin\/schedule\/slot/);
  assert.match(source,/Параллельно с/);
  assert.match(source,/parallelField\.hidden=!enabled/);
  assert.doesNotMatch(source,/Время пересекается с/);
- assert.match(api,/admin\\/schedule\\/slot/);
- assert.match(api,/duration_min=\\?,sort_order=\\?,gap_before_min=0/);
+ assert.match(api,/admin\/schedule\/slot/);
+ assert.match(api,/duration_min=\?,sort_order=\?,gap_before_min=0/);
 });
