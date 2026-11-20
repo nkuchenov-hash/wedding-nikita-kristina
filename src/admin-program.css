@@ -320,3 +320,89 @@
  .ad-tl-display-option{min-width:100px}
  .ad-tl-program-list .ad-tl-card-head{flex-wrap:wrap}
 }
+
+/* Compact schedule header: two functional toolbar rows below the page title.
+   Date and section selectors share one row; tag filters and display mode
+   share another. Do not wrap each individual tag into an extra tall line. */
+.ad-timeline-page .ad-tl-header{
+  align-items:center;justify-content:space-between;
+  gap:12px;padding:0;margin:0 0 12px;
+}
+.ad-timeline-page .ad-tl-header h1{
+  font-size:clamp(25px,2.7vw,36px);
+  line-height:1.15;margin:0;
+}
+.ad-timeline-page .ad-tl-top-actions{flex:0 0 auto;gap:6px}
+.ad-timeline-page .ad-tl-top-actions .ad-tl-button{
+  min-height:38px;padding:8px 12px;font-size:12px;
+}
+.ad-tl-section-controls{
+  display:flex;align-items:stretch;gap:10px;
+  min-width:0;margin:0 0 9px;
+}
+.ad-tl-section-controls .ad-tl-day-nav{
+  flex:1 1 52%;width:auto;min-width:0;margin:0;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:stretch;gap:5px;
+}
+.ad-tl-section-controls .ad-tl-day-tab{
+  min-width:0;width:100%;min-height:40px;
+  padding:8px 7px;font-size:12.5px;line-height:1.2;
+  box-shadow:none;border-radius:9px;
+}
+.ad-tl-section-controls .ad-tl-main-switch{
+  flex:1 1 48%;width:auto;min-width:0;min-height:40px;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:3px;padding:3px;margin:0;
+  background:#edf3eb;border-radius:10px;
+}
+.ad-tl-section-controls .ad-tl-main-switch .ad-tl-main-tab{
+  min-width:0;padding:8px 6px;font-size:12.5px;line-height:1.25;
+  border-radius:8px;white-space:nowrap;
+}
+.ad-tl-compact-tools{
+  display:flex;align-items:center;min-width:0;
+  gap:10px;margin:0 0 10px;
+}
+.ad-tl-compact-tools .ad-tl-tag-filters{
+  display:flex;align-items:center;flex-wrap:nowrap;flex:1 1 auto;
+  min-width:0;gap:5px;padding:4px 3px;margin:0;
+  overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:thin;scrollbar-color:#c9d9cc transparent;
+}
+.ad-tl-compact-tools .ad-tl-filter{
+  flex:0 0 auto;min-height:29px;
+  padding:6px 10px;font-size:11px;line-height:1.2;white-space:nowrap;
+}
+.ad-tl-compact-tools .ad-tl-display-modes{
+  display:flex;flex:0 0 auto;gap:2px;
+  margin:0;padding:3px;border-radius:9px;
+}
+.ad-tl-compact-tools .ad-tl-display-option{
+  min-width:76px;min-height:33px;
+  padding:7px 9px;font-size:11.5px;line-height:1.2;
+}
+.ad-timeline-page .ad-tl-notice{margin:0 0 10px;padding:9px 12px}
+.ad-timeline-page .ad-tl-calendar{margin-top:0}
+@media(max-width:1050px){
+  .ad-tl-section-controls{flex-wrap:wrap;gap:7px}
+  .ad-tl-section-controls .ad-tl-day-nav,
+  .ad-tl-section-controls .ad-tl-main-switch{flex:1 1 100%}
+}
+@media(max-width:680px){
+  .ad-timeline-page .ad-tl-header{
+    flex-direction:row;align-items:center;flex-wrap:wrap;gap:9px;
+  }
+  .ad-timeline-page .ad-tl-header h1{font-size:clamp(22px,5vw,30px)}
+  .ad-timeline-page .ad-tl-top-actions{flex:0 0 auto}
+  .ad-timeline-page .ad-tl-top-actions .ad-tl-button{
+    flex:none;min-height:36px;padding:7px 10px;
+  }
+  .ad-tl-section-controls .ad-tl-day-tab{min-height:37px;font-size:12px;padding:8px 4px}
+  .ad-tl-section-controls .ad-tl-main-switch{min-height:38px}
+  .ad-tl-section-controls .ad-tl-main-switch .ad-tl-main-tab{padding:7px 4px;font-size:12px}
+  .ad-tl-compact-tools{gap:7px}
+  .ad-tl-compact-tools .ad-tl-tag-filters{gap:4px}
+  .ad-tl-compact-tools .ad-tl-filter{font-size:10.5px;padding:6px 8px}
+  .ad-tl-compact-tools .ad-tl-display-option{min-width:63px;padding:7px 6px;font-size:11px}
+}
