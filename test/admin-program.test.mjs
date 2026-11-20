@@ -237,7 +237,11 @@ test('settings saves daily visible hours, and the left sidebar places settings l
  assert.ok(list.lastIndexOf("id:'settings'")>list.lastIndexOf("id:'tasks'"));
  assert.match(css,/\.admin-settings-footer/);
  assert.match(css,/height:100dvh/);
- assert.match(css,/overflow-y:auto;overflow-x:hidden/);
+ assert.match(css,/overflow:hidden!important;overscroll-behavior:none/);
+ assert.match(css,/flex:1 1 0;min-height:0;max-height:46px/);
+ assert.match(css,/max-height:100dvh/);
+ assert.match(css,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+ assert.match(css,/overflow:visible!important;white-space:normal/);
  assert.match(css,/margin-top:auto/);
 });
 
@@ -256,4 +260,14 @@ test('header is compact: dates with section tabs, tag strip with view switch',()
  assert.match(css,/flex-wrap:nowrap/);
  assert.match(css,/overflow-x:auto;overflow-y:hidden/);
  assert.match(css,/\.ad-timeline-page \.ad-tl-header h1\{/);
+});
+
+test('organizer sidebar never scrolls independently and settings stays visible',()=>{
+ const css=readFileSync(new URL('../src/styles.css',import.meta.url),'utf8');
+ const desktop=css.slice(css.indexOf('/* Sidebar is exactly one viewport high.'));
+ assert.match(desktop,/height:100vh;height:100dvh;min-height:0;max-height:100dvh/);
+ assert.match(desktop,/overflow:hidden!important;overscroll-behavior:none/);
+ assert.doesNotMatch(desktop,/overflow-y:auto/);
+ assert.doesNotMatch(desktop,/overflow-x:auto/);
+ assert.match(desktop,/\.admin-settings-footer\{[\s\S]*?flex:0 0 auto/);
 });
