@@ -128,8 +128,7 @@ export async function activateGuestDirectory(root){
  destination.replaceChildren();
  const page=mk('section','ad-guestbook');
  const head=mk('div','ad-gb-top'),heading=mk('div');
- heading.append(mk('span','ad-gb-eyebrow','ГОСТИ · ЕДИНАЯ БАЗА'),mk('h1','','Список гостей'),
-   mk('p','','Все люди, семьи, приглашения и ответы — в одной системе. Изменения сохраняются в базе сайта.'));
+ heading.append(mk('h1','','Список гостей'));
  const actions=mk('div','ad-gb-top-actions');
  const add=mk('button','ad-gb-primary','+ Добавить гостя');add.type='button';
  actions.append(add);head.append(heading,actions);page.append(head);
@@ -152,8 +151,10 @@ export async function activateGuestDirectory(root){
  const alert=mk('p','ad-gb-notice');alert.hidden=true;page.append(alert);
  const list=mk('div','ad-gb-list');page.append(list);
  const overlay=mk('div','ad-gb-shade');overlay.hidden=true;overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
- const panel=mk('section','ad-gb-panel'),close=mk('button','ad-gb-close','Закрыть ×');close.type='button';
- const detail=mk('div','ad-gb-details');panel.append(close,detail);overlay.append(panel);page.append(overlay);
+ const panel=mk('section','ad-gb-panel'),panelHeader=mk('header','ad-gb-panel-header'),
+   titleArea=mk('div','ad-gb-panel-identity'),close=mk('button','ad-gb-close','Закрыть ×');close.type='button';
+ panelHeader.append(titleArea,close);
+ const detail=mk('div','ad-gb-details');panel.append(panelHeader,detail);overlay.append(panel);page.append(overlay);
  destination.append(page);
  let people=[],csrf='',activeId=null,editing=false,lastSnapshot='',lastRevision=0,refreshing=false,childrenEnabled=true,descending=false;
  let visibleColumns=[...DEFAULT_GUEST_TABLE_COLUMNS],savingColumns=false,relationshipEdges=[];
@@ -373,10 +374,9 @@ export async function activateGuestDirectory(root){
      }
    }
    table.append(body);holder.append(table);list.append(holder);
-   list.append(mk('p','ad-gb-count','Показано '+chosen.length+' из '+people.length+
-     ' · Заголовки сортируют данные. Нажмите на значение для редактирования. Столбцы настраиваются справа.'));
+   list.append(mk('p','ad-gb-count','Показано '+chosen.length+' из '+people.length));
  }
- function closeGuest(){activeId=null;overlay.hidden=true;document.body.classList.remove('ad-gb-lock');detail.replaceChildren()}
+ function closeGuest(){activeId=null;overlay.hidden=true;document.body.classList.remove('ad-gb-lock');detail.replaceChildren();titleArea.replaceChildren()}
  function field(parent,label,key,value,type='text',items=null){
    const wrapper=mk('label','ad-gb-edit-field');wrapper.append(mk('span','',label));
    const input=items?select(items,value):type==='textarea'?mk('textarea'):mk('input');
@@ -388,7 +388,8 @@ export async function activateGuestDirectory(root){
  }
  function section(title){const el=mk('section','ad-gb-section');el.append(mk('h3','',title));detail.append(el);return el}
  async function openGuest(id){
-   activeId=id;overlay.hidden=false;document.body.classList.add('ad-gb-lock');close.focus();
+   activeId=id;overlay.hidden=false;document.body.classList.add('ad-gb-lock');
+   titleArea.replaceChildren(mk('span','ad-gb-loading-name','Загрузка…'));detail.scrollTop=0;
    detail.replaceChildren(mk('p','ad-gb-note','Открываю карточку…'));
    try{
      const [data,companionsData]=await Promise.all([
@@ -397,8 +398,41 @@ export async function activateGuestDirectory(root){
      ]);
      if(activeId!==id)return;
      const g=data.guest,p=byId(id)||g;
-     detail.replaceChildren(mk('span','ad-gb-id',g.source_person_id||'Добавлен вручную'),mk('h2','',display(g)));
-     detail.append(mk('p','ad-gb-note','Поля сгруппированы по назначению. Сохраняются только изменённые значения.'));
+     detail.replaceChildren();
+     const titleInput=mk('input','ad-gb-title-input'),titleEn=mk('input','ad-gb-subtitle-input');
+     titleInput.type=titleEn.type='text';
+     titleInput.maxLength=titleEn.maxLength=320;
+     titleInput.value=display(g);titleInput.placeholder='Имя гостя';
+     titleEn.value=s(g.name_en);titleEn.placeholder='Имя латиницей';
+     titleInput.setAttribute('aria-label','Имя гостя');
+     titleEn.setAttribute('aria-label','Имя латиницей');
+     const nameStatus=mk('span','ad-gb-name-status');
+     const saveTitle=async(key,input)=>{
+       if(activeId!==id)return;
+       const value=s(input.value),previous=s(g[key]);
+       if(value===previous)return;
+       if(key==='display_name'&&!value){
+         nameStatus.textContent='Введите имя';input.value=previous;return;
+       }
+       input.disabled=true;nameStatus.textContent='Сохраняю…';
+       editing=true;
+       try{
+         await request('admin/guest/fields',{method:'PATCH',csrf,body:{id,fields:{[key]:value}}});
+         g[key]=value;if(p)p[key]=value;
+         nameStatus.textContent='Сохранено';
+         await reloadData();
+       }catch(error){
+         input.value=previous;nameStatus.textContent=error.message||'Не удалось сохранить';
+       }finally{input.disabled=false;editing=false}
+     };
+     for(const [key,input] of [['display_name',titleInput],['name_en',titleEn]]){
+       input.addEventListener('blur',()=>saveTitle(key,input));
+       input.addEventListener('keydown',event=>{
+         if(event.key==='Enter'){event.preventDefault();input.blur()}
+         if(event.key==='Escape'){event.preventDefault();input.value=s(g[key]);input.blur()}
+       });
+     }
+     titleArea.replaceChildren(titleInput,titleEn,nameStatus);
      const profile=section('Данные гостя');
      const form=mk('form','ad-gb-unified-form'),controls={},initial={};
      // Imported sheets repeat the social-circle label in the bio fields.
@@ -430,11 +464,9 @@ export async function activateGuestDirectory(root){
        ['side','Сторона','select',SIDES.filter(([v])=>v!=='all')],
        ['decision','Решение об отправке приглашения','select',decisionOptions]
      ]);
-     planningGroup.append(mk('p','ad-gb-quiet-note',
-       '«Основной / Резерв» управляет составом и расчётами; «Приглашаем?» — внутреннее решение. Факт отправки отмечается ниже в разделе «Приглашение».'));
-     group('Имя и контакты',[
-       ['display_name','Имя для списка и приглашения','text'],
-       ['name_en','Имя латиницей (если нужно)','text'],
+     group('Контакты',[
+       ['first_name','Имя (отдельное поле)','text'],
+       ['last_name','Фамилия (отдельное поле)','text'],
        ['city','Город','text'],['phone','Телефон','tel'],['email','Email','email'],
        ['language','Язык общения','select',LANGUAGES]
      ]);
@@ -455,9 +487,6 @@ export async function activateGuestDirectory(root){
      const seatingGroup=group('План рассадки',[
        ['seating_group','С кем посадить / компания для стола','text']
      ],seatingDetails);
-     seatingGroup.append(mk('p','ad-gb-quiet-note',seatingMatchesCommunity
-       ?'Сейчас здесь повторён круг знакомства. Это исходная подсказка, а не подтверждённая рассадка. Значение сохранено; измените его, когда будете распределять гостей по столам.'
-       :'Круг знакомства — откуда вы знаете человека. Это поле — с кем он должен сидеть на празднике. Заполните или измените его при составлении плана рассадки.'));
      const bioDetails=mk('details','ad-gb-legacy-details ad-gb-bio-details');
      bioDetails.append(mk('summary','','Описания на русском и английском, заметки организаторов'));
      form.append(bioDetails);
@@ -466,9 +495,6 @@ export async function activateGuestDirectory(root){
        ['about_en','Описание на английском','textarea'],
        ['private_notes','Заметки организаторов','textarea']
      ],bioDetails);
-     bio.append(mk('p','ad-gb-quiet-note',
-       'Здесь только уникальные описания. Автоматические фразы, повторяющие круг знакомства, не отображаются, но остаются в исходных данных.'));
-
      const submit=mk('button','ad-gb-primary','Сохранить изменения');submit.type='submit';
      const feedback=mk('span','ad-gb-feedback'),buttons=mk('div','ad-gb-edit-actions');
      buttons.append(submit,feedback);form.append(buttons);profile.append(form);
@@ -485,12 +511,12 @@ export async function activateGuestDirectory(root){
          Object.assign(g,changed);
          for(const key of Object.keys(changed))initial[key]=s(changed[key]);
          feedback.textContent='Сохранено в базе';
-         detail.querySelector('h2').textContent=display(g);
+         titleInput.value=display(g);
        }catch(err){feedback.textContent=err.message}
        finally{submit.disabled=false}
      });
      const household=section('Семья и сопровождающие');
-     household.append(mk('p','ad-gb-note','Связи указывают на существующих гостей, без создания повторных записей. Сопровождающие добавляются только по необходимости.'));
+
      const relList=mk('div','ad-gb-relations');
      async function refreshRel(){
        const response=await request('admin/guest-profile?guest_id='+encodeURIComponent(id));
@@ -567,9 +593,6 @@ export async function activateGuestDirectory(root){
      r.other_notes=field(rsp,'Другие пожелания','other_notes',g.other_notes||'','textarea');
      const saveR=mk('button','ad-gb-primary','Сохранить ответ'),msgR=mk('span','ad-gb-feedback');
      saveR.type='submit';const f=mk('div','ad-gb-edit-actions');f.append(saveR,msgR);rsp.append(f);response.append(rsp);
-     response.append(mk('p','ad-gb-note',childrenEnabled
-       ?'Ручной ответ отмечается как внесённый организатором. Он не равен заполненной анкете.'
-       :'Дети отключены общим переключателем. Их существующие ответы сохранены; новые ответы с детьми не принимаются.'));
      rsp.addEventListener('submit',async ev=>{
        ev.preventDefault();saveR.disabled=true;msgR.textContent='Сохраняю…';
        const val=r.attendance.value;
@@ -588,7 +611,7 @@ export async function activateGuestDirectory(root){
        sent=mk('button','ad-gb-light',g.invitation_sent_at?'Отменить отметку об отправке':'Отметить отправленным');
      issue.type=sent.type='button';sent.disabled=!g.active_invite_id;
      inviteActions.append(issue,sent);invites.append(inviteActions);
-     invites.append(mk('p','ad-gb-note','Создание ссылки не отправляет сообщение. Гостевой кабинет ещё закрыт.'));
+
      issue.addEventListener('click',async()=>{
        if(g.active_invite_id&&!confirm('Существующая ссылка станет недействительной. Продолжить?'))return;
        issue.disabled=true;
@@ -628,7 +651,7 @@ export async function activateGuestDirectory(root){
        });
      }
 
-   }catch(err){detail.replaceChildren(mk('p','ad-gb-error','Не удалось открыть карточку: '+err.message))}
+   }catch(err){titleArea.replaceChildren(mk('h2','ad-gb-new-title','Гость'));detail.replaceChildren(mk('p','ad-gb-error','Не удалось открыть карточку: '+err.message))}
  }
  async function reloadData(quiet=false){
    const data=await request('admin/guests');
@@ -644,7 +667,7 @@ export async function activateGuestDirectory(root){
  }
  async function createGuest(){
    activeId='new';overlay.hidden=false;document.body.classList.add('ad-gb-lock');
-   detail.replaceChildren(mk('h2','','Добавить гостя'));
+   titleArea.replaceChildren(mk('h2','ad-gb-new-title','Добавить гостя'));detail.scrollTop=0;detail.replaceChildren();
    const form=mk('form','ad-gb-edit-grid');
    const name=field(form,'Имя *','first_name','','text');
    const family=field(form,'Фамилия','last_name','','text');
