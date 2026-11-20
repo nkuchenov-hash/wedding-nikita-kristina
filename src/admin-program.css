@@ -406,3 +406,105 @@
   .ad-tl-compact-tools .ad-tl-filter{font-size:10.5px;padding:6px 8px}
   .ad-tl-compact-tools .ad-tl-display-option{min-width:63px;padding:7px 6px;font-size:11px}
 }
+
+/* One dominant card color: never form a multicolored accent from multiple tags.
+   The other selected tags are shown as labeled chips, not extra card bands. */
+.ad-tl-card::before{
+  background:var(--activity-color,#ecf2ec);
+}
+
+/* All assigned tags stay visible, including on short timeline entries.
+   For tiny time slots, preserve the time position and let the compact
+   content extend below its duration-sized footprint rather than hiding tags. */
+.ad-tl-calendar-card .ad-tl-tags-inline{
+  display:flex!important;
+  flex-wrap:wrap;
+  align-items:center;
+  flex-shrink:0;
+  max-height:none!important;
+  overflow:visible!important;
+  gap:4px;
+  margin-top:5px;
+}
+.ad-tl-calendar-card.ad-tl-has-short-tags{
+  min-height:max-content!important;
+  overflow:visible!important;
+}
+.ad-tl-calendar-card.ad-tl-short-event .ad-tl-tags-inline,
+.ad-tl-calendar-card.ad-tl-micro-event .ad-tl-tags-inline{
+  display:flex!important;
+  max-height:none!important;
+  overflow:visible!important;
+  flex:0 0 auto;
+  margin-top:2px;
+  gap:4px;
+}
+.ad-tl-calendar-card.ad-tl-short-event .ad-tl-tag,
+.ad-tl-calendar-card.ad-tl-micro-event .ad-tl-tag{
+  display:inline-flex;
+  font-size:10px;
+  line-height:1.2;
+  padding:3px 7px;
+}
+.ad-tl-calendar-card.ad-tl-micro-event.ad-tl-has-short-tags{
+  flex-direction:column;
+  align-items:stretch;
+  padding:5px 9px 10px!important;
+  gap:2px;
+}
+.ad-tl-calendar-card.ad-tl-micro-event.ad-tl-has-short-tags .ad-tl-card-head{
+  order:0;
+}
+.ad-tl-calendar-card.ad-tl-micro-event.ad-tl-has-short-tags .ad-tl-card-title{
+  order:1;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  text-overflow:clip;
+}
+.ad-tl-calendar-card.ad-tl-micro-event.ad-tl-has-short-tags .ad-tl-tags-inline{
+  order:2;
+}
+
+/* Group separation, without turning a compact two-row toolbar into four rows. */
+.ad-tl-section-controls{column-gap:26px}
+.ad-tl-section-controls .ad-tl-main-switch{position:relative}
+.ad-tl-section-controls .ad-tl-main-switch::before{
+  content:"";
+  position:absolute;
+  left:-14px;top:5px;bottom:5px;
+  width:1px;background:#ccdccc;
+  pointer-events:none;
+}
+.ad-tl-compact-tools{column-gap:22px}
+.ad-tl-compact-tools .ad-tl-display-modes{position:relative}
+.ad-tl-compact-tools .ad-tl-display-modes::before{
+  content:"";
+  position:absolute;
+  left:-12px;top:5px;bottom:5px;
+  width:1px;background:#ccdccc;
+  pointer-events:none;
+}
+@media (min-width:761px) and (max-width:900px), (max-width:600px){
+  .ad-tl-section-controls{row-gap:9px;column-gap:10px}
+  .ad-tl-section-controls .ad-tl-main-switch::before{display:none}
+}
+@media(max-width:680px){
+  .ad-tl-compact-tools{column-gap:15px}
+  .ad-tl-compact-tools .ad-tl-display-modes::before{left:-8px}
+}
+.ad-tl-toast{
+  position:fixed;
+  bottom:max(20px,env(safe-area-inset-bottom));
+  left:50%;
+  transform:translateX(-50%);
+  z-index:2147483500;
+  max-width:min(460px,calc(100% - 28px));
+  padding:11px 16px;
+  border-radius:11px;
+  background:#204b37;
+  color:#fff;
+  box-shadow:0 12px 28px #173c2c3d;
+  font:650 13px/1.45 Manrope,system-ui,sans-serif;
+  text-align:center;
+  pointer-events:none;
+}
