@@ -248,6 +248,56 @@ export async function renderWeddingProgram(host,api,days){
    if(view==='program')attachTimelineHandles(node,item,clockLabel,lengthLabel);
    return node;
  }
+ function renderTimeline(items){
+   const container=$('section','ad-tl-calendar');
+   if(!items.length){
+     container.append($('div','ad-tl-empty','Для этого дня программа пока не составлена. Добавьте активность или переведите идею в программу.'));
+     return container;
+   }
+   const layout=parallelEventLayout(items);
+   const earliest=Math.min(...layout.map(x=>x.start));
+   const latest=Math.max(...layout.map(x=>x.end));
+   const axisStart=Math.max(0,Math.floor((earliest-75)/30)*30);
+   const axisEnd=Math.min(1440,Math.max(axisStart+180,Math.ceil((latest+90)/30)*30));
+   const height=(axisEnd-axisStart)*MINUTE_PX;
+   const scroller=$('div','ad-tl-calendar-scroll');
+   scroller.setAttribute('aria-label','Расписание по часам с параллельными дорожками');
+   const grid=$('div','ad-tl-calendar-grid');
+   grid.style.height=height+'px';
+   const board=$('div','ad-tl-calendar-board');
+   board.style.height=height+'px';
+   for(let minute=Math.ceil(axisStart/30)*30;minute<=axisEnd;minute+=30){
+     const major=minute%60===0;
+     const top=(minute-axisStart)*MINUTE_PX;
+     const label=$('span','ad-tl-time-tick'+(major?' is-hour':''),clock(minute));
+     label.style.top=top+'px';grid.append(label);
+     const line=$('div','ad-tl-calendar-line'+(major?' is-hour':''));
+     line.style.top=top+'px';board.append(line);
+   }
+   const byId=new Map(items.map(x=>[x.id,x]));
+   for(const slot of layout){
+     const item=byId.get(slot.id);
+     if(!item)continue;
+     const tile=card(item,items);
+     tile.classList.add('ad-tl-calendar-card');
+     tile.style.top=((slot.start-axisStart)*MINUTE_PX)+'px';
+     tile.style.height=((slot.end-slot.start)*MINUTE_PX)+'px';
+     tile.style.left=(slot.lane/slot.laneCount*100)+'%';
+     tile.style.width='calc('+(100/slot.laneCount)+'% - 8px)';
+     tile.setAttribute('data-parallel-lane',String(slot.lane));
+     tile.title=item.title+' · '+clock(slot.start)+'–'+clock(slot.end);
+     if(slot.laneCount>1)tile.classList.add('ad-tl-is-parallel');
+     board.append(tile);
+   }
+   grid.append(board);scroller.append(grid);container.append(scroller);
+   const footer=$('p','ad-tl-timeline-foot',
+     clock(earliest)+'–'+clock(latest)+' · '+items.length+' событий · '+
+     (layout.some(x=>x.laneCount>1)?'Есть параллельные активности':'Без пересечений'));
+   container.append(footer);
+   // Initial scroll keeps the first event in sight without a blank prelude.
+   scroller.scrollTop=Math.max(0,(earliest-axisStart)*MINUTE_PX-84);
+   return container;
+ }
  function render(){
    host.replaceChildren();
    host.classList.add('ad-timeline-page');
@@ -288,7 +338,7 @@ export async function renderWeddingProgram(host,api,days){
    const toolbar=$('div','ad-tl-section-toolbar'),heading=$('div','ad-tl-section-heading');
    heading.append($('h2','',view==='program'?'Программа · '+dateName(day):'Пул идей · '+dateName(day)));
    heading.append($('span','ad-tl-help',view==='program'
-     ?'Перетаскивайте карточки для изменения порядка. Время пересчитывается автоматически.'
+     ?'Тяните карточку за верхний значок, чтобы сдвинуть по времени, или за нижний край, чтобы изменить длительность. Параллельные события отображаются рядом.'
      :'Идеи принадлежат этому дню, но пока не имеют назначенного времени.'));
    toolbar.append(heading);
    const sum=$('span','ad-tl-summary',current.length+' '+(view==='program'?'событий':'идей'));
@@ -304,31 +354,18 @@ export async function renderWeddingProgram(host,api,days){
      }
      host.append(filters);
    }
-   const content=$('div','ad-tl-single-content'+(view==='idea'?' ad-tl-ideas-grid':' ad-tl-track'));
    const visibleRows=current.filter(visible);
    if(view==='program'){
-     content.addEventListener('dragover',event=>event.preventDefault());
-     content.addEventListener('drop',event=>{
-       if(event.target.closest('.ad-tl-card'))return;
-       event.preventDefault();
-       if(dragged)moveInTimeline(dragged,null);
-     });
+     host.append(renderTimeline(visibleRows));
+   }else{
+     const content=$('div','ad-tl-single-content ad-tl-ideas-grid');
+     if(!visibleRows.length)content.append($('div','ad-tl-empty',
+       filter!=='all'?'В этом дне нет карточек с выбранным тегом.':
+       'Для этого дня идей пока нет. Добавьте первую.'));
+     else for(const item of visibleRows)content.append(card(item,current));
+     host.append(content);
    }
-   if(!visibleRows.length)content.append($('div','ad-tl-empty',
-      filter!=='all'?'В этом дне нет карточек с выбранным тегом.'
-      :view==='idea'?'Для этого дня идей пока нет. Добавьте первую.'
-      :'Для этого дня программа пока не составлена.'));
-   else for(const item of visibleRows)content.append(card(item,current));
-   host.append(content);
-   if(view==='program'&&current.length){
-     const timeline=[...current].sort((a,b)=>String(a.start_at).localeCompare(String(b.start_at)));
-     const overlap=timeline.some((e,i)=>i>0&&String(e.start_at)<String(timeline[i-1].end_at||''));
-     if(overlap)host.append($('p','ad-tl-warning','В расписании есть наложения. Нажмите на карточку и исправьте время.'));
-     const start=hm(timeline[0].start_at),end=hm(timeline[timeline.length-1].end_at);
-     const sum=$('p','ad-tl-timeline-foot',(start||'—')+' — '+(end||'—')+
-       ' · '+current.reduce((n,x)=>n+duration(x),0)+' минут активностей');
-     host.append(sum);
-   }
+
  }
  function openCard(item=null,prefs={}){
    host.querySelector('.ad-tl-modal-cover')?.remove();
