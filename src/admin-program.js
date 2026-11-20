@@ -206,22 +206,39 @@ export async function renderWeddingProgram(host,call,weddingDays,venues){
    for(const d of weddingDays){const opt=element('option','',d.label);opt.value=d.date;date.append(opt);}
    date.value=options.date||(item&&weddingDays.some(d=>d.date===dateOf(item))?dateOf(item):day);
    const start=element('input');start.type='time';start.value=timeOf(item)||'';
+   const finish=element('input');finish.type='time';
    const place=element('input');place.value=item?.place||'';place.maxLength=250;
    const venue=element('select');const noVenue=element('option','','Не выбрана');noVenue.value='';venue.append(noVenue);
    for(const v of venues){const opt=element('option','',v.name);opt.value=v.id;venue.append(opt);}
    venue.value=item?.venue_id||'';
    const confirmed=element('input');confirmed.type='checkbox';confirmed.checked=Number(item?.is_confirmed||0)===1;
-   const dateWrap=field('Дата',date),timeWrap=field('Начало',start);
+   const dateWrap=field('Дата',date),timeWrap=field('Начало',start),finishWrap=field('Окончание',finish);
    const endPreview=element('p','ad-tl-end-preview');
    function updateTiming(){
-     const inProgram=stage.value==='program';dateWrap.hidden=!inProgram;timeWrap.hidden=!inProgram;start.required=inProgram;
+     const inProgram=stage.value==='program';
+     dateWrap.hidden=!inProgram;timeWrap.hidden=!inProgram;finishWrap.hidden=!inProgram;
+     start.required=inProgram;finish.required=inProgram;
      const n=asMinutes(start.value),m=Number(minutes.value);
-     endPreview.textContent=inProgram?(n!==null&&m>0&&n+m<1440?'Окончание: '+clock(n+m):'Выберите начало и длительность'):'Идея хранится без времени начала и окончания';
+     if(inProgram&&n!==null&&Number.isInteger(m)&&m>=5&&n+m<1440){
+       finish.value=clock(n+m);
+       endPreview.textContent='Окончание и длительность связаны: можно изменить любое из них.';
+     }else{
+       finish.value='';
+       endPreview.textContent=inProgram?'Выберите начало и длительность':'Идея хранится без времени начала и окончания';
+     }
    }
-   stage.addEventListener('change',updateTiming);start.addEventListener('input',updateTiming);minutes.addEventListener('input',updateTiming);
+   stage.addEventListener('change',updateTiming);
+   start.addEventListener('input',updateTiming);
+   minutes.addEventListener('input',updateTiming);
+   finish.addEventListener('input',()=>{
+     const n=asMinutes(start.value),end=asMinutes(finish.value);
+     if(n!==null&&end!==null&&end>n&&end-n>=5&&end-n<=600){
+       minutes.value=String(end-n);updateTiming();
+     }else endPreview.textContent='Окончание должно быть позже начала (от 5 до 600 минут).';
+   });
    form.append(field('Название активности',name),field('Описание',notes),field('Тип активности',type),
      field('Длительность, минут',minutes),field('Где находится карточка',stage),
-     dateWrap,timeWrap,endPreview,field('Место / зона (необязательно)',place),
+     dateWrap,timeWrap,finishWrap,endPreview,field('Место / зона (необязательно)',place),
      field('Площадка из списка (необязательно)',venue));
    const venueConfirm=field('Место утверждено',confirmed);venueConfirm.classList.add('ad-tl-checkbox');
    form.append(venueConfirm);
@@ -236,7 +253,7 @@ export async function renderWeddingProgram(host,call,weddingDays,venues){
      const target=date.value,isProgram=stage.value==='program';
      if(!name.value.trim()){status.textContent='Укажите название';return;}
      if(!Number.isInteger(n)||n<5||n>600){status.textContent='Длительность от 5 до 600 минут';return;}
-     if(isProgram&&(begin===null||begin+n>=1440)){
+     if(isProgram&&(begin===null||begin+n>=1440||asMinutes(finish.value)!==begin+n)){
        status.textContent='Укажите время, позволяющее закончить активность в тот же день';return;
      }
      let gap=0;
