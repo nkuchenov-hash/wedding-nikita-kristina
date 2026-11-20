@@ -16,8 +16,8 @@ permissions:
   pages: write
   id-token: write
 concurrency:
-  group: pages
-  cancel-in-progress: true
+  group: wedding-admin-recovery-20261120
+  cancel-in-progress: false
 jobs:
   deploy:
     environment:
