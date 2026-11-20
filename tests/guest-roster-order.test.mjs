@@ -113,3 +113,23 @@ test('guest identity and biography precede collapsed organizer invitation fields
    assert.doesNotMatch(main,new RegExp("'"+field+"'"));
  assert.match(js,/adminDetails.append\(mk\('summary','','Организация приглашения'\)\)/);
 });
+
+
+test('guest identity is free of organizer-only fields, which appear at the end of the card',async()=>{
+ const ui=await readFile(new URL('../src/admin-guests.js',import.meta.url),'utf8');
+ const first=ui.slice(ui.indexOf("const basics=group('О человеке'"),ui.indexOf("basics.classList.add"));
+ for(const field of ['planning_status','age_group','plus_one_allowed','decision','side']){
+   assert.doesNotMatch(first,new RegExp("\\['"+field+"'"));
+ }
+ for(const field of ['relation_to_couple','community','origin_place','origin_country','city','country']){
+   assert.match(first,new RegExp("\\['"+field+"'"));
+ }
+ const biography=ui.indexOf("const bio=group('Профиль гостя'");
+ const english=ui.indexOf("const englishDetails=");
+ const organizer=ui.indexOf("const adminDetails=");
+ const registration=ui.indexOf("const registration=section('Регистрация на свадьбу')");
+ assert.ok(biography>0&&english>biography&&organizer>english&&registration>organizer);
+ const planning=ui.slice(organizer,registration);
+ for(const field of ['planning_status','age_group','plus_one_allowed','decision','side'])
+   assert.match(planning,new RegExp("\\['"+field+"'"));
+});
