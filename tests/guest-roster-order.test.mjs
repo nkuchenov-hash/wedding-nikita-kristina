@@ -51,3 +51,22 @@ test('guest toolbar uses only header add, expandable search and icon-only settin
  assert.match(css,/\.ad-gb-settings-icon\{[\s\S]*?border:0!important/);
  assert.match(css,/\.ad-gb-search-field\[hidden\]\{display:none!important\}/);
 });
+
+test('guest editor has a pinned Save Cancel Delete footer and icon-only close',async()=>{
+ const ui=await readFile(new URL('../src/admin-guests.js',import.meta.url),'utf8');
+ const css=await readFile(new URL('../src/admin-guests.css',import.meta.url),'utf8');
+ assert.match(ui,/ad-gb-panel-footer/);
+ assert.match(ui,/ad-gb-footer-delete','Удалить'/);
+ assert.match(ui,/ad-gb-footer-cancel','Отмена'/);
+ assert.match(ui,/ad-gb-primary ad-gb-footer-save','Сохранить'/);
+ assert.match(ui,/ad-gb-close','×'/);
+ assert.doesNotMatch(ui,/ad-gb-close','Закрыть ×'/);
+ assert.match(ui,/panelSave=async\(\)=>/);
+ assert.match(ui,/panelDirty=/);
+ assert.match(ui,/closeWithCheck/);
+ assert.match(ui,/admin\/guest\/fields/);
+ assert.match(ui,/admin\/guest\/rsvp/);
+ assert.match(css,/\.ad-gb-panel-footer\{/);
+ assert.match(css,/\.ad-gb-details\{flex:1 1 auto;min-height:0;overflow-y:auto/);
+ assert.match(css,/\.ad-gb-panel-footer\[hidden\]\{display:none!important\}/);
+});
