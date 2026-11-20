@@ -35,11 +35,10 @@ function streamLiveGuestXlsx(\PDO $db): never {
         $relations[$b][]=$names[$a].' — '.(string)($l['relation_2_to_1']?:$l['relation_type']);
     }
     $headers=['Гость','Name EN','Сторона','Круг общения','Кем приходится','Связанные гости',
-      'Откуда родом','Страна происхождения','Где живёт сейчас','Страна проживания',
+      'Город рождения','Страна рождения','Город проживания','Страна проживания',
       'Профиль гостя (RU)','Guest profile (EN)','Заметки организатора',
       'Состав','Возраст','Решение о приглашении','RSVP','Приглашение отправлено',
-      'Рассадка','Телефон','Email','ID',
-      'Город рождения (по происхождению)','Страна рождения (по происхождению)'];
+      'Рассадка','Телефон','Email','ID'];
     $rows=[$headers];
     $sides=['groom'=>'Никита','bride'=>'Кристина','both'=>'Общие','other'=>'Не определено'];
     $ages=['unknown'=>'Не уточнено','adult'=>'Взрослый','child'=>'Ребёнок','infant'=>'Младенец'];
@@ -49,14 +48,13 @@ function streamLiveGuestXlsx(\PDO $db): never {
           $p['display_name'],$p['name_en'],$sides[(string)$p['side']]??'Не определено',
           $p['community'],$p['relation_to_couple'],
           implode('; ',array_unique($relations[(string)$p['id']]??[])),
-          $p['origin_place'],$p['origin_country'],$p['city'],$p['country'],
+          $p['birth_city'],$p['birth_country'],$p['city'],$p['country'],
           $p['about'],$p['about_en'],$p['private_notes'],
           ($p['planning_status']==='reserve'?'Резерв':'Основной'),
           $ages[(string)$p['age_group']]??'Не уточнено',$p['decision'],
           $attendance[(string)($p['attendance']??'')]??'Нет ответа',
           ($p['invitation_sent_at']?'Да · '.substr((string)$p['invitation_sent_at'],0,10):'Нет'),
-          $p['seating_group'],$p['phone'],$p['email'],$p['source_person_id']?:$p['id'],
-          $p['birth_city'],$p['birth_country']
+          $p['seating_group'],$p['phone'],$p['email'],$p['source_person_id']?:$p['id']
         ];
     }
     $xmlText=static function($value):string{
@@ -70,7 +68,7 @@ function streamLiveGuestXlsx(\PDO $db): never {
         return $result;
     };
     $last=count($rows);
-    $columns=[24,22,12,19,23,35,23,20,23,18,52,48,36,13,15,22,16,20,26,19,27,15,22,20];
+    $columns=[24,22,12,19,23,35,23,20,23,18,52,48,36,13,15,22,16,20,26,19,27,15];
     $cols='<cols>';
     foreach($columns as $i=>$width)$cols.='<col min="'.($i+1).'" max="'.($i+1).'" width="'.$width.'" customWidth="1"/>';
     $cols.='</cols>';
@@ -87,10 +85,10 @@ function streamLiveGuestXlsx(\PDO $db): never {
     }
     $sheet='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'.
       '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'.
-      '<dimension ref="A1:X'.$last.'"/>'.
+      '<dimension ref="A1:V'.$last.'"/>'.
       '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'.
       $cols.'<sheetData>'.$sheetRows.'</sheetData>'.
-      '<autoFilter ref="A1:X'.$last.'"/></worksheet>';
+      '<autoFilter ref="A1:V'.$last.'"/></worksheet>';
     $types='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'.
       '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'.
       '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'.
