@@ -48,7 +48,6 @@
 .ad-tl-card-description{white-space:pre-line;font:400 13px/1.55 Manrope,system-ui,sans-serif;color:#5e7364;margin:0 0 8px;overflow-wrap:anywhere}
 .ad-tl-tags-inline{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
 .ad-tl-tag{border-radius:99px;background:var(--tag-color,#eef4ec);border:1px solid #ffffffaa;color:#445849;font-size:10px;padding:4px 8px;font-weight:700}
-.ad-tl-card-hint{display:block;font-size:10px;color:#819588;margin-top:14px}
 .ad-tl-card-actions{display:flex;gap:5px;margin-top:11px;padding-top:9px;border-top:1px solid #ffffffbd}
 .ad-tl-card-actions .ad-tl-icon{font-size:16px;min-width:38px;padding:6px 9px}
 .ad-tl-track .ad-tl-card{max-width:none}
