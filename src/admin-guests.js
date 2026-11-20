@@ -29,7 +29,12 @@ export const GUEST_TABLE_FIELDS=[
 export const DEFAULT_GUEST_TABLE_COLUMNS=['display_name','side','community','about','planning_status','attendance'];
 export function normalizeGuestTableColumns(value){
  if(!Array.isArray(value))return [...DEFAULT_GUEST_TABLE_COLUMNS];
- const allowed=new Set(GUEST_TABLE_FIELDS.map(([key])=>key)),columns=['display_name'];
+ const allowed=new Set(GUEST_TABLE_FIELDS.map(([key])=>key));
+ const oldDefault=['display_name','planning_status','side','relation_to_couple','seating_group','decision','attendance'];
+ // The previous seven-column default and obsolete technical selections get a readable upgrade.
+ if(value.join('|')===oldDefault.join('|')||value.some(key=>!allowed.has(key)))
+   return [...DEFAULT_GUEST_TABLE_COLUMNS];
+ const columns=['display_name'];
  for(const key of value)if(key!=='display_name'&&allowed.has(key)&&!columns.includes(key))columns.push(key);
  return columns;
 }
