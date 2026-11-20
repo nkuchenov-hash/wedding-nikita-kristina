@@ -228,3 +228,50 @@
  .ad-tl-calendar-card.ad-tl-short-event .ad-tl-clock{font-size:12px}
  .ad-tl-calendar-card.ad-tl-short-event .ad-tl-card-title{font-size:14px!important}
 }
+
+
+/* Single taxonomy: the actual selected tags color the whole activity.
+   With multiple tags the left stripe contains every selected tag color. */
+.ad-tl-card{
+ position:relative;
+ border-left:1px solid #dce6dd;
+ background:linear-gradient(102deg,color-mix(in srgb,var(--activity-color,#ecf2ec) 68%,white) 0%,#fff 85%);
+}
+.ad-tl-card::before{
+ content:"";position:absolute;left:0;top:0;bottom:0;width:7px;
+ background:var(--activity-stripe,var(--activity-color,#ecf2ec));
+ border-radius:13px 0 0 13px;
+ pointer-events:none;z-index:0;
+}
+.ad-tl-card > *{position:relative;z-index:1}
+.ad-tl-calendar-card::before{border-radius:13px 0 0 13px}
+.ad-tl-ideas-grid .ad-tl-card:hover,.ad-tl-calendar-card:hover{
+ background:linear-gradient(102deg,color-mix(in srgb,var(--activity-color,#ecf2ec) 78%,white) 0%,#fff 92%);
+}
+
+/* The name itself is editable, with no duplicated field underneath. */
+.ad-tl-editor-heading{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+.ad-tl-editor-title-input{
+ display:block;flex:1;min-width:0;width:100%;min-height:48px;
+ padding:4px 3px 5px 0;margin:0;border:1px solid transparent;
+ border-bottom:1px solid transparent;border-radius:4px;
+ background:transparent;color:#214734;
+ font:normal clamp(22px,2.5vw,30px)/1.22 Georgia,serif;
+ letter-spacing:-.02em;
+ outline:none;resize:none;overflow:hidden;
+ overflow-wrap:anywhere;box-shadow:none;
+}
+.ad-tl-editor-title-input:hover{border-bottom-color:#9ebaa4}
+.ad-tl-editor-title-input:focus{border-bottom-color:#36794c;outline:none;background:#f4f9f435}
+.ad-tl-editor-title-input::placeholder{color:#6f9277;opacity:1}
+.ad-tl-editor-heading .ad-tl-editor-pencil{
+ flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+ padding:7px;width:36px;height:36px;border:0;border-radius:9px;
+ color:#5b896a;background:transparent;font-size:20px;line-height:1;
+}
+.ad-tl-editor-heading .ad-tl-editor-pencil:hover{background:#edf5ee;color:#245d38}
+.ad-tl-modal-head{align-items:flex-start}
+@media(max-width:460px){
+ .ad-tl-editor-title-input{font-size:23px;line-height:1.25}
+ .ad-tl-editor-heading .ad-tl-editor-pencil{width:30px;height:32px;padding:4px}
+}
