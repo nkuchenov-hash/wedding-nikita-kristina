@@ -103,8 +103,9 @@ test('calendar supports vertical time dragging, bottom-edge resizing and manual 
  assert.match(source,/pointermove/);
  assert.match(source,/pointerup/);
  assert.match(source,/admin\/schedule\/slot/);
- assert.match(source,/Параллельно с/);
- assert.match(source,/parallelField\.hidden=!enabled/);
+ assert.doesNotMatch(source,/Параллельно с/);
+ assert.doesNotMatch(source,/parallelField/);
+ assert.match(source,/parallelEventLayout/);
  assert.doesNotMatch(source,/Время пересекается с/);
  assert.match(api,/admin\/schedule\/slot/);
  assert.match(api,/duration_min=\?,sort_order=\?,gap_before_min=0/);
@@ -126,6 +127,16 @@ test('activity editor uses title, visual tag chips and program switch; global se
  assert.doesNotMatch(source,/У идеи есть длительность/);
  assert.match(source,/placement\.type='checkbox'/);
  assert.match(source,/placement\.setAttribute\('role','switch'\)/);
+ assert.match(source,/Включить в программу/);
+ assert.match(source,/Включено в программу/);
+ assert.match(source,/placement\.setAttribute\('aria-label',switchCaption\(enabled\)\)/);
+ assert.match(source,/ad-tl-time-row/);
+ assert.match(source,/timeRow\.append\(startField,endField\)/);
+ assert.match(source,/timeRow\.classList\.toggle\('is-inactive',!enabled\)/);
+ const css=readFileSync(new URL('../src/admin-program.css',import.meta.url),'utf8');
+ assert.match(css,/ad-tl-time-row\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+ assert.match(css,/\.ad-tl-time-row\.is-inactive\{visibility:hidden/);
+ assert.match(css,/\.ad-tl-placement-toggle\{[^}]*grid-template-columns:46px/);
  assert.doesNotMatch(source,/placement\.value==='program'/);
  assert.match(settings,/renderWeddingSettings/);
  assert.match(settings,/activity_tags/);
