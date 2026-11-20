@@ -132,7 +132,7 @@ function adminCollections(): array {
       'vendors'=>['category','name','contact','website','status','estimate_rub','contract_ref','notes'],
       'budget_lines'=>['category','description','planned_rub','committed_rub','paid_rub','due_at','vendor_id','notes'],
       'tasks'=>['title','description','status','priority','owner','due_at'],
-      'schedule_items'=>['title','start_at','end_at','place','notes','is_public','sort_order','venue_id','is_confirmed','stage','activity_type','duration_min'],
+      'schedule_items'=>['title','start_at','end_at','place','notes','is_public','sort_order','venue_id','is_confirmed','stage','activity_type','duration_min','gap_before_min'],
       'menu_options'=>['category','title','description','allergens','active','sort_order'],
       'documents'=>['category','label','reference','visibility'],
     ];
@@ -559,7 +559,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
            !is_array($ids)||!array_is_list($ids)||count($ids)>250||
            count($ids)!==count(array_unique($ids,SORT_REGULAR)))
             fail(422,'schedule','Неверные параметры расписания');
-        $all=all($db,"SELECT id,duration_min FROM schedule_items
+        $all=all($db,"SELECT id,duration_min,gap_before_min FROM schedule_items
             WHERE stage='program' AND substr(start_at,1,10)=?",[$day]);
         $byId=[];foreach($all as $event)$byId[$event['id']]=$event;
         if(count($ids)!==count($byId))fail(409,'schedule_changed','Программа изменилась. Обновите страницу');
@@ -568,6 +568,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $minute=(int)substr($start,0,2)*60+(int)substr($start,3,2);
         $updates=[];
         foreach($ids as $index=>$id){
+            if($index>0)$minute+=(int)$byId[$id]['gap_before_min'];
             $duration=(int)$byId[$id]['duration_min'];
             if($duration<5||$duration>600||$minute+$duration>1440)
                 fail(422,'schedule','События не помещаются в выбранный день');
@@ -615,6 +616,8 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
                     fail(422,'field','Неизвестный статус активности');
                 if($field==='activity_type' && (!is_string($value)||!preg_match('/^[a-z][a-z0-9_-]{0,31}$/',$value)))
                     fail(422,'field','Неверный тип активности');
+                if($field==='gap_before_min' && (!is_int($value)||$value<0||$value>240))
+                    fail(422,'field','Пауза от 0 до 240 минут');
                 if($field==='duration_min' && (!is_int($value)||$value<5||$value>600))
                     fail(422,'field','Длительность от 5 до 600 минут');
                 if(in_array($field,['start_at','end_at'],true) && $value!==null &&
