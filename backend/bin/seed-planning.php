@@ -34,10 +34,10 @@ try {
     ];
     $removeOld=$db->prepare('DELETE FROM schedule_items WHERE id=? AND title=? AND notes=? AND start_at IS NULL AND is_public=0');
     foreach($obsolete as $row) $removeOld->execute($row);
-    $insertSchedule=$db->prepare('INSERT OR IGNORE INTO schedule_items(id,title,start_at,place,notes,is_public,sort_order) VALUES(?,?,?,?,?,?,?)');
+    $insertSchedule=$db->prepare('INSERT OR IGNORE INTO schedule_items(id,title,start_at,place,notes,is_public,sort_order,stage,activity_type,duration_min) VALUES(?,?,?,?,?,?,?,?,?,?)');
     $scheduleAdded=0;
     foreach($seed['schedule']??[] as $item) {
-        $insertSchedule->execute([$item['id'],$item['title'],$item['start_at'],$item['place'],$item['notes'],$item['is_public'],$item['sort_order']]);
+        $insertSchedule->execute([$item['id'],$item['title'],$item['start_at'],$item['place'],$item['notes'],$item['is_public'],$item['sort_order'],str_contains((string)$item['start_at'],'T')?'program':'idea','ceremony',30]);
         $scheduleAdded+=$insertSchedule->rowCount();
     }
     $insertDoc=$db->prepare('INSERT OR IGNORE INTO documents(id,category,label,reference,visibility) VALUES(?,?,?,?,?)');
