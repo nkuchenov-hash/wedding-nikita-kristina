@@ -32,7 +32,7 @@ const mins=value=>{
 const clock=minutes=>String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0');
 const duration=entry=>Math.max(5,Number(entry?.duration_min)||30);
 export const scheduled=entry=>entry?.stage==='program'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d/.test(entry.start_at||'');
-export const assignedDay=entry=>entry?.activity_date||String(entry?.start_at||'').slice(0,10)||'2027-06-19';
+export const assignedDay=entry=>scheduled(entry)?(entry.activity_date||String(entry.start_at).slice(0,10)):'';
 export const itemTags=item=>{
  try{const tags=JSON.parse(item?.tags_json||'[]');return Array.isArray(tags)?tags.filter(x=>typeof x==='string'):[]}
  catch{return []}
@@ -44,7 +44,7 @@ export async function renderWeddingProgram(host,api,days){
  let entries=[],types=BASE_TYPES.map(t=>({...t})),tags=[],day='2027-06-19',view='program';
  let filter='all',notification='',busy=false,dragged='';
  const dateName=value=>days.find(d=>d.date===value)?.label||value;
- const entriesFor=which=>entries.filter(e=>assignedDay(e)===day&&(which==='program'?scheduled(e):!scheduled(e)))
+ const entriesFor=which=>entries.filter(e=>which==='program'?(scheduled(e)&&assignedDay(e)===day):!scheduled(e))
    .sort((a,b)=>which==='program'
       ?String(a.start_at||'').localeCompare(String(b.start_at||''))||(Number(a.sort_order)||0)-(Number(b.sort_order)||0)
       :String(b.created_at||'').localeCompare(String(a.created_at||'')));
@@ -165,7 +165,7 @@ export async function renderWeddingProgram(host,api,days){
    for(const [id,label,desc] of [
      ['program','Программа','Таймлайн'],
      ['idea','Пул идей','Без назначенного времени']]){
-     const count=entries.filter(e=>(id==='program'?scheduled(e):!scheduled(e))&&assignedDay(e)===day).length;
+     const count=entries.filter(e=>id==='program'?(scheduled(e)&&assignedDay(e)===day):!scheduled(e)).length;
      const button=makeButton(label+' · '+count,()=>{view=id;filter='all';notification='';render();},'ad-tl-main-tab'+(view===id?' is-active':''));
      button.setAttribute('aria-pressed',String(view===id));button.title=desc;nav.append(button);
    }
@@ -176,14 +176,14 @@ export async function renderWeddingProgram(host,api,days){
      b.setAttribute('aria-pressed',String(day===d.date));
      daysBar.append(b);
    }
-   host.append(daysBar);
+   if(view==='program')host.append(daysBar);
    if(notification){const n=$('p','ad-tl-notice',notification);n.setAttribute('role','status');host.append(n);}
    const current=entriesFor(view);
    const toolbar=$('div','ad-tl-section-toolbar'),heading=$('div','ad-tl-section-heading');
-   heading.append($('h2','',view==='program'?'Программа · '+dateName(day):'Идеи · '+dateName(day)));
+   heading.append($('h2','',view==='program'?'Программа · '+dateName(day):'Общий пул идей'));
    heading.append($('span','ad-tl-help',view==='program'
      ?'Перетаскивайте карточки для изменения порядка. Время пересчитывается автоматически.'
-     :'Идеи принадлежат выбранному дню и не имеют времени начала или окончания.'));
+     :'Идеи не привязаны к дате или времени. Любую карточку можно включить в программу нужного дня.'));
    toolbar.append(heading);
    const sum=$('span','ad-tl-summary',current.length+' '+(view==='program'?'событий':'идей'));
    toolbar.append(sum);
@@ -243,7 +243,7 @@ export async function renderWeddingProgram(host,api,days){
    durationInput.min='5';durationInput.max='600';durationInput.value=String(duration(item));
    const targetDay=$('select');
    for(const d of days){const option=$('option','',d.label);option.value=d.date;targetDay.append(option)}
-   targetDay.value=item?assignedDay(item):day;
+   targetDay.value=item&&scheduled(item)?assignedDay(item):day;
    const placement=$('select');
    for(const [id,label] of [['idea','Пул идей'],['program','В программе']]){
      const option=$('option','',label);option.value=id;placement.append(option)
@@ -253,11 +253,12 @@ export async function renderWeddingProgram(host,api,days){
    const end=$('input');end.type='time';
    end.value=hm(item?.end_at)||(mins(start.value)!==null&&mins(start.value)+duration(item)<1440
      ?clock(mins(start.value)+duration(item)):'');
+   const dayField=field('День мероприятия',targetDay);
    const startField=field('Начало',start),endField=field('Окончание',end);
    const timeHint=$('p','ad-tl-end-preview','');
    function updateVisible(){
      const enabled=placement.value==='program';
-     startField.hidden=!enabled;endField.hidden=!enabled;
+     dayField.hidden=!enabled;startField.hidden=!enabled;endField.hidden=!enabled;
      start.required=enabled;end.required=enabled;
      timeHint.textContent=enabled?'Время начала и окончания можно менять. Длительность синхронизируется автоматически.'
        :'У идеи есть длительность, но нет назначенного времени.';
@@ -287,7 +288,7 @@ export async function renderWeddingProgram(host,api,days){
    tagsField.append(makeButton('Управлять тегами',()=>{shade.remove();openTaxonomy('tags')},'ad-tl-text-button'));
    form.append(field('Название',name),field('Описание',description),field('Категория',category),
      field('Длительность, минут',durationInput),tagsField,
-     field('День мероприятия',targetDay),field('Раздел',placement),
+     dayField,field('Раздел',placement),
      startField,endField,timeHint);
    const feedback=$('p','ad-tl-form-error');feedback.setAttribute('role','alert');
    const buttons=$('div','ad-tl-modal-actions');
@@ -318,7 +319,7 @@ export async function renderWeddingProgram(host,api,days){
      const fields={
        title:name.value.trim(),notes:description.value.trim(),
        activity_type:category.value,duration_min:n,tags_json:JSON.stringify(checked),
-       stage:isProgram?'program':'idea',activity_date:chosenDay,
+       stage:isProgram?'program':'idea',activity_date:isProgram?chosenDay:'',
        start_at:isProgram?chosenDay+'T'+start.value+':00':null,
        end_at:isProgram?chosenDay+'T'+end.value+':00':null,
        gap_before_min:0,sort_order:isProgram?(startN||0):0
@@ -328,7 +329,7 @@ export async function renderWeddingProgram(host,api,days){
        await api('admin/records',{method:item?.id?'PATCH':'POST',body:{
          collection:'schedule_items',...(item?.id?{id:item.id}:{}),fields
        }});
-       day=chosenDay;view=isProgram?'program':'idea';filter='all';
+       if(isProgram)day=chosenDay;view=isProgram?'program':'idea';filter='all';
        shade.remove();await reload('Карточка сохранена.');
      }catch(error){feedback.textContent=error.message||'Не удалось сохранить.';}
      finally{busy=false;save.disabled=false}
