@@ -173,3 +173,30 @@
  .ad-tl-tag-select-list{gap:7px}
  .ad-tl-tag-select-list .ad-tl-tag-select{padding:9px 11px}
 }
+
+
+/* The program switch and its caption occupy identical dimensions in both
+   states. No modal movement when changing the activity's section. */
+.ad-tl-placement-field{grid-column:1/-1;min-height:48px;display:flex;align-items:center}
+.ad-tl-placement-toggle{
+  width:270px;max-width:100%;min-height:36px;
+  display:grid;grid-template-columns:46px minmax(0,1fr);
+  align-items:center;column-gap:12px;
+}
+.ad-tl-switch-state{
+  display:block;min-width:0;white-space:nowrap;
+  font:750 13px/1.4 Manrope,system-ui,sans-serif;
+}
+.ad-tl-time-row{
+  grid-column:1/-1;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  align-items:start;column-gap:16px;min-height:81px;
+}
+.ad-tl-time-row .ad-tl-field{min-width:0}
+.ad-tl-time-row .ad-tl-field input{width:100%;min-width:0}
+.ad-tl-time-row.is-inactive{visibility:hidden;pointer-events:none}
+@media(max-width:460px){
+ .ad-tl-placement-field,.ad-tl-time-row{grid-column:1/-1}
+ .ad-tl-time-row{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:10px;min-height:80px}
+ .ad-tl-time-row .ad-tl-field input{padding:10px 7px;font-size:13px}
+}
