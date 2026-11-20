@@ -154,8 +154,7 @@ export async function renderWeddingProgram(host,api,days){
    host.replaceChildren();
    host.classList.add('ad-timeline-page');
    const header=$('header','ad-tl-header'),intro=$('div');
-   intro.append($('span','ad-tl-kicker','СВАДЬБА · СЦЕНАРИЙ'),$('h1','','Программа мероприятия'),
-     $('p','','Выберите день, затем откройте его программу или пул идей. Каждая карточка редактируется нажатием.'));
+   intro.append($('h1','','Программа мероприятия'));
    const commands=$('div','ad-tl-top-actions');
    commands.append(makeButton('+ '+(view==='program'?'Активность':'Идея'),
      ()=>openCard(null,{stage:view}),'ad-tl-primary'),
