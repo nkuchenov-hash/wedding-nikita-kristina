@@ -210,12 +210,13 @@ export async function renderWeddingProgram(host,api,days){
  }
  function card(item,rows){
    const cat=typesOf(item),node=$('article','ad-tl-card ad-tl-card-clickable');
+   let clockLabel=null,lengthLabel=null;
    node.style.setProperty('--activity-color',typeColor(cat));
    node.setAttribute('role','button');
    node.setAttribute('tabindex','0');
    node.setAttribute('aria-label','Открыть активность: '+item.title);
    node.addEventListener('click',e=>{
-     if(e.target.closest('button'))return;
+     if(e.target.closest('button,.ad-tl-move-grip,.ad-tl-resize-grip'))return;
      openCard(item);
    });
    node.addEventListener('keydown',e=>{
@@ -223,25 +224,17 @@ export async function renderWeddingProgram(host,api,days){
      if(e.key==='Enter'||e.key===' '){e.preventDefault();openCard(item)}
    });
    if(view==='program'){
-     node.draggable=true;
-     node.addEventListener('dragstart',e=>{
-       dragged=item.id;e.dataTransfer.effectAllowed='move';
-       e.dataTransfer.setData('text/plain',item.id);node.classList.add('ad-tl-dragging');
-     });
-     node.addEventListener('dragend',()=>{dragged='';node.classList.remove('ad-tl-dragging');});
-     node.addEventListener('dragover',e=>{e.preventDefault();node.classList.add('ad-tl-over')});
-     node.addEventListener('dragleave',()=>node.classList.remove('ad-tl-over'));
-     node.addEventListener('drop',e=>{
-       e.preventDefault();e.stopPropagation();node.classList.remove('ad-tl-over');
-       const id=dragged||e.dataTransfer.getData('text/plain');
-       if(id&&id!==item.id)moveInTimeline(id,item.id);
-     });
      const from=hm(item.start_at);
-     const until=hm(item.end_at)||(mins(from)!==null?clock(Math.min(1439,mins(from)+duration(item))):'—');
-     node.append($('div','ad-tl-clock',from+' — '+until));
+     const until=hm(item.end_at)||(mins(from)!==null
+       ?clock(Math.min(1439,mins(from)+duration(item))):'—');
+     const top=$('div','ad-tl-card-top');
+     clockLabel=$('span','ad-tl-clock',(from||'—')+' — '+until);
+     top.append(clockLabel);
+     node.append(top);
    }
    const meta=$('div','ad-tl-card-eyebrow');
-   meta.append($('span','ad-tl-type',cat?.label||'Другое'),$('span','ad-tl-length',duration(item)+' мин'));
+   lengthLabel=$('span','ad-tl-length',duration(item)+' мин');
+   meta.append($('span','ad-tl-type',cat?.label||'Другое'),lengthLabel);
    node.append(meta,$('h3','ad-tl-card-title',item.title));
    if(item.notes)node.append($('p','ad-tl-card-description',item.notes));
    const pills=$('div','ad-tl-tags-inline');
@@ -252,20 +245,7 @@ export async function renderWeddingProgram(host,api,days){
      pill.style.setProperty('--tag-color',typeColor(tag));pills.append(pill);
    }
    if(pills.childElementCount)node.append(pills);
-   if(view==='program'){
-     const actions=$('div','ad-tl-card-actions');
-     const index=rows.findIndex(x=>x.id===item.id);
-     if(index>0){
-       const up=makeButton('↑',e=>{e.stopPropagation();moveInTimeline(item.id,rows[index-1].id)},'ad-tl-icon');
-       up.setAttribute('aria-label','Поднять активность');actions.append(up);
-     }
-     if(index<rows.length-1){
-       const down=makeButton('↓',e=>{e.stopPropagation();
-         moveInTimeline(item.id,rows[index+2]?.id||null)},'ad-tl-icon');
-       down.setAttribute('aria-label','Опустить активность');actions.append(down);
-     }
-     if(actions.childElementCount)node.append(actions);
-   }
+   if(view==='program')attachTimelineHandles(node,item,clockLabel,lengthLabel);
    return node;
  }
  function render(){
