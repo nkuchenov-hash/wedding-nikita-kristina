@@ -21,7 +21,7 @@ if(!$f)throw new \RuntimeException('Snapshot unreadable');
 $header=fgetcsv($f,0,',','"','\\');
 if(!$header)throw new \RuntimeException('Snapshot header missing');
 $header=array_map(static fn($v)=>trim(preg_replace('/^\xEF\xBB\xBF/','',(string)$v)),$header);
-$required=['ID','Гость','Имя EN (черновик)','Сторона','Круг / группа','Город','Краткий профиль RU','Краткий профиль EN','Рассадка','Приватные заметки'];
+$required=['ID','Гость','Имя EN (черновик)','Сторона','Круг / группа','Город','Краткий профиль RU','Краткий профиль EN','Рассадка','Приватные заметки','Решение о приглашении','В базовом подсчёте'];
 foreach($required as $col)if(!in_array($col,$header,true))
     throw new \RuntimeException('Snapshot columns changed');
 $at=array_flip($header);$items=[];$sides=['Никита'=>0,'Кристина'=>0];
@@ -43,7 +43,7 @@ function usableBio(string $v):bool {
 }
 $db=db();$db->beginTransaction();
 try {
-    $records=all($db,'SELECT p.source_person_id,p.guest_id,p.name_en,p.seating_group,g.display_name,g.city,g.community,g.about,g.about_en,g.private_notes,g.updated_at
+    $records=all($db,'SELECT p.source_person_id,p.guest_id,p.name_en,p.seating_group,g.display_name,g.city,g.community,g.about,g.about_en,g.private_notes,g.planning_status,g.updated_at
       FROM guest_profile_details p JOIN guests g ON g.id=p.guest_id');
     $live=[];
     foreach($records as $g){
@@ -53,7 +53,7 @@ try {
     if(count($live)!==114)throw new \RuntimeException('DB guest count has changed; manual review required');
     foreach($items as $pid=>$source)if(!isset($live[$pid]))throw new \RuntimeException('Source person missing from DB');
     $changed=0;$fields=0;$unchanged=0;$ignored=0;$conflicts=0;
-    $saveGuest=$db->prepare("UPDATE guests SET display_name=?,city=?,community=?,about=?,about_en=?,private_notes=?,updated_at=datetime('now') WHERE id=?");
+    $saveGuest=$db->prepare("UPDATE guests SET display_name=?,city=?,community=?,about=?,about_en=?,private_notes=?,planning_status=?,updated_at=datetime('now') WHERE id=?");
     $saveEn=$db->prepare("UPDATE guest_profile_details SET name_en=?,seating_group=?,updated_at=datetime('now') WHERE guest_id=?");
     // Organizer audit logs, not migration-touched timestamps, protect manual edits.
     $last=one($db,"SELECT value_json FROM event_settings WHERE key='guest_sheet_last_sync'");
@@ -75,6 +75,8 @@ try {
           'community'=>$source['Круг / группа']?:$g['community'],
           'about'=>usableBio($source['Краткий профиль RU'])?$source['Краткий профиль RU']:$g['about'],
           'about_en'=>usableBio($source['Краткий профиль EN'])?$source['Краткий профиль EN']:$g['about_en'],
+          'planning_status'=>$source['Решение о приглашении']==='Под вопросом'
+                &&$source['В базовом подсчёте']==='Нет'?'reserve':$g['planning_status'],
           'private_notes'=>isset($notesChanged[$pid])&&$source['Приватные заметки']!==''
               ?$source['Приватные заметки']:$g['private_notes'],
           'name_en'=>$source['Имя EN (черновик)']?:$g['name_en'],
@@ -88,7 +90,7 @@ try {
         if(isset($manual[(string)$g['guest_id']])){$conflicts++;continue;}
         $changed++;$fields+=$different;
         if($mode==='--apply'){
-            $saveGuest->execute([$target['display_name'],$target['city'],$target['community'],$target['about'],$target['about_en'],$target['private_notes'],$g['guest_id']]);
+            $saveGuest->execute([$target['display_name'],$target['city'],$target['community'],$target['about'],$target['about_en'],$target['private_notes'],$target['planning_status'],$g['guest_id']]);
             if($target['name_en']!==(string)$g['name_en']||$target['seating_group']!==(string)$g['seating_group'])
                 $saveEn->execute([$target['name_en'],$target['seating_group'],$g['guest_id']]);
         }
