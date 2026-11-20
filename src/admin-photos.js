@@ -11,7 +11,7 @@ const CATEGORY = Object.freeze([
 ]);
 export const GUEST_PHOTO_CATEGORIES=CATEGORY.map(([id,title])=>({id,title}));
 export function approvedVenueIds(items=[]){
-  return new Set(items.filter(item=>item&&Number(item.is_confirmed)===1&&item.venue_id)
+  return new Set(items.filter(item=>item&&item.stage==='program'&&Number(item.is_confirmed)===1&&item.venue_id)
     .map(item=>String(item.venue_id)));
 }
 export function guestGalleryAssets(items=[],approved=new Set()){
