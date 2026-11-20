@@ -384,7 +384,7 @@
 }
 .ad-timeline-page .ad-tl-notice{margin:0 0 10px;padding:9px 12px}
 .ad-timeline-page .ad-tl-calendar{margin-top:0}
-@media(max-width:1050px){
+@media (min-width:761px) and (max-width:900px), (max-width:600px){
   .ad-tl-section-controls{flex-wrap:wrap;gap:7px}
   .ad-tl-section-controls .ad-tl-day-nav,
   .ad-tl-section-controls .ad-tl-main-switch{flex:1 1 100%}
