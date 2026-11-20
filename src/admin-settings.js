@@ -1,107 +1,61 @@
-import {BASE_TYPES,itemTags} from './admin-program.js';
-
-// One settings screen for shared activity categories and tags; never edit them
-// inside an individual activity. Persists to the existing private SQLite API.
-const $=(tag,className='',text)=>{
- const el=document.createElement(tag);
- if(className)el.className=className;
- if(text!==undefined)el.textContent=String(text);
- return el;
-};
-const makeButton=(label,fn,style='')=>{
- const button=$('button','ad-tl-button '+style,label);
- button.type='button';button.addEventListener('click',fn);return button;
-};
-const validColor=value=>/^#[0-9a-fA-F]{6}$/.test(value||'')?value:'#DDE9DF';
+import {itemTags} from './admin-program.js';
+const $=(tag,cls='',value)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(value!==undefined)e.textContent=String(value);return e};
+const button=(label,fn,cls='')=>{const e=$('button','ad-tl-button '+cls,label);e.type='button';e.addEventListener('click',fn);return e};
+const color=value=>/^#[0-9a-fA-F]{6}$/.test(value||'')?value:'#DDE9DF';
 
 export async function renderWeddingSettings(host,api){
- const [settingsResponse,recordsResponse]=await Promise.all([
-   api('admin/settings'),api('admin/records?collection=schedule_items')
- ]);
- const settings=settingsResponse.settings||{};
- const records=recordsResponse.items||[];
- const state={
-   activity_types:Array.isArray(settings.activity_types)&&settings.activity_types.length
-     ?settings.activity_types.map(t=>({...t}))
-     :BASE_TYPES.map(t=>({...t})),
-   activity_tags:Array.isArray(settings.activity_tags)
-     ?settings.activity_tags.map(t=>({...t})):[]
- };
- let active='activity_tags',saving=false;
- const head=$('header','ad-tl-settings-head');
- head.append($('h1','','Общие настройки'),$('p','','Настройка оформления и классификации активностей свадебной программы.'));
- const tabs=$('nav','ad-tl-settings-tabs');
- tabs.setAttribute('aria-label','Тип настроек');
- const content=$('section','ad-tl-settings-content');
- const status=$('p','ad-tl-form-error');status.setAttribute('role','status');
- const available=new Set(['activity_types','activity_tags']);
- function used(key,id){
-   return records.some(x=>key==='activity_types'
-     ?x.activity_type===id
-     :itemTags(x).includes(id));
- }
- const draw=()=>{
-   tabs.replaceChildren();content.replaceChildren();status.textContent='';
-   const tabNames=[['activity_tags','Теги'],['activity_types','Категории']];
-   for(const [id,title] of tabNames){
-     const b=makeButton(title,()=>{active=id;draw()},'ad-tl-main-tab'+(active===id?' is-active':''));
-     b.setAttribute('aria-pressed',String(active===id));tabs.append(b);
-   }
-   const isTag=active==='activity_tags';
-   const title=$('h2','',isTag?'Теги для активностей':'Категории и цвета карточек');
-   const note=$('p','ad-tl-settings-help',isTag
-     ?'Несколько тегов можно назначать одной активности. Здесь меняются их названия и цвета.'
-     :'У каждой активности одна категория. Она определяет основной цвет карточки.');
-   content.append(title,note);
-   const list=$('div','ad-tl-settings-list');
-   const data=state[active];
-   for(const entry of data){
+ const [settings,records]=await Promise.all([api('admin/settings'),api('admin/records?collection=schedule_items')]);
+ const tags=Array.isArray(settings.settings?.activity_tags)?settings.settings.activity_tags.map(x=>({...x})):[];
+ const used=id=>(records.items||[]).some(item=>itemTags(item).includes(id));
+ let saving=false;
+ const header=$('header','ad-tl-settings-head');
+ header.append($('h1','','Настройки'),$('p','','Общие теги для программы и пула идей.'));
+ const panel=$('section','ad-tl-settings-content');
+ panel.append($('h2','','Теги активностей'),$('p','ad-tl-settings-help','Теги объединяют классификацию и цвета карточек. У активности может быть несколько тегов.'));
+ const list=$('div','ad-tl-settings-list'),actions=$('div','ad-tl-modal-actions');
+ const message=$('p','ad-tl-form-error');message.setAttribute('role','status');
+ panel.append(list,actions);
+ host.classList.add('ad-timeline-page','ad-global-settings-page');
+ host.replaceChildren(header,panel,message);
+ function draw(){
+   list.replaceChildren();actions.replaceChildren();
+   for(const tag of tags){
      const row=$('div','ad-tl-settings-row');
-     const input=$('input');input.type='text';input.value=entry.label;input.maxLength=60;
-     input.setAttribute('aria-label','Название '+(isTag?'тега':'категории'));
-     input.addEventListener('input',()=>entry.label=input.value);
-     const color=$('input');color.type='color';color.value=validColor(entry.color);
-     color.setAttribute('aria-label','Цвет '+(isTag?'тега':'категории'));
-     color.addEventListener('input',()=>entry.color=color.value);
-     const remove=makeButton('Удалить',()=>{
-       if(used(active,entry.id)){status.textContent='Этот '+(isTag?'тег':'тип')+' уже применяется в карточках. Сначала снимите его с активностей.';return}
-       data.splice(data.indexOf(entry),1);draw();
+     const name=$('input');name.type='text';name.maxLength=60;name.value=tag.label;
+     name.setAttribute('aria-label','Название тега');
+     name.addEventListener('input',()=>tag.label=name.value);
+     const paint=$('input');paint.type='color';paint.value=color(tag.color);
+     paint.setAttribute('aria-label','Цвет тега');
+     paint.addEventListener('input',()=>tag.color=paint.value);
+     const remove=button('Удалить',()=>{
+       if(used(tag.id)){message.textContent='Тег используется в карточках.';return}
+       tags.splice(tags.indexOf(tag),1);draw();
      },'ad-tl-muted');
-     remove.disabled=used(active,entry.id);
-     if(remove.disabled)remove.title='Используется в карточках';
-     row.append(input,color,remove);list.append(row);
+     remove.disabled=used(tag.id);
+     if(remove.disabled)remove.title='Сначала снимите тег с карточек';
+     row.append(name,paint,remove);list.append(row);
    }
-   if(!data.length)list.append($('p','ad-tl-settings-help','Пока нет записей.'));
-   content.append(list);
-   const actions=$('div','ad-tl-modal-actions');
-   actions.append(makeButton('+ '+(isTag?'Добавить тег':'Добавить категорию'),()=>{
-     if(data.length>=30){status.textContent='Максимум 30 записей.';return}
-     const prefix=isTag?'tag_':'category_';
-     let candidate,idx=0;
-     do{candidate=prefix+Date.now().toString(36)+'_'+(idx++).toString(36)}while(data.some(x=>x.id===candidate));
-     data.push({id:candidate,label:isTag?'Новый тег':'Новая категория',color:'#DDE9DF'});
-     draw();list.lastElementChild?.querySelector('input[type=text]')?.focus();
+   if(!tags.length)list.append($('p','ad-tl-settings-help','Тегов пока нет.'));
+   actions.append(button('+ Добавить тег',()=>{
+     if(tags.length>=30){message.textContent='Не более 30 тегов.';return}
+     let id,n=0;
+     do{id='tag_'+Date.now().toString(36)+'_'+(n++).toString(36)}while(tags.some(x=>x.id===id));
+     tags.push({id,label:'Новый тег',color:'#DDE9DF'});message.textContent='';draw();
+     list.lastElementChild?.querySelector('input[type=text]')?.focus();
    },'ad-tl-secondary'));
-   const save=makeButton('Сохранить изменения',async()=>{
+   const save=button('Сохранить',async()=>{
      if(saving)return;
-     if(active==='activity_types'&&!data.length){status.textContent='Нужна хотя бы одна категория.';return}
-     if(data.some(x=>!x.label.trim()||x.label.length>60)){
-       status.textContent='Заполните названия (не длиннее 60 символов).';return;
-     }
-     if(!available.has(active))return;
+     if(tags.some(x=>!x.label.trim()||x.label.length>60)){message.textContent='Заполните названия тегов.';return}
      saving=true;save.disabled=true;
      try{
-       await api('admin/settings',{method:'POST',body:{key:active,value:data.map(x=>({
-         id:x.id,label:x.label.trim(),color:validColor(x.color)
-       }))}});
-       status.textContent='Изменения сохранены в общей базе.';
-       status.classList.add('ad-tl-setting-success');
-     }catch(e){status.classList.remove('ad-tl-setting-success');status.textContent=e.message||'Ошибка сохранения'}
+       await api('admin/settings',{method:'POST',body:{key:'activity_tags',
+         value:tags.map(x=>({id:x.id,label:x.label.trim(),color:color(x.color)}))}});
+       message.textContent='Теги сохранены. Цвета карточек обновлены в базе.';
+       message.classList.add('ad-tl-setting-success');
+     }catch(err){message.classList.remove('ad-tl-setting-success');message.textContent=err.message||'Ошибка сохранения'}
      finally{saving=false;save.disabled=false}
    },'ad-tl-primary');
-   actions.append(save);content.append(actions);
- };
- host.classList.add('ad-timeline-page','ad-global-settings-page');
- host.replaceChildren(head,tabs,content,status);
+   actions.append(save);
+ }
  draw();
 }
