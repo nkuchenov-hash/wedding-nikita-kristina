@@ -91,3 +91,45 @@
 .ad-tl-day-nav + .ad-tl-main-switch .ad-tl-main-tab{font-size:13px;padding:11px 14px}
 .ad-tl-day-nav + .ad-tl-main-switch .ad-tl-main-tab.is-active{box-shadow:0 1px 6px #294f311a}
 @media(max-width:680px){.ad-tl-day-nav{gap:6px}.ad-tl-day-tab{font-size:12px;padding:13px 5px}}
+
+
+/* Precise, vertically scalable wedding program: overlapping entries get equal lanes. */
+.ad-tl-calendar{width:100%;min-width:0;margin-top:10px}
+.ad-tl-calendar-scroll{overflow-y:auto;overflow-x:auto;max-height:min(77vh,1000px);min-height:280px;overscroll-behavior:contain;border:1px solid #dbe7dd;border-radius:14px;background:#fcfdfb;box-shadow:0 5px 22px #24482a09}
+.ad-tl-calendar-grid{position:relative;min-width:290px}
+.ad-tl-calendar-board{position:absolute;top:0;left:68px;width:calc(100% - 68px);background:repeating-linear-gradient(to bottom,#fbfdfb 0px,#fbfdfb 89px,#f7faf7 90px,#f7faf7 179px)}
+.ad-tl-calendar-line{pointer-events:none;position:absolute;left:0;right:0;border-top:1px dashed #e4eee6;z-index:0}
+.ad-tl-calendar-line.is-hour{border-top:1px solid #d0e0d2}
+.ad-tl-time-tick{position:absolute;left:8px;top:0;display:block;width:53px;transform:translateY(-50%);font-size:11px;color:#8a9e90;font-weight:650;line-height:1.3;white-space:nowrap;font-variant-numeric:tabular-nums;z-index:1}
+.ad-tl-time-tick.is-hour{color:#456b51;font-weight:800}
+.ad-tl-calendar-card{position:absolute!important;box-sizing:border-box;z-index:2;padding:9px 11px 19px!important;overflow:hidden;display:flex;flex-direction:column;gap:3px;min-height:0!important;transition:box-shadow .12s;isolation:isolate}
+.ad-tl-calendar-card.ad-tl-is-parallel{box-shadow:0 3px 10px #20472b17}
+.ad-tl-calendar-card.ad-tl-adjusting{z-index:5;box-shadow:0 10px 34px #20472b45;outline:2px solid #3b7950;outline-offset:0}
+.ad-tl-calendar-card .ad-tl-card-top{display:flex;justify-content:space-between;gap:5px;align-items:center;min-height:18px;flex:0 0 auto}
+.ad-tl-calendar-card .ad-tl-clock{font-size:12px;font-weight:850;white-space:nowrap;letter-spacing:0;margin:0;font-variant-numeric:tabular-nums}
+.ad-tl-calendar-card .ad-tl-card-eyebrow{gap:4px;min-height:15px;flex:0 0 auto}
+.ad-tl-calendar-card .ad-tl-type{font-size:9px;padding:3px 7px;max-width:calc(100% - 40px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ad-tl-calendar-card .ad-tl-length{font-size:10px}
+.ad-tl-calendar-card .ad-tl-card-title{font-size:12px!important;font-weight:750!important;line-height:1.3!important;margin:3px 0!important;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;flex:0 1 auto}
+.ad-tl-calendar-card .ad-tl-card-description{font-size:10px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;margin:0}
+.ad-tl-calendar-card .ad-tl-tags-inline{margin-top:3px}
+.ad-tl-calendar-card .ad-tl-tag{font-size:9px;padding:3px 5px}
+.ad-tl-move-grip{display:inline-flex;justify-content:center;align-items:center;min-width:29px;height:22px;border-radius:7px;color:#5a8165;font-size:17px;line-height:1;letter-spacing:-.15em;cursor:grab;touch-action:none;user-select:none;flex-shrink:0}
+.ad-tl-move-grip:hover,.ad-tl-move-grip:focus-visible{background:#fff;color:#27593e;outline:1px solid #b5cbb9}
+.ad-tl-move-grip:active{cursor:grabbing}
+.ad-tl-resize-grip{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:center;z-index:8;height:17px;background:linear-gradient(0deg,#edf4edce,#ffffff00);font-size:0;cursor:ns-resize;touch-action:none;user-select:none;border-radius:0 0 10px 10px}
+.ad-tl-resize-grip:after{content:"";display:block;width:35px;height:4px;border-radius:99px;background:#aac4af;box-shadow:0 1px 2px #29543415}
+.ad-tl-resize-grip:hover:after,.ad-tl-resize-grip:focus-visible:after{background:#337a4c;height:5px}
+.ad-tl-move-grip:focus-visible,.ad-tl-resize-grip:focus-visible{outline:2px solid #35784c;outline-offset:0}
+.ad-tl-calendar-card .ad-tl-card-eyebrow,.ad-tl-calendar-card .ad-tl-card-title,.ad-tl-calendar-card .ad-tl-card-description,.ad-tl-calendar-card .ad-tl-tags-inline{pointer-events:none}
+.ad-tl-calendar .ad-tl-timeline-foot{padding:11px 4px 0;margin:0;color:#738a79;font-size:12px}
+@media(max-width:720px){
+ .ad-tl-calendar-scroll{max-height:68vh}
+ .ad-tl-calendar-board{left:54px;width:calc(100% - 54px)}
+ .ad-tl-time-tick{left:5px;font-size:10px;width:45px}
+ .ad-tl-calendar-card{padding:6px 7px 18px!important;border-radius:9px}
+ .ad-tl-calendar-card .ad-tl-clock{font-size:10px}
+ .ad-tl-calendar-card .ad-tl-card-title{font-size:11px!important}
+ .ad-tl-calendar-card .ad-tl-card-description{display:none}
+ .ad-tl-move-grip{min-width:25px}
+}
