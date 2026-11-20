@@ -1,0 +1,39 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {groupGuestsByConnections,normalizeGuestTableColumns,DEFAULT_GUEST_TABLE_COLUMNS} from '../src/admin-guests.js';
+
+const people=[
+ {id:'sam',display_name:'Сэм',side:'groom',community:'Друзья',seating_group:'Сэм с девушкой'},
+ {id:'girlfriend',display_name:'Девушка Сэма',side:'groom',community:'Друзья',seating_group:'Сэм с девушкой'},
+ {id:'roma',display_name:'Рома',side:'groom',community:'Семья',seating_group:'Рома и Алина'},
+ {id:'alina',display_name:'Алина',side:'groom',community:'Семья',seating_group:'Рома и Алина'},
+ {id:'university',display_name:'Анна',side:'groom',community:'Университет',seating_group:''},
+ {id:'university2',display_name:'Илья',side:'groom',community:'Университет',seating_group:''},
+ {id:'bride',display_name:'Катя',side:'bride',community:'Семья',seating_group:''}
+];
+
+test('group sorting keeps Sam and his girlfriend adjacent and in that order',()=>{
+ const groups=groupGuestsByConnections(people,people,[{guest_id_1:'sam',guest_id_2:'girlfriend',relation_type:'partner'}]);
+ const names=groups.flatMap(group=>group.members.map(person=>person.display_name));
+ assert.equal(names.indexOf('Девушка Сэма'),names.indexOf('Сэм')+1);
+ assert.equal(new Set(names).size,people.length);
+ assert.equal(names.length,people.length);
+});
+test('families and university guests form their own circle groups',()=>{
+ const groups=groupGuestsByConnections(people,people,[]);
+ const byName=new Map(groups.flatMap(g=>g.members.map(person=>[person.id,g.label])));
+ assert.equal(byName.get('roma'),byName.get('alina'));
+ assert.equal(byName.get('university'),byName.get('university2'));
+ assert.notEqual(byName.get('roma'),byName.get('bride'));
+ assert.match(byName.get('university'),/Университет/);
+});
+test('filtering does not insert hidden relatives or duplicate rows',()=>{
+ const selected=people.filter(person=>!['girlfriend','bride'].includes(person.id));
+ const groups=groupGuestsByConnections(selected,people,[{guest_id_1:'sam',guest_id_2:'girlfriend'}]);
+ assert.deepEqual(new Set(groups.flatMap(g=>g.members.map(p=>p.id))),new Set(selected.map(p=>p.id)));
+});
+test('guest identity column is always kept first',()=>{
+ assert.deepEqual(normalizeGuestTableColumns(['city','name_en','city','not-a-column']),
+ ['display_name','city','name_en']);
+ assert.deepEqual(normalizeGuestTableColumns(null),DEFAULT_GUEST_TABLE_COLUMNS);
+});
