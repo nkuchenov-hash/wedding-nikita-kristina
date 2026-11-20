@@ -37,3 +37,17 @@ test('guest identity column is always kept first',()=>{
  ['display_name','city','name_en']);
  assert.deepEqual(normalizeGuestTableColumns(null),DEFAULT_GUEST_TABLE_COLUMNS);
 });
+
+import {readFile} from 'node:fs/promises';
+test('guest toolbar uses only header add, expandable search and icon-only settings',async()=>{
+ const js=await readFile(new URL('../src/admin-guests.js',import.meta.url),'utf8');
+ const css=await readFile(new URL('../src/admin-guests.css',import.meta.url),'utf8');
+ assert.match(js,/actions\.append\(add,searchWrap,columnPrefs\)/);
+ assert.match(js,/searchField\.hidden=true/);
+ assert.match(js,/searchToggle\.addEventListener\('click'/);
+ assert.match(js,/filterField\('Сторона',side\)/);
+ assert.match(js,/filterField\('Сортировка',sort\)/);
+ assert.doesNotMatch(js,/bar\.append\(search,side,filter,sort,direction/);
+ assert.match(css,/\.ad-gb-settings-icon\{[\s\S]*?border:0!important/);
+ assert.match(css,/\.ad-gb-search-field\[hidden\]\{display:none!important\}/);
+});
