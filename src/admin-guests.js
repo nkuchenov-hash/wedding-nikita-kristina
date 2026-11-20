@@ -462,11 +462,12 @@ export async function activateGuestDirectory(root){
      resize.setAttribute('aria-label','Ширина: '+label);
      resize.title='Потяните, чтобы изменить ширину столбца';
      const persistWidth=()=>applyTableLayout({...tableLayout,widths:{...tableLayout.widths,
-       [key]:colWidths[key]}});
+       [key]:colWidths[key]}},{rerender:false});
      resize.addEventListener('pointerdown',ev=>{
        if(ev.button!==0)return;ev.preventDefault();ev.stopPropagation();
        const startX=ev.clientX,startWidth=colWidths[key];
        resize.classList.add('ad-gb-col-resizing');
+       document.body.classList.add('ad-gb-is-resizing');
        const move=event=>{
          colWidths[key]=Math.max(100,Math.min(900,Math.round(startWidth+event.clientX-startX)));
          setPhysicalWidths();hideClippedTooltip();
@@ -476,6 +477,7 @@ export async function activateGuestDirectory(root){
          window.removeEventListener('pointerup',end);
          window.removeEventListener('pointercancel',end);
          resize.classList.remove('ad-gb-col-resizing');
+         document.body.classList.remove('ad-gb-is-resizing');
          if(startWidth!==colWidths[key])persistWidth();
        };
        window.addEventListener('pointermove',move);
@@ -552,7 +554,9 @@ export async function activateGuestDirectory(root){
      const el=event.target.closest?.('.ad-gb-cell-value');
      if(el&&table.contains(el))showClippedTooltip(el);
    });
-   table.addEventListener('pointerout',hideClippedTooltip);
+   table.addEventListener('pointerout',event=>{
+     if(!event.relatedTarget||!event.target.contains?.(event.relatedTarget))hideClippedTooltip();
+   });
    table.addEventListener('focusin',event=>{
      const el=event.target.querySelector?.('.ad-gb-cell-value');
      if(el)showClippedTooltip(el);
