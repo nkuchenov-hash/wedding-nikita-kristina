@@ -1,5 +1,5 @@
 // Wedding admin: day-first program and idea pool; same authenticated SQLite source.
-const BASE_TYPES=[
+export const BASE_TYPES=[
  {id:'ceremony',label:'Церемония',color:'#E5EAD8'},
  {id:'social',label:'Общение с гостями',color:'#D7ECE8'},
  {id:'dance',label:'Танцы',color:'#F3DAE5'},
@@ -75,7 +75,7 @@ export function parallelEventLayout(items){
 
 export async function renderWeddingProgram(host,api,days){
  let entries=[],types=BASE_TYPES.map(t=>({...t})),tags=[],day='2027-06-19',view='program';
- let filter='all',notification='',busy=false,dragged='';
+ let filter='all',notification='',busy=false;
  const timelineScrollByDay=new Map();
  const dateName=value=>days.find(d=>d.date===value)?.label||value;
  const entriesFor=which=>entries.filter(e=>assignedDay(e)===day&&(which==='program'?scheduled(e):!scheduled(e)))
@@ -93,7 +93,6 @@ export async function renderWeddingProgram(host,api,days){
    tags=Array.isArray(settings.settings?.activity_tags)?settings.settings.activity_tags.map(t=>({...t})):[];
  }
  async function reload(message=''){notification=message;await load();render();}
- const order=()=>entriesFor('program');
  async function saveSlot(item,startMinute,newLength,success='Время обновлено.'){
    if(busy)return false;
    const length=Math.round(Number(newLength)),start=snapToFive(Number(startMinute));
@@ -313,8 +312,7 @@ export async function renderWeddingProgram(host,api,days){
    intro.append($('h1','','Программа мероприятия'));
    const commands=$('div','ad-tl-top-actions');
    commands.append(makeButton('+ '+(view==='program'?'Активность':'Идея'),
-     ()=>openCard(null,{stage:view}),'ad-tl-primary'),
-     makeButton('Категории и теги',openTaxonomy,'ad-tl-secondary'));
+     ()=>openCard(null,{stage:view}),'ad-tl-primary'));
    header.append(intro,commands);host.append(header);
    // Day is the first-level navigation; program and ideas live inside each day.
    const daysBar=$('nav','ad-tl-day-nav');
@@ -381,10 +379,16 @@ export async function renderWeddingProgram(host,api,days){
    modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
    modal.setAttribute('aria-label','Редактирование активности');
    const title=$('div','ad-tl-modal-head');
-   title.append($('h2','',item?'Карточка активности':view==='idea'?'Новая идея':'Новая активность'),
-     makeButton('Закрыть',()=>shade.remove(),'ad-tl-secondary'));modal.append(title);
+   const heading=$('h2','ad-tl-editor-title',item?.title||(view==='idea'?'Новая идея':'Новая активность'));
+   const pencil=$('span','ad-tl-editor-pencil','✎');
+   pencil.setAttribute('aria-hidden','true');
+   const headingWrap=$('div','ad-tl-editor-heading');
+   headingWrap.append(heading,pencil);
+   title.append(headingWrap,makeButton('Закрыть',()=>shade.remove(),'ad-tl-secondary'));
+   modal.append(title);
    const form=$('form','ad-tl-form');
    const name=$('input');name.value=item?.title||'';name.required=true;name.maxLength=220;
+   name.addEventListener('input',()=>heading.textContent=name.value.trim()||(view==='idea'?'Новая идея':'Новая активность'));
    const description=$('textarea');description.value=item?.notes||'';description.rows=3;description.maxLength=3000;
    const category=$('select');
    for(const type of types){const opt=$('option','',type.label);opt.value=type.id;category.append(opt)}
@@ -498,71 +502,6 @@ export async function renderWeddingProgram(host,api,days){
      }catch(error){feedback.textContent=error.message||'Не удалось сохранить.';}
      finally{busy=false;save.disabled=false}
    });
- }
- function openTaxonomy(initial='types'){
-   host.querySelector('.ad-tl-modal-cover')?.remove();
-   let part=initial==='tags'?'tags':'types';
-   let newTypes=types.map(x=>({...x})),newTags=tags.map(x=>({...x}));
-   const shade=$('div','ad-tl-modal-cover'),modal=$('section','ad-tl-modal ad-tl-settings-modal');
-   modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
-   modal.setAttribute('aria-label','Управление категориями и тегами');
-   const title=$('div','ad-tl-modal-head');
-   title.append($('h2','','Категории и теги'),makeButton('Закрыть',()=>shade.remove(),'ad-tl-secondary'));modal.append(title);
-   const tabs=$('div','ad-tl-settings-tabs'),list=$('div','ad-tl-settings-list');
-   const error=$('p','ad-tl-form-error');error.setAttribute('role','alert');
-   const footer=$('div','ad-tl-modal-actions');
-   let add=null;
-   const preview=()=>{
-     list.replaceChildren();tabs.replaceChildren();error.textContent='';
-     if(add)add.textContent='+ Добавить '+(part==='types'?'категорию':'тег');
-     for(const [id,label] of [['types','Категории'],['tags','Теги']]){
-       tabs.append(makeButton(label,()=>{part=id;preview()},'ad-tl-main-tab'+(part===id?' is-active':'')));
-     }
-     const data=part==='types'?newTypes:newTags;
-     list.append($('p','ad-tl-help',part==='types'
-        ?'Категория определяет основной цвет карточки. Здесь можно менять её название и цвет.'
-        :'Тегов у одной карточки может быть несколько. Они отображаются на карточках и используются для фильтрации.'));
-     for(const entry of data){
-       const row=$('div','ad-tl-settings-row');
-       const name=$('input');name.value=entry.label;name.maxLength=60;
-       name.setAttribute('aria-label','Название');
-       name.addEventListener('input',()=>{entry.label=name.value});
-       const color=$('input');color.type='color';color.value=typeColor(entry);
-       color.setAttribute('aria-label','Цвет');
-       color.addEventListener('input',()=>{entry.color=color.value});
-       row.append(name,color,makeButton('Удалить',()=>{
-         const used=entries.some(x=>part==='types'?x.activity_type===entry.id:itemTags(x).includes(entry.id));
-         if(used){error.textContent='Этот '+(part==='types'?'тип':'тег')+' используется в карточках. Сначала измените карточки.';return}
-         const listToEdit=part==='types'?newTypes:newTags;
-         listToEdit.splice(listToEdit.indexOf(entry),1);preview();
-       },'ad-tl-muted'));
-       list.append(row);
-     }
-     if(!data.length)list.append($('p','ad-tl-empty','Пока ничего нет.'));
-   };
-   preview();
-   add=makeButton('+ Добавить',()=>{
-      const arr=part==='types'?newTypes:newTags;
-      if(arr.length>=30){error.textContent='Не более 30 записей.';return}
-      const id=(part==='types'?'category_':'tag_')+(Date.now().toString(36))+'_'+arr.length;
-      arr.push({id,label:part==='types'?'Новая категория':'Новый тег',color:'#DDE9DF'});
-      preview();
-   },'ad-tl-secondary');
-   footer.append(add);
-   footer.append(makeButton('Сохранить',async()=>{
-     if(!newTypes.length){error.textContent='Добавьте хотя бы одну категорию.';return}
-     if([...newTypes,...newTags].some(x=>!x.label.trim())){
-       error.textContent='Название не может быть пустым.';return;
-     }
-     if(busy)return;busy=true;
-     try{
-       await api('admin/settings',{method:'POST',body:{key:'activity_types',value:newTypes}});
-       await api('admin/settings',{method:'POST',body:{key:'activity_tags',value:newTags}});
-       shade.remove();await reload('Категории и теги сохранены.');
-     }catch(err){error.textContent='Не удалось сохранить: '+err.message}
-     finally{busy=false}
-   },'ad-tl-primary'));
-   modal.append(tabs,list,error,footer);shade.append(modal);host.append(shade);
  }
  await load();render();
 }
