@@ -141,7 +141,7 @@ export async function activateGuestDirectory(root){
  const searchField=mk('div','ad-gb-search-field');searchField.id='ad-gb-search-field';searchField.hidden=true;
  const search=mk('input','ad-gb-input ad-gb-search-input');
  search.type='search';search.placeholder='Найти гостя';search.setAttribute('aria-label','Поиск по имени, связям, группе, контактам');
- search.autocomplete='off';searchField.append(search);searchWrap.append(searchToggle,searchField);
+ search.autocomplete='off';searchField.append(search);searchWrap.append(searchField,searchToggle);
  const side=select(SIDES,'all'),
    filter=select([['all','Все гости'],['base','В основном списке'],['question','Под вопросом'],['no-name','Нет имени'],['duplicates','Возможные дубли'],['reserve','Резерв'],['kids','Дети'],['yes','Будут'],['maybe','Не решили'],['no','Не придут'],['unsent','Не отправлено'],['archived','Архив']],'all');
  side.className=filter.className='ad-gb-select';
@@ -155,7 +155,7 @@ export async function activateGuestDirectory(root){
  columnsButton.innerHTML='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.3" fill="white"/><circle cx="16" cy="17" r="2.3" fill="white"/></svg>';
  const columnsMenu=mk('div','ad-gb-columns-menu');columnsMenu.hidden=true;
  columnPrefs.append(columnsButton,columnsMenu);
- actions.append(add,searchWrap,columnPrefs);head.append(heading,actions);page.append(head);
+ actions.append(searchWrap,columnPrefs,add);head.append(heading,actions);page.append(head);
  const metrics=mk('div','ad-gb-metrics');page.append(metrics);
  const list=mk('div','ad-gb-list');page.append(list);
  const overlay=mk('div','ad-gb-shade');overlay.hidden=true;overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
@@ -271,7 +271,7 @@ export async function activateGuestDirectory(root){
  }
  columnsButton.addEventListener('click',()=>{
    const open=columnsMenu.hidden;
-   if(open){renderColumnMenu();columnsMenu.hidden=false}else closeColumns();
+   if(open){if(!searchField.hidden)setSearchOpen(false);renderColumnMenu();columnsMenu.hidden=false}else closeColumns();
    columnsButton.setAttribute('aria-expanded',String(open));
  });
  function metric(label,value){const card=mk('div','ad-gb-metric');card.append(mk('strong','',value),mk('span','',label));metrics.append(card)}
