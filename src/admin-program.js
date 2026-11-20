@@ -38,6 +38,22 @@ export const itemTags=item=>{
  catch{return []}
 };
 const typeColor=type=>/^#[0-9a-fA-F]{6}$/.test(type?.color||'')?type.color:'#E8EBE8';
+export function cardTagColors(item,definitions){
+ const ids=itemTags(item);
+ const palette=new Map((Array.isArray(definitions)?definitions:[])
+   .filter(x=>x&&typeof x.id==='string').map(x=>[x.id,x.color]));
+ return [...new Set(ids)].map(id=>palette.get(id))
+   .filter(color=>typeof color==='string'&&/^#[0-9a-fA-F]{6}$/.test(color));
+}
+export function cardColorStyle(item,definitions){
+ const colors=cardTagColors(item,definitions);
+ const primary=colors[0]||'#ECF2EC';
+ const stripe=colors.length>1?'linear-gradient(to bottom,'+
+   colors.map((color,i)=>color+' '+(i/colors.length*100)+'% '+((i+1)/colors.length*100)+'%').join(',')+')'
+   :primary;
+ return {primary,stripe};
+}
+
 const safeTypes=(saved,fallback)=>Array.isArray(saved)&&saved.length?saved.map(x=>({...x})):fallback.map(x=>({...x}));
 
 // One fixed vertical time scale keeps start/end and stretch height in sync.
@@ -82,7 +98,7 @@ export function parallelEventLayout(items){
 }
 
 export async function renderWeddingProgram(host,api,days){
- let entries=[],types=BASE_TYPES.map(t=>({...t})),tags=[],day='2027-06-19',view='program';
+ let entries=[],tags=[],day='2027-06-19',view='program';
  let filter='all',notification='',busy=false;
  const timelineScrollByDay=new Map();
  const dateName=value=>days.find(d=>d.date===value)?.label||value;
@@ -90,14 +106,12 @@ export async function renderWeddingProgram(host,api,days){
    .sort((a,b)=>which==='program'
       ?String(a.start_at||'').localeCompare(String(b.start_at||''))||(Number(a.sort_order)||0)-(Number(b.sort_order)||0)
       :String(b.created_at||'').localeCompare(String(a.created_at||'')));
- const typesOf=e=>types.find(t=>t.id===e.activity_type)||BASE_TYPES.find(t=>t.id==='other');
  const visible=e=>filter==='all'||itemTags(e).includes(filter);
  async function load(){
    const [records,settings]=await Promise.all([
      api('admin/records?collection=schedule_items'),api('admin/settings')
    ]);
    entries=(records.items||[]).filter(e=>e&&typeof e.title==='string');
-   types=safeTypes(settings.settings?.activity_types,BASE_TYPES);
    tags=Array.isArray(settings.settings?.activity_tags)?settings.settings.activity_tags.map(t=>({...t})):[];
  }
  async function reload(message=''){notification=message;await load();render();}
@@ -220,9 +234,11 @@ export async function renderWeddingProgram(host,api,days){
    finally{busy=false}
  }
  function card(item,rows){
-   const cat=typesOf(item),node=$('article','ad-tl-card ad-tl-card-clickable');
+   const node=$('article','ad-tl-card ad-tl-card-clickable');
    let clockLabel=null,lengthLabel=null;
-   node.style.setProperty('--activity-color',typeColor(cat));
+   const palette=cardColorStyle(item,tags);
+   node.style.setProperty('--activity-color',palette.primary);
+   node.style.setProperty('--activity-stripe',palette.stripe);
    node.setAttribute('role','button');
    node.setAttribute('tabindex','0');
    node.setAttribute('aria-label','Открыть активность: '+item.title);
@@ -394,22 +410,31 @@ export async function renderWeddingProgram(host,api,days){
    const shade=$('div','ad-tl-modal-cover'),modal=$('section','ad-tl-modal');
    modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
    modal.setAttribute('aria-label','Редактирование активности');
-   const title=$('div','ad-tl-modal-head');
-   const heading=$('h2','ad-tl-editor-title',item?.title||(view==='idea'?'Новая идея':'Новая активность'));
-   const pencil=$('span','ad-tl-editor-pencil','✎');
-   pencil.setAttribute('aria-hidden','true');
+   const form=$('form','ad-tl-form');
+   form.id='ad-tl-card-editor';
+   // The title itself is the input. No second "Название" field.
+   const name=$('textarea','ad-tl-editor-title-input');
+   name.value=item?.title||'';
+   name.rows=1;name.required=true;name.maxLength=220;
+   name.placeholder=view==='idea'?'Новая идея':'Новая активность';
+   name.setAttribute('aria-label','Название активности');
+   name.setAttribute('form',form.id);
+   const resizeTitle=()=>{
+     name.style.height='auto';
+     name.style.height=Math.max(48,name.scrollHeight)+'px';
+   };
+   name.addEventListener('input',resizeTitle);
+   name.addEventListener('keydown',event=>{
+     if(event.key==='Enter'){event.preventDefault();name.blur();}
+   });
+   const pencil=makeButton('✎',()=>name.focus({preventScroll:true}),'ad-tl-editor-pencil');
+   pencil.setAttribute('aria-label','Изменить название');
    const headingWrap=$('div','ad-tl-editor-heading');
-   headingWrap.append(heading,pencil);
+   headingWrap.append(name,pencil);
+   const title=$('div','ad-tl-modal-head');
    title.append(headingWrap,makeButton('Закрыть',()=>shade.remove(),'ad-tl-secondary'));
    modal.append(title);
-   const form=$('form','ad-tl-form');
-   const name=$('input');name.value=item?.title||'';name.required=true;name.maxLength=220;
-   name.addEventListener('input',()=>heading.textContent=name.value.trim()||(view==='idea'?'Новая идея':'Новая активность'));
    const description=$('textarea');description.value=item?.notes||'';description.rows=3;description.maxLength=3000;
-   const category=$('select');
-   for(const type of types){const opt=$('option','',type.label);opt.value=type.id;category.append(opt)}
-   if(types.some(t=>t.id===item?.activity_type))category.value=item.activity_type;
-   else category.value=types.find(t=>t.id==='other')?.id||types[0]?.id||'other';
    const durationInput=$('input');durationInput.type='number';durationInput.step='1';
    durationInput.min='5';durationInput.max='600';durationInput.value=String(duration(item));
    const placement=$('input');
@@ -476,8 +501,7 @@ export async function renderWeddingProgram(host,api,days){
    const tagsField=$('div','ad-tl-tags-field');
    tagsField.append($('span','ad-tl-form-label','Теги'));
    if(tags.length)tagsField.append(tagBox);
-   form.append(field('Название',name),field('Описание',description),field('Категория',category),
-     field('Длительность, минут',durationInput),tagsField,
+   form.append(field('Описание',description),field('Длительность, минут',durationInput),tagsField,
      placementField,timeRow);
    const feedback=$('p','ad-tl-form-error');feedback.setAttribute('role','alert');
    const buttons=$('div','ad-tl-modal-actions');
@@ -486,7 +510,9 @@ export async function renderWeddingProgram(host,api,days){
    if(item)buttons.append(makeButton('Удалить',()=>removeItem(item),'ad-tl-muted ad-tl-delete'));
    buttons.append(makeButton('Отмена',()=>shade.remove(),'ad-tl-secondary'));
    form.append(buttons,feedback);modal.append(form);shade.append(modal);host.append(shade);
-   updateVisible();name.focus({preventScroll:true});
+   updateVisible();
+   requestAnimationFrame(()=>{if(name.isConnected)resizeTitle()});
+   if(!item)name.focus({preventScroll:true});
    form.addEventListener('submit',async event=>{
      event.preventDefault();if(busy)return;
      const startN=mins(start.value),endN=mins(end.value);
@@ -502,7 +528,8 @@ export async function renderWeddingProgram(host,api,days){
      const checked=[...selected];
      const fields={
        title:name.value.trim(),notes:description.value.trim(),
-       activity_type:category.value,duration_min:n,tags_json:JSON.stringify(checked),
+       // Legacy activity_type stays in the database for compatibility only.
+       duration_min:n,tags_json:JSON.stringify(checked),
        stage:isProgram?'program':'idea',activity_date:chosenDay,
        start_at:isProgram?chosenDay+'T'+start.value+':00':null,
        end_at:isProgram?chosenDay+'T'+end.value+':00':null,
