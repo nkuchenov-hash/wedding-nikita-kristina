@@ -1,5 +1,5 @@
-// Private organizer-only wedding program editor. All changes persist through the authenticated API.
-const DEFAULT_TYPES=[
+// Wedding admin: separate per-day ideas and timed program; same private SQLite source.
+const BASE_TYPES=[
  {id:'ceremony',label:'Церемония',color:'#E5EAD8'},
  {id:'social',label:'Общение с гостями',color:'#D7ECE8'},
  {id:'dance',label:'Танцы',color:'#F3DAE5'},
@@ -9,345 +9,394 @@ const DEFAULT_TYPES=[
  {id:'game',label:'Интерактив',color:'#DDE9F5'},
  {id:'other',label:'Другое',color:'#E8EBE8'}
 ];
-const element=(tag,cls='',text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=String(text);return node;};
-const timeOf=item=>String(item?.start_at||'').match(/T(\d\d:\d\d)/)?.[1]||'';
-const dateOf=item=>String(item?.start_at||'').slice(0,10);
-const asMinutes=value=>{const m=/^(\d\d):(\d\d)$/.exec(String(value||''));return m?Number(m[1])*60+Number(m[2]):null;};
-const clock=minute=>String(Math.floor(minute/60)).padStart(2,'0')+':'+String(minute%60).padStart(2,'0');
-const planned=item=>item.stage==='program' && /^\d{4}-\d{2}-\d{2}T\d\d:\d\d/.test(item.start_at||'');
-const button=(label,cb,cls='')=>{const b=element('button','ad-tl-button '+cls,label);b.type='button';b.addEventListener('click',cb);return b;};
-const field=(label,control)=>{const wrap=element('label','ad-tl-field');wrap.append(element('span','',label),control);return wrap;};
+const $=(tag,className='',value)=>{
+ const node=document.createElement(tag);
+ if(className)node.className=className;
+ if(value!==undefined)node.textContent=String(value);
+ return node;
+};
+const makeButton=(name,action,cls='')=>{
+ const b=$('button','ad-tl-button '+cls,name);b.type='button';
+ b.addEventListener('click',action);return b;
+};
+const field=(label,input)=>{
+ const wrapper=$('label','ad-tl-field');wrapper.append($('span','',label),input);return wrapper;
+};
+const hm=value=>{const match=String(value||'').match(/T(\d\d:\d\d)/);return match?match[1]:'';};
+const mins=value=>{
+ const found=/^(\d\d):(\d\d)$/.exec(String(value||''));
+ if(!found)return null;
+ const h=Number(found[1]),m=Number(found[2]);
+ return h<24&&m<60?h*60+m:null;
+};
+const clock=minutes=>String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0');
+const duration=entry=>Math.max(5,Number(entry?.duration_min)||30);
+const scheduled=entry=>entry?.stage==='program'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d/.test(entry.start_at||'');
+const assignedDay=entry=>entry?.activity_date||String(entry?.start_at||'').slice(0,10)||'2027-06-19';
+const itemTags=item=>{
+ try{const tags=JSON.parse(item?.tags_json||'[]');return Array.isArray(tags)?tags.filter(x=>typeof x==='string'):[]}
+ catch{return []}
+};
+const typeColor=type=>/^#[0-9a-fA-F]{6}$/.test(type?.color||'')?type.color:'#E8EBE8';
+const safeTypes=(saved,fallback)=>Array.isArray(saved)&&saved.length?saved.map(x=>({...x})):fallback.map(x=>({...x}));
 
-export async function renderWeddingProgram(host,call,weddingDays,venues){
- let entries=[],types=DEFAULT_TYPES.map(x=>({...x})),day='2027-06-19',notice='',dragId='',working=false;
- const dayName=d=>weddingDays.find(x=>x.date===d)?.label||d;
- const dayEntries=d=>entries.filter(e=>planned(e)&&dateOf(e)===d)
-   .sort((a,b)=>(Number(a.sort_order)||0)-(Number(b.sort_order)||0)||String(a.start_at).localeCompare(String(b.start_at)));
- const ideaEntries=()=>entries.filter(e=>!planned(e)).sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
- const category=e=>types.find(t=>t.id===e.activity_type)||types.find(t=>t.id==='other')||DEFAULT_TYPES[7];
- const duration=e=>Math.max(5,Number(e.duration_min)||30);
- const lastEnd=arr=>{
-   const item=arr[arr.length-1];if(!item)return '';
-   if(item.end_at)return String(item.end_at).match(/T(\d\d:\d\d)/)?.[1]||'';
-   const n=asMinutes(timeOf(item));return n===null?'':clock(Math.min(1439,n+duration(item)));
- };
- async function fetchData(){
+export async function renderWeddingProgram(host,api,days){
+ let entries=[],types=BASE_TYPES.map(t=>({...t})),tags=[],day='2027-06-19',view='program';
+ let filter='all',notification='',busy=false,dragged='';
+ const dateName=value=>days.find(d=>d.date===value)?.label||value;
+ const entriesFor=which=>entries.filter(e=>assignedDay(e)===day&&(which==='program'?scheduled(e):!scheduled(e)))
+   .sort((a,b)=>which==='program'
+      ?String(a.start_at||'').localeCompare(String(b.start_at||''))||(Number(a.sort_order)||0)-(Number(b.sort_order)||0)
+      :String(b.created_at||'').localeCompare(String(a.created_at||'')));
+ const typesOf=e=>types.find(t=>t.id===e.activity_type)||BASE_TYPES.find(t=>t.id==='other');
+ const visible=e=>filter==='all'||itemTags(e).includes(filter);
+ async function load(){
    const [records,settings]=await Promise.all([
-     call('admin/records?collection=schedule_items'),call('admin/settings')
+     api('admin/records?collection=schedule_items'),api('admin/settings')
    ]);
    entries=(records.items||[]).filter(e=>e&&typeof e.title==='string');
-   const saved=settings.settings?.activity_types;
-   types=Array.isArray(saved)&&saved.length?saved.map(t=>({...t})):DEFAULT_TYPES.map(x=>({...x}));
+   types=safeTypes(settings.settings?.activity_types,BASE_TYPES);
+   tags=Array.isArray(settings.settings?.activity_tags)?settings.settings.activity_tags.map(t=>({...t})):[];
  }
- async function refresh(message=''){
-   notice=message;await fetchData();draw();
- }
- async function arrange(target,ids,start){
-   if(!ids.length)return;
-   if(!start)throw new Error('Укажите начало первого события');
-   await call('admin/schedule/arrange',{method:'POST',body:{day:target,ids,start_time:start}});
- }
- async function shift(target,movedId,beforeId=null){
-   if(working)return;
-   const items=dayEntries(target);
-   if(!items.some(e=>e.id===movedId))return;
-   const ordered=items.map(e=>e.id).filter(id=>id!==movedId);
-   const at=beforeId?ordered.indexOf(beforeId):-1;
-   ordered.splice(at<0?ordered.length:at,0,movedId);
-   const first=items[0];
-   working=true;
-   try{await arrange(target,ordered,timeOf(first));await refresh('Порядок и время обновлены.');}
-   catch(e){await refresh('Не удалось изменить порядок: '+e.message);}
-   finally{working=false}
- }
- async function returnToIdeas(item){
-   if(working)return;
-   working=true;const oldDay=dateOf(item);const old=dayEntries(oldDay);
+ async function reload(message=''){notification=message;await load();render();}
+ const order=()=>entriesFor('program');
+ async function moveInTimeline(id,beforeId){
+   if(busy)return;
+   const rows=order(),source=rows.find(e=>e.id===id);
+   if(!source)return;
+   const ids=rows.map(e=>e.id).filter(x=>x!==id);
+   const index=beforeId===null?ids.length:ids.indexOf(beforeId);
+   ids.splice(index<0?ids.length:index,0,id);
+   if(ids.join('|')===rows.map(x=>x.id).join('|'))return;
+   const start=hm(rows[0].start_at);
+   if(!start)return;
+   busy=true;
    try{
-     await call('admin/records',{method:'PATCH',body:{collection:'schedule_items',id:item.id,fields:{
-       stage:'idea',start_at:null,end_at:null,gap_before_min:0
-     }}});
-     if(old.length>1){
-       const remain=old.filter(e=>e.id!==item.id);
-       await arrange(oldDay,remain.map(e=>e.id),timeOf(remain[0]));
-     }
-     await refresh('Карточка возвращена в пул идей.');
-   }catch(e){await refresh('Не удалось переместить: '+e.message);}
-   finally{working=false}
+     await api('admin/schedule/arrange',{method:'POST',body:{day,ids,start_time:start}});
+     await reload('Порядок и время обновлены.');
+   }catch(error){await reload('Не удалось переставить: '+error.message);}
+   finally{busy=false}
  }
- function drawCard(item,where,dayList){
-   const type=category(item),card=element('article','ad-tl-card');
-   card.style.setProperty('--activity-color',type.color);
-   card.draggable=true;
-   card.dataset.id=item.id;
-   card.addEventListener('dragstart',e=>{
-     dragId=item.id;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',item.id);
-     card.classList.add('ad-tl-dragging');
+ async function removeItem(item){
+   if(busy||!confirm('Удалить активность «'+item.title+'»? Это действие нельзя отменить.'))return;
+   busy=true;
+   try{
+     await api('admin/schedule/delete',{method:'POST',body:{id:item.id}});
+     await reload('Активность удалена.');
+   }catch(err){await reload('Не удалось удалить: '+err.message);}
+   finally{busy=false}
+ }
+ function card(item,rows){
+   const cat=typesOf(item),node=$('article','ad-tl-card ad-tl-card-clickable');
+   node.style.setProperty('--activity-color',typeColor(cat));
+   node.setAttribute('role','button');
+   node.setAttribute('tabindex','0');
+   node.setAttribute('aria-label','Открыть активность: '+item.title);
+   node.addEventListener('click',e=>{
+     if(e.target.closest('button'))return;
+     openCard(item);
    });
-   card.addEventListener('dragend',()=>{dragId='';card.classList.remove('ad-tl-dragging');});
-   card.addEventListener('dragover',e=>{e.preventDefault();card.classList.add('ad-tl-over');});
-   card.addEventListener('dragleave',()=>card.classList.remove('ad-tl-over'));
-   card.addEventListener('drop',async e=>{
-     e.preventDefault();e.stopPropagation();card.classList.remove('ad-tl-over');
-     const source=entries.find(x=>x.id===(dragId||e.dataTransfer.getData('text/plain')));
-     if(!source||source.id===item.id)return;
-     if(where==='timeline'){
-       if(planned(source)&&dateOf(source)===day)await shift(day,source.id,item.id);
-       else openEditor(source,{stage:'program',date:day,beforeId:item.id});
-     }
+   node.addEventListener('keydown',e=>{
+     if(e.target!==node)return;
+     if(e.key==='Enter'||e.key===' '){e.preventDefault();openCard(item)}
    });
-   const eyebrow=element('div','ad-tl-card-eyebrow');
-   eyebrow.append(element('span','ad-tl-type',type.label),element('span','ad-tl-length',duration(item)+' мин'));
-   card.append(eyebrow);
-   card.append(element('h3','ad-tl-card-title',item.title));
-   if(item.notes)card.append(element('p','ad-tl-card-description',item.notes));
-   if(item.place)card.append(element('small','ad-tl-place',item.place));
-   if(where==='timeline'){
-     const start=timeOf(item),end=String(item.end_at||'').match(/T(\d\d:\d\d)/)?.[1]||'';
-     card.prepend(element('div','ad-tl-clock',(start||'—')+' — '+(end||'—')));
-     if(!item.end_at)card.append(element('small','ad-tl-break','Длительность предварительная — уточните в редакторе.'));
-     if(Number(item.gap_before_min)>0)card.append(element('small','ad-tl-break','Пауза перед: '+item.gap_before_min+' мин'));
+   if(view==='program'){
+     node.draggable=true;
+     node.addEventListener('dragstart',e=>{
+       dragged=item.id;e.dataTransfer.effectAllowed='move';
+       e.dataTransfer.setData('text/plain',item.id);node.classList.add('ad-tl-dragging');
+     });
+     node.addEventListener('dragend',()=>{dragged='';node.classList.remove('ad-tl-dragging');});
+     node.addEventListener('dragover',e=>{e.preventDefault();node.classList.add('ad-tl-over')});
+     node.addEventListener('dragleave',()=>node.classList.remove('ad-tl-over'));
+     node.addEventListener('drop',e=>{
+       e.preventDefault();e.stopPropagation();node.classList.remove('ad-tl-over');
+       const id=dragged||e.dataTransfer.getData('text/plain');
+       if(id&&id!==item.id)moveInTimeline(id,item.id);
+     });
+     const from=hm(item.start_at);
+     const until=hm(item.end_at)||(mins(from)!==null?clock(Math.min(1439,mins(from)+duration(item))):'—');
+     node.append($('div','ad-tl-clock',from+' — '+until));
    }
-   const actions=element('div','ad-tl-card-actions');
-   actions.append(button('Изменить',()=>openEditor(item),'ad-tl-edit'));
-   if(where==='idea'){
-     actions.append(button('В программу',()=>openEditor(item,{stage:'program',date:day}),'ad-tl-green'));
+   const meta=$('div','ad-tl-card-eyebrow');
+   meta.append($('span','ad-tl-type',cat?.label||'Другое'),$('span','ad-tl-length',duration(item)+' мин'));
+   node.append(meta,$('h3','ad-tl-card-title',item.title));
+   if(item.notes)node.append($('p','ad-tl-card-description',item.notes));
+   const pills=$('div','ad-tl-tags-inline');
+   for(const id of itemTags(item)){
+     const tag=tags.find(t=>t.id===id);
+     if(!tag)continue;
+     const pill=$('span','ad-tl-tag',tag.label);
+     pill.style.setProperty('--tag-color',typeColor(tag));pills.append(pill);
+   }
+   if(pills.childElementCount)node.append(pills);
+   if(view==='program'){
+     const actions=$('div','ad-tl-card-actions');
+     const index=rows.findIndex(x=>x.id===item.id);
+     if(index>0){
+       const up=makeButton('↑',e=>{e.stopPropagation();moveInTimeline(item.id,rows[index-1].id)},'ad-tl-icon');
+       up.setAttribute('aria-label','Поднять активность');actions.append(up);
+     }
+     if(index<rows.length-1){
+       const down=makeButton('↓',e=>{e.stopPropagation();
+         moveInTimeline(item.id,rows[index+2]?.id||null)},'ad-tl-icon');
+       down.setAttribute('aria-label','Опустить активность');actions.append(down);
+     }
+     if(actions.childElementCount)node.append(actions);
    }else{
-     const i=dayList.findIndex(x=>x.id===item.id);
-     actions.append(button('↑',()=>i>0&&shift(day,item.id,dayList[i-1].id),'ad-tl-icon'));
-     actions.append(button('↓',()=>i<dayList.length-1&&shift(day,dayList[i+1].id,item.id),'ad-tl-icon'));
-     actions.append(button('В идеи',()=>returnToIdeas(item),'ad-tl-muted'));
-     actions[0];
+     const hint=$('span','ad-tl-card-hint','Нажмите, чтобы изменить или включить в программу');
+     node.append(hint);
    }
-   card.append(actions);
-   return card;
+   return node;
  }
- function dropTarget(target){
-   target.addEventListener('dragover',e=>{e.preventDefault();target.classList.add('ad-tl-target-over')});
-   target.addEventListener('dragleave',e=>{if(!target.contains(e.relatedTarget))target.classList.remove('ad-tl-target-over')});
-   target.addEventListener('drop',async e=>{
-     if(e.target.closest('.ad-tl-card'))return;
-     e.preventDefault();target.classList.remove('ad-tl-target-over');
-     const source=entries.find(x=>x.id===(dragId||e.dataTransfer.getData('text/plain')));
-     if(!source)return;
-     if(planned(source)&&dateOf(source)===day)return;
-     openEditor(source,{stage:'program',date:day});
-   });
- }
- function draw(){
+ function render(){
    host.replaceChildren();
    host.classList.add('ad-timeline-page');
-   const header=element('header','ad-tl-header');
-   const heading=element('div');
-   heading.append(element('div','ad-tl-kicker','СЦЕНАРИЙ СВАДЬБЫ'),element('h1','','Программа мероприятия'),
-     element('p','','Идеи без времени — слева. Утверждённые активности с точным таймингом — справа.'));
-   const topActions=element('div','ad-tl-top-actions');
-   topActions.append(button('+ Новая идея',()=>openEditor(null,{stage:'idea'}),'ad-tl-primary'),
-     button('Типы и цвета',editTypes,'ad-tl-secondary'));
-   header.append(heading,topActions);host.append(header);
-   if(notice){const alert=element('p','ad-tl-notice',notice);alert.setAttribute('role','status');host.append(alert);}
-   const layout=element('div','ad-tl-layout');
-   const pool=element('section','ad-tl-pool');
-   const poolHead=element('div','ad-tl-section-head');
-   poolHead.append(element('h2','','Пул идей'),element('span','ad-tl-count',ideaEntries().length));
-   pool.append(poolHead,element('p','ad-tl-help','Без утверждённого времени. Перетащите в расписание или нажмите «В программу».'));
-   const poolList=element('div','ad-tl-pool-list');
-   for(const item of ideaEntries())poolList.append(drawCard(item,'idea',[]));
-   if(!ideaEntries().length)poolList.append(element('p','ad-tl-empty','Идей пока нет. Добавьте первую карточку.'));
-   pool.append(poolList);
-   const timeline=element('section','ad-tl-timeline');
-   const timelineHead=element('div','ad-tl-section-head');
-   timelineHead.append(element('h2','','Таймлайн'),button('+ Активность',()=>openEditor(null,{stage:'program',date:day}),'ad-tl-secondary'));
-   timeline.append(timelineHead);
-   const tabs=element('div','ad-tl-tabs');
-   for(const weddingDay of weddingDays){
-     const b=button(weddingDay.label+(dayEntries(weddingDay.date).length?' · '+dayEntries(weddingDay.date).length:''),()=>{
-       day=weddingDay.date;notice='';draw();
-     },day===weddingDay.date?'ad-tl-tab active':'ad-tl-tab');
-     b.setAttribute('aria-pressed',day===weddingDay.date?'true':'false');tabs.append(b);
+   const header=$('header','ad-tl-header'),intro=$('div');
+   intro.append($('span','ad-tl-kicker','СВАДЬБА · СЦЕНАРИЙ'),$('h1','','Программа мероприятия'),
+     $('p','','У каждого дня — собственные идеи и расписание. Нажмите на карточку, чтобы изменить её.'));
+   const commands=$('div','ad-tl-top-actions');
+   commands.append(makeButton('+ '+(view==='program'?'Активность':'Идея'),
+     ()=>openCard(null,{stage:view}),'ad-tl-primary'),
+     makeButton('Категории и теги',openTaxonomy,'ad-tl-secondary'));
+   header.append(intro,commands);host.append(header);
+   const nav=$('nav','ad-tl-main-switch');nav.setAttribute('aria-label','Идеи или программа');
+   for(const [id,label,desc] of [
+     ['program','Программа','Таймлайн'],
+     ['idea','Пул идей','Без назначенного времени']]){
+     const count=entries.filter(e=>(id==='program'?scheduled(e):!scheduled(e))&&assignedDay(e)===day).length;
+     const button=makeButton(label+' · '+count,()=>{view=id;filter='all';notification='';render();},'ad-tl-main-tab'+(view===id?' is-active':''));
+     button.setAttribute('aria-pressed',String(view===id));button.title=desc;nav.append(button);
    }
-   timeline.append(tabs);
-   const dayList=dayEntries(day);
-   const summary=element('div','ad-tl-summary');
-   const total=dayList.reduce((n,e)=>n+duration(e)+(Number(e.gap_before_min)||0),0);
-   summary.append(element('span','','Активностей: '+dayList.length),element('span','','Продолжительность: '+Math.floor(total/60)+' ч '+total%60+' мин'));
-   timeline.append(summary);
-   const track=element('div','ad-tl-track');dropTarget(track);
-   if(dayList.length){
-     for(const item of dayList)track.append(drawCard(item,'timeline',dayList));
-     const sortedByStart=[...dayList].sort((a,b)=>String(a.start_at).localeCompare(String(b.start_at)));
-     const overlaps=sortedByStart.some((x,i)=>i>0&&String(x.start_at)<String(sortedByStart[i-1].end_at||''));
-     if(overlaps)timeline.append(element('p','ad-tl-warning','Обнаружено пересечение времени. Измените карточку или переставьте события.'));
-   }else{
-     track.append(element('p','ad-tl-empty','На '+dayName(day)+' пока нет активностей с назначенным временем. Перетащите идею сюда.'));
+   host.append(nav);
+   const daysBar=$('div','ad-tl-day-nav');
+   for(const d of days){
+     const b=makeButton(d.label,()=>{day=d.date;filter='all';notification='';render();},'ad-tl-day-tab'+(day===d.date?' is-active':''));
+     b.setAttribute('aria-pressed',String(day===d.date));
+     daysBar.append(b);
    }
-   timeline.append(track);
-   layout.append(pool,timeline);host.append(layout);
+   host.append(daysBar);
+   if(notification){const n=$('p','ad-tl-notice',notification);n.setAttribute('role','status');host.append(n);}
+   const current=entriesFor(view);
+   const toolbar=$('div','ad-tl-section-toolbar'),heading=$('div','ad-tl-section-heading');
+   heading.append($('h2','',view==='program'?'Программа · '+dateName(day):'Идеи · '+dateName(day)));
+   heading.append($('span','ad-tl-help',view==='program'
+     ?'Перетаскивайте карточки для изменения порядка. Время пересчитывается автоматически.'
+     :'Идеи принадлежат выбранному дню и не имеют времени начала или окончания.'));
+   toolbar.append(heading);
+   const sum=$('span','ad-tl-summary',current.length+' '+(view==='program'?'событий':'идей'));
+   toolbar.append(sum);
+   host.append(toolbar);
+   if(tags.length){
+     const filters=$('div','ad-tl-tag-filters');filters.setAttribute('aria-label','Фильтр по тегу');
+     const all=makeButton('Все теги',()=>{filter='all';render();},'ad-tl-filter'+(filter==='all'?' selected':''));
+     all.setAttribute('aria-pressed',String(filter==='all'));filters.append(all);
+     for(const tag of tags){
+       const b=makeButton(tag.label,()=>{filter=tag.id;render();},'ad-tl-filter'+(filter===tag.id?' selected':''));
+       b.style.setProperty('--tag-color',typeColor(tag));b.setAttribute('aria-pressed',String(filter===tag.id));filters.append(b);
+     }
+     host.append(filters);
+   }
+   const content=$('div','ad-tl-single-content'+(view==='idea'?' ad-tl-ideas-grid':' ad-tl-track'));
+   const visibleRows=current.filter(visible);
+   if(view==='program'){
+     content.addEventListener('dragover',event=>event.preventDefault());
+     content.addEventListener('drop',event=>{
+       if(event.target.closest('.ad-tl-card'))return;
+       event.preventDefault();
+       if(dragged)moveInTimeline(dragged,null);
+     });
+   }
+   if(!visibleRows.length)content.append($('div','ad-tl-empty',
+      filter!=='all'?'В этом дне нет карточек с выбранным тегом.'
+      :view==='idea'?'Для этого дня идей пока нет. Добавьте первую.'
+      :'Для этого дня программа пока не составлена.'));
+   else for(const item of visibleRows)content.append(card(item,current));
+   host.append(content);
+   if(view==='program'&&current.length){
+     const timeline=[...current].sort((a,b)=>String(a.start_at).localeCompare(String(b.start_at)));
+     const overlap=timeline.some((e,i)=>i>0&&String(e.start_at)<String(timeline[i-1].end_at||''));
+     if(overlap)host.append($('p','ad-tl-warning','В расписании есть наложения. Нажмите на карточку и исправьте время.'));
+     const start=hm(timeline[0].start_at),end=hm(timeline[timeline.length-1].end_at);
+     const sum=$('p','ad-tl-timeline-foot',(start||'—')+' — '+(end||'—')+
+       ' · '+current.reduce((n,x)=>n+duration(x),0)+' минут активностей');
+     host.append(sum);
+   }
  }
- function openEditor(item=null,options={}){
+ function openCard(item=null,prefs={}){
    host.querySelector('.ad-tl-modal-cover')?.remove();
-   const cover=element('div','ad-tl-modal-cover'),dialog=element('section','ad-tl-modal');
-   dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','Редактирование активности');
-   const head=element('div','ad-tl-modal-head');
-   head.append(element('h2','',item?'Редактировать активность':'Новая активность'),
-     button('Закрыть',()=>cover.remove(),'ad-tl-secondary'));dialog.append(head);
-   const form=element('form','ad-tl-form');
-   const name=element('input');name.value=item?.title||'';name.maxLength=200;name.required=true;
-   const notes=element('textarea');notes.value=item?.notes||'';notes.rows=4;notes.maxLength=3000;
-   const type=element('select');for(const cat of types){const opt=element('option','',cat.label);opt.value=cat.id;type.append(opt);}
-   type.value=item?.activity_type||'other';
-   const minutes=element('input');minutes.type='number';minutes.min='5';minutes.max='600';minutes.step='1';minutes.value=String(duration(item));
-   const stage=element('select');
-   for(const [id,label] of [['idea','Пул идей — время не назначено'],['program','В программе — назначено время']]){
-     const opt=element('option','',label);opt.value=id;stage.append(opt);
+   const shade=$('div','ad-tl-modal-cover'),modal=$('section','ad-tl-modal');
+   modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
+   modal.setAttribute('aria-label','Редактирование активности');
+   const title=$('div','ad-tl-modal-head');
+   title.append($('h2','',item?'Карточка активности':view==='idea'?'Новая идея':'Новая активность'),
+     makeButton('Закрыть',()=>shade.remove(),'ad-tl-secondary'));modal.append(title);
+   const form=$('form','ad-tl-form');
+   const name=$('input');name.value=item?.title||'';name.required=true;name.maxLength=220;
+   const description=$('textarea');description.value=item?.notes||'';description.rows=3;description.maxLength=3000;
+   const category=$('select');
+   for(const type of types){const opt=$('option','',type.label);opt.value=type.id;category.append(opt)}
+   if(types.some(t=>t.id===item?.activity_type))category.value=item.activity_type;
+   else category.value=types.find(t=>t.id==='other')?.id||types[0]?.id||'other';
+   const durationInput=$('input');durationInput.type='number';durationInput.step='1';
+   durationInput.min='5';durationInput.max='600';durationInput.value=String(duration(item));
+   const targetDay=$('select');
+   for(const d of days){const option=$('option','',d.label);option.value=d.date;targetDay.append(option)}
+   targetDay.value=item?assignedDay(item):day;
+   const placement=$('select');
+   for(const [id,label] of [['idea','Пул идей'],['program','В программе']]){
+     const option=$('option','',label);option.value=id;placement.append(option)
    }
-   stage.value=options.stage||(item&&planned(item)?'program':'idea');
-   const date=element('select');
-   for(const d of weddingDays){const opt=element('option','',d.label);opt.value=d.date;date.append(opt);}
-   date.value=options.date||(item&&weddingDays.some(d=>d.date===dateOf(item))?dateOf(item):day);
-   const start=element('input');start.type='time';start.value=timeOf(item)||'';
-   const finish=element('input');finish.type='time';
-   const place=element('input');place.value=item?.place||'';place.maxLength=250;
-   const venue=element('select');const noVenue=element('option','','Не выбрана');noVenue.value='';venue.append(noVenue);
-   for(const v of venues){const opt=element('option','',v.name);opt.value=v.id;venue.append(opt);}
-   venue.value=item?.venue_id||'';
-   const confirmed=element('input');confirmed.type='checkbox';confirmed.checked=Number(item?.is_confirmed||0)===1;
-   const dateWrap=field('Дата',date),timeWrap=field('Начало',start),finishWrap=field('Окончание',finish);
-   const endPreview=element('p','ad-tl-end-preview');
-   function updateTiming(){
-     const inProgram=stage.value==='program';
-     dateWrap.hidden=!inProgram;timeWrap.hidden=!inProgram;finishWrap.hidden=!inProgram;
-     start.required=inProgram;finish.required=inProgram;
-     const n=asMinutes(start.value),m=Number(minutes.value);
-     if(inProgram&&n!==null&&Number.isInteger(m)&&m>=5&&n+m<1440){
-       finish.value=clock(n+m);
-       endPreview.textContent='Окончание и длительность связаны: можно изменить любое из них.';
-     }else{
-       finish.value='';
-       endPreview.textContent=inProgram?'Выберите начало и длительность':'Идея хранится без времени начала и окончания';
-     }
+   placement.value=prefs.stage||(item&&scheduled(item)?'program':'idea');
+   const start=$('input');start.type='time';start.value=hm(item?.start_at);
+   const end=$('input');end.type='time';
+   end.value=hm(item?.end_at)||(mins(start.value)!==null&&mins(start.value)+duration(item)<1440
+     ?clock(mins(start.value)+duration(item)):'');
+   const startField=field('Начало',start),endField=field('Окончание',end);
+   const timeHint=$('p','ad-tl-end-preview','');
+   function updateVisible(){
+     const enabled=placement.value==='program';
+     startField.hidden=!enabled;endField.hidden=!enabled;
+     start.required=enabled;end.required=enabled;
+     timeHint.textContent=enabled?'Время начала и окончания можно менять. Длительность синхронизируется автоматически.'
+       :'У идеи есть длительность, но нет назначенного времени.';
    }
-   stage.addEventListener('change',updateTiming);
-   start.addEventListener('input',updateTiming);
-   minutes.addEventListener('input',updateTiming);
-   finish.addEventListener('input',()=>{
-     const n=asMinutes(start.value),end=asMinutes(finish.value);
-     if(n!==null&&end!==null&&end>n&&end-n>=5&&end-n<=600){
-       minutes.value=String(end-n);updateTiming();
-     }else endPreview.textContent='Окончание должно быть позже начала (от 5 до 600 минут).';
+   function fromStartOrDuration(){
+     const a=mins(start.value),d=Number(durationInput.value);
+     if(a!==null&&Number.isInteger(d)&&d>=5&&d<=600&&a+d<1440)end.value=clock(a+d);
+     else end.value='';
+   }
+   start.addEventListener('change',fromStartOrDuration);
+   durationInput.addEventListener('change',fromStartOrDuration);
+   end.addEventListener('change',()=>{
+     const a=mins(start.value),b=mins(end.value);
+     if(a!==null&&b!==null&&b>a&&b-a>=5&&b-a<=600)durationInput.value=String(b-a);
    });
-   form.append(field('Название активности',name),field('Описание',notes),field('Тип активности',type),
-     field('Длительность, минут',minutes),field('Где находится карточка',stage),
-     dateWrap,timeWrap,finishWrap,endPreview,field('Место / зона (необязательно)',place),
-     field('Площадка из списка (необязательно)',venue));
-   const venueConfirm=field('Место утверждено',confirmed);venueConfirm.classList.add('ad-tl-checkbox');
-   form.append(venueConfirm);
-   const actions=element('div','ad-tl-modal-actions');
-   const save=element('button','ad-tl-button ad-tl-primary','Сохранить');save.type='submit';
-   actions.append(save,button('Отмена',()=>cover.remove(),'ad-tl-secondary'));
-   const status=element('p','ad-tl-form-error');status.setAttribute('role','alert');
-   form.append(actions,status);dialog.append(form);cover.append(dialog);host.append(cover);updateTiming();
-   form.addEventListener('submit',async e=>{
-     e.preventDefault();if(working)return;
-     const n=Number(minutes.value),begin=asMinutes(start.value),previousDay=item&&planned(item)?dateOf(item):'';
-     const target=date.value,isProgram=stage.value==='program';
-     if(!name.value.trim()){status.textContent='Укажите название';return;}
-     if(!Number.isInteger(n)||n<5||n>600){status.textContent='Длительность от 5 до 600 минут';return;}
-     if(isProgram&&(begin===null||begin+n>=1440||asMinutes(finish.value)!==begin+n)){
-       status.textContent='Укажите время, позволяющее закончить активность в тот же день';return;
+   placement.addEventListener('change',updateVisible);
+   const tagBox=$('div','ad-tl-tag-checkboxes');const selected=new Set(itemTags(item));
+   for(const tag of tags){
+     const check=$('input');check.type='checkbox';check.value=tag.id;check.checked=selected.has(tag.id);
+     const chip=field(tag.label,check);chip.classList.add('ad-tl-check-chip');
+     chip.style.setProperty('--tag-color',typeColor(tag));tagBox.append(chip);
+   }
+   const tagsField=$('div','ad-tl-tags-field');
+   tagsField.append($('span','ad-tl-form-label','Теги'));
+   if(tags.length)tagsField.append(tagBox);
+   else tagsField.append($('p','ad-tl-help','Теги пока не созданы.'));
+   tagsField.append(makeButton('Управлять тегами',()=>{shade.remove();openTaxonomy('tags')},'ad-tl-text-button'));
+   form.append(field('Название',name),field('Описание',description),field('Категория',category),
+     field('Длительность, минут',durationInput),tagsField,
+     field('День мероприятия',targetDay),field('Раздел',placement),
+     startField,endField,timeHint);
+   const feedback=$('p','ad-tl-form-error');feedback.setAttribute('role','alert');
+   const buttons=$('div','ad-tl-modal-actions');
+   const save=$('button','ad-tl-button ad-tl-primary','Сохранить');save.type='submit';
+   buttons.append(save);
+   if(item)buttons.append(makeButton('Удалить',()=>removeItem(item).then(()=>shade.remove()),'ad-tl-muted ad-tl-delete'));
+   buttons.append(makeButton('Отмена',()=>shade.remove(),'ad-tl-secondary'));
+   form.append(buttons,feedback);modal.append(form);shade.append(modal);host.append(shade);
+   updateVisible();name.focus({preventScroll:true});
+   form.addEventListener('submit',async event=>{
+     event.preventDefault();if(busy)return;
+     const startN=mins(start.value),endN=mins(end.value);
+     const n=Number(durationInput.value),isProgram=placement.value==='program';
+     if(!name.value.trim()){feedback.textContent='Укажите название активности.';return}
+     if(!Number.isInteger(n)||n<5||n>600){feedback.textContent='Длительность должна составлять 5–600 минут.';return}
+     if(isProgram&&(startN===null||endN===null||endN<=startN||endN-startN!==n)){
+       feedback.textContent='Проверьте начало, окончание и длительность активности.';return;
      }
-     let gap=0;
-     const before=dayEntries(target).filter(x=>x.id!==item?.id);
-     let ordered=before.map(x=>x.id),at=ordered.length;
-     if(isProgram&&item&&previousDay===target){
-       const original=dayEntries(target).map(x=>x.id);
-       at=Math.min(original.indexOf(item.id),ordered.length);
+     if(isProgram&&endN>=1440){feedback.textContent='Событие должно завершиться до полуночи.';return}
+     const chosenDay=targetDay.value;
+     if(isProgram){
+       const conflict=entries.find(x=>x.id!==item?.id&&scheduled(x)&&assignedDay(x)===chosenDay&&
+         startN<mins(hm(x.end_at)||clock(Math.min(1439,mins(hm(x.start_at))+duration(x))))&&
+         endN>mins(hm(x.start_at)));
+       if(conflict){feedback.textContent='Время пересекается с «'+conflict.title+'». Исправьте расписание.';return}
      }
-     if(isProgram&&options.beforeId){
-       const targetIndex=ordered.indexOf(options.beforeId);
-       if(targetIndex>=0)at=targetIndex;
-     }
-     if(isProgram&&at>0){
-       const prior=before[at-1],end=asMinutes(lastEnd(before.slice(0,at)));
-       if(end!==null&&begin<end){
-         status.textContent='Начало раньше окончания предыдущей активности. Измените время или порядок.';return;
-       }
-       gap=Math.min(240,Math.max(0,(begin??0)-(end??0)));
-       if(begin!==null&&end!==null&&begin-end>240){
-         status.textContent='Пауза до активности больше 4 часов. Уточните начало.';return;
-       }
-     }
+     const checked=[...tagBox.querySelectorAll('input:checked')].map(x=>x.value);
      const fields={
-       title:name.value.trim(),notes:notes.value.trim(),activity_type:type.value,
-       duration_min:n,stage:isProgram?'program':'idea',gap_before_min:isProgram?gap:0,
-       start_at:isProgram?target+'T'+start.value+':00':null,
-       end_at:isProgram?target+'T'+clock(begin+n)+':00':null,
-       place:place.value.trim(),venue_id:venue.value,
-       is_confirmed:confirmed.checked&&!!venue.value?1:0,
-       is_public:Number(item?.is_public||0),
-       sort_order:isProgram?(item&&previousDay===target?Number(item.sort_order)||90:10000):Number(item?.sort_order)||0
+       title:name.value.trim(),notes:description.value.trim(),
+       activity_type:category.value,duration_min:n,tags_json:JSON.stringify(checked),
+       stage:isProgram?'program':'idea',activity_date:chosenDay,
+       start_at:isProgram?chosenDay+'T'+start.value+':00':null,
+       end_at:isProgram?chosenDay+'T'+end.value+':00':null,
+       gap_before_min:0,sort_order:isProgram?(startN||0):0
      };
-     working=true;save.disabled=true;
+     busy=true;save.disabled=true;
      try{
-       const result=await call('admin/records',{method:item?.id?'PATCH':'POST',body:{
+       await api('admin/records',{method:item?.id?'PATCH':'POST',body:{
          collection:'schedule_items',...(item?.id?{id:item.id}:{}),fields
        }});
-       if(isProgram){
-         const newId=item?.id||result.id;
-         ordered.splice(at,0,newId);
-         const priorFirst=before[0];
-         const firstTime=at===0?start.value:(priorFirst?timeOf(priorFirst):start.value);
-         await arrange(target,ordered,firstTime);
-       }
-       if(previousDay&&(!isProgram||previousDay!==target)){
-         const remaining=dayEntries(previousDay).filter(x=>x.id!==item.id);
-         if(remaining.length)await arrange(previousDay,remaining.map(x=>x.id),timeOf(remaining[0]));
-       }
-       cover.remove();await refresh('Изменения сохранены в базе.');
-     }catch(err){
-       status.textContent=err.message||'Не удалось сохранить';
-       await fetchData();
-     }finally{working=false;save.disabled=false}
+       day=chosenDay;view=isProgram?'program':'idea';filter='all';
+       shade.remove();await reload('Карточка сохранена.');
+     }catch(error){feedback.textContent=error.message||'Не удалось сохранить.';}
+     finally{busy=false;save.disabled=false}
    });
-   name.focus({preventScroll:true});
  }
- function editTypes(){
+ function openTaxonomy(initial='types'){
    host.querySelector('.ad-tl-modal-cover')?.remove();
-   const cover=element('div','ad-tl-modal-cover'),dialog=element('section','ad-tl-modal');
-   const head=element('div','ad-tl-modal-head');
-   head.append(element('h2','','Типы активностей и цвета'),button('Закрыть',()=>cover.remove(),'ad-tl-secondary'));dialog.append(head);
-   const rows=element('div','ad-tl-types');
-   let local=types.map(t=>({...t}));
-   const note=element('p','ad-tl-help','Каждому типу соответствует цвет всех карточек этого типа.');
-   const info=element('p','ad-tl-form-error');info.setAttribute('role','alert');
-   const redraw=()=>{
-     rows.replaceChildren();
-     for(const type of local){
-       const row=element('div','ad-tl-type-row');
-       const name=element('input');name.value=type.label;name.maxLength=60;
-       name.addEventListener('input',()=>{type.label=name.value;});
-       const color=element('input');color.type='color';color.value=type.color;
-       color.addEventListener('input',()=>{type.color=color.value;});
-       const del=button('Удалить',()=>{
-         if(entries.some(e=>e.activity_type===type.id)){info.textContent='Этот тип используется в карточках. Сначала смените их тип.';return;}
-         local=local.filter(t=>t.id!==type.id);redraw();
-       },'ad-tl-muted');
-       row.append(name,color,del);rows.append(row);
+   let part=initial==='tags'?'tags':'types';
+   let newTypes=types.map(x=>({...x})),newTags=tags.map(x=>({...x}));
+   const shade=$('div','ad-tl-modal-cover'),modal=$('section','ad-tl-modal ad-tl-settings-modal');
+   modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
+   modal.setAttribute('aria-label','Управление категориями и тегами');
+   const title=$('div','ad-tl-modal-head');
+   title.append($('h2','','Категории и теги'),makeButton('Закрыть',()=>shade.remove(),'ad-tl-secondary'));modal.append(title);
+   const tabs=$('div','ad-tl-settings-tabs'),list=$('div','ad-tl-settings-list');
+   const error=$('p','ad-tl-form-error');error.setAttribute('role','alert');
+   const footer=$('div','ad-tl-modal-actions');
+   const preview=()=>{
+     list.replaceChildren();tabs.replaceChildren();error.textContent='';
+     for(const [id,label] of [['types','Категории'],['tags','Теги']]){
+       tabs.append(makeButton(label,()=>{part=id;preview()},'ad-tl-main-tab'+(part===id?' is-active':'')));
      }
+     const data=part==='types'?newTypes:newTags;
+     list.append($('p','ad-tl-help',part==='types'
+        ?'Категория определяет основной цвет карточки. Здесь можно менять её название и цвет.'
+        :'Тегов у одной карточки может быть несколько. Они отображаются на карточках и используются для фильтрации.'));
+     for(const entry of data){
+       const row=$('div','ad-tl-settings-row');
+       const name=$('input');name.value=entry.label;name.maxLength=60;
+       name.setAttribute('aria-label','Название');
+       name.addEventListener('input',()=>{entry.label=name.value});
+       const color=$('input');color.type='color';color.value=typeColor(entry);
+       color.setAttribute('aria-label','Цвет');
+       color.addEventListener('input',()=>{entry.color=color.value});
+       row.append(name,color,makeButton('Удалить',()=>{
+         const used=entries.some(x=>part==='types'?x.activity_type===entry.id:itemTags(x).includes(entry.id));
+         if(used){error.textContent='Этот '+(part==='types'?'тип':'тег')+' используется в карточках. Сначала измените карточки.';return}
+         const listToEdit=part==='types'?newTypes:newTags;
+         listToEdit.splice(listToEdit.indexOf(entry),1);preview();
+       },'ad-tl-muted'));
+       list.append(row);
+     }
+     if(!data.length)list.append($('p','ad-tl-empty','Пока ничего нет.'));
    };
-   redraw();
-   const footer=element('div','ad-tl-modal-actions');
-   footer.append(button('+ Тип',()=>{
-     local.push({id:'custom_'+Date.now().toString(36),label:'Новый тип',color:'#DCE8DE'});redraw();
+   preview();
+   footer.append(makeButton('+ Добавить '+(part==='types'?'категорию':'тег'),()=>{
+      const arr=part==='types'?newTypes:newTags;
+      if(arr.length>=30){error.textContent='Не более 30 записей.';return}
+      const id=(part==='types'?'category_':'tag_')+(Date.now().toString(36))+'_'+arr.length;
+      arr.push({id,label:part==='types'?'Новая категория':'Новый тег',color:'#DDE9DF'});
+      preview();
    },'ad-tl-secondary'));
-   footer.append(button('Сохранить типы',async ()=>{
-     if(!local.every(t=>t.label.trim())){info.textContent='Укажите название каждого типа';return;}
+   // The Add button follows the selected management tab.
+   const add=footer.querySelector('button');
+   const originalAdd=add;originalAdd.addEventListener('click',()=>{});
+   footer.append(makeButton('Сохранить',async()=>{
+     if(!newTypes.length){error.textContent='Добавьте хотя бы одну категорию.';return}
+     if([...newTypes,...newTags].some(x=>!x.label.trim())){
+       error.textContent='Название не может быть пустым.';return;
+     }
+     if(busy)return;busy=true;
      try{
-       await call('admin/settings',{method:'POST',body:{key:'activity_types',value:local}});
-       cover.remove();await refresh('Типы и цвета сохранены.');
-     }catch(e){info.textContent=e.message;}
+       await api('admin/settings',{method:'POST',body:{key:'activity_types',value:newTypes}});
+       await api('admin/settings',{method:'POST',body:{key:'activity_tags',value:newTags}});
+       shade.remove();await reload('Категории и теги сохранены.');
+     }catch(err){error.textContent='Не удалось сохранить: '+err.message}
+     finally{busy=false}
    },'ad-tl-primary'));
-   dialog.append(note,rows,info,footer);cover.append(dialog);host.append(cover);
+   modal.append(tabs,list,error,footer);shade.append(modal);host.append(shade);
  }
- await fetchData();draw();
+ await load();render();
 }
