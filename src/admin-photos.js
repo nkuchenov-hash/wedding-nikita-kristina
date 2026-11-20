@@ -1,3 +1,4 @@
+import {showAdminToast} from './admin-toast.js';
 /* The organizer's ONE guest-facing photo collection.
    It is NOT a gallery of candidate venue research or a guest moderation screen.
    No assets appear here without explicit organizer upload. */
@@ -210,8 +211,8 @@ export function activatePhotoArchive(root){
       }
       const result=await request('admin/gallery/upload',{method:'POST',formData:data});
       await reload();file.value='';caption.value='';
-      feedback.textContent=result.duplicate?'Эта фотография уже есть в галерее.':'Фото сохранено как черновик для гостей.';
-    }catch(error){feedback.textContent=error.message}
+      feedback.textContent='';showAdminToast(result.duplicate?'Эта фотография уже есть в галерее.':'Фотография сохранена.');
+    }catch(error){feedback.textContent='';showAdminToast(error.message,{kind:'error'})}
     finally{ui.busy=false;updateCategory()}
   });
   flag.addEventListener('click',async()=>{
@@ -220,8 +221,8 @@ export function activatePhotoArchive(root){
     ui.busy=true;flag.disabled=true;
     try{
       await request('admin/gallery/update',{method:'PATCH',data:{id:item.id,is_public:Number(item.is_public)!==1}});
-      await reload();drawLightbox();
-    }catch(error){feedback.textContent=error.message}
+      await reload();drawLightbox();showAdminToast('Настройки фотографии сохранены.');
+    }catch(error){showAdminToast(error.message,{kind:'error'})}
     finally{ui.busy=false;flag.disabled=false}
   });
   category.addEventListener('change',()=>{feedback.textContent='';updateCategory()});
