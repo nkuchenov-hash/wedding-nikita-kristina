@@ -152,7 +152,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $d=payload(16384);
         $allowed=['event_date','event_time','event_venue','venue_address','rsvp_deadline',
           'dress_code','transport_info','public_notes','menu_open','directory_open',
-          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','activity_types','activity_tags','program_day_hours'];
+          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','guest_table_columns','activity_types','activity_tags','program_day_hours'];
         $key=choice($d,'key',$allowed,'');
         if(!array_key_exists('value',$d))
             fail(422,'field','Значение настройки недопустимо');
@@ -168,6 +168,21 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
                    !is_string($type['color'])||!preg_match('/^#[0-9a-fA-F]{6}$/',$type['color'])||
                    isset($seen[$type['id']]))fail(422,'field','Некорректный тип активности');
                 $seen[$type['id']]=true;
+            }
+        } elseif($key==='guest_table_columns'){
+            $columns=['display_name','first_name','last_name','name_en','planning_status','age_group',
+                'side','relation_to_couple','relationship','community','seating_group','decision',
+                'invitation_sent_at','attendance','adults','children','plus_one_allowed','city',
+                'phone','email','language','about','about_en','private_notes','source_person_id',
+                'status','created_at','updated_at','profile_completed_at','first_opened_at',
+                'last_opened_at','invite_prepared_at','response_source','dietary_notes','other_notes'];
+            if(!is_array($value)||!array_is_list($value)||count($value)>count($columns)||
+                count($value)<1||$value[0]!=='display_name'||
+                count($value)!==count(array_unique($value)))
+                fail(422,'field','Некорректный набор столбцов');
+            foreach($value as $column){
+                if(!is_string($column)||!in_array($column,$columns,true))
+                    fail(422,'field','Недопустимое поле таблицы гостей');
             }
         } elseif($key==='program_day_hours'){
             $days=['2027-06-17','2027-06-18','2027-06-19'];
