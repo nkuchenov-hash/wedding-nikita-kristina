@@ -86,6 +86,7 @@ jobs:
             php bin/migrate.php
             php bin/backfill-guest-profiles.php
             php bin/backfill-guest-children.php
+            php bin/backfill-guest-locations.php
             php bin/test-unified-guests.php
             php bin/seed-venues.php
             php bin/seed-venue-dates.php
