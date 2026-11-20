@@ -40,6 +40,39 @@ export const itemTags=item=>{
 const typeColor=type=>/^#[0-9a-fA-F]{6}$/.test(type?.color||'')?type.color:'#E8EBE8';
 const safeTypes=(saved,fallback)=>Array.isArray(saved)&&saved.length?saved.map(x=>({...x})):fallback.map(x=>({...x}));
 
+// One fixed vertical time scale keeps start/end and stretch height in sync.
+export const MINUTE_PX=3;
+export const snapToFive=value=>Math.round(value/5)*5;
+export function parallelEventLayout(items){
+ const slots=items.map(item=>{
+   const start=mins(hm(item.start_at));
+   const end=mins(hm(item.end_at))??(start===null?null:start+duration(item));
+   return {id:item.id,start,end};
+ }).filter(x=>x.start!==null&&x.end!==null&&x.end>x.start)
+   .sort((a,b)=>a.start-b.start||b.end-a.end||String(a.id).localeCompare(String(b.id)));
+ const arranged=[];
+ let group=[],groupEnd=-1;
+ const flush=()=>{
+   if(!group.length)return;
+   const lanes=[];
+   const placed=group.map(event=>{
+     let lane=lanes.findIndex(end=>end<=event.start);
+     if(lane===-1){lane=lanes.length;lanes.push(event.end)}
+     else lanes[lane]=event.end;
+     return {...event,lane};
+   });
+   for(const event of placed)arranged.push({...event,laneCount:lanes.length});
+   group=[];groupEnd=-1;
+ };
+ for(const event of slots){
+   if(group.length&&event.start>=groupEnd)flush();
+   group.push(event);
+   groupEnd=Math.max(groupEnd,event.end);
+ }
+ flush();
+ return arranged;
+}
+
 export async function renderWeddingProgram(host,api,days){
  let entries=[],types=BASE_TYPES.map(t=>({...t})),tags=[],day='2027-06-19',view='program';
  let filter='all',notification='',busy=false,dragged='';
@@ -60,23 +93,111 @@ export async function renderWeddingProgram(host,api,days){
  }
  async function reload(message=''){notification=message;await load();render();}
  const order=()=>entriesFor('program');
- async function moveInTimeline(id,beforeId){
-   if(busy)return;
-   if(filter!=='all'){notification='Для перестановки включите «Все теги».';render();return}
-   const rows=order(),source=rows.find(e=>e.id===id);
-   if(!source)return;
-   const ids=rows.map(e=>e.id).filter(x=>x!==id);
-   const index=beforeId===null?ids.length:ids.indexOf(beforeId);
-   ids.splice(index<0?ids.length:index,0,id);
-   if(ids.join('|')===rows.map(x=>x.id).join('|'))return;
-   const start=hm(rows[0].start_at);
-   if(!start)return;
+ async function saveSlot(item,startMinute,newLength,success='Время обновлено.'){
+   if(busy)return false;
+   const length=Math.round(Number(newLength)),start=snapToFive(Number(startMinute));
+   if(!Number.isFinite(start)||!Number.isInteger(length)||length<5||length>600||
+      start<0||start+length>=1440){
+     notification='Время выходит за пределы дня или длительность недопустима.';render();return false;
+   }
    busy=true;
    try{
-     await api('admin/schedule/arrange',{method:'POST',body:{day,ids,start_time:start}});
-     await reload('Порядок и время обновлены.');
-   }catch(error){await reload('Не удалось переставить: '+error.message);}
+     await api('admin/schedule/slot',{method:'POST',body:{
+       id:item.id,day:assignedDay(item),start_time:clock(start),duration_min:length
+     }});
+     await reload(success);return true;
+   }catch(error){await reload('Не удалось сохранить время: '+error.message);return false}
    finally{busy=false}
+ }
+ function attachTimelineHandles(node,item,clockLabel,lengthLabel){
+   const start=mins(hm(item.start_at));
+   if(start===null)return;
+   const grip=$('span','ad-tl-move-grip','⋮⋮');
+   grip.setAttribute('title','Переместить по времени (стрелки вверх/вниз — шаг 5 минут)');
+   grip.setAttribute('role','button');
+   grip.setAttribute('tabindex','0');
+   grip.setAttribute('aria-label','Переместить активность по времени');
+   const handle=$('span','ad-tl-resize-grip','⋮⋮');
+   handle.setAttribute('title','Потяните вниз или вверх, чтобы изменить длительность');
+   handle.setAttribute('role','slider');
+   handle.setAttribute('tabindex','0');
+   handle.setAttribute('aria-label','Длительность активности');
+   handle.setAttribute('aria-valuemin','5');
+   handle.setAttribute('aria-valuemax',String(Math.min(600,1435-start)));
+   handle.setAttribute('aria-valuenow',String(duration(item)));
+   handle.setAttribute('aria-orientation','vertical');
+   const top=node.querySelector('.ad-tl-card-top');
+   top.append(grip);
+   node.append(handle);
+   const drag=(control,mode)=>{
+     control.addEventListener('click',e=>{e.preventDefault();e.stopPropagation()});
+     control.addEventListener('pointerdown',e=>{
+       if(busy||(e.pointerType==='mouse'&&e.button!==0))return;
+       e.preventDefault();e.stopPropagation();
+       const originY=e.clientY,originStart=start,originLength=duration(item);
+       let resultStart=originStart,resultLength=originLength;
+       control.setPointerCapture(e.pointerId);
+       node.classList.add('ad-tl-adjusting');
+       const update=e2=>{
+         if(e2.pointerId!==e.pointerId)return;
+         e2.preventDefault();
+         const delta=snapToFive((e2.clientY-originY)/MINUTE_PX);
+         if(mode==='resize'){
+           resultLength=Math.max(5,Math.min(600,1435-originStart,
+             snapToFive(originLength+delta)));
+           node.style.height=Math.max(15,resultLength*MINUTE_PX-3)+'px';
+           handle.setAttribute('aria-valuenow',String(resultLength));
+         }else{
+           resultStart=Math.max(0,Math.min(1435-originLength,snapToFive(originStart+delta)));
+           node.style.transform='translateY('+((resultStart-originStart)*MINUTE_PX)+'px)';
+         }
+         clockLabel.textContent=clock(resultStart)+' — '+clock(resultStart+resultLength);
+         lengthLabel.textContent=resultLength+' мин';
+       };
+       const finish=e2=>{
+         if(e2.pointerId!==e.pointerId)return;
+         control.removeEventListener('pointermove',update);
+         control.removeEventListener('pointerup',finish);
+         control.removeEventListener('pointercancel',cancel);
+         try{control.releasePointerCapture(e.pointerId)}catch{}
+         node.classList.remove('ad-tl-adjusting');
+         node.style.transform='';
+         if(resultStart!==originStart||resultLength!==originLength)
+           void saveSlot(item,resultStart,resultLength,
+             mode==='resize'?'Длительность изменена.':'Время начала изменено.');
+         else{
+           node.style.height='';
+           clockLabel.textContent=clock(start)+' — '+clock(start+originLength);
+           lengthLabel.textContent=originLength+' мин';
+         }
+       };
+       const cancel=e2=>{
+         if(e2.pointerId!==e.pointerId)return;
+         control.removeEventListener('pointermove',update);
+         control.removeEventListener('pointerup',finish);
+         control.removeEventListener('pointercancel',cancel);
+         node.classList.remove('ad-tl-adjusting');node.style.transform='';node.style.height='';
+         clockLabel.textContent=clock(start)+' — '+clock(start+originLength);
+         lengthLabel.textContent=originLength+' мин';
+       };
+       control.addEventListener('pointermove',update);
+       control.addEventListener('pointerup',finish);
+       control.addEventListener('pointercancel',cancel);
+     });
+     control.addEventListener('keydown',event=>{
+       if(!['ArrowUp','ArrowDown'].includes(event.key))return;
+       event.preventDefault();event.stopPropagation();
+       const step=event.shiftKey?15:5;
+       const direction=event.key==='ArrowDown'?1:-1;
+       if(mode==='resize')void saveSlot(item,start,
+         Math.max(5,Math.min(600,1435-start,duration(item)+direction*step)),'Длительность изменена.');
+       else void saveSlot(item,
+         Math.max(0,Math.min(1435-duration(item),start+direction*step)),
+         duration(item),'Время начала изменено.');
+     });
+   };
+   drag(grip,'move');
+   drag(handle,'resize');
  }
  async function removeItem(item){
    if(busy||!confirm('Удалить активность «'+item.title+'»? Это действие нельзя отменить.'))return false;
