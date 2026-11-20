@@ -37,7 +37,9 @@ test('tags are stored as arrays on activity cards and are independently editable
 });
 test('the day is primary navigation with program and idea sub-tabs',()=>{
  assert.match(source,/const daysBar=\$\('nav','ad-tl-day-nav'\)/);
- assert.match(source,/host\.append\(daysBar\);\s*const nav=/);
+ assert.match(source,/const sectionControls=\$\('div','ad-tl-section-controls'\)/);
+ assert.match(source,/sectionControls\.append\(daysBar,nav\)/);
+ assert.match(source,/host\.append\(sectionControls\)/);
  assert.match(source,/\['program','Программа'/);
  assert.match(source,/\['idea','Пул идей'/);
  assert.match(source,/assignedDay\(e\)===day&&\(which==='program'\?scheduled\(e\):!scheduled\(e\)\)/);
@@ -233,6 +235,25 @@ test('settings saves daily visible hours, and the left sidebar places settings l
  for(const day of ['2027-06-17','2027-06-18','2027-06-19'])assert.ok(settings.includes(day));
  const list=data.slice(data.indexOf('export const adminModules'));
  assert.ok(list.lastIndexOf("id:'settings'")>list.lastIndexOf("id:'tasks'"));
- assert.match(css,/\.side-link\[href="#\/admin\/settings"\]/);
+ assert.match(css,/\.admin-settings-footer/);
+ assert.match(css,/height:100dvh/);
+ assert.match(css,/overflow-y:auto;overflow-x:hidden/);
  assert.match(css,/margin-top:auto/);
+});
+
+
+test('header is compact: dates with section tabs, tag strip with view switch',()=>{
+ const css=readFileSync(new URL('../src/admin-program.css',import.meta.url),'utf8');
+ assert.match(source,/const sectionControls=\$\('div','ad-tl-section-controls'\)/);
+ assert.match(source,/sectionControls\.append\(daysBar,nav\)/);
+ assert.match(source,/const compactTools=\$\('div','ad-tl-compact-tools'\)/);
+ assert.match(source,/compactTools\.append\(filters\)/);
+ assert.match(source,/compactTools\.append\(modes\)/);
+ assert.match(source,/host\.append\(compactTools\)/);
+ assert.match(css,/\.ad-tl-section-controls\{/);
+ assert.match(css,/\.ad-tl-compact-tools\{/);
+ assert.match(css,/\.ad-tl-compact-tools \.ad-tl-tag-filters\{/);
+ assert.match(css,/flex-wrap:nowrap/);
+ assert.match(css,/overflow-x:auto;overflow-y:hidden/);
+ assert.match(css,/\.ad-timeline-page \.ad-tl-header h1\{/);
 });
