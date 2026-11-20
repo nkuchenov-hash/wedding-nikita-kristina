@@ -175,7 +175,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         } elseif($key==='guest_table_columns'){
             $columns=['display_name','first_name','last_name','name_en','planning_status','age_group',
                 'side','relation_to_couple','relationship','community','seating_group','decision',
-                'invitation_sent_at','attendance','adults','children','plus_one_allowed','city',
+                'invitation_sent_at','attendance','adults','children','plus_one_allowed','city','country','birth_city','birth_country',
                 'phone','email','language','about','about_en','private_notes','source_person_id',
                 'status','created_at','updated_at','profile_completed_at','first_opened_at',
                 'last_opened_at','invite_prepared_at','response_source','dietary_notes','other_notes'];
@@ -432,7 +432,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         if(!one($db,'SELECT id FROM guests WHERE id=?',[$id]))
             fail(404,'guest','Гость не найден');
         $profileFields=['name_en','relation_to_couple','seating_group','decision','base_count'];
-        $guestFields=['first_name','last_name','display_name','side','relationship','city',
+        $guestFields=['first_name','last_name','display_name','side','relationship','city','country','birth_city','birth_country',
             'email','phone','language','about','about_en','community','private_notes','plus_one_allowed','children_count','planning_status','age_group'];
         $setGuest=[];$argsGuest=[];$setProfile=[];$argsProfile=[];
         foreach($values as $key=>$value){
