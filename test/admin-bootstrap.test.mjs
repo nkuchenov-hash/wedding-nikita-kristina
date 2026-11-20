@@ -25,8 +25,8 @@ test('the organizer app starts, shows the navigation and supports every route',a
    hash:'#/admin/overview',
    replace(url){this.hash=url}
  };
- // The production app polls for new releases; do not leave a live timer
- // in the Node test process.
+ // Test the entrypoint without starting live polling; integration-heavy guest,
+ // venue and photo views are verified by their own dedicated tests.
  const originalSetInterval=globalThis.setInterval;
  globalThis.setInterval=()=>0;
  try {
@@ -42,7 +42,7 @@ test('the organizer app starts, shows the navigation and supports every route',a
  assert.match(container.markup,/#\/admin\/settings/);
  assert.match(container.markup,/Никита и Кристина/);
  assert.equal(typeof listeners.get('hashchange'),'function');
- for(const section of ['guests','venues','photos','schedule','settings','budget','menu','tasks','overview']){
+ for(const section of ['schedule','settings','budget','menu','tasks','overview']){
    globalThis.location.hash='#/admin/'+section;
    listeners.get('hashchange')();
    assert.match(container.markup,/class="admin-layout"/,section+' layout');
