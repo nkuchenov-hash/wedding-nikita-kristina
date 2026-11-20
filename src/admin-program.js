@@ -39,9 +39,9 @@ export function cardTagColors(item,definitions){
 export function cardColorStyle(item,definitions){
  const colors=cardTagColors(item,definitions);
  const primary=colors[0]||'#ECF2EC';
- // The first selected tag alone determines the card background and accent.
- // Additional tags remain visible as labels but do not blend colors.
- return {primary,stripe:primary};
+ // The first selected tag alone determines the background.
+ // Other tags remain visible on the card without secondary stripes.
+ return {primary};
 }
 
 
@@ -243,7 +243,6 @@ export async function renderWeddingProgram(host,api,days){
    let clockLabel=null,lengthLabel=null;
    const palette=cardColorStyle(item,tags);
    node.style.setProperty('--activity-color',palette.primary);
-   node.style.setProperty('--activity-stripe',palette.stripe);
    node.setAttribute('role','button');
    node.setAttribute('tabindex','0');
    node.setAttribute('aria-label','Открыть активность: '+item.title);
