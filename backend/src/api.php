@@ -547,6 +547,16 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         json(['ok'=>true,'sent'=>$sent]);
     }
 
+    if ($route==='admin/schedule/delete' && $method==='POST') {
+        $d=payload(4096);
+        $id=strval($d,'id',40,true);
+        $record=one($db,'SELECT id FROM schedule_items WHERE id=?',[$id]);
+        if(!$record)fail(404,'not_found','Активность не найдена');
+        statement($db,'DELETE FROM schedule_items WHERE id=?',[$id]);
+        audit($db,'admin',$actor,'delete','schedule_items',$id);
+        json(['ok'=>true,'id'=>$id]);
+    }
+
     // Atomic server-side reorder: all events in one day move together, and end times
     // are derived from their durations. Never perform partial client-side PATCH loops.
     if ($route==='admin/schedule/arrange' && $method==='POST') {
