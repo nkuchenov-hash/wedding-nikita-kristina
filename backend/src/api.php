@@ -560,7 +560,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
            count($ids)!==count(array_unique($ids,SORT_REGULAR)))
             fail(422,'schedule','Неверные параметры расписания');
         $all=all($db,"SELECT id,duration_min,gap_before_min FROM schedule_items
-            WHERE stage='program' AND substr(start_at,1,10)=?",[$day,$day]);
+            WHERE stage='program' AND activity_date=? AND substr(start_at,1,10)=?",[$day,$day]);
         $byId=[];foreach($all as $event)$byId[$event['id']]=$event;
         if(count($ids)!==count($byId))fail(409,'schedule_changed','Программа изменилась. Обновите страницу');
         foreach($ids as $id)if(!is_string($id)||!isset($byId[$id]))
