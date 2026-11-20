@@ -47,6 +47,10 @@ if(!in_array('planning_status',array_column($guestColumns,'name'),true))
     $database->exec("ALTER TABLE guests ADD COLUMN planning_status TEXT NOT NULL DEFAULT 'main' CHECK(planning_status IN ('main','reserve'))");
 if(!in_array('age_group',array_column($guestColumns,'name'),true))
     $database->exec("ALTER TABLE guests ADD COLUMN age_group TEXT NOT NULL DEFAULT 'unknown' CHECK(age_group IN ('unknown','adult','child','infant'))");
+foreach(['country','birth_city','birth_country'] as $field){
+    if(!in_array($field,array_column($guestColumns,'name'),true))
+        $database->exec("ALTER TABLE guests ADD COLUMN ".$field." TEXT NOT NULL DEFAULT ''");
+}
 $database->exec('CREATE INDEX IF NOT EXISTS idx_guests_planning_age ON guests(planning_status,age_group)');
 $scheduleColumns=$database->query('PRAGMA table_info(schedule_items)')->fetchAll(PDO::FETCH_ASSOC);
 if(!in_array('venue_id',array_column($scheduleColumns,'name'),true))
