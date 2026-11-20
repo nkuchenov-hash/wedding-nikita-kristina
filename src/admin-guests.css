@@ -385,3 +385,23 @@ body.ad-gb-lock{overflow:hidden}
   .ad-guestbook .ad-gb-top{align-items:center;gap:5px}
   .ad-guestbook .ad-gb-top-actions{gap:1px}
 }
+
+/* The organizer's dictated personal profile is the primary guest field. */
+.ad-gb-main-profile{padding:0 0 22px;margin:0 0 18px;border-bottom:1px solid #dce7dd}
+.ad-gb-main-profile h4{font-size:19px;font-weight:700;line-height:1.25;margin:0 0 16px;color:#204c35}
+.ad-gb-main-profile .ad-gb-edit-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:15px}
+.ad-gb-main-profile .ad-gb-edit-field{font-size:13px;font-weight:550;color:#57745f}
+.ad-gb-main-profile textarea{
+ display:block;width:100%;min-height:132px;padding:14px 15px;
+ resize:vertical;white-space:pre-wrap;line-height:1.6;
+ font-size:14px;box-sizing:border-box;background:#fff;
+ border:1px solid #c7dacb;border-radius:10px;
+}
+.ad-gb-main-profile .ad-gb-edit-field:first-child textarea{min-height:190px}
+.ad-gb-main-profile textarea:focus{outline:2px solid #c1dfc6;outline-offset:1px;border-color:#4b8f67}
+.ad-gb-plain-cell:has(.ad-gb-text-preview){max-width:350px}
+.ad-gb-plain-cell .ad-gb-text-preview{max-width:350px;line-height:1.55;overflow-wrap:anywhere;text-align:left}
+@media(max-width:720px){
+ .ad-gb-main-profile h4{font-size:17px}
+ .ad-gb-main-profile .ad-gb-edit-field:first-child textarea{min-height:160px}
+}
