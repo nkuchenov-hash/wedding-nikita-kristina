@@ -346,6 +346,7 @@ export async function renderWeddingProgram(host,api,days){
    const tabs=$('div','ad-tl-settings-tabs'),list=$('div','ad-tl-settings-list');
    const error=$('p','ad-tl-form-error');error.setAttribute('role','alert');
    const footer=$('div','ad-tl-modal-actions');
+   let add=null;
    const preview=()=>{
      list.replaceChildren();tabs.replaceChildren();error.textContent='';
      if(add)add.textContent='+ Добавить '+(part==='types'?'категорию':'тег');
@@ -375,7 +376,7 @@ export async function renderWeddingProgram(host,api,days){
      if(!data.length)list.append($('p','ad-tl-empty','Пока ничего нет.'));
    };
    preview();
-   const add=makeButton('+ Добавить',()=>{
+   add=makeButton('+ Добавить',()=>{
       const arr=part==='types'?newTypes:newTags;
       if(arr.length>=30){error.textContent='Не более 30 записей.';return}
       const id=(part==='types'?'category_':'tag_')+(Date.now().toString(36))+'_'+arr.length;
