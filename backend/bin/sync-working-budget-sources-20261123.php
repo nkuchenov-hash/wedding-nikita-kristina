@@ -7,7 +7,7 @@ use Throwable;
 require_once __DIR__.'/../src/core.php';
 if(PHP_SAPI!=='cli'){http_response_code(404);exit(1);}
 // Refresh attached factual sources only. Never overwrite organizer 'overrides'.
-$ids=['roof18','milyutin','glukhovsky','repino-riviera'];
+$ids=['roof18','milyutin','glukhovsky','repino-riviera','petr'];
 $seed=json_decode((string)file_get_contents(__DIR__.'/../seed/venues.json'),true,512,JSON_THROW_ON_ERROR);
 $sourceById=[];
 foreach($seed as $x){
