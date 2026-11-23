@@ -16,12 +16,12 @@ body.admin-body .admin-page-heading h1{
  max-width:100%;overflow-wrap:break-word;
 }
 body.admin-body .admin-page-heading :is(.eyebrow,.ad-overview-kicker,.ad-photo-eyebrow){
- font:750 10px/1.4 Manrope,Arial,sans-serif;
+ font:750 16px/1.4 Manrope,Arial,sans-serif;
  letter-spacing:.15em;text-transform:uppercase;
  color:var(--admin-page-kicker-color);margin:0 0 6px;
 }
 body.admin-body .admin-page-heading p{
- font:400 12px/1.5 Manrope,Arial,sans-serif;
+ font:400 16px/1.5 Manrope,Arial,sans-serif;
  color:var(--admin-page-subtitle-color);margin:5px 0 0;max-width:830px;
 }
 body.admin-body :is(.panel-header h2,.ad-overview-card-head h2,.vw-table-panel-title h2,.ad-photo-upload-form h2,.ad-tl-settings-content>h2){
@@ -53,3 +53,19 @@ body.admin-body .ad-timeline-page .ad-tl-top-actions{
  body.admin-body .ad-guestbook .ad-gb-top h1{font-size:clamp(26px,5.4vw,32px)}
  body.admin-body .ad-timeline-page .ad-tl-header>div:first-child{flex-basis:220px}
 }
+
+/* Shared organizer typography tokens: primary 17px, secondary 16px on all screens. */
+body.admin-body{
+ --admin-text-size:17px;
+ --admin-label-size:16px;
+ font-size:var(--admin-text-size);
+ line-height:1.55;
+}
+body.admin-body .admin-content{font-size:var(--admin-text-size)}
+body.admin-body .admin-side .side-link{font-size:17px;min-height:46px;line-height:1.45}
+body.admin-body .admin-side :is(.admin-brand,.admin-brand small,.side-caption,.side-back){font-size:16px;line-height:1.5}
+body.admin-body :is(.admin-topbar,.dashboard-heading p,.metric span,.metric small,.panel-meta,.ad-global-toast,.ad-global-toast-action){font-size:16px;line-height:1.5}
+body.admin-body .admin-content small{font-size:16px}
+body.admin-body .admin-content :is(input,select,textarea){min-height:42px}
+body.admin-body .admin-page-heading p{font-size:17px}
+body.admin-body .admin-page-heading :is(.eyebrow,.ad-overview-kicker,.ad-photo-eyebrow){font-size:16px}

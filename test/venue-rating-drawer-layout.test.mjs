@@ -33,10 +33,10 @@ test('narrow viewport and numeric budgets keep fixed-size inputs with no sideway
  assert.match(html,/data-rating-form/);
 });
 
-test('rating drawer uses readable 15px labels, 13px hints, and 16px numeric controls',()=>{
- assert.match(css,/\.vw-page \.vw-rating-drawer \.vw-rating-rule b\{font-size:15px/);
- assert.match(css,/\.vw-page \.vw-rating-drawer \.vw-rating-rule small\{font-size:13px/);
+test('rating drawer uses readable 16px labels, 16px hints, and 16px numeric controls',()=>{
+ assert.match(css,/\.vw-page \.vw-rating-drawer \.vw-rating-rule b\{font-size:16px/);
+ assert.match(css,/\.vw-page \.vw-rating-drawer \.vw-rating-rule small\{font-size:16px/);
  assert.match(css,/\.vw-page \.vw-rating-drawer \.vw-rating-rule input\[type="number"\]\{[^}]*font-size:16px/s);
- assert.match(css,/\.vw-page \.vw-rating-drawer-body>p\{font-size:15px/);
+ assert.match(css,/\.vw-page \.vw-rating-drawer-body>p\{font-size:16px/);
  assert.match(css,/\.vw-page \.vw-rating-drawer-header h2\{font-size:clamp\(25px/);
 });

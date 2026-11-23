@@ -169,8 +169,8 @@ test('timeline cards present time once, large titles and a single row of actual 
  assert.match(source,/ad-tl-micro-event/);
  const css=readFileSync(new URL('../src/admin-program.css',import.meta.url),'utf8');
  assert.match(css,/\.ad-tl-calendar-card \.ad-tl-card-title\{font-size:18px!important/);
- assert.match(css,/\.ad-tl-calendar-card \.ad-tl-card-description\{font-size:13\.5px/);
- assert.match(css,/\.ad-tl-calendar-card \.ad-tl-length\{font-size:14px/);
+ assert.match(css,/\.ad-tl-calendar-card \.ad-tl-card-description\{font-size:16px/);
+ assert.match(css,/\.ad-tl-calendar-card \.ad-tl-length\{font-size:16px/);
  assert.match(css,/\.ad-tl-calendar-card\.ad-tl-micro-event \.ad-tl-card-title/);
  assert.match(css,/\.ad-tl-calendar-card\.ad-tl-short-event \.ad-tl-card-title/);
  assert.match(css,/\.ad-tl-ideas-grid\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
