@@ -117,54 +117,67 @@ export function estimateVenue(v,guests){
    The administrator may change rules globally; all venues use the same rules. */
 export const RATING_CRITERIA=[
  ['date','Доступность даты',45],
- ['cost','Бюджет на всех гостей',20],
- ['capacity','Вместимость',13],
- ['city','Местоположение в Санкт-Петербурге',10],
- ['includedEquipment','Штатный звук и свет на площадке',7],
- ['outdoorArea','Терраса, балкон или открытая зона',5]
+ ['cost','Бюджет на всех гостей',18],
+ ['capacity','Вместимость',11],
+ ['city','Местоположение в Санкт-Петербурге',9],
+ ['includedEquipment','Штатный звук и свет на площадке',6],
+ ['outdoorArea','Терраса, балкон или открытая зона',3],
+ ['entrance','Презентабельность и удобство входа',8]
 ];
 export const OBJECTIVE_CRITERIA=[
  {key:'includedEquipment',label:'Штатный звук и свет на площадке',question:'Площадка располагает собственной звуковой и световой системой для ведущего и диджея (вне зависимости от стоимости аренды)?',evidence:'Технический райдер или перечень оборудования'},
- {key:'outdoorArea',label:'Терраса, балкон или открытая зона',question:'Есть ли у площадки балкон, терраса, сад или внутренний двор? Само наличие проверяется по осмотру и фото; доступность гостям и плату за использование показываем отдельно.',evidence:'Фото осмотра, план помещений или описание площадки'}
+ {key:'outdoorArea',label:'Терраса, балкон или открытая зона',question:'Есть ли у площадки балкон, терраса, сад или внутренний двор? Само наличие проверяется по осмотру и фото; доступность гостям и плату за использование показываем отдельно.',evidence:'Фото осмотра, план помещений или описание площадки'},
+ {key:'entrance',label:'Презентабельность и удобство входа',question:'Вход легко найти, маршрут для гостей удобен и входная группа выглядит аккуратно и достойно свадебного приёма? «Да» — все три условия; «Нет» — хотя бы одно не выполнено; «Неизвестно» — нет достоверных сведений.',evidence:'Фото входа, осмотр маршрута от улицы и оценка организатора по единому чек-листу'}
 ];
-export const PERSONAL_CRITERIA=[]; // Obsolete subjective 1–5 ratings are deliberately not used.
+export const PERSONAL_CRITERIA=[];
 export const RATING_MAX=100;
 export const DEFAULT_RATING_RULES=Object.freeze({
- weights:{date:45,cost:20,capacity:13,city:10,includedEquipment:7,outdoorArea:5},
+ weights:{date:45,cost:18,capacity:11,city:9,includedEquipment:6,outdoorArea:3,entrance:8},
  alternativeDatePercent:60,
  priceLimits:[650000,800000,1000000,1200000],
  pricePercents:[100,80,60,33,0],
  includeWorkingBudgets:true
 });
-const PREVIOUS_RATING_WEIGHTS={
+const SIX_RATING_WEIGHTS={date:45,cost:20,capacity:13,city:10,includedEquipment:7,outdoorArea:5};
+const TEN_RATING_WEIGHTS={
  date:40,cost:15,capacity:10,city:10,singleHall:6,indoorBackup:5,
  includedEquipment:5,until23:3,ownAlcohol:3,outdoorArea:3
 };
-/** Upgrade previously saved 10-criterion rules without discarding personal thresholds.
-    When legacy weights are unchanged, use the new redistribution exactly; otherwise
-    preserve relative emphasis among the six retained criteria. */
+function integerWeights(value,keys){
+ return !!value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===keys.length&&
+  keys.every(key=>Number.isInteger(value[key])&&value[key]>=0&&value[key]<=100)&&
+  keys.reduce((sum,key)=>sum+value[key],0)===100;
+}
+function distributeWeight(value,keys,total){
+ const current=keys.reduce((s,k)=>s+value[k],0);
+ if(current===0)return null;
+ const fractions=keys.map((key,index)=>({key,index,raw:value[key]*total/current}));
+ const next=Object.fromEntries(fractions.map(x=>[x.key,Math.floor(x.raw)]));
+ const remaining=total-Object.values(next).reduce((sum,w)=>sum+w,0);
+ fractions.sort((a,b)=>(b.raw-Math.floor(b.raw))-(a.raw-Math.floor(a.raw))||a.index-b.index);
+ for(let i=0;i<remaining;i++)next[fractions[i].key]++;
+ return next;
+}
+/** Convert old saved 6/10-criterion weights to 7 without discarding
+ * customized date or price thresholds. The new entrance weighs 8/100.
+ * Previously customized weights retain their relative proportions. */
 export function migrateRatingRules(value){
  const valid=validateRatingRules(value);
  if(valid)return valid;
  if(!value||typeof value!=='object'||!value.weights)return null;
- const former=Object.keys(PREVIOUS_RATING_WEIGHTS);
- if(former.some(k=>!Number.isInteger(value.weights[k])||value.weights[k]<0||value.weights[k]>100)||
-  Object.keys(value.weights).length!==former.length||
-  former.reduce((t,k)=>t+value.weights[k],0)!==100)return null;
- const keys=RATING_CRITERIA.map(([key])=>key);
- const unchanged=former.every(k=>value.weights[k]===PREVIOUS_RATING_WEIGHTS[k]);
- let weights={...DEFAULT_RATING_RULES.weights};
- if(!unchanged){
-  const total=keys.reduce((t,k)=>t+value.weights[k],0);
-  if(total>0){
-   const parts=keys.map(key=>({key,raw:value.weights[key]*100/total}));
-   weights=Object.fromEntries(parts.map(x=>[x.key,Math.floor(x.raw)]));
-   let remainder=100-Object.values(weights).reduce((t,w)=>t+w,0);
-   parts.sort((x,y)=>(y.raw-Math.floor(y.raw))-(x.raw-Math.floor(x.raw)));
-   for(let i=0;i<remainder;i++)weights[parts[i].key]++;
-  }
- }
- return validateRatingRules({...value,weights});
+ const oldSixKeys=Object.keys(SIX_RATING_WEIGHTS),oldTenKeys=Object.keys(TEN_RATING_WEIGHTS);
+ let previous;
+ if(integerWeights(value.weights,oldSixKeys)){
+  previous=value.weights;
+ }else if(integerWeights(value.weights,oldTenKeys)){
+  const sameTen=oldTenKeys.every(k=>value.weights[k]===TEN_RATING_WEIGHTS[k]);
+  previous=sameTen?SIX_RATING_WEIGHTS:distributeWeight(value.weights,oldSixKeys,100);
+ }else return null;
+ const sameSix=oldSixKeys.every(k=>previous[k]===SIX_RATING_WEIGHTS[k]);
+ const retained=sameSix?Object.fromEntries(oldSixKeys.map(k=>[k,DEFAULT_RATING_RULES.weights[k]])):
+  distributeWeight(previous,oldSixKeys,92);
+ if(!retained)return null;
+ return validateRatingRules({...value,weights:{...retained,entrance:8}});
 }
 export function validateRatingRules(value){
  if(!value||typeof value!=='object'||Array.isArray(value))return null;
