@@ -258,7 +258,7 @@ function ratingPane(v,ctx){
   const value=v.ratingFacts?.[x.key]??'unknown';
   const note=(score.breakdown||[]).find(y=>y.key===x.key);
   return '<label class="vdp-objective-fact"><span><b>'+h(x.label)+'</b><small>'+h(x.question)+'</small>'+
-   '<small class="vdp-rating-source">Основание: '+h(x.evidence)+'</small></span>'+
+   '<small class="vdp-rating-source">'+h(v.ratingFactSources?.[x.key]?'В материалах: '+v.ratingFactSources[x.key]:'Для проверки: '+x.evidence)+'</small></span>'+
    '<select data-venue="'+h(v.id)+'" data-rating-fact="'+h(x.key)+'" aria-label="'+h(x.label)+'">'+
    [['unknown','Нет подтверждения'],['yes','Да, подтверждено'],['no','Нет, подтверждено']].map(([id,label])=>
     '<option value="'+id+'" '+(value===id?'selected':'')+'>'+label+'</option>').join('')+'</select>'+
