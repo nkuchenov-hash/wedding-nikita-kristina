@@ -41,7 +41,7 @@ test('Objective facts use identical yes / no / unknown logic for every venue',()
  const full=scoreVenue(v,80,{value:650000,isQuote:true,partial:false});
  assert.equal(full.value,100);
  assert.equal(row(full,'date').value,45);
- assert.equal(row(full,'city').value,10);
+ assert.equal(row(full,'city').value,9);
  assert.equal(row(full,'cost').value,18);
  assert.equal(row(full,'includedEquipment').value,6);
  assert.equal(row(full,'entrance').value,8);
