@@ -857,7 +857,12 @@ export function activateVenueAdmin(root){
      changes[t.dataset.field]=val;
     }else if(t.dataset.cost){changes.cost={...old.cost,[t.dataset.cost]:numbers(t.value)};}
     else if(t.dataset.extra){changes.extras={...old.extras,[t.dataset.extra]:numbers(t.value)};}
-    else if(t.dataset.rating){changes.ratings={...old.ratings,[t.dataset.rating]:t.value?Number(t.value):null};}
+    else if(t.hasAttribute('data-rating-fact')){
+      if(!OBJECTIVE_CRITERIA.some(x=>x.key===t.dataset.ratingFact)||!['yes','no','unknown'].includes(t.value))
+       throw new Error('Недопустимый проверяемый критерий');
+      changes.ratingFacts={...(old.ratingFacts||{}),[t.dataset.ratingFact]:t.value};
+     }
+     else if(t.dataset.rating){changes.ratings={...old.ratings,[t.dataset.rating]:t.value?Number(t.value):null};}
     else return;
     await commitInlineChanges(id,changes,root);
    }catch(error){
