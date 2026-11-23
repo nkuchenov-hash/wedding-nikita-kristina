@@ -576,7 +576,7 @@ export function renderVenueAdmin(){
   columnHeading('capacity','Вместимость',headerSelect('capacity','Минимальная вместимость',[['all','Все'],['80','80+ гостей'],['100','100+ гостей']]))+
   columnHeading('score','Рейтинг')+
   '</tr></thead><tbody>'+list.map(row).join('')+'</tbody></table></div>'+(list.length?'':'<p class="vw-empty">Нет площадок по выбранным фильтрам.</p>')+'</div>'+
-  '</div>'+ratingDrawer();
+  ratingDrawer()+'</div>';
 }
 function redraw(root){
  const el=root.querySelector('[data-venues-page]');if(!el)return;
