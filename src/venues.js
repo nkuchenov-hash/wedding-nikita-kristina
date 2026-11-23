@@ -494,6 +494,7 @@ function ratingMethodPage(){
   '<a class="vw-method-back" href="#/admin/venues">← Вернуться к списку площадок</a></section></div>';
 }
 export function renderVenueAdmin(){
+ if(typeof location!=='undefined'&&/^#\/admin\/venues\/rating-method\/?$/.test(location.hash))return ratingMethodPage();
  if(!venueDb.ready){
   const feedback=venueDb.error?'Не удалось загрузить данные из базы: '+h(venueDb.error):'Загрузка данных площадок из базы…';
   return '<div class="vw-page" data-venues-page><div class="vw-panel" role="status" aria-live="polite"><h2>Сравнение площадок</h2><p>'+feedback+'</p><button type="button" data-venue-retry>Повторить загрузку</button></div></div>';
@@ -501,10 +502,14 @@ export function renderVenueAdmin(){
 
  const route=typeof location!=='undefined'?location.hash:'';
  const archiveRoute=/^#\/admin\/venues\/archive\/?$/.test(route);
+ const allRoute=/^#\/admin\/venues\/all\/?$/.test(route);
  const ratingMethodRoute=/^#\/admin\/venues\/rating-method\/?$/.test(route);
+ const activeRoute=/^#\/admin\/venues\/?$/.test(route);
  if(archiveRoute&&ui.archiveFilter!=='archived')
   Object.assign(ui,{archiveFilter:'archived',kind:'all',query:'',dateFilter:'all',budget:'all',visit:'all',capacity:'all'});
- const match=archiveRoute||ratingMethodRoute?null:route.match(/^#\/admin\/venues\/([^/?]+)(?:\/([^/?]+))?/);
+ else if(allRoute)ui.archiveFilter='all';
+ else if(activeRoute)ui.archiveFilter='active';
+ const match=archiveRoute||allRoute||ratingMethodRoute?null:route.match(/^#\/admin\/venues\/([^/?]+)(?:\/([^/?]+))?/);
  if(match){const next=decodeURIComponent(match[1]);if(ui.expanded!==next){ui.photoSection='all';ui.photoView='gallery';ui.photoIndex=0;ui.photoLightbox=false;}ui.expanded=next;ui.detailTab=match[2]==='edit'?'terms':(match[2]||'overview');}else{ui.expanded=null;ui.photoLightbox=false;}
  const all=PUBLIC_VENUES.map(get);
  const archivedCount=all.filter(v=>v.archived).length;
@@ -736,7 +741,7 @@ export function activateVenueAdmin(root){
   if(t.dataset.ui){
    ui[t.dataset.ui]=t.value;
    if(t.dataset.ui==='archiveFilter'){
-    const next=t.value==='archived'?'#/admin/venues/archive':'#/admin/venues';
+    const next=t.value==='archived'?'#/admin/venues/archive':t.value==='all'?'#/admin/venues/all':'#/admin/venues';
     if(location.hash!==next)location.hash=next;
     else redraw(root);
    }else redraw(root);
