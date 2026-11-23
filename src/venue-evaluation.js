@@ -112,57 +112,96 @@ export function estimateVenue(v,guests){
 
 }
 
-/* 100-point decision score: the desired 19 June is the strongest single criterion.
-   Missing subjective evidence remains unrated, never silently treated as confirmed. */
+/* Shared, evidence-based venue scoring. Every rule is the same for every venue.
+   Unknown facts do not turn into automatic points or automatic failures.
+   The administrator may change rules globally; all venues use the same rules. */
 export const RATING_CRITERIA=[
- ['date','Доступность 19 июня / альтернатив',40],
- ['cost','Полная стоимость для гостей',15],
+ ['date','Доступность даты',40],
+ ['cost','Бюджет на всех гостей',15],
  ['capacity','Вместимость',10],
- ['city','Городское расположение',10],
- ['look','Атмосфера',6],
- ['comfort','Комфорт гостей',3],
- ['food','Меню и обслуживание',3],
- ['travel','Логистика',3],
- ['terrace','Терраса, природа и виды',5],
- ['terms','Условия аренды и ограничения',5]
+ ['city','Местоположение в Санкт-Петербурге',10],
+ ['singleHall','Все гости в одном зале',6],
+ ['indoorBackup','Крытая рассадка при дожде',5],
+ ['includedEquipment','Звук и свет включены в цену',5],
+ ['until23','До 23:00 без доплаты',3],
+ ['ownAlcohol','Свой алкоголь без пробкового сбора',3],
+ ['outdoorArea','Доступная открытая зона или терраса',3]
 ];
-export const PERSONAL_CRITERIA=RATING_CRITERIA.filter(([key])=>['look','comfort','food','travel','terrace','terms'].includes(key));
-export const RATING_MAX=RATING_CRITERIA.reduce((sum,[,,points])=>sum+points,0);
-function pricePoints(total){
- if(total<=650000)return 15;
- if(total<=800000)return 12;
- if(total<=1000000)return 9;
- if(total<=1200000)return 5;
- return 0;
+export const OBJECTIVE_CRITERIA=[
+ {key:'singleHall',label:'Все гости в одном зале',question:'80 гостей могут сидеть в одном помещении без разделения банкета между залами?',evidence:'План рассадки или подтверждённая вместимость одного зала'},
+ {key:'indoorBackup',label:'Крытая рассадка при дожде',question:'Все гости могут разместиться внутри в дождь без дополнительной аренды?',evidence:'Письменно подтверждённый погодный вариант для полного числа гостей'},
+ {key:'includedEquipment',label:'Звук и свет включены в цену',question:'Оборудование для ведущего, музыки и танцев уже входит в выбранный бюджет без обязательной доплаты?',evidence:'Состав включённого пакета или отдельная строка бюджета'},
+ {key:'until23',label:'До 23:00 без доплаты',question:'Площадка доступна до 23:00 без отдельной почасовой оплаты?',evidence:'Договорные часы аренды и условия продления'},
+ {key:'ownAlcohol',label:'Свой алкоголь без пробкового сбора',question:'Разрешено привезти свой алкоголь без пробкового сбора?',evidence:'Письменные условия площадки о своём алкоголе'},
+ {key:'outdoorArea',label:'Доступная открытая зона или терраса',question:'Гостям разрешено пользоваться террасой, садом или внутренним двором в составе выбранного пакета?',evidence:'Описание включённой территории и условий пользования'}
+];
+export const PERSONAL_CRITERIA=[]; // Obsolete subjective 1–5 ratings are deliberately not used.
+export const RATING_MAX=100;
+export const DEFAULT_RATING_RULES=Object.freeze({
+ weights:{date:40,cost:15,capacity:10,city:10,singleHall:6,indoorBackup:5,includedEquipment:5,until23:3,ownAlcohol:3,outdoorArea:3},
+ alternativeDatePercent:60,
+ priceLimits:[650000,800000,1000000,1200000],
+ pricePercents:[100,80,60,33,0],
+ includeWorkingBudgets:true
+});
+export function validateRatingRules(value){
+ if(!value||typeof value!=='object'||Array.isArray(value))return null;
+ const allowed=['weights','alternativeDatePercent','priceLimits','pricePercents','includeWorkingBudgets'];
+ if(Object.keys(value).some(k=>!allowed.includes(k)))return null;
+ if(!value.weights||Array.isArray(value.weights)||Object.keys(value.weights).length!==RATING_CRITERIA.length)return null;
+ const keys=RATING_CRITERIA.map(([key])=>key);
+ if(Object.keys(value.weights).some(k=>!keys.includes(k))||keys.some(k=>!Number.isInteger(value.weights[k])||value.weights[k]<0||value.weights[k]>100))return null;
+ if(keys.reduce((sum,k)=>sum+value.weights[k],0)!==100)return null;
+ if(!Number.isInteger(value.alternativeDatePercent)||value.alternativeDatePercent<0||value.alternativeDatePercent>100)return null;
+ if(!Array.isArray(value.priceLimits)||value.priceLimits.length!==4||
+  value.priceLimits.some((x,i)=>!Number.isInteger(x)||x<10000||x>100000000||(i>0&&x<=value.priceLimits[i-1])))return null;
+ if(!Array.isArray(value.pricePercents)||value.pricePercents.length!==5||
+  value.pricePercents.some((x,i)=>!Number.isInteger(x)||x<0||x>100||(i>0&&x>value.pricePercents[i-1])))return null;
+ if(typeof value.includeWorkingBudgets!=='boolean')return null;
+ return {
+  weights:Object.fromEntries(keys.map(k=>[k,value.weights[k]])),
+  alternativeDatePercent:value.alternativeDatePercent,
+  priceLimits:[...value.priceLimits],
+  pricePercents:[...value.pricePercents],
+  includeWorkingBudgets:value.includeWorkingBudgets
+ };
 }
-export function scoreVenue(v,guests,cost=estimateVenue(v,guests)){
+export function scoreVenue(v,guests,cost=estimateVenue(v,guests),rules=DEFAULT_RATING_RULES){
+ const config=validateRatingRules(rules)||DEFAULT_RATING_RULES;
+ const weights=config.weights;
  const breakdown=[];
  const add=(key,value,known,note='')=>{
-   const row=RATING_CRITERIA.find(r=>r[0]===key);
-   breakdown.push({key,label:row[1],maximum:row[2],value:known?Math.max(0,Math.min(row[2],value)):null,note});
+  const criterion=RATING_CRITERIA.find(x=>x[0]===key);
+  breakdown.push({key,label:criterion[1],maximum:weights[key],value:known?Math.max(0,Math.min(weights[key],value)):null,note});
  };
  const preferred=status(v,'19'),alternates=['18','20'].map(d=>status(v,d));
- if(preferred==='available')add('date',40,true,'19 июня подтверждено');
- else if(alternates.includes('available'))add('date',24,true,'Подтверждено 18 или 20 июня, но не 19');
- else if([preferred,...alternates].every(x=>x==='unavailable'))add('date',0,true,'Все рассматриваемые даты заняты');
- else add('date',0,false,'Доступность рассматриваемой даты не подтверждена');
- // Rent-only information is never a comparable total event quote.
- const comparableCost=cost.value!==null && ((cost.isQuote&&!cost.partial)||cost.basedOnQuote===true);
- if(comparableCost)add('cost',pricePoints(cost.value),true,cost.partial?'Предварительная стоимость':'Полученная смета');
- else add('cost',0,false,'Нет полноценного подтверждённого КП. Рабочая смета и минимум по тарифам не дают баллов за стоимость.');
+ if(preferred==='available')add('date',weights.date,true,'19 июня подтверждено свободно');
+ else if(alternates.includes('available'))add('date',weights.date*config.alternativeDatePercent/100,true,'18 или 20 июня свободно; 19 июня не подтверждено');
+ else if([preferred,...alternates].every(x=>x==='unavailable'))add('date',0,true,'18, 19 и 20 июня заняты');
+ else add('date',0,false,'Нет подтверждённой свободной даты');
+ const priceKnown=cost&&typeof cost.value==='number'&&Number.isFinite(cost.value)&&cost.value>=0;
+ const admissible=priceKnown&&(config.includeWorkingBudgets||((cost.isQuote&&!cost.partial)||cost.basedOnQuote===true));
+ if(admissible){
+  let band=config.priceLimits.findIndex(limit=>cost.value<=limit);
+  if(band<0)band=config.pricePercents.length-1;
+  const preliminary=cost.partial||cost.kind==='planning';
+  add('cost',weights.cost*config.pricePercents[band]/100,true,
+   (preliminary?'Предварительная рабочая смета':'Подтверждённое предложение')+' на '+(Number(guests)||80)+' гостей: '+Math.round(cost.value).toLocaleString('ru-RU')+' ₽');
+ }else add('cost',0,false,priceKnown?'Рабочий бюджет не учитывается по настройке рейтинга':'Нет расчёта банкета на нужное число гостей');
  const cap=num(v.capacity),n=Math.round(Number(guests)||80);
- if(cap!==null&&cap>0)add('capacity',cap>=n?10:0,true,cap>=n?'Вмещает '+n+' гостей':'Недостаточная вместимость');
- else add('capacity',0,false,'Вместимость не подтверждена');
- add('city',v.region==='city'?10:0,true,v.region==='city'?'Городская площадка':'За городом — без бонуса за расположение');
- for(const [key,,weight] of PERSONAL_CRITERIA){
-    const n=num(v.ratings?.[key]),known=n!==null&&n>=1&&n<=5;
-    add(key,known?n/5*weight:0,known,known?'Ваша оценка '+n+'/5':'Личная оценка не заполнена');
+ if(cap!==null&&cap>0)add('capacity',cap>=n?weights.capacity:0,true,cap>=n?'Вмещает '+n+' гостей':'Не вмещает '+n+' гостей');
+ else add('capacity',0,false,'Нет подтверждённой общей вместимости');
+ add('city',v.region==='city'?weights.city:0,true,v.region==='city'?'В Санкт-Петербурге':'За городом');
+ for(const item of OBJECTIVE_CRITERIA){
+  const fact=v.ratingFacts?.[item.key];
+  if(fact===true||fact==='yes')add(item.key,weights[item.key],true,'Да — '+item.evidence);
+  else if(fact===false||fact==='no')add(item.key,0,true,'Нет — '+item.evidence);
+  else add(item.key,0,false,'Не подтверждено: '+item.evidence);
  }
- const known=breakdown.filter(r=>r.value!==null);
- const total=known.reduce((sum,r)=>sum+r.value,0);
- const provisional=known.length<breakdown.length||cost.partial;
- // Zero is a meaningful score only when other criteria have been evaluated.
- return {value:known.every(x=>x.key==='city')?null:Math.round(total),complete:known.length,maximum:RATING_MAX,
-   rated:PERSONAL_CRITERIA.filter(([key])=>num(v.ratings?.[key])!==null).length,
-   provisional,preferred:preferred==='available',date:preferred,breakdown};
+ const known=breakdown.filter(x=>x.value!==null);
+ const total=known.reduce((sum,row)=>sum+row.value,0);
+ const provisional=known.length<breakdown.length||!!cost?.partial;
+ return {value:known.length===0?null:Math.round(total*10)/10,complete:known.length,maximum:100,
+  rated:OBJECTIVE_CRITERIA.filter(x=>v.ratingFacts?.[x.key]==='yes'||v.ratingFacts?.[x.key]==='no').length,
+  provisional,preferred:preferred==='available',date:preferred,breakdown};
 }
