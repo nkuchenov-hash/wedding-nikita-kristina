@@ -116,6 +116,33 @@ jobs:
           grep -Fq 'Презентабельность и удобство входа' /tmp/venue-evaluation.js
           grep -Fq '"entrance": "no"' /tmp/venues-data.js
           echo 'LIVE_ENTRANCE_CRITERION_AND_VESENNIY_CONFIRMED'
+          # Verify the latest authenticated live assets, not only repository sources.
+          grep -Fq 'vdp-rating-inputs' /tmp/venue-detail-ui.js
+          grep -Fq 'vdp-terms-page' /tmp/venue-detail-ui.js
+          grep -Fq 'summarizeVenueBudget' /tmp/venue-evaluation.js
+          grep -Fq 'budgetSummary' /tmp/venues.js
+          curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" \
+            'https://nikitakristina.ru/admin/index.php?asset=src/venues.css' \
+            -o /tmp/venues-layout.css
+          grep -Fq '.vw-page.vw-control-board .vw-date-edit>span{' /tmp/venues-layout.css
+          python3 - <<'PY'
+          import json
+          source=open('/tmp/venues-data.js',encoding='utf-8').read()
+          records=json.loads(source.split('export const VENUE_RECORDS = ',1)[1].strip().rstrip(';'))
+          assert records['alex-park']['capacity']==300
+          assert records['eva']['capacity']==150
+          assert records['vesenniy']['capacity'] is None
+          assert records['vinity']['capacity'] is None
+          print('LIVE_VENUE_CAPACITY_SOURCE_VERIFIED')
+          for row in json.load(open('/tmp/wedding-venues.json'))['items']:
+              data=json.loads(row.get('details_json') or '{}')
+              ident=data.get('wedding_comparison_id') or (data.get('public') or {}).get('id') or row.get('id')
+              if ident in ('alex-park','eva','vesenniy','vinity'):
+                  overrides=data.get('overrides') or {}
+                  print('LIVE_CAPACITY_OVERRIDE',ident,overrides.get('capacity','UNSET'))
+          PY
+          echo 'LIVE_VENUE_UNIFIED_CARD_AND_DATE_LAYOUT_VERIFIED'
+
           curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" \
             'https://nikitakristina.ru/admin/index.php?api=admin%2Fsettings' \
             -o /tmp/wedding-ranking-settings.json
