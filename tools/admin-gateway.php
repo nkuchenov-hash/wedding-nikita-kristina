@@ -257,6 +257,7 @@ $types = [
     'src/venues-photos-2.js' => 'text/javascript; charset=UTF-8',
     'src/venues-photos-3.js' => 'text/javascript; charset=UTF-8',
     'src/venues-photos-4.js' => 'text/javascript; charset=UTF-8',
+    'src/venues-photos-5.js' => 'text/javascript; charset=UTF-8',
     'src/styles.css' => 'text/css; charset=UTF-8',
     'src/venues.css' => 'text/css; charset=UTF-8',
     'src/venue-detail-ui.css' => 'text/css; charset=UTF-8',
