@@ -29,17 +29,35 @@ test('All 25 venues have the same 13 price rows, even when price is unknown',()=
   assert.match(html,/Неизвестные суммы указаны отдельно/);
  }
 });
-test('Photo archive includes all 378 indexed photographs in source room categories',()=>{
- const total=allIds.reduce((s,id)=>s+getVenuePhotos(venue(id)).length,0);
- assert.equal(total,378);
+test('Photo archive contains 479 indexed photographs, including 103 new originals from four site visits',()=>{
+ const total=[...allIds,'milyutin','glukhovsky','santa-gloria'].reduce((s,id)=>s+getVenuePhotos(venue(id)).length,0);
+ assert.equal(total,479);
  assert.equal(getVenuePhotos(venue('vinity')).length,24);
  assert.equal(getVenuePhotos(venue('palma')).length,7,'all seven original Telegram photos must be displayed');
- for(const id of ['360','kraft','roof18','bali','ambassador','english-roof','admiralty-roof','eva','zhemchuzhny']){
+ for(const id of ['360','kraft','bali','ambassador','english-roof','admiralty-roof','eva','zhemchuzhny']){
   const photos=getVenuePhotos(venue(id));
   assert.ok(photos.length>0,id+' should show a verified venue image');
   assert.ok(photos.every(x=>x.src?.startsWith('https://')&&x.sourceUrl?.startsWith('https://')),id+' has a source link');
   assert.ok(getVenueCover(venue(id))?.src,id+' hero must not be empty');
  }
+ const newlyUploaded={
+  milyutin:{total:18,cover:'1wUoS4p2AEThmm1C7Droo6pu6o31RSdMm'},
+  glukhovsky:{total:32,cover:'1-scO2kypBqMWZobP4dz4GFMD9X2D9SOl'},
+  'santa-gloria':{total:24,cover:'1uYYIQZ8o8H8T6RVzx6k3GC_J8A2RVY0x'},
+  roof18:{total:29,cover:'1nS6BYMQX0N5VHvddrZXBDP-5IQm-igtx'}
+ };
+ const newlyIndexed=[];
+ for(const [id,{total,cover}] of Object.entries(newlyUploaded)){
+  const photos=getVenuePhotos(venue(id));
+  assert.equal(photos.length,total,id+' complete visit album');
+  assert.equal(getVenueCover(venue(id))?.id,cover,id+' reviewed cover');
+  assert.ok(photos.every(x=>x.id&&x.folder&&x.name&&x.section&&!x.src),id+' originals must be from Wedding Drive, not third-party shots');
+  const html=renderVenueNewPage(venue(id),context('photos'));
+  assert.match(html,new RegExp('Фотографии[^<]*<span>'+total+'</span>'),id+' photo count visible');
+  newlyIndexed.push(...photos.map(p=>p.id));
+ }
+ assert.equal(newlyIndexed.length,103);
+ assert.equal(new Set(newlyIndexed).size,103,'no repeated photos across new venue albums');
  assert.equal(getVenuePhotos(venue('palma')).filter(p=>p.section==='Залы').length,4);
  assert.equal(getVenuePhotos(venue('palma')).filter(p=>p.section==='Welcome-зона').length,3);
  assert.equal(getVenuePhotos(venue('maryino')).length,36,'show all 36 organizer-supplied photos and no external substitutes');
