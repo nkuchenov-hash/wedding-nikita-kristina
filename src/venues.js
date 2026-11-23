@@ -740,6 +740,22 @@ export function activateVenueAdmin(root){
  });
  // Save the field right where it was displayed, not in a second editor.
  root.addEventListener('submit',async event=>{
+  if(event.target.matches('[data-rating-form]')){
+   event.preventDefault();
+   const form=event.target;if(form.dataset.saving)return;
+   const validated=validateRatingRules(ui.ratingDraft);
+   if(!validated){showAdminToast('Проверьте веса и пороги рейтинга.',{kind:'error'});return;}
+   form.dataset.saving='yes';const button=form.querySelector('[type="submit"]');if(button)button.disabled=true;
+   try{
+    await venueApi('admin/settings',{method:'POST',body:{key:'venue_rating_rules',value:validated}});
+    ratingRules=validated;ui.ratingDraft=null;ui.ratingDirty=false;redraw(root);
+    showAdminToast('Настройки сохранены. Рейтинг всех площадок пересчитан.');
+   }catch(error){
+    if(button?.isConnected)button.disabled=false;
+    showAdminToast('Не удалось сохранить рейтинг: '+error.message,{kind:'error'});
+   }finally{form.dataset.saving='';}
+   return;
+  }
   const form=event.target.closest('[data-inline-key],[data-inline-quote-index]');
   if(!form)return;
   event.preventDefault();
@@ -827,6 +843,11 @@ export function activateVenueAdmin(root){
   }
  });
  document.addEventListener('keydown',event=>{
+   if(event.key==='Escape'&&ui.ratingDrawer){
+    event.preventDefault();
+    if(ui.ratingDirty&&!window.confirm('Закрыть настройки без сохранения?'))return;
+    ui.ratingDrawer=false;ui.ratingDraft=null;ui.ratingDirty=false;redraw(root);return;
+   }
    if(!ui.photoLightbox)return;
    if(event.key==='Escape'){event.preventDefault();ui.photoLightbox=false;redraw(root);return;}
    if(event.key==='ArrowRight'||event.key==='ArrowLeft'){
