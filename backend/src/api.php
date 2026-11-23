@@ -170,7 +170,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
                 $seen[$type['id']]=true;
             }
         } elseif($key==='venue_rating_rules'){
-            $keys=['date','cost','capacity','city','includedEquipment','outdoorArea'];
+            $keys=['date','cost','capacity','city','includedEquipment','outdoorArea','entrance'];
             if(!is_array($value)||array_is_list($value)||
                count($value)!==5||
                array_diff(array_keys($value),['weights','alternativeDatePercent',
