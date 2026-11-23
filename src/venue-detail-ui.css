@@ -460,3 +460,14 @@
 .vdp-rating-breakdown>div>span{display:block;flex:1;min-width:0}
 .vdp-rating-breakdown .vdp-rating-reason{display:block;color:#67806d;font-size:11px;line-height:1.4;margin-top:5px;max-width:45ch}
 .vdp-archived-notice a{color:#285e42;text-decoration:underline;text-underline-offset:3px;font-weight:700}
+
+/* Uniform evidence-based venue facts, replacing personal 1–5 scores. */
+.vdp-objective-facts{display:grid;gap:10px;margin-top:17px}
+.vdp-objective-fact{display:grid;grid-template-columns:minmax(0,1fr) 175px 90px;gap:16px;align-items:center;padding:16px;border:1px solid #dae8dd;border-radius:11px;background:#fff}
+.vdp-objective-fact>span{min-width:0}
+.vdp-objective-fact b{display:block;color:#2c5139;font-size:14px;line-height:1.35}
+.vdp-objective-fact small{display:block;color:#67806e;font-size:12px;line-height:1.45;margin-top:5px}
+.vdp-objective-fact .vdp-rating-source{color:#849687;font-size:11px}
+.vdp-objective-fact select{height:38px;max-width:100%;padding:5px 9px;border:1px solid #cbdcce;border-radius:8px;background:#f8fbf8;color:#264f36;font-size:12px}
+.vdp-objective-fact>strong{color:#2e6042;text-align:right;font-size:13px;font-variant-numeric:tabular-nums}
+@media(max-width:760px){.vdp-objective-fact{grid-template-columns:minmax(0,1fr) auto;gap:9px;padding:12px}.vdp-objective-fact>span{grid-column:1/-1}.vdp-objective-fact>strong{font-size:12px}}
