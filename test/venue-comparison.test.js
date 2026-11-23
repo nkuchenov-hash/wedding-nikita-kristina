@@ -268,3 +268,11 @@ test('date cells preserve full June date labels',()=>{
  assert.match(css,/\.vw-page\.vw-control-board \.vw-date-edit>span\{[\s\S]*?white-space:nowrap/);
  assert.match(css,/\.vw-page\.vw-control-board \.vw-date-edit\{[\s\S]*?grid-template-columns:67px/);
 });
+
+test('Quote guest counts are not assumed to be banquet capacity',()=>{
+ assert.equal(VENUE_RECORDS.vesenniy.capacity,null);
+ assert.equal(VENUE_RECORDS.vinity.capacity,null);
+ const known=scoreVenue({...VENUE_RECORDS.vesenniy,region:'city'},80,{value:619450,partial:false,isQuote:true});
+ assert.equal(known.breakdown.find(x=>x.key==='capacity').value,null);
+ assert.equal(VENUE_RECORDS.eva.capacity,150,'verified tent presentation');
+});

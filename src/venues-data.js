@@ -52,7 +52,7 @@ export const VENUE_RECORDS = {
     "visited": true,
     "visitEvidence": "Фото посещения в папке площадки",
     "availability": "unavailable",
-    "capacity": 80,
+    "capacity": null,
     "drive": "https://drive.google.com/drive/folders/1bN3tmAlJipnlMg-k8JuO0DuXBWZsveF5",
     "photos": "https://drive.google.com/drive/folders/1OgOiGEzjrsTEQEV_OQT2TQgU6h1OG0Eq",
     "quoteSource": "https://drive.google.com/file/d/1Lx71bllyDMPl_vmUkE3JIi7V2CnrLUt-/view",
@@ -439,7 +439,7 @@ export const VENUE_RECORDS = {
     "visitTranscriptSource": "https://drive.google.com/file/d/1irN3e-kAAg7lOCsa-qJCdzsc9xzMIHhh/view?usp=drivesdk",
     "visited": true,
     "visitEvidence": "Фото осмотра 15 ноября",
-    "capacity": 80,
+    "capacity": null,
     "capacityNote": "80 гостей предусмотрены сметой, предел единой рассадки ещё подтвердить.",
     "summary": "Смета на 80 гостей без скидки — 863 500 ₽. На 20 июня 2027 доступна скидка 10%, база её применения пока не подтверждена: финальную цену не вычисляем произвольно.",
     "quotes": [
@@ -1399,6 +1399,7 @@ export const VENUE_RECORDS = {
     }
   },
   "eva": {
+    "capacity": 150,
     "cost": {
       "menu": 5000,
       "service": 10,
