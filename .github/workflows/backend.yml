@@ -94,6 +94,7 @@ jobs:
             php bin/apply-venue-confirmations-20261118.php
             php bin/supplement-telegram-20261118.php
             php bin/reconcile-palma-pricing-20261118.php
+             php bin/apply-venue-updates-20261123.php
             php bin/import-venue-files.php
             php bin/seed-planning.php
             php bin/import-kristina-ideas-20261120.php
