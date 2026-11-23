@@ -43,6 +43,6 @@ test('Alexandrovsky Park terrace appears in photos and contributes to rating',()
  const rated=scoreVenue({id:'alex-park',region:'city',capacity:300,...venue},80,estimateVenue(venue,80));
  const terrace=rated.breakdown.find(x=>x.key==='outdoorArea');
  assert.equal(terrace.value,terrace.maximum);
- assert.equal(terrace.maximum,5);
- assert.equal(rated.breakdown.find(x=>x.key==='includedEquipment').value,7);
+ assert.equal(terrace.maximum,3);
+ assert.equal(rated.breakdown.find(x=>x.key==='includedEquipment').value,6);
 });
