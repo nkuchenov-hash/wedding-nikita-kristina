@@ -512,6 +512,30 @@ export function renderVenueRatingGuide(){
   '<p class="vw-method-foot">Баллы конкретной площадки и личные оценки доступны по нажатию на её рейтинг в таблице.</p>'+
   '<a class="vw-method-back" href="#/admin/venues/rating-method">Открыть правила отдельно</a></div></details>';
 }
+function cloneRatingRules(x){return JSON.parse(JSON.stringify(x))}
+function ratingWeightTotal(x){return Object.values(x.weights).reduce((a,b)=>a+(Number(b)||0),0)}
+function ratingDrawer(){
+ if(!ui.ratingDrawer)return '';
+ const x=ui.ratingDraft||ratingRules,sum=ratingWeightTotal(x);
+ const criteria=RATING_CRITERIA.map(([key,name])=>{
+  const f=OBJECTIVE_CRITERIA.find(z=>z.key===key);
+  const tip=f?f.question:key==='date'?'19 июня — полный вес, 18/20 — его доля.':key==='cost'?'Общий бюджет на выбранное число гостей.':key==='capacity'?'Вмещаются все гости.':'Город или за городом.';
+  return '<label class="vw-rating-rule"><span><b>'+h(name)+'</b><small>'+h(tip)+'</small></span><input type="number" min="0" max="100" data-rating-weight="'+key+'" value="'+h(x.weights[key])+'"></label>';
+ }).join('');
+ const limits=x.priceLimits.map((v,i)=>'<label class="vw-rating-rule small"><span>Граница '+(i+1)+', ₽</span><input type="number" data-rating-limit="'+i+'" min="10000" step="10000" value="'+h(v)+'"></label>').join('');
+ const shares=x.pricePercents.map((v,i)=>'<label class="vw-rating-rule small"><span>'+(i===4?'Выше всех границ':'Диапазон '+(i+1))+', %</span><input type="number" data-rating-percent="'+i+'" min="0" max="100" value="'+h(v)+'"></label>').join('');
+ return '<div class="vw-rating-overlay" data-rating-backdrop><aside class="vw-rating-drawer" role="dialog" aria-modal="true" aria-labelledby="vw-rating-title">'+
+ '<header class="vw-rating-drawer-header"><div><small>ОДИНАКОВЫЕ ПРАВИЛА ДЛЯ ВСЕХ</small><h2 id="vw-rating-title">Настройка рейтинга</h2></div><button data-rating-close type="button" aria-label="Закрыть">×</button></header>'+
+ '<form data-rating-form><div class="vw-rating-drawer-body"><p>Веса и пороги меняются для всех площадок. Факты оцениваются одинаково: подтверждено «Да» или «Нет», либо «Неизвестно».</p>'+
+ '<div class="vw-rating-weights-title"><h3>Веса критериев</h3><strong data-rating-total class="'+(sum===100?'valid':'invalid')+'">'+sum+' / 100</strong></div>'+
+ criteria+'<h3>Пороги и дополнительные правила</h3>'+
+ '<label class="vw-rating-rule small"><span>18/20 июня: % от веса даты</span><input type="number" data-rating-alternative min="0" max="100" value="'+h(x.alternativeDatePercent)+'"></label>'+
+ '<div class="vw-rating-price-columns"><section><h4>Порог стоимости</h4>'+limits+'</section><section><h4>Доля баллов</h4>'+shares+'</section></div>'+
+ '<label class="vw-rating-check"><input type="checkbox" data-rating-working '+(x.includeWorkingBudgets?'checked':'')+'><span>Учитывать рабочие сметы с допущениями (рейтинг останется предварительным)</span></label>'+
+ '<p class="vw-rating-description">Для каждой площадки ответы «Да / Нет / Неизвестно» редактируются во вкладке «Рейтинг». Неподтверждённое не считается ни плюсом, ни минусом.</p></div>'+
+ '<footer class="vw-rating-drawer-footer"><span data-rating-validation>'+(sum===100?'':'Сумма весов должна быть ровно 100')+'</span>'+
+ '<button type="button" data-rating-defaults>По умолчанию</button><button class="vw-rating-save" type="submit" '+(validateRatingRules(x)?'':'disabled')+'>Сохранить и пересчитать</button></footer></form></aside></div>';
+}
 export function renderVenueAdmin(){
  if(typeof location!=='undefined'&&/^#\/admin\/venues\/rating-method\/?$/.test(location.hash))return ratingMethodPage();
  if(!venueDb.ready){
@@ -542,8 +566,7 @@ export function renderVenueAdmin(){
   }
  if(ratingMethodRoute)return ratingMethodPage();
  return '<div class="vw-page vw-control-board" data-venues-page>'+
-  '<div class="vw-control-head admin-page-heading"><div><h1>Площадки <span>'+activeCount+'</span></h1><p>19 июня — приоритет · 18 и 20 июня — альтернативы</p></div><div class="vw-control-facts"><span>'+visited+' осмотрено</span><span>'+all.filter(v=>!v.archived&&DATE_CHOICES.some(([d])=>dayStatus(v,d)==='available')).length+' со свободной датой</span><a class="vw-archive-counter" data-open-archive href="#/admin/venues/archive" aria-label="Открыть архив: '+archivedCount+' площадок">'+archivedCount+' в архиве</a></div></div>'+
-  renderVenueRatingGuide()+
+  '<div class="vw-control-head admin-page-heading"><div><h1>Площадки <span>'+activeCount+'</span></h1><p>19 июня — приоритет · 18 и 20 июня — альтернативы</p></div><div class="vw-control-facts"><span>'+visited+' осмотрено</span><span>'+all.filter(v=>!v.archived&&DATE_CHOICES.some(([d])=>dayStatus(v,d)==='available')).length+' со свободной датой</span><a class="vw-archive-counter" data-open-archive href="#/admin/venues/archive" aria-label="Открыть архив: '+archivedCount+' площадок">'+archivedCount+' в архиве</a><button type="button" class="vw-rating-trigger" data-rating-open>Настроить рейтинг</button></div></div>'+
   '<div class="vw-panel vw-table-panel"><div class="vw-panel-title vw-table-panel-title"><div><h2>'+(ui.archiveFilter==='archived'?'Архив площадок':'Управление площадками')+'</h2><span><b data-venues-visible>'+list.length+'</b> из '+(ui.archiveFilter==='active'?activeCount:ui.archiveFilter==='archived'?archivedCount:all.length)+'</span></div><div class="vw-table-tools"><label class="vw-compact-control">Список <select data-ui="archiveFilter" aria-label="Показывать площадки">'+[['active','Активные'],['archived','Архив'],['all','Все']].map(([id,label])=>'<option value="'+id+'" '+(ui.archiveFilter===id?'selected':'')+'>'+label+'</option>').join('')+'</select></label><label class="vw-compact-control">Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+state.guestCount+'" aria-label="Число гостей для пересчёта смет"></label><input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Найти площадку" aria-label="Поиск площадки (Enter)"><button type="button" data-clear-filters>Сбросить</button></div></div>'+
   '<div class="vw-scroll" role="region" tabindex="0" aria-label="Таблица площадок, прокрутка по горизонтали"><table class="vw-table vw-table-sortable"><thead><tr>'+
   columnHeading('name','Площадка','<div class="vw-head-filter-row">'+headerSelect('kind','Расположение',[['all','Все районы'],['city','Город'],['country','За городом']])+'</div>')+
@@ -553,7 +576,7 @@ export function renderVenueAdmin(){
   columnHeading('capacity','Вместимость',headerSelect('capacity','Минимальная вместимость',[['all','Все'],['80','80+ гостей'],['100','100+ гостей']]))+
   columnHeading('score','Рейтинг')+
   '</tr></thead><tbody>'+list.map(row).join('')+'</tbody></table></div>'+(list.length?'':'<p class="vw-empty">Нет площадок по выбранным фильтрам.</p>')+'</div>'+
-  '</div>';
+  '</div>'+ratingDrawer();
 }
 function redraw(root){
  const el=root.querySelector('[data-venues-page]');if(!el)return;
