@@ -727,6 +727,30 @@ export function activateVenueAdmin(root){
  // Guest count updates budgets and scores while typing without dropping focus.
  root.addEventListener('input',event=>{
   const t=event.target;
+  if(ui.ratingDrawer&&(t.hasAttribute('data-rating-weight')||t.hasAttribute('data-rating-limit')||
+   t.hasAttribute('data-rating-percent')||t.hasAttribute('data-rating-alternative')||
+   t.hasAttribute('data-rating-working'))){
+   const x=ui.ratingDraft||(ui.ratingDraft=cloneRatingRules(ratingRules));
+   const number=t.value===''?NaN:Number(t.value);
+   if(t.hasAttribute('data-rating-weight'))x.weights[t.dataset.ratingWeight]=number;
+   if(t.hasAttribute('data-rating-limit'))x.priceLimits[Number(t.dataset.ratingLimit)]=number;
+   if(t.hasAttribute('data-rating-percent'))x.pricePercents[Number(t.dataset.ratingPercent)]=number;
+   if(t.hasAttribute('data-rating-alternative'))x.alternativeDatePercent=number;
+   if(t.hasAttribute('data-rating-working'))x.includeWorkingBudgets=t.checked;
+   ui.ratingDirty=true;
+   const valid=validateRatingRules(x),sum=ratingWeightTotal(x),total=root.querySelector('[data-rating-total]');
+   if(total){total.textContent=sum+' / 100';total.className=valid?'valid':'invalid';}
+   const status=root.querySelector('[data-rating-validation]');
+   if(status)status.textContent=valid?'':'Сумма весов должна быть 100, пороги возрастают, баллы не увеличиваются при росте цены.';
+   const save=root.querySelector('.vw-rating-save');if(save)save.disabled=!valid;
+   if(valid)for(const row of root.querySelectorAll('.vw-row[data-id]')){
+    const base=PUBLIC_VENUES.find(v=>v.id===row.dataset.id);if(!base)continue;
+    const score=weighted(get(base)),link=row.querySelector('.vw-score-link'),small=row.querySelector('.vw-score small');
+    if(link)link.textContent=score.value===null?'—':score.value+' / '+RATING_MAX;
+    if(small)small.textContent=(score.provisional?'Предварительно':'Проверено')+' · '+score.complete+'/'+RATING_CRITERIA.length+' критериев';
+   }
+   return;
+  }
   if(t.dataset.state!=='guestCount')return;
   const count=Number(t.value);
   if(!Number.isInteger(count)||count<1||count>300||count===state.guestCount)return;
