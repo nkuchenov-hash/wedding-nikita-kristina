@@ -4,12 +4,13 @@ import {VENUE_PHOTOS_1} from './venues-photos-1.js';
 import {VENUE_PHOTOS_2} from './venues-photos-2.js';
 import {VENUE_PHOTOS_3} from './venues-photos-3.js';
 import {VENUE_PHOTOS_4} from './venues-photos-4.js';
+import {VENUE_PHOTOS_5} from './venues-photos-5.js';
 import {VENUE_PRICING,VENUE_COST_LABELS} from './venues-pricing.js';
 import {PERSONAL_CRITERIA,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
 import {transcriptAddons,transcriptMenuScenarios} from './venue-transcript-costs.js';
 import {venueBudgetCoverage,k2PlanningScenarios} from './venue-budget-coverage.js';
 
-const ALL_PHOTOS={...VENUE_PHOTOS_1,...VENUE_PHOTOS_2,...VENUE_PHOTOS_3,...VENUE_PHOTOS_4};
+const ALL_PHOTOS={...VENUE_PHOTOS_1,...VENUE_PHOTOS_2,...VENUE_PHOTOS_3,...VENUE_PHOTOS_4,...VENUE_PHOTOS_5};
 const h=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>typeof n==='number'&&Number.isFinite(n)?Math.round(n).toLocaleString('ru-RU')+' ₽':'—';
 const escUrl=u=>{try{const x=new URL(String(u));return /^https?:$/.test(x.protocol)?x.href:''}catch{return ''}};
@@ -41,6 +42,10 @@ const photoPriority=x=>{
 };
 // Reviewed phone-photo covers for albums where filenames are only IMG timestamps.
 const FEATURED_COVERS={
+ 'milyutin':'1wUoS4p2AEThmm1C7Droo6pu6o31RSdMm', // inspected ceremonial salon
+ 'glukhovsky':'1-scO2kypBqMWZobP4dz4GFMD9X2D9SOl', // inspected wide banquet hall
+ 'santa-gloria':'1uYYIQZ8o8H8T6RVzx6k3GC_J8A2RVY0x', // inspected waterside dining hall
+ 'roof18':'1nS6BYMQX0N5VHvddrZXBDP-5IQm-igtx', // inspected open panoramic terrace
  'vesenniy':'1xrDBe6UYNcGcxGFadQ-Di8LCnHeM36Ux',    // verified wide banquet hall 02 (3072x1728)
  'putilov':'1Yo4j6ZhK_ycH38ZeHXKCGnaMmQfcHme4',       // ceremonial grand hall
  'repino-riviera':'1PCv5jMFTatJ21kuaUD2RaPx7JFXYsfPM', // building and bay
