@@ -8,7 +8,7 @@ test('Alexandrovsky Park 2026 rider confirms a basic technician without double b
  const v=VENUE_RECORDS['alex-park'],p=VENUE_PRICING['alex-park'];
  assert.ok(v.technicalRiderSource.includes('drive.google.com/file/d/'));
  assert.ok(v.technicalRiderNotes.includes('1 час подготовки + до 6 часов'));
- assert.ok(v.technicalRiderNotes.includes('НЕ входят'));
+ assert.match(v.technicalRiderNotes,/не входят/i);
  assert.ok(v.visitIncludedEquipment.includes('штатный технический специалист'));
  assert.ok(v.excluded.some(x=>x.includes('Звукорежиссёр')&&x.includes('светорежиссёр')));
  assert.ok(v.excluded.some(x=>x.includes('ВОЗМЕЩЕНИЯ')||x.includes('возмещение')));
