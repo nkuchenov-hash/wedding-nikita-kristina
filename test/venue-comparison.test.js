@@ -9,7 +9,7 @@ const venue=(overrides={})=>({
  id:'venue-score-test', region:'city',capacity:100,
  dateAvailability:{'18':'unknown','19':'available','20':'unknown'},
  cost:{rent:100000,menu:5000,service:10},
- ratingFacts:{singleHall:'yes',indoorBackup:'yes',includedEquipment:'yes',until23:'yes',ownAlcohol:'yes',outdoorArea:'yes'},
+ ratingFacts:{includedEquipment:'yes',outdoorArea:'yes'},
  ...overrides
 });
 
@@ -17,17 +17,17 @@ test('all criteria sum to 100 with June 19 the highest-weighted criterion',()=>{
  assert.equal(RATING_MAX,100);
  assert.equal(RATING_CRITERIA.reduce((s,[,,p])=>s+p,0),100);
  assert.equal(RATING_CRITERIA[0][0],'date');
- assert.equal(RATING_CRITERIA[0][2],40);
+ assert.equal(RATING_CRITERIA[0][2],45);
  assert.equal(RATING_CRITERIA.find(([key])=>key==='city')[2],10);
 });
 
-test('June 19 and ten objective facts reach 100 points with a preliminary budget',()=>{
+test('June 19 and two verified objective facts reach 100 points with a preliminary budget',()=>{
  const v=venue();
  const score=scoreVenue(v,100);
  assert.equal(score.value,100);
  assert.equal(score.complete,RATING_CRITERIA.length);
  assert.equal(score.provisional,true); // Cost is a documented but provisional tariff scenario.
- assert.equal(score.breakdown.find(x=>x.key==='date').value,40);
+ assert.equal(score.breakdown.find(x=>x.key==='date').value,45);
  assert.equal(score.breakdown.find(x=>x.key==='city').value,10);
 });
 
@@ -38,11 +38,11 @@ test('country venues earn no city bonus even when other scores are perfect',()=>
  assert.equal(score.value,90);
 });
 
-test('alternate date yields 24 date points, not 40',()=>{
+test('alternate date yields 27 date points, not 45',()=>{
  const v=venue({quotes:[{guests:100,total:650000,kind:'quote'}],dateAvailability:{'18':'available','19':'unavailable','20':'unknown'}});
  const score=scoreVenue(v,100);
- assert.equal(score.breakdown.find(x=>x.key==='date').value,24);
- assert.equal(score.value,84);
+ assert.equal(score.breakdown.find(x=>x.key==='date').value,27);
+ assert.equal(score.value,82);
 });
 
 test('unconfirmed date and verifiable conditions stay unknown',()=>{
