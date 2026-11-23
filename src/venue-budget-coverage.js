@@ -152,7 +152,9 @@ function workingBudget(v,guests){
 
 export function planningEstimate(v,guests){
  const hasOwnMenu=num(v.cost?.menu)!==null;
- if(hasOwnMenu)return null; // A manual correction of the actual banquet rate always wins.
+ const budget=VENUE_WORKING_BUDGETS[v.id];
+ // A genuinely revised banquet rate must override a default working scenario.
+ if(hasOwnMenu&&(!budget||num(v.cost.menu)!==budget.menu))return null;
  const plan=k2PlanningScenarios(v,guests)[0];
  if(!plan)return workingBudget(v,guests);
  return {
