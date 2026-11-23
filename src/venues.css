@@ -320,3 +320,28 @@
 .vw-archive-action:hover{background:#e7f2ea;border-color:#91b29d}
 .vw-row.is-archived .vw-venue-media{opacity:.65}
 .vw-archive-reason{color:#926837!important;font-weight:690!important}
+
+
+/* Navigable archive counter and rating-method help. */
+.vw-control-facts .vw-archive-counter{display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#285a3c;padding:7px 11px;border:1px solid #9fbaa6;border-radius:9px;background:#f3f9f3;white-space:nowrap;text-decoration:none}
+.vw-control-facts .vw-archive-counter:hover,.vw-control-facts .vw-archive-counter:focus-visible{background:#e3f1e6;border-color:#4b8763;outline-offset:3px}
+.vw-archive-reason{display:inline-block;text-decoration:underline;text-underline-offset:3px}
+.vw-method-link{display:inline-flex;align-items:center;min-height:34px;white-space:nowrap;color:#2a6240;font-size:12px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.vw-method-link:hover,.vw-method-back:hover{color:#17683a}
+.vw-method-page{max-width:1120px;margin-inline:auto}
+.vw-method-head{margin-bottom:20px}
+.vw-method-head h1{font-size:clamp(24px,2.4vw,32px);letter-spacing:-.025em;margin:13px 0 7px}
+.vw-method-head p{font-size:14px;line-height:1.6;color:#536b59;margin:0}
+.vw-method-back{display:inline-flex;margin:8px 0;color:#2d6241;font-weight:700;text-decoration:underline;text-underline-offset:3px;font-size:13px}
+.vw-method-panel{padding:23px 25px}
+.vw-method-panel h2{font-size:19px;margin:0 0 14px}
+.vw-method-criteria{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px;margin-bottom:29px}
+.vw-method-criterion{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #e0e9e0;font-size:13px}
+.vw-method-criterion span{color:#3b5544}
+.vw-method-criterion strong{white-space:nowrap;color:#26553a}
+.vw-method-rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:8px 0 20px}
+.vw-method-rules section{padding:16px;border:1px solid #e0e9e0;border-radius:11px;background:#fff}
+.vw-method-rules h3{font-size:15px;color:#284a36;margin:0 0 8px}
+.vw-method-rules p,.vw-method-foot{font-size:13px;line-height:1.65;color:#516357;margin:0}
+.vw-method-foot{margin:15px 0}
+@media(max-width:790px){.vw-method-criteria,.vw-method-rules{grid-template-columns:1fr}.vw-method-panel{padding:16px}.vw-method-link{white-space:normal}}
