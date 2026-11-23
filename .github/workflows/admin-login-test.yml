@@ -94,7 +94,7 @@ jobs:
             -o /tmp/wedding-guests.json
           python3 -c 'import json;v=json.load(open("/tmp/wedding-guests.json"));g=v.get("guests",[]);assert v.get("ok") and len(g)>=114 and "source_person_id" in g[0];print("PRIVATE_GUEST_PROFILES_OK",len(g))'
 
-          for asset in admin-guests.js venue-files-ui.js venue-detail-ui.js admin-photos.js venue-transcript-costs.js venue-budget-coverage.js venues.js; do
+          for asset in admin-guests.js venue-files-ui.js venue-detail-ui.js admin-photos.js venue-transcript-costs.js venue-budget-coverage.js venues.js venue-evaluation.js venues-data.js; do
             code=$(curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" -o "/tmp/$asset" \
               -w '%{http_code}' "https://nikitakristina.ru/admin/index.php?asset=src/$asset")
             test "$code" = 200
@@ -113,6 +113,9 @@ jobs:
           grep -Fq 'data-rating-fact' /tmp/venue-detail-ui.js
           grep -Fq 'data-rating-open' /tmp/venues.js
           grep -Fq 'venue_rating_rules' /tmp/venues.js
+          grep -Fq 'Презентабельность и удобство входа' /tmp/venue-evaluation.js
+          grep -Fq '"entrance": "no"' /tmp/venues-data.js
+          echo 'LIVE_ENTRANCE_CRITERION_AND_VESENNIY_CONFIRMED'
           curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" \
             'https://nikitakristina.ru/admin/index.php?api=admin%2Fsettings' \
             -o /tmp/wedding-ranking-settings.json

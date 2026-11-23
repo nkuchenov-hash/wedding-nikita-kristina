@@ -76,6 +76,16 @@ render();
 // unsaved guest/venue form edits. Never silently reload an active editor.
 const loadedRevision=new URL(import.meta.url).searchParams.get('v')||'';
 let latestRevision='',refreshChecking=false,lastNotifiedRevision='';
+let editedInThisTab=false;
+// Never interrupt a draft just because another release has arrived.
+document.addEventListener('input',event=>{
+ if(event.target?.matches?.('input,textarea,select,[contenteditable]'))editedInThisTab=true;
+},true);
+function safeToAutoRefresh(){
+ return !editedInThisTab&&!document.querySelector(
+  '.vw-rating-drawer,.vdp-inline-form,.vdp-inline-quote-form,.vdp-inline-quote-editor,.ad-gb-lock,[role="dialog"],input:focus,textarea:focus,select:focus,[contenteditable]:focus'
+ );
+}
 function showReleaseBanner(){
  showAdminToast('Сайт обновлён — доступна новая версия.',{
    duration:6000,
@@ -95,9 +105,21 @@ async function checkRelease(){
    if(!response.ok)return;
    const info=await response.json();
    latestRevision=String(info?.revision||'');
-   if(latestRevision&&latestRevision!==loadedRevision&&latestRevision!==lastNotifiedRevision){
-     lastNotifiedRevision=latestRevision;
-     showReleaseBanner();
+   if(latestRevision&&latestRevision!==loadedRevision){
+     // The old JavaScript cannot hot-swap itself. Refresh an untouched tab
+     // automatically; otherwise offer a reload without discarding user input.
+     const key='wedding-admin-auto-refreshed-'+latestRevision;
+     let alreadyRefreshed=false;
+     try{alreadyRefreshed=sessionStorage.getItem(key)==='1';}catch{}
+     if(safeToAutoRefresh()&&!alreadyRefreshed){
+       try{sessionStorage.setItem(key,'1');}catch{}
+       location.reload();
+       return;
+     }
+     if(latestRevision!==lastNotifiedRevision){
+       lastNotifiedRevision=latestRevision;
+       showReleaseBanner();
+     }
    }
  }catch{/* Temporary network failure must never break the editor. */}
  finally{refreshChecking=false}

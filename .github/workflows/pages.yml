@@ -157,7 +157,7 @@ jobs:
             echo "::error::REG.RU admin/index.php checksum mismatch."
             exit 1
           fi
-          for asset in admin-app.js admin-data-ui.js admin-guests.js admin-guests.css admin-photos.js venue-files-ui.js venue-detail-ui.js venue-transcript-costs.js venue-budget-coverage.js venues-photos-5.js; do
+          for asset in admin-app.js admin-data-ui.js admin-guests.js admin-guests.css admin-photos.js venue-files-ui.js venue-detail-ui.js venue-transcript-costs.js venue-budget-coverage.js venues-photos-5.js venue-evaluation.js venues-data.js; do
             local_asset_sha=$(sha256sum "_admin-private/src/$asset" | awk '{print $1}')
             remote_asset_sha=$(ssh $SSH_OPTS "$USERNAME@$HOST" "sha256sum '/var/www/u3728035/data/wedding-private/admin-release/src/$asset'" | awk '{print $1}')
             if [[ "$local_asset_sha" != "$remote_asset_sha" ]]; then
@@ -181,6 +181,10 @@ jobs:
              grep -Fq 'checkRelease' /var/www/u3728035/data/wedding-private/admin-release/src/admin-app.js"
           remote_version=$(ssh $SSH_OPTS "$USERNAME@$HOST" "cat '$DESTINATION/build-info.json'")
           echo "$remote_version" | node -e 'let s="";process.stdin.on("data",d=>s+=d);process.stdin.on("end",()=>{const v=JSON.parse(s); if(v.revision!==process.env.GITHUB_SHA.slice(0,12))process.exit(1)})'
+          # Check the actual private production release, not just a new build number.
+          ssh $SSH_OPTS "$USERNAME@$HOST" \
+            "set -eu; grep -Fq 'Презентабельность и удобство входа' /var/www/u3728035/data/wedding-private/admin-release/src/venue-evaluation.js; \
+             grep -Fq '\"entrance\": \"no\"' /var/www/u3728035/data/wedding-private/admin-release/src/venues-data.js"
           echo "REG.RU protected admin JavaScript bundle matches this release."
           echo "REG.RU admin-only deployment confirmed by remote checksums."
       - uses: actions/configure-pages@v5
