@@ -612,7 +612,11 @@ export function activateVenueAdmin(root){
     target.disabled=true;
     const next={...(state.venues[id]||{}),archived};
     if(archived&&!venue.archiveReason)next.archiveReason='Убрано из сравнения вручную';
-    commitInlineChanges(id,next,root).catch(error=>showError('Не удалось изменить архив: '+error.message));
+    commitInlineChanges(id,next,root).then(()=>{
+     showAdminToast(archived?'Площадка перенесена в архив.':'Площадка возвращена в основной список.',{
+      action:archived?{label:'Открыть архив',onClick:()=>{location.hash='#/admin/venues/archive';}}:null
+     });
+    }).catch(error=>showError('Не удалось изменить архив: '+error.message));
    }
   else if(target.hasAttribute('data-venue-inline')){
    if(!venueDb.ready){showError('Общая база недоступна. Редактирование не открывается: '+(venueDb.error||'нет соединения'));return}
