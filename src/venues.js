@@ -394,9 +394,9 @@ function row(v){
  const complete=cost.value!==null&&!cost.partial;
  const amount=cost.value===null?'Не рассчитано':(cost.kind==='planning'?'≈ '+rub(cost.value):complete?rub(cost.value):'от '+rub(cost.value));
  const known=cost.value===null&&cost.knownSubtotal>0?'Известно: '+rub(cost.knownSubtotal)+' (не итог)':'';
- const type=cost.value===null?'Нет полной цены':cost.kind==='planning'?'План с резервами, не КП':complete?'Смета':'Неполный расчёт';
+ const type=cost.value===null?'Нет достаточных тарифов':cost.kind==='planning'?'Рабочая смета':complete?'Полученное КП':cost.kind==='minimum'?'Минимум по тарифам':cost.kind==='estimate'?'Оценка по предложению':'Предварительная оценка';
  const missing=cost.missing?.length?'Нет: '+cost.missing.join(', '):'';
- const hint=cost.kind==='planning'?'Техника и сервис — рабочие резервы, не подтверждены площадкой':[known,missing].filter(Boolean).join(' · ')||((cost.quoteDate&&complete)?'На '+cost.quoteDate.slice(8,10)+'.06':'');
+ const hint=cost.kind==='planning'?'Выбранный сценарий с отмеченными допущениями, не КП':[known,missing].filter(Boolean).join(' · ')||((cost.quoteDate&&complete)?'На '+cost.quoteDate.slice(8,10)+'.06':'');
  return '<tr class="vw-row'+(v.archived?' is-archived':'')+'" data-id="'+h(v.id)+'"><td><div class="vw-venue-cell"><span class="vw-venue-media"><button type="button" class="vw-image-open" data-detail="'+h(v.id)+'" aria-label="Открыть площадку '+h(v.name)+'">'+image+'</button></span><div class="vw-venue-label"><button class="vw-name" data-detail="'+h(v.id)+'" type="button">'+h(v.name)+'</button><small>'+h(v.area)+' · '+(v.region==='country'?'За городом':'Город')+'</small>'+(v.archived?'<small class="vw-archive-reason" title="'+h(v.archiveReason||'')+'">В архиве</small>':'')+'<button type="button" class="vw-archive-action" data-venue-archive="'+h(v.id)+'" aria-label="'+(v.archived?'Вернуть из архива: ':'Убрать в архив: ')+h(v.name)+'">'+(v.archived?'Вернуть':'В архив')+'</button></div></div></td>'+
  '<td>'+tableDateControls(v)+'</td>'+
  '<td><span class="vw-state '+(v.visited?'vw-seen':'')+'">'+(v.visited?'● Были лично':'○ Не подтверждено')+'</span></td>'+
