@@ -174,7 +174,7 @@ test('every venue has the same cost schema and table indicates missing quotes',(
  }
  assert.match(detail,/rowGroups\.map/);
  assert.match(detail,/vdp-cost-missing/);
- assert.match(list,/Нет полной цены/);
+ assert.match(list,/Нет достаточных тарифов/);
  assert.match(list,/data-list-date/);
  assert.doesNotMatch(list,/Сезоны в парке.*сообщили о занятости 19-го/);
 });
