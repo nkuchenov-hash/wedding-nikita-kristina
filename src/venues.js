@@ -569,10 +569,16 @@ export function activateVenueAdmin(root){
  redraw(root);
  initVenueDatabase(root);
  root.addEventListener('click',event=>{
-  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-venue-inline],[data-inline-quote],[data-add-inline-quote],[data-cancel-inline],[data-remove-venue-quote],[data-venue-retry],[data-venue-archive]');if(!target)return;
+  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-venue-inline],[data-inline-quote],[data-add-inline-quote],[data-cancel-inline],[data-remove-venue-quote],[data-venue-retry],[data-venue-archive],[data-open-archive]');if(!target)return;
   const venueBase=PUBLIC_VENUES.find(x=>x.id===ui.expanded);
   const showError=message=>showAdminToast(message,{kind:'error'});
-  if(target.hasAttribute('data-venue-retry')){initVenueDatabase(root,true);}
+  if(target.hasAttribute('data-open-archive')){
+   event.preventDefault();
+   Object.assign(ui,{archiveFilter:'archived',kind:'all',query:'',dateFilter:'all',budget:'all',visit:'all',capacity:'all'});
+   if(location.hash!=='#/admin/venues/archive')location.hash='#/admin/venues/archive';
+   else redraw(root);
+  }
+  else if(target.hasAttribute('data-venue-retry')){initVenueDatabase(root,true);}
   else if(target.hasAttribute('data-cancel-inline')){redraw(root);}
    else if(target.hasAttribute('data-venue-archive')){
     const id=target.dataset.venueArchive,base=PUBLIC_VENUES.find(x=>x.id===id);
@@ -708,7 +714,15 @@ export function activateVenueAdmin(root){
   if(t.hasAttribute('data-photo-sort')){ui.photoSort=t.value;ui.photoIndex=0;redraw(root);return;}
   if(t.matches('select[data-inline-control]')){t.closest('form')?.requestSubmit();return;}
   if(t.dataset.state==='guestCount'){state.guestCount=Math.max(1,Math.min(300,Number(t.value)||80));save();redraw(root);return;}
-  if(t.dataset.ui){ui[t.dataset.ui]=t.value;redraw(root);return;}
+  if(t.dataset.ui){
+   ui[t.dataset.ui]=t.value;
+   if(t.dataset.ui==='archiveFilter'){
+    const next=t.value==='archived'?'#/admin/venues/archive':'#/admin/venues';
+    if(location.hash!==next)location.hash=next;
+    else redraw(root);
+   }else redraw(root);
+   return;
+  }
   if(t.dataset.venue){
    const id=t.dataset.venue,old=state.venues[id]||{};
    if(!venueDb.ready){redraw(root);return;}
