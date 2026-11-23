@@ -446,3 +446,9 @@
 
 .vdp-coverage-row.partial{background:#f9faf2;border-color:#dbdfc0}
 .vdp-coverage-row.partial>span{color:#8a7438}
+
+.vdp-top-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.vdp-top-actions .vdp-inline-hint{margin-left:auto}
+.vdp-archive-btn{min-height:39px;padding:8px 15px;border:1px solid #d1ded4;border-radius:9px;background:#fff;color:#476753;font-weight:680;font-size:13px;cursor:pointer}
+.vdp-archive-btn:hover{background:#ebf3ed}
+.vdp-archived-notice{padding:12px 16px;border:1px solid #e9dfd1;border-radius:10px;background:#fffaf4;color:#725a3a;font-size:13px;margin:0 0 12px}

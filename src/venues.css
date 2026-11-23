@@ -313,3 +313,10 @@
 .vw-image-open.vw-photo-unavailable::after{content:'Нет фото';font-size:10px;line-height:1.1;padding:3px}
 
 .vw-image-open img[hidden]{display:none!important}
+
+/* Reversible venue archiving without adding a comparison table column. */
+.vw-control-board .vw-table-tools [data-ui="archiveFilter"]{min-width:115px;min-height:33px;padding:6px 9px;font-size:12px}
+.vw-archive-action{display:inline-flex;align-items:center;min-height:30px;margin-top:7px;padding:5px 11px;border:1px solid #cbdccf;border-radius:8px;background:#f7faf7;color:#3c6047;font-size:11px;font-weight:690;white-space:nowrap;cursor:pointer}
+.vw-archive-action:hover{background:#e7f2ea;border-color:#91b29d}
+.vw-row.is-archived .vw-venue-media{opacity:.65}
+.vw-archive-reason{color:#926837!important;font-weight:690!important}
