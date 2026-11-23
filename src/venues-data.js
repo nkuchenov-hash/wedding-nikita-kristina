@@ -1808,20 +1808,5 @@ export const VENUE_RECORDS = {
     "drive": "https://drive.google.com/drive/folders/1gSI7zMBrYFZ6hyShdJEQ8FmdLWPpLfcB",
     "photos": "https://drive.google.com/drive/folders/18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
     "documentsFolder": "https://drive.google.com/drive/folders/1mK35seBt-Ynu6eS1cHpxSMeND08LEnCq"
-  },
-  "chadu": {
-    "summary": "Чаду на Боткинской улице — в маршруте осмотров 21.11.2026. Результаты встречи, точный адрес, доступность и цены пока не получены.",
-    "dateAvailability": {
-      "18": "unknown",
-      "19": "unknown",
-      "20": "unknown"
-    },
-    "questions": [
-      "Уточнить полное название и адрес, фактический осмотр, даты, вместимость и цены"
-    ],
-    "sourceStatus": "Маршрут осмотров 21 ноября.",
-    "drive": "https://drive.google.com/drive/folders/1SgX_-YBAeZnQXHTbNgttVgicEK9Ob0Yy",
-    "photos": "https://drive.google.com/drive/folders/1_PBRGigK_vLjDEKGnxCDj2xe5Q9-5k61",
-    "documentsFolder": "https://drive.google.com/drive/folders/1bu8IoKiMLSNXMZtU7dl23JEU5SOx473Z"
   }
 };
