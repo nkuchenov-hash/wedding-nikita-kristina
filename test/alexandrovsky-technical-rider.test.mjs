@@ -39,7 +39,7 @@ test('Alexandrovsky Park terrace appears in photos and contributes to rating',()
  assert.equal(venue.gallery.find(x=>x.label==='Крытая терраса')?.folder,'17V-_fThWRq7z1s5219I9NIbEjMZ-vPni');
  assert.equal(venue.ratingFacts.outdoorArea,'yes');
  assert.match(venue.ratingFactSources.outdoorArea,/80 м²/);
- assert.match(OBJECTIVE_CRITERIA.find(x=>x.key==='outdoorArea').question,/есть терраса/);
+ assert.match(OBJECTIVE_CRITERIA.find(x=>x.key==='outdoorArea').question,/балкон, терраса/);
  const rated=scoreVenue({id:'alex-park',region:'city',capacity:300,...venue},80,estimateVenue(venue,80));
  const terrace=rated.breakdown.find(x=>x.key==='outdoorArea');
  assert.equal(terrace.value,terrace.maximum);
