@@ -6,7 +6,7 @@ import {VENUE_PHOTOS_3} from './venues-photos-3.js';
 import {VENUE_PHOTOS_4} from './venues-photos-4.js';
 import {VENUE_PHOTOS_5} from './venues-photos-5.js';
 import {VENUE_PRICING,VENUE_COST_LABELS} from './venues-pricing.js';
-import {PERSONAL_CRITERIA,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
+import {OBJECTIVE_CRITERIA,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
 import {transcriptAddons,transcriptMenuScenarios} from './venue-transcript-costs.js';
 import {venueBudgetCoverage,k2PlanningScenarios} from './venue-budget-coverage.js';
 
@@ -253,8 +253,28 @@ function infoPane(v,ctx){
  '<div class="vdp-source-links">'+sourceLinks(v)+'</div></section></div>'+scopeList(v);
 }
 function ratingPane(v,ctx){
- const sc=ctx.weighted(v);
- return '<section class="vdp-pane"><h2>Балльная оценка площадки</h2><p><a class="vdp-rating-method-link" href="#/admin/venues/rating-method">Как рассчитывается рейтинг · все правила →</a></p><p>19 июня — максимум 40 баллов; подтверждённые 18/20 июня — 24; город — 10. По остальным критериям выставляются баллы в пределах фактических условий. Отсутствующие сведения не считаются подтверждёнными.</p><div class="vdp-rating-summary"><strong>'+(sc.value===null?'Недостаточно данных':sc.value+' / '+RATING_MAX+' баллов')+'</strong><span>'+sc.complete+' из '+RATING_CRITERIA.length+' критериев оценены · '+(sc.provisional?'неполная оценка':'все учтены')+'</span></div><div class="vdp-rating-breakdown">'+(sc.breakdown||[]).map(x=>'<div title="'+h(x.note||'')+'"><span>'+h(x.label)+' <small>макс. '+x.maximum+'</small><small class="vdp-rating-reason">'+h(x.note||'Условия не указаны')+'</small></span><strong>'+(x.value===null?'Нет данных':Math.round(x.value*10)/10+' / '+x.maximum)+'</strong></div>').join('')+'</div><h3>Оценка площадки после осмотра</h3><div class="vdp-extra-grid">'+PERSONAL_CRITERIA.map(([key,label])=>'<label>'+h(label)+'<select data-venue="'+h(v.id)+'" data-rating="'+key+'"><option value="">Пока не оценивали</option>'+[1,2,3,4,5].map(n=>'<option value="'+n+'" '+(Number(v.ratings?.[key])===n?'selected':'')+'>'+n+' / 5</option>').join('')+'</select></label>').join('')+'</div></section>';
+ const score=ctx.weighted(v);
+ const facts=OBJECTIVE_CRITERIA.map(x=>{
+  const value=v.ratingFacts?.[x.key]??'unknown';
+  const note=score.breakdown.find(y=>y.key===x.key);
+  return '<label class="vdp-objective-fact"><span><b>'+h(x.label)+'</b><small>'+h(x.question)+'</small>'+
+   '<small class="vdp-rating-source">Основание: '+h(x.evidence)+'</small></span>'+
+   '<select data-venue="'+h(v.id)+'" data-rating-fact="'+h(x.key)+'" aria-label="'+h(x.label)+'">'+
+   [['unknown','Нет подтверждения'],['yes','Да, подтверждено'],['no','Нет, подтверждено']].map(([id,label])=>
+    '<option value="'+id+'" '+(value===id?'selected':'')+'>'+label+'</option>').join('')+'</select>'+
+   '<strong>'+(note?.value===null?'Не оценено':Math.round(note.value*10)/10+' / '+note.maximum)+'</strong></label>';
+ }).join('');
+ return '<section class="vdp-pane"><h2>Рейтинг площадки</h2>'+
+  '<p>Только проверяемые критерии, одинаковые для всех площадок. Для каждого факта выберите «Да», «Нет» или «Нет подтверждения». Личных оценок по шкале 1–5 больше нет.</p>'+
+  '<p><a class="vdp-rating-method-link" href="#/admin/venues/rating-method">Общие правила и веса критериев</a></p>'+
+  '<div class="vdp-rating-summary"><strong>'+(score.value===null?'Нет оценки':score.value+' / '+RATING_MAX+' баллов')+'</strong>'+
+  '<span>'+score.complete+' из '+RATING_CRITERIA.length+' критериев подтверждены · '+(score.provisional?'предварительный рейтинг':'все критерии известны')+'</span></div>'+
+  '<h3>Расчёт по каждому критерию</h3><div class="vdp-rating-breakdown">'+score.breakdown.map(x=>
+   '<div><span>'+h(x.label)+' <small>макс. '+x.maximum+'</small>'+
+   '<small class="vdp-rating-reason">'+h(x.note||'Нет объяснения')+'</small></span>'+
+   '<strong>'+(x.value===null?'Нет данных':Math.round(x.value*10)/10+' / '+x.maximum)+'</strong></div>').join('')+'</div>'+
+  '<h3>Проверенные условия площадки</h3><p>Выбор сохраняется в базе и автоматически изменяет рейтинг на главной странице.</p>'+
+  '<div class="vdp-objective-facts">'+facts+'</div></section>';
 }
 
 
