@@ -266,7 +266,7 @@ function ratingPane(v,ctx){
  }).join('');
  return '<section class="vdp-pane"><h2>Рейтинг площадки</h2>'+
   '<p>Только проверяемые критерии, одинаковые для всех площадок. Для каждого факта выберите «Да», «Нет» или «Нет подтверждения». Личных оценок по шкале 1–5 больше нет.</p>'+
-  '<p><a class="vdp-rating-method-link" href="#/admin/venues/rating-method">Общие правила и веса критериев</a></p>'+
+  '<p><button type="button" class="vdp-rating-method-link" data-rating-open>Настроить общие правила рейтинга</button></p>'+
   '<div class="vdp-rating-summary"><strong>'+(score.value===null?'Нет оценки':score.value+' / '+RATING_MAX+' баллов')+'</strong>'+
   '<span>'+score.complete+' из '+RATING_CRITERIA.length+' критериев подтверждены · '+(score.provisional?'предварительный рейтинг':'все критерии известны')+'</span></div>'+
   '<h3>Расчёт по каждому критерию</h3><div class="vdp-rating-breakdown">'+(score.breakdown||[]).map(x=>
