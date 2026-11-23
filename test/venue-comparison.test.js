@@ -9,7 +9,7 @@ const venue=(overrides={})=>({
  id:'venue-score-test', region:'city',capacity:100,
  dateAvailability:{'18':'unknown','19':'available','20':'unknown'},
  cost:{rent:100000,menu:5000,service:10},
- ratings:{look:5,comfort:5,food:5,travel:5,terrace:5,terms:5},
+ ratingFacts:{singleHall:'yes',indoorBackup:'yes',includedEquipment:'yes',until23:'yes',ownAlcohol:'yes',outdoorArea:'yes'},
  ...overrides
 });
 
@@ -21,12 +21,12 @@ test('all criteria sum to 100 with June 19 the highest-weighted criterion',()=>{
  assert.equal(RATING_CRITERIA.find(([key])=>key==='city')[2],10);
 });
 
-test('June 19 and all rated criteria yield 85 points until full cost is confirmed',()=>{
+test('June 19 and ten objective facts reach 100 points with a preliminary budget',()=>{
  const v=venue();
  const score=scoreVenue(v,100);
- assert.equal(score.value,85);
- assert.equal(score.complete,RATING_CRITERIA.length-1);
- assert.equal(score.provisional,true); // No confirmed complete quote: cost remains unrated.
+ assert.equal(score.value,100);
+ assert.equal(score.complete,RATING_CRITERIA.length);
+ assert.equal(score.provisional,true); // Cost is a documented but provisional tariff scenario.
  assert.equal(score.breakdown.find(x=>x.key==='date').value,40);
  assert.equal(score.breakdown.find(x=>x.key==='city').value,10);
 });
@@ -45,11 +45,11 @@ test('alternate date yields 24 date points, not 40',()=>{
  assert.equal(score.value,84);
 });
 
-test('unconfirmed date and subjective qualities stay unknown',()=>{
- const v=venue({ratings:{},dateAvailability:{'18':'unknown','19':'unknown','20':'unknown'}});
+test('unconfirmed date and verifiable conditions stay unknown',()=>{
+ const v=venue({ratingFacts:{},dateAvailability:{'18':'unknown','19':'unknown','20':'unknown'}});
  const score=scoreVenue(v,100);
  assert.equal(score.breakdown.find(x=>x.key==='date').value,null);
- assert.equal(score.breakdown.find(x=>x.key==='terrace').value,null);
+ assert.equal(score.breakdown.find(x=>x.key==='outdoorArea').value,null);
  assert.equal(score.provisional,true);
 });
 
