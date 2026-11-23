@@ -11,7 +11,7 @@ import {VENUE_PRICING} from './venues-pricing.js';
 import {transcriptAddonTotal} from './venue-transcript-costs.js';
 import {renderVenueNewPage,renderVenueQuoteEditorRow,filteredVenuePhotos,getVenuePhotos,getVenueCover} from './venue-detail-ui.js';
 import {hydrateVenueFiles} from './venue-files-ui.js';
-import {estimateVenue,scoreVenue,OBJECTIVE_CRITERIA,DEFAULT_RATING_RULES,validateRatingRules,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
+import {estimateVenue,scoreVenue,OBJECTIVE_CRITERIA,DEFAULT_RATING_RULES,validateRatingRules,migrateRatingRules,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
 export const PUBLIC_VENUES = [
   {id:'360',name:'Пространство 360',region:'city',area:'Санкт-Петербург'},
   {id:'loft-roof',name:'Лофт на крыше',region:'city',area:'Обводный канал'},
@@ -178,7 +178,7 @@ async function initVenueDatabase(root,force=false){
     throw new Error('Не загружены статусы дат для '+venue.name);
   }
   // Revalidate silently: other-device edits redraw only when data has changed.
-  const serverRules=validateRatingRules(settingsResponse.settings?.venue_rating_rules)||DEFAULT_RATING_RULES;
+  const serverRules=migrateRatingRules(settingsResponse.settings?.venue_rating_rules)||DEFAULT_RATING_RULES;
   changed=JSON.stringify(ratingRules)!==JSON.stringify(serverRules)||
     JSON.stringify(state.venues)!==JSON.stringify(incoming)||
     JSON.stringify([...venueDb.dates].sort())!==JSON.stringify([...dates].sort());
