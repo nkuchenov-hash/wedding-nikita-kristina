@@ -262,7 +262,7 @@ function ratingPane(v,ctx){
    '<select data-venue="'+h(v.id)+'" data-rating-fact="'+h(x.key)+'" aria-label="'+h(x.label)+'">'+
    [['unknown','Нет подтверждения'],['yes','Да, подтверждено'],['no','Нет, подтверждено']].map(([id,label])=>
     '<option value="'+id+'" '+(value===id?'selected':'')+'>'+label+'</option>').join('')+'</select>'+
-   '<strong>'+(note?.value===null?'Не оценено':Math.round(note.value*10)/10+' / '+note.maximum)+'</strong></label>';
+   '<strong>'+(note?.value==null?'Не оценено':Math.round(note.value*10)/10+' / '+note.maximum)+'</strong></label>';
  }).join('');
  return '<section class="vdp-pane"><h2>Рейтинг площадки</h2>'+
   '<p>Только проверяемые критерии, одинаковые для всех площадок. Для каждого факта выберите «Да», «Нет» или «Нет подтверждения». Личных оценок по шкале 1–5 больше нет.</p>'+
