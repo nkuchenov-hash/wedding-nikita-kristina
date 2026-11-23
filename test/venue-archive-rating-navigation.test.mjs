@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {renderVenueAdmin} from '../src/venues.js';
+import {renderVenueAdmin,renderVenueRatingGuide} from '../src/venues.js';
 import {RATING_CRITERIA,RATING_MAX,scoreVenue} from '../src/venue-evaluation.js';
 
 test('Archive can be opened by its counter, link, selector, and post-save action',()=>{
@@ -54,4 +54,20 @@ test('Rating weights and price thresholds match the user-facing methodology',()=
  }
  const working=scoreVenue(v,80,{value:650000,isQuote:false,partial:true,kind:'planning'});
  assert.equal(row(working,'cost').value,null,'Working budgets must not be scored as received full quotes');
+});
+
+test('Main venues list exposes expanded rating formulas inline, not only via navigation',()=>{
+ const source=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');
+ assert.match(source,/renderVenueRatingGuide\(\)\+\s*'\u003cdiv class="vw-panel vw-table-panel"/);
+ const html=renderVenueRatingGuide();
+ assert.match(html,/^\u003cdetails class="vw-rating-guide"/);
+ assert.match(html,/\u003csummary\u003e/);
+ assert.match(html,/Как рассчитывается рейтинг/);
+ assert.match(html,/100 баллов/);
+ assert.equal((html.match(/class="vw-method-criterion"/g)||[]).length,10);
+ assert.match(html,/до 650 000 ₽/);
+ assert.match(html,/19 июня подтверждено свободно/);
+ assert.match(html,/Рабочий расчёт с резервами пока не получает баллов/);
+ assert.match(html,/href="#\/admin\/venues\/rating-method"/);
+ assert.match(html,/\u003c\/details\u003e$/);
 });
