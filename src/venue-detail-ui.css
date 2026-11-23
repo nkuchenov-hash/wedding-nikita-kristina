@@ -484,3 +484,20 @@
  .vdp-objective-fact{grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:17px}
  .vdp-objective-fact select{min-height:46px}
 }
+
+/* Single field home per tab: Overview decisions; Conditions policies; Budget pricing. */
+.vdp-terms-page{display:grid;grid-template-columns:minmax(0,1fr);gap:17px}
+.vdp-terms-page .vdp-scope-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.vdp-terms-page>.vdp-pane h3{font-size:19px;margin:18px 0 10px}
+.vdp-rating-inputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:16px 0 27px}
+.vdp-rating-inputs>section{padding:20px;border:1px solid #d8e8da;border-radius:12px;background:#f7faf6;min-width:0}
+.vdp-rating-inputs>section h3{font-size:19px;margin:0 0 13px;color:#315740}
+.vdp-rating-inputs .vdp-dates{margin:4px 0 0}
+.vdp-rating-inputs .vdp-date{padding:10px;overflow-wrap:normal}
+.vdp-rating-inputs>section p{margin:10px 0 0;font-size:16px;line-height:1.55}
+.vdp-rating-inputs>section p>a{color:#236145;text-decoration:underline;text-underline-offset:3px}
+.vdp-rating-inputs>section>strong{font-size:22px;color:#28593a}
+@media(max-width:900px){
+ .vdp-rating-inputs{grid-template-columns:1fr}
+ .vdp-terms-page .vdp-scope-grid{grid-template-columns:1fr}
+}

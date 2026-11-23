@@ -23,9 +23,8 @@ const context=(detailTab)=>({
 
 test('overview displays data directly as editable values, without an edit-only page',()=>{
  const html=renderVenueNewPage(venue,context('overview'));
- for(const key of ['name','area','summary','capacity','capacityNote',
-  'date:18','date:19','date:20','cost:menu','cost:rent','cost:service',
-  'included','excluded','questions']){
+ for(const key of ['name','area','capacity','capacityNote',
+  'date:18','date:19','date:20','cost:menu','cost:rent','cost:service']){
   assert.ok(html.includes('data-venue-inline="'+key+'"'),key+' not clickable');
  }
  assert.match(html,/Нажмите на значение, чтобы изменить его/);
@@ -39,12 +38,12 @@ test('venue Overview begins with decision KPIs and keeps photo gallery last',()=
  const html=renderVenueNewPage(venue,context('overview'));
  const dashboard=html.indexOf('class="vdp-parameter-dashboard"');
  const detail=html.indexOf('class="vdp-dashboard-details"');
- const terms=html.indexOf('class="vdp-scope-grid"');
+ const terms=html.indexOf('class="vdp-pane vdp-overview-gallery"');
  const gallery=html.indexOf('class="vdp-pane vdp-overview-gallery"');
  assert.ok(dashboard>=0,'Decision dashboard must exist');
  assert.ok(detail>dashboard,'Dates and budget must follow dashboard');
- assert.ok(terms>detail,'Terms follow financial details');
- assert.ok(gallery>terms,'Photos come after all decision information');
+ assert.ok(terms>detail,'Gallery after financial details without repeated Conditions');
+ assert.equal(gallery,terms,'Gallery is final Overview section');
  for(const key of ['date:19','capacity','region','visited']){
   assert.ok(html.slice(dashboard,detail).includes('data-venue-inline="'+key+'"'),key+' editable on first screen');
  }
@@ -57,9 +56,8 @@ test('venue Overview begins with decision KPIs and keeps photo gallery last',()=
 
 test('conditions values are clickable in the same cards, no repeated editing section',()=>{
  const html=renderVenueNewPage(venue,context('terms'));
- for(const key of ['summary','capacity','capacityNote','visited','notes',
-  'contactPhone','contactEmail','date:18','date:19','date:20',
-  'included','excluded','questions']){
+ for(const key of ['summary','notes','visitTranscriptNotes',
+  'contactPhone','contactEmail','included','excluded','questions']){
   assert.ok(html.includes('data-venue-inline="'+key+'"'),key+' is missing');
  }
  assert.match(html,/Условия площадки/);
@@ -110,4 +108,15 @@ test('responsive CSS uses full workspace without duplicate edit form',()=>{
  assert.match(css,/\.vdp-inline-form\{/);
  assert.match(css,/\.vdp-date-editable\{/);
  assert.match(css,/@container\(max-width:520px\)/);
+});
+
+test('Overview is distinct from Conditions and Rating has direct fact editors',()=>{
+ const overview=renderVenueNewPage(venue,context('overview'));
+ const terms=renderVenueNewPage(venue,context('terms'));
+ const rating=renderVenueNewPage(venue,context('rating'));
+ for(const field of ['summary','included'])assert.ok(!overview.includes('data-venue-inline="'+field+'"'));
+ for(const field of ['capacity','date:19'])assert.ok(!terms.includes('data-venue-inline="'+field+'"'));
+ for(const field of ['capacity','region','date:18','date:19','date:20'])
+  assert.ok(rating.includes('data-venue-inline="'+field+'"'),field+' not editable in Rating');
+ assert.match(rating,/Изменить тарифы и расходы в единой смете/);
 });

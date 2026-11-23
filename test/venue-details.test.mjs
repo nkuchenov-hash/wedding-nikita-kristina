@@ -169,8 +169,8 @@ test('Visit transcript insights are additive editable fields on seven correctly 
   const item=venue(id);
   assert.ok(item.visitTranscriptNotes?.length>100,id+' should have detailed original meeting notes');
   assert.match(item.visitTranscriptSource,/^https:\/\/drive\.google\.com\/file\/d\//);
-  const overview=renderVenueNewPage(item,context('overview'));
-  assert.match(overview,/Из расшифровки встречи/);
+  const overview=renderVenueNewPage(item,context('terms'));
+  assert.match(overview,/Расшифровка встречи/);
   assert.match(overview,/data-venue-inline="visitTranscriptNotes"/);
   assert.match(overview,/Исходная расшифровка/);
  }
@@ -180,8 +180,8 @@ test('Visit transcript insights are additive editable fields on seven correctly 
   const record=VENUE_RECORDS[id];
   assert.ok(record.visitTranscriptNotes?.length>100,id+' contains verified original visit details');
   assert.ok(record.visitTranscriptSource.includes(docId),id+' has the correct distinct transcript source');
-  const overview=renderVenueNewPage(venue(id),context('overview'));
-  assert.match(overview,/Из расшифровки встречи/);
+  const overview=renderVenueNewPage(venue(id),context('terms'));
+  assert.match(overview,/Расшифровка встречи/);
  }
  assert.ok(!VENUE_RECORDS.k2.visitTranscriptSource.includes('14FJ4Ogo8qB6'));
  assert.ok(!VENUE_RECORDS['alex-park'].visitTranscriptSource.includes('1yxll_uMcNO'));
