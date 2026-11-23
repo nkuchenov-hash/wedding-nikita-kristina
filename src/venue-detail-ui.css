@@ -452,3 +452,11 @@
 .vdp-archive-btn{min-height:39px;padding:8px 15px;border:1px solid #d1ded4;border-radius:9px;background:#fff;color:#476753;font-weight:680;font-size:13px;cursor:pointer}
 .vdp-archive-btn:hover{background:#ebf3ed}
 .vdp-archived-notice{padding:12px 16px;border:1px solid #e9dfd1;border-radius:10px;background:#fffaf4;color:#725a3a;font-size:13px;margin:0 0 12px}
+
+
+/* Detailed rating explanations must stay visible on phones without hover. */
+.vdp-rating-method-link{display:inline-flex;font-weight:700;color:#286041;text-decoration:underline;text-underline-offset:3px}
+.vdp-rating-method-link:hover{color:#12653a}
+.vdp-rating-breakdown>div>span{display:block;flex:1;min-width:0}
+.vdp-rating-breakdown .vdp-rating-reason{display:block;color:#67806d;font-size:11px;line-height:1.4;margin-top:5px;max-width:45ch}
+.vdp-archived-notice a{color:#285e42;text-decoration:underline;text-underline-offset:3px;font-weight:700}
