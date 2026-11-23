@@ -9,7 +9,7 @@ const venue=(overrides={})=>({
  id:'venue-score-test', region:'city',capacity:100,
  dateAvailability:{'18':'unknown','19':'available','20':'unknown'},
  cost:{rent:100000,menu:5000,service:10},
- ratingFacts:{includedEquipment:'yes',outdoorArea:'yes'},
+ ratingFacts:{includedEquipment:'yes',outdoorArea:'yes',entrance:'yes'},
  ...overrides
 });
 
@@ -18,7 +18,7 @@ test('all criteria sum to 100 with June 19 the highest-weighted criterion',()=>{
  assert.equal(RATING_CRITERIA.reduce((s,[,,p])=>s+p,0),100);
  assert.equal(RATING_CRITERIA[0][0],'date');
  assert.equal(RATING_CRITERIA[0][2],45);
- assert.equal(RATING_CRITERIA.find(([key])=>key==='city')[2],10);
+ assert.equal(RATING_CRITERIA.find(([key])=>key==='city')[2],9);
 });
 
 test('June 19 and two verified objective facts reach 100 points with a preliminary budget',()=>{
@@ -35,7 +35,7 @@ test('country venues earn no city bonus even when other scores are perfect',()=>
  const v=venue({region:'country',quotes:[{guests:100,total:650000,kind:'quote'}]});
  const score=scoreVenue(v,100);
  assert.equal(score.breakdown.find(x=>x.key==='city').value,0);
- assert.equal(score.value,90);
+ assert.equal(score.value,91);
 });
 
 test('alternate date yields 27 date points, not 45',()=>{
