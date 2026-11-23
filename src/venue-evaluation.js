@@ -149,7 +149,7 @@ export function scoreVenue(v,guests,cost=estimateVenue(v,guests)){
  // Rent-only information is never a comparable total event quote.
  const comparableCost=cost.value!==null && ((cost.isQuote&&!cost.partial)||cost.basedOnQuote===true);
  if(comparableCost)add('cost',pricePoints(cost.value),true,cost.partial?'Предварительная стоимость':'Полученная смета');
- else add('cost',0,false,'Банкет и прочие расходы не рассчитаны');
+ else add('cost',0,false,'Нет полноценного подтверждённого КП. Рабочая смета и минимум по тарифам не дают баллов за стоимость.');
  const cap=num(v.capacity),n=Math.round(Number(guests)||80);
  if(cap!==null&&cap>0)add('capacity',cap>=n?10:0,true,cap>=n?'Вмещает '+n+' гостей':'Недостаточная вместимость');
  else add('capacity',0,false,'Вместимость не подтверждена');
