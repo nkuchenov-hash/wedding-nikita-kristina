@@ -8,7 +8,7 @@ test('Archive can be opened by its counter, link, selector, and post-save action
  const source=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');
  assert.match(source,/data-open-archive href="#\/admin\/venues\/archive"/);
  assert.match(source,/archiveRoute=/);
- assert.match(source,/ui\.archiveFilter='archived'/);
+ assert.match(source,/archiveFilter:'archived'/);
  assert.match(source,/t\.dataset\.ui==='archiveFilter'/);
  assert.match(source,/Открыть архив/);
  assert.match(source,/Вернуть из архива/);
