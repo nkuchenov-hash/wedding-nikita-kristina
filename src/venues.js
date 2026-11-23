@@ -83,7 +83,7 @@ function read(){
 let state=read();
 let ratingRules=DEFAULT_RATING_RULES;
 const effectiveRatingRules=()=>validateRatingRules(ui.ratingDraft)||ratingRules;
-let ui={archiveFilter:'active',kind:'all',query:'',sort:'date',sortDir:'asc',expanded:null,detailTab:'overview',dateFilter:'all',budget:'all',visit:'all',capacity:'all',photoSection:'all',photoView:'gallery',photoSort:'original',photoIndex:0,photoLightbox:false,ratingDrawer:false,ratingDraft:null,ratingDirty:false};
+let ui={archiveFilter:'active',kind:'all',query:'',sort:'score',sortDir:'desc',expanded:null,detailTab:'overview',dateFilter:'all',budget:'all',visit:'all',capacity:'all',photoSection:'all',photoView:'gallery',photoSort:'original',photoIndex:0,photoLightbox:false,ratingDrawer:false,ratingDraft:null,ratingDirty:false};
 const h=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rub=(v)=>typeof v==='number'&&Number.isFinite(v)?Math.round(v).toLocaleString('ru-RU')+' ₽':'—';
 const safeUrl=(v)=>{try{const u=new URL(String(v));return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
@@ -412,6 +412,15 @@ function row(v){
 }
 // Venue detail rendering is centralized in venue-detail-ui.js.
 const SORT_DEFAULTS={name:'asc',date:'asc',visit:'asc',price:'asc',capacity:'desc',score:'desc'};
+export const VENUE_DEFAULT_SORT=Object.freeze({sort:'score',sortDir:'desc'});
+let lastVenueListRoute=null;
+function applyListDefaultSort(route){
+ if(route!==lastVenueListRoute){
+  ui.sort=VENUE_DEFAULT_SORT.sort;
+  ui.sortDir=VENUE_DEFAULT_SORT.sortDir;
+  lastVenueListRoute=route;
+ }
+}
 function sortVenues(rows){
  const cmpName=(a,b)=>a.name.localeCompare(b.name,'ru');
  const ordinal={available:0,pending:1,unknown:2,unavailable:3};
@@ -505,6 +514,7 @@ export function renderVenueAdmin(){
  const allRoute=/^#\/admin\/venues\/all\/?$/.test(route);
  const ratingMethodRoute=/^#\/admin\/venues\/rating-method\/?$/.test(route);
  const activeRoute=/^#\/admin\/venues\/?$/.test(route);
+ if(archiveRoute||allRoute||activeRoute)applyListDefaultSort(route);
  if(archiveRoute&&ui.archiveFilter!=='archived')
   Object.assign(ui,{archiveFilter:'archived',kind:'all',query:'',dateFilter:'all',budget:'all',visit:'all',capacity:'all'});
  else if(allRoute)ui.archiveFilter='all';
@@ -700,11 +710,15 @@ export function activateVenueAdmin(root){
    const status=root.querySelector('[data-rating-validation]');
    if(status)status.textContent=valid?'':'Сумма весов должна быть 100, пороги возрастают, баллы не увеличиваются при росте цены.';
    const save=root.querySelector('.vw-rating-save');if(save)save.disabled=!valid;
-   if(valid)for(const row of root.querySelectorAll('.vw-row[data-id]')){
-    const base=PUBLIC_VENUES.find(v=>v.id===row.dataset.id);if(!base)continue;
-    const score=weighted(get(base)),link=row.querySelector('.vw-score-link'),small=row.querySelector('.vw-score small');
-    if(link)link.textContent=score.value===null?'—':score.value+' / '+RATING_MAX;
-    if(small)small.textContent=(score.provisional?'Предварительно':'Проверено')+' · '+score.complete+'/'+RATING_CRITERIA.length+' критериев';
+   if(valid){
+    // Keep the ordered table in sync with the draft score, not only its labels.
+    const tbody=root.querySelector('.vw-table-sortable tbody');
+    if(tbody){
+     const ordered=visibleVenues(PUBLIC_VENUES.map(get));
+     tbody.innerHTML=ordered.map(row).join('');
+     const visible=root.querySelector('[data-venues-visible]');
+     if(visible)visible.textContent=String(ordered.length);
+    }
    }
    return;
   }
