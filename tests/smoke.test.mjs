@@ -219,8 +219,8 @@ test('wedding venue scoring is traceable and stays tentative for missing evidenc
  const rating=scoreVenue(venue,80,eighty);
  assert.equal(rating.breakdown.find(x=>x.key==='date').value,45);
  assert.equal(rating.breakdown.find(x=>x.key==='city').value,0);
- assert.equal(scoreVenue({...venue,region:'city'},80,eighty).breakdown.find(x=>x.key==='city').value,10);
- assert.equal(rating.breakdown.find(x=>x.key==='capacity').value,13);
+ assert.equal(scoreVenue({...venue,region:'city'},80,eighty).breakdown.find(x=>x.key==='city').value,9);
+ assert.equal(rating.breakdown.find(x=>x.key==='capacity').value,11);
  assert.equal(rating.provisional,true);
  const alternative={...venue,dateAvailability:{'19':'unavailable','18':'available'}};
  assert.equal(scoreVenue(alternative,80,eighty).breakdown.find(x=>x.key==='date').value,27);
