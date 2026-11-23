@@ -345,3 +345,27 @@
 .vw-method-rules p,.vw-method-foot{font-size:13px;line-height:1.65;color:#516357;margin:0}
 .vw-method-foot{margin:15px 0}
 @media(max-width:790px){.vw-method-criteria,.vw-method-rules{grid-template-columns:1fr}.vw-method-panel{padding:16px}.vw-method-link{white-space:normal}}
+
+/* Rating formula is available without leaving the main venue comparison.
+   Native details/summary makes the explanation usable with keyboard and touch. */
+.vw-rating-guide{margin:0 0 16px;border:1px solid #b8d2c0;border-radius:13px;background:#f7faf7;overflow:hidden}
+.vw-rating-guide>summary{display:flex;align-items:center;gap:12px;min-height:54px;padding:12px 17px;cursor:pointer;list-style:none;user-select:none}
+.vw-rating-guide>summary::-webkit-details-marker{display:none}
+.vw-rating-guide>summary:hover,.vw-rating-guide>summary:focus-visible{background:#ebf4ed}
+.vw-rating-guide>summary:focus-visible{outline:2px solid #407e59;outline-offset:-3px}
+.vw-rating-guide-title{font-size:15px;font-weight:760;color:#205338;white-space:nowrap}
+.vw-rating-guide-caption{font-size:12px;color:#607865;flex:1}
+.vw-rating-guide-chevron{font-size:22px;color:#306447;transition:transform .2s;line-height:1;transform-origin:center}
+.vw-rating-guide[open] .vw-rating-guide-chevron{transform:rotate(180deg)}
+.vw-rating-guide-body{padding:20px 22px 22px;background:#fff;border-top:1px solid #d7e8dc}
+.vw-rating-guide-body h2{margin:0 0 12px;font-size:18px;color:#244e34}
+.vw-rating-guide-body .vw-method-criteria{margin-bottom:25px}
+.vw-rating-guide-body .vw-method-rules{margin-bottom:16px}
+.vw-rating-guide-body .vw-method-foot{margin-top:12px}
+@media(max-width:760px){
+ .vw-rating-guide>summary{align-items:flex-start;flex-wrap:wrap;gap:5px 12px;min-height:55px;padding:12px}
+ .vw-rating-guide-title{font-size:14px;white-space:normal;flex:1}
+ .vw-rating-guide-caption{order:3;flex-basis:100%;font-size:11px}
+ .vw-rating-guide-chevron{order:2}
+ .vw-rating-guide-body{padding:15px 12px}
+}
