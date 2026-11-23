@@ -152,7 +152,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $d=payload(16384);
         $allowed=['event_date','event_time','event_venue','venue_address','rsvp_deadline',
           'dress_code','transport_info','public_notes','menu_open','directory_open',
-          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','guest_table_columns','guest_table_layout','guest_sort_mode','activity_types','activity_tags','program_day_hours'];
+          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','guest_table_columns','guest_table_layout','guest_sort_mode','activity_types','activity_tags','program_day_hours','venue_rating_rules'];
         $key=choice($d,'key',$allowed,'');
         if(!array_key_exists('value',$d))
             fail(422,'field','Значение настройки недопустимо');
@@ -169,6 +169,47 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
                    isset($seen[$type['id']]))fail(422,'field','Некорректный тип активности');
                 $seen[$type['id']]=true;
             }
+        } elseif($key==='venue_rating_rules'){
+            $keys=['date','cost','capacity','city','singleHall','indoorBackup',
+              'includedEquipment','until23','ownAlcohol','outdoorArea'];
+            if(!is_array($value)||array_is_list($value)||
+               count($value)!==5||
+               array_diff(array_keys($value),['weights','alternativeDatePercent',
+                 'priceLimits','pricePercents','includeWorkingBudgets'])||
+               !isset($value['weights'],$value['alternativeDatePercent'],
+                 $value['priceLimits'],$value['pricePercents'],$value['includeWorkingBudgets']))
+                fail(422,'field','Некорректные правила рейтинга');
+            $weights=$value['weights'];
+            if(!is_array($weights)||array_is_list($weights)||count($weights)!==count($keys)||
+               array_diff(array_keys($weights),$keys))
+                fail(422,'field','Неизвестные критерии рейтинга');
+            $sum=0;
+            foreach($keys as $k){
+                $w=$weights[$k]??null;
+                if(!is_int($w)||$w<0||$w>100)fail(422,'field','Неверный вес критерия');
+                $sum+=$w;
+            }
+            if($sum!==100)fail(422,'field','Сумма весов должна составлять 100 баллов');
+            $alt=$value['alternativeDatePercent'];
+            if(!is_int($alt)||$alt<0||$alt>100)fail(422,'field','Неверный вес альтернативной даты');
+            $limits=$value['priceLimits'];$percents=$value['pricePercents'];
+            if(!is_array($limits)||!array_is_list($limits)||count($limits)!==4||
+               !is_array($percents)||!array_is_list($percents)||count($percents)!==5)
+                fail(422,'field','Неверные ценовые диапазоны');
+            $last=0;
+            foreach($limits as $x){
+                if(!is_int($x)||$x<10000||$x>100000000||$x<=$last)
+                    fail(422,'field','Ценовые пороги должны возрастать');
+                $last=$x;
+            }
+            $last=100;
+            foreach($percents as $x){
+                if(!is_int($x)||$x<0||$x>100||$x>$last)
+                    fail(422,'field','Доли баллов за бюджет должны не возрастать');
+                $last=$x;
+            }
+            if(!is_bool($value['includeWorkingBudgets']))
+                fail(422,'field','Неверная настройка рабочих смет');
         } elseif($key==='guest_table_layout'){
             $allowedHeights=[56,72,96,128,0];
             $allowedFields=['display_name','side','community','relation_to_couple','about',
