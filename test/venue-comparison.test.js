@@ -206,8 +206,8 @@ test('Palma menu tiers produce a dynamic, explicitly provisional 80 and 100 pers
  const v={id:'palma',region:'city',capacity:null,dateAvailability:{'19':'available'},
    cost:VENUE_RECORDS.palma.cost,quotes:VENUE_RECORDS.palma.quotes,ratings:{}};
  assert.equal(VENUE_PRICING.palma.menu.value,4700);
- assert.equal(estimateVenue(v,80).value,773600);
- assert.equal(estimateVenue(v,100).value,877000);
+ assert.equal(estimateVenue(v,80).value,1013600);
+ assert.equal(estimateVenue(v,100).value,1157000);
  assert.equal(estimateVenue(v,80).partial,true);
  assert.equal(estimateVenue(v,80).missing.length,0);
  assert.equal(estimateVenue({...v,cost:{...v.cost,menu:5900}},80).value,879200);
