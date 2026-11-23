@@ -75,11 +75,86 @@ export function k2PlanningScenarios(v,guests){
   };
  });
 }
+/* Chosen working budgets for 80 guests (dynamic for any guest count).
+   Confirmed rates come from individual venue records and organizer materials.
+   Any chosen reserve is identified as an assumption, not a supplier quotation.
+   Deposits replace covered food/drink spend; they are never added twice. */
+export const VENUE_WORKING_BUDGETS={
+ 'milyutin':{rent:99750,menu:4500,service:10,tech:80000,drinks:40000,alcohol:60000,corkage:500,drinkersRatio:.625,cake:30000,decor:50000,
+  note:'7 ч × 14 250 ₽/ч аренды из расшифровки осмотра (порог более 5 ч; состав залов уточнить). Меню 4 500 ₽/чел и техника 80 000 ₽ — из переписки. Сервис 10%, напитки, алкоголь, торт, декор и 50 пьющих — рабочие допущения, не тарифы площадки.'},
+ 'glukhovsky':{rent:0,menu:5000,service:10,tech:25000,drinks:40000,alcohol:60000,corkage:650,drinkersRatio:.625,cake:30000,decor:50000,
+  note:'Меню 5 000 ₽/гость, аренда 0 и 10% сервис из сообщения менеджера. Для дискозоны во втором зале заложено 25 000 ₽ на дополнительный свет/звук (неразборчивая реплика 20–30 тыс. из записи; не КП). 50 пьющих × 650 ₽, покупка алкоголя, напитки, торт и декор — выбранные допущения.'},
+ 'roof18':{minSpend:750000,menu:6500,service:10,tech:60000,cake:30000,decor:50000,
+  note:'Депозит 750 000 ₽ — сообщён организатором 23.11; в модель заложено меню обычного ресторана 6 500 ₽/гость как допущение, но его сумма НЕ прибавляется к депозиту. Звук/DJ со специалистом ≈ 60 000 ₽ из записи. Обслуживание 10%, торт и декор — резервы. Внутри депозита предполагается выбранный заказ кухни, напитков и бара; погодный сценарий на 80 человек внутри не подтверждён.'},
+ 'ermolinsky':{rent:430000,menu:7500,service:0,tech:170000,drinks:40000,alcohol:60000,cake:30000,decor:50000,
+  note:'Аренда 430 000 ₽, меню 7 500 ₽/гость с обслуживанием и технический пакет от 170 000 ₽ — по персональному КП. Напитки, алкоголь, торт и декор — резерв, не договорные позиции.'},
+ 'zarenkov-gallery':{rent:30000,menu:4500,service:10,tech:30000,drinks:40000,alcohol:60000,cake:30000,decor:50000,
+  note:'Аренда от 30 000 ₽, меню от 4 500 ₽/гость из собранных данных. Звук/свет на площадке есть; 30 000 ₽ оставлено как резерв на дискотечное дополнение, не подтверждённая аренда. Сервис 10%, напитки, алкоголь, торт и декор — плановые допущения.'},
+ 'palma':{rent:360000,menu:4700,service:10,tech:0,welcome:40000,drinks:40000,alcohol:60000,staff:20000,cake:30000,decor:50000,
+  note:'Выбран Eat Catering №1: 4 700 ₽/гость, аренда 360 000 ₽, сервис 10% на банкет. Базовые свет/звук и техперсонал входят. Фуршет 40 000 ₽, безалкогольные 40 000 ₽, алкоголь 60 000 ₽, дополнительный персонал 20 000 ₽, торт 30 000 ₽ и декор 50 000 ₽ — резервы; налогообложение/сервис на добавленные позиции уточнить.'},
+ 'panorama':{rent:150000,menu:7800,service:10,tech:0,drinks:60000,alcohol:60000,cake:30000,decor:50000,
+  note:'Аренда 150 000 ₽, меню 7 800 ₽, 10% сервис; штатная техника включена. Обязательные 80 л безалкогольного из меню 2026: 40 л воды ×550 ₽ +40 л морса ×950 ₽=60 000 ₽ (цены 2027 уточнить). Свой алкоголь без сбора; закупка алкоголя, торт и декор — резервы. Депозит не добавлять поверх меню.'},
+ 'eva':{rent:90000,menu:5000,service:10,tech:0,drinks:38000,alcohol:60000,cake:4500,decor:50000,
+  note:'90 000 ₽ аренда, 5 000 ₽/гость меню, сервис 10%, штатная техника включена. Безалкогольные: вода 40 л ×250 ₽ + морс 40 л ×700 ₽ по прайсу 2027; алкоголь без пробкового сбора, тортовый сбор 4 500 ₽, декор 50 000 ₽ (резерв). Депозит 350 000 ₽ расходуется на меню, не прибавлять.'},
+ 'petr':{rent:0,menu:4500,service:10,tech:35000,drinks:40000,alcohol:60000,cake:30000,decor:50000,
+  note:'Зал без отдельной аренды, меню 4 500 ₽/гость, сервис 10%, техника от 35 000 ₽. Свой алкоголь без пробкового сбора. Напитки, закупка алкоголя, торт и декор — рабочие резервы; два зала остаются минусом для единой программы.'},
+ 'maryino':{rent:250000,menu:6500,service:10,tech:80000,drinks:40000,alcohol:60000,cake:30000,decor:50000,
+  note:'Белый зал 250 000 ₽, публичное меню от 6 500 ₽/гость. Сервис 10%, техника 80 000 ₽, напитки, алкоголь, торт и декор — допущения для сравнения, не подтверждённые условия усадьбы. Трансфер не заложен.'},
+ 'repino-riviera':{rent:1000000,menu:6500,service:10,tech:0,drinks:40000,alcohol:60000,cake:30000,decor:50000,
+  note:'По переписке: два варианта залов с террасой, каждый «около миллиона плюс еда»; для сценария принята аренда 1 млн ₽. В присланной свадебной презентации есть меню 5 500/6 500 ₽ на персону; выбран вариант 6 500 ₽. Сервис 10%, напитки, алкоголь, торт и декор — рабочие допущения. В презентации указано базовое оснащение, но выбранный состав нужно сверить.'},
+ 'bali':{rent:150000,menu:5500,service:10,tech:60000,drinks:40000,alcohol:60000,cake:30000,decor:50000,
+  note:'По Bali есть лишь сообщение «сильно дешевле» и ссылка на банкет, без индивидуального прайса. ВСЕ ставки (150 тыс. аренда, 5 500 ₽/гость, 10% сервис, 60 тыс. техника, напитки/алкоголь, торт и декор) — сравнительные предположения, а не утверждения ресторана.'},
+ 'ambassador':{rent:200000,menu:6500,service:10,tech:80000,drinks:40000,alcohol:60000,cake:30000,decor:50000,
+  note:'По Амбассадор Ивент в переписке нет числового КП. ВЕСЬ бюджет — рабочая гипотеза: 200 тыс. аренда, 6 500 ₽/гость, 10% сервис, 80 тыс. техника, стандартные напитки, алкоголь, торт и декор. Не выдавать за предложение площадки.'}
+};
+function workingBudget(v,guests){
+ const spec=VENUE_WORKING_BUDGETS[v.id];
+ if(!spec)return null;
+ const count=Math.max(1,Math.min(300,Math.round(Number(guests)||80)));
+ const price=VENUE_PRICING[v.id]||{};
+ const own=k=>num(v.cost?.[k]);
+ const includedCost=x=>included(x);
+ const menuRate=own('menu')??spec.menu;
+ const rent=own('rent')??spec.rent;
+ const serviceRate=own('service')??(includedCost(price.service?.value)?0:(num(price.service?.value)??spec.service));
+ const tech=own('technical')??spec.tech??0;
+ const variable=(fixed,key)=>Math.round((fixed||0)*count/80);
+ const food=Math.round(menuRate*count);
+ const welcome=variable(spec.welcome,'welcome');
+ const drinks=variable(spec.drinks,'drinks');
+ const covered=Math.max(food+welcome+drinks,num(v.cost?.minSpend)??spec.minSpend??0);
+ const amountService=Math.round((spec.serviceOnAllFood?covered:Math.max(food,covered-(drinks+welcome)))*serviceRate/100);
+ const alcohol=variable(spec.alcohol,'alcohol');
+ const cake=spec.cake??0;
+ const decor=spec.decor??0;
+ const staff=variable(spec.staff,'staff');
+ const drinkers=spec.corkage?Math.round(count*(spec.drinkersRatio||.625)):0;
+ const corkage=drinkers*(spec.corkage||0);
+ const items=[
+  {label:'Аренда (выбранный вариант)',amount:rent},
+  {label:'Банкет: '+menuRate.toLocaleString('ru-RU')+' ₽ × '+count,amount:food},
+  ...(welcome?[{label:'Приветственный фуршет (план)',amount:welcome}]:[]),
+  ...(drinks?[{label:'Безалкогольные напитки (план)',amount:drinks}]:[]),
+  ...(covered>food+welcome+drinks?[{label:'Доведение заказа до минимального депозита (не сверху)',amount:covered-food-welcome-drinks}]:[]),
+  {label:'Обслуживание '+serviceRate+'%',amount:amountService},
+  ...(tech?[{label:'Технический пакет / доп. свет и звук',amount:tech}]:[]),
+  ...(staff?[{label:'Дополнительный обслуживающий персонал (план)',amount:staff}]:[]),
+  ...(alcohol?[{label:'Покупка алкоголя (план)',amount:alcohol}]:[]),
+  ...(corkage?[{label:'Пробковый сбор: '+drinkers+' пьющих × '+spec.corkage+' ₽',amount:corkage}]:[]),
+  ...(cake?[{label:'Торт / тортовый сбор (план)',amount:cake}]:[]),
+  ...(decor?[{label:'Декор (план)',amount:decor}]:[])
+ ];
+ const sum=Math.round(rent+covered+amountService+tech+staff+alcohol+corkage+cake+decor);
+ if(sum!==items.reduce((t,x)=>t+x.amount,0))throw Error('Planning venue budget mismatch: '+v.id);
+ return {value:sum,knownSubtotal:sum,partial:true,isQuote:false,kind:'planning',items,
+  missing:[],note:'Сценарий для сравнения, не договорная смета. '+spec.note};
+}
+
 export function planningEstimate(v,guests){
  const hasOwnMenu=num(v.cost?.menu)!==null;
  if(hasOwnMenu)return null; // A manual correction of the actual banquet rate always wins.
  const plan=k2PlanningScenarios(v,guests)[0];
- if(!plan)return null;
+ if(!plan)return workingBudget(v,guests);
  return {
   value:plan.total,knownSubtotal:plan.rent,partial:true,isQuote:false,
   kind:'planning',missing:['условия техники','сервис','окончательное меню','дополнительные услуги'],
