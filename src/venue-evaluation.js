@@ -116,34 +116,56 @@ export function estimateVenue(v,guests){
    Unknown facts do not turn into automatic points or automatic failures.
    The administrator may change rules globally; all venues use the same rules. */
 export const RATING_CRITERIA=[
- ['date','Доступность даты',40],
- ['cost','Бюджет на всех гостей',15],
- ['capacity','Вместимость',10],
+ ['date','Доступность даты',45],
+ ['cost','Бюджет на всех гостей',20],
+ ['capacity','Вместимость',13],
  ['city','Местоположение в Санкт-Петербурге',10],
- ['singleHall','Все гости в одном зале',6],
- ['indoorBackup','Крытая рассадка при дожде',5],
- ['includedEquipment','Штатный звук и свет на площадке',5],
- ['until23','До 23:00 без доплаты',3],
- ['ownAlcohol','Свой алкоголь без пробкового сбора',3],
- ['outdoorArea','Доступная открытая зона или терраса',3]
+ ['includedEquipment','Штатный звук и свет на площадке',7],
+ ['outdoorArea','Доступная открытая зона или терраса',5]
 ];
 export const OBJECTIVE_CRITERIA=[
- {key:'singleHall',label:'Все гости в одном зале',question:'80 гостей могут сидеть в одном помещении без разделения банкета между залами?',evidence:'План рассадки или подтверждённая вместимость одного зала'},
- {key:'indoorBackup',label:'Крытая рассадка при дожде',question:'Все гости могут разместиться внутри в дождь без дополнительной аренды?',evidence:'Письменно подтверждённый погодный вариант для полного числа гостей'},
- {key:'includedEquipment',label:'Штатный звук и свет на площадке',question:'Площадка располагает собственной звуковой и световой системой для ведущего и диджея (даже если аренда техники оплачивается отдельно)?',evidence:'Технический райдер или документальный перечень оборудования'},
- {key:'until23',label:'До 23:00 без доплаты',question:'Площадка доступна до 23:00 без отдельной почасовой оплаты?',evidence:'Договорные часы аренды и условия продления'},
- {key:'ownAlcohol',label:'Свой алкоголь без пробкового сбора',question:'Разрешено привезти свой алкоголь без пробкового сбора?',evidence:'Письменные условия площадки о своём алкоголе'},
- {key:'outdoorArea',label:'Доступная открытая зона или терраса',question:'Гостям разрешено пользоваться террасой, садом или внутренним двором в составе выбранного пакета?',evidence:'Описание включённой территории и условий пользования'}
+ {key:'includedEquipment',label:'Штатный звук и свет на площадке',question:'Площадка располагает собственной звуковой и световой системой для ведущего и диджея (вне зависимости от стоимости аренды)?',evidence:'Технический райдер или перечень оборудования'},
+ {key:'outdoorArea',label:'Доступная открытая зона или терраса',question:'В выбранном пакете предусмотрена доступная гостям терраса, сад или внутренний двор?',evidence:'План помещения или условия использования территории'}
 ];
 export const PERSONAL_CRITERIA=[]; // Obsolete subjective 1–5 ratings are deliberately not used.
 export const RATING_MAX=100;
 export const DEFAULT_RATING_RULES=Object.freeze({
- weights:{date:40,cost:15,capacity:10,city:10,singleHall:6,indoorBackup:5,includedEquipment:5,until23:3,ownAlcohol:3,outdoorArea:3},
+ weights:{date:45,cost:20,capacity:13,city:10,includedEquipment:7,outdoorArea:5},
  alternativeDatePercent:60,
  priceLimits:[650000,800000,1000000,1200000],
  pricePercents:[100,80,60,33,0],
  includeWorkingBudgets:true
 });
+const PREVIOUS_RATING_WEIGHTS={
+ date:40,cost:15,capacity:10,city:10,singleHall:6,indoorBackup:5,
+ includedEquipment:5,until23:3,ownAlcohol:3,outdoorArea:3
+};
+/** Upgrade previously saved 10-criterion rules without discarding personal thresholds.
+    When legacy weights are unchanged, use the new redistribution exactly; otherwise
+    preserve relative emphasis among the six retained criteria. */
+export function migrateRatingRules(value){
+ const valid=validateRatingRules(value);
+ if(valid)return valid;
+ if(!value||typeof value!=='object'||!value.weights)return null;
+ const former=Object.keys(PREVIOUS_RATING_WEIGHTS);
+ if(former.some(k=>!Number.isInteger(value.weights[k])||value.weights[k]<0||value.weights[k]>100)||
+  Object.keys(value.weights).length!==former.length||
+  former.reduce((t,k)=>t+value.weights[k],0)!==100)return null;
+ const keys=RATING_CRITERIA.map(([key])=>key);
+ const unchanged=former.every(k=>value.weights[k]===PREVIOUS_RATING_WEIGHTS[k]);
+ let weights={...DEFAULT_RATING_RULES.weights};
+ if(!unchanged){
+  const total=keys.reduce((t,k)=>t+value.weights[k],0);
+  if(total>0){
+   const parts=keys.map(key=>({key,raw:value.weights[key]*100/total}));
+   weights=Object.fromEntries(parts.map(x=>[x.key,Math.floor(x.raw)]));
+   let remainder=100-Object.values(weights).reduce((t,w)=>t+w,0);
+   parts.sort((x,y)=>(y.raw-Math.floor(y.raw))-(x.raw-Math.floor(x.raw)));
+   for(let i=0;i<remainder;i++)weights[parts[i].key]++;
+  }
+ }
+ return validateRatingRules({...value,weights});
+}
 export function validateRatingRules(value){
  if(!value||typeof value!=='object'||Array.isArray(value))return null;
  const allowed=['weights','alternativeDatePercent','priceLimits','pricePercents','includeWorkingBudgets'];
