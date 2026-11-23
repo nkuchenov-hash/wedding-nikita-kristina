@@ -474,7 +474,7 @@ function columnHeading(key,label,filters=''){
 function headerSelect(id,aria,options){
  return '<select class="vw-head-filter" aria-label="'+h(aria)+'" data-ui="'+h(id)+'">'+options.map(([value,label])=>'<option value="'+h(value)+'" '+(ui[id]===value?'selected':'')+'>'+h(label)+'</option>').join('')+'</select>';
 }
-function ratingMethodPage(){
+function ratingMethodContent(){
  const criteria=RATING_CRITERIA.map(([key,label,max])=>
   '<div class="vw-method-criterion"><span>'+h(label)+'</span><strong>'+max+' баллов</strong></div>').join('');
  const rules=[
@@ -485,13 +485,26 @@ function ratingMethodPage(){
   ['Личные оценки · максимум 25','Атмосфера — до 6; комфорт гостей — до 3; меню и обслуживание — до 3; логистика — до 3; терраса и виды — до 5; условия аренды — до 5. Для каждого пункта выбирается оценка от 1 до 5: баллы = оценка / 5 × максимальный вес.'],
   ['Неподтверждённые данные','Неизвестная оценка показывается как «Нет данных», а не как 0. Общий результат — сумма известных баллов, округлённая до целого; пока оценены не все критерии, он отмечен как предварительный.']
  ];
+
+ return '<h2>Веса критериев</h2><div class="vw-method-criteria">'+criteria+'</div>'+
+  '<h2>Формулы и условия</h2><div class="vw-method-rules">'+rules.map(([title,body])=>
+   '<section><h3>'+h(title)+'</h3><p>'+h(body)+'</p></section>').join('')+'</div>';
+}
+function ratingMethodPage(){
  return '<div class="vw-page vw-method-page" data-venues-page>'+
   '<header class="vw-method-head"><a class="vw-method-back" href="#/admin/venues">← Все площадки</a><h1>Как рассчитывается рейтинг</h1><p>Единая шкала из 100 баллов. Приоритет отдан 19 июня, итоговому бюджету и вместимости.</p></header>'+
-  '<section class="vw-panel vw-method-panel"><h2>Веса критериев</h2><div class="vw-method-criteria">'+criteria+'</div>'+
-  '<h2>Формулы и условия</h2><div class="vw-method-rules">'+rules.map(([title,body])=>
-   '<section><h3>'+h(title)+'</h3><p>'+h(body)+'</p></section>').join('')+'</div>'+
+  '<section class="vw-panel vw-method-panel">'+ratingMethodContent()+
   '<p class="vw-method-foot">Откройте площадку и выберите вкладку «Рейтинг», чтобы увидеть её баллы по каждому критерию и выставить личные оценки.</p>'+
   '<a class="vw-method-back" href="#/admin/venues">← Вернуться к списку площадок</a></section></div>';
+}
+function ratingMethodInline(){
+ return '<details class="vw-rating-guide" data-rating-guide>'+
+  '<summary><span class="vw-rating-guide-title">Как рассчитывается рейтинг</span>'+
+  '<span class="vw-rating-guide-caption">100 баллов · 10 критериев · доступность даты, бюджет, условия</span>'+
+  '<span class="vw-rating-guide-chevron" aria-hidden="true">⌄</span></summary>'+
+  '<div class="vw-rating-guide-body">'+ratingMethodContent()+
+  '<p class="vw-method-foot">Баллы конкретной площадки и личные оценки доступны по нажатию на её рейтинг в таблице.</p>'+
+  '<a class="vw-method-back" href="#/admin/venues/rating-method">Открыть правила отдельно</a></div></details>';
 }
 export function renderVenueAdmin(){
  if(typeof location!=='undefined'&&/^#\/admin\/venues\/rating-method\/?$/.test(location.hash))return ratingMethodPage();
@@ -524,7 +537,8 @@ export function renderVenueAdmin(){
  if(ratingMethodRoute)return ratingMethodPage();
  return '<div class="vw-page vw-control-board" data-venues-page>'+
   '<div class="vw-control-head admin-page-heading"><div><h1>Площадки <span>'+activeCount+'</span></h1><p>19 июня — приоритет · 18 и 20 июня — альтернативы</p></div><div class="vw-control-facts"><span>'+visited+' осмотрено</span><span>'+all.filter(v=>!v.archived&&DATE_CHOICES.some(([d])=>dayStatus(v,d)==='available')).length+' со свободной датой</span><a class="vw-archive-counter" data-open-archive href="#/admin/venues/archive" aria-label="Открыть архив: '+archivedCount+' площадок">'+archivedCount+' в архиве</a></div></div>'+
-  '<div class="vw-panel vw-table-panel"><div class="vw-panel-title vw-table-panel-title"><div><h2>'+(ui.archiveFilter==='archived'?'Архив площадок':'Управление площадками')+'</h2><span><b data-venues-visible>'+list.length+'</b> из '+(ui.archiveFilter==='active'?activeCount:ui.archiveFilter==='archived'?archivedCount:all.length)+'</span></div><div class="vw-table-tools"><a class="vw-method-link" href="#/admin/venues/rating-method">Как рассчитывается рейтинг</a><label class="vw-compact-control">Список <select data-ui="archiveFilter" aria-label="Показывать площадки">'+[['active','Активные'],['archived','Архив'],['all','Все']].map(([id,label])=>'<option value="'+id+'" '+(ui.archiveFilter===id?'selected':'')+'>'+label+'</option>').join('')+'</select></label><label class="vw-compact-control">Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+state.guestCount+'" aria-label="Число гостей для пересчёта смет"></label><input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Найти площадку" aria-label="Поиск площадки (Enter)"><button type="button" data-clear-filters>Сбросить</button></div></div>'+
+  ratingMethodInline()+
+  '<div class="vw-panel vw-table-panel"><div class="vw-panel-title vw-table-panel-title"><div><h2>'+(ui.archiveFilter==='archived'?'Архив площадок':'Управление площадками')+'</h2><span><b data-venues-visible>'+list.length+'</b> из '+(ui.archiveFilter==='active'?activeCount:ui.archiveFilter==='archived'?archivedCount:all.length)+'</span></div><div class="vw-table-tools"><label class="vw-compact-control">Список <select data-ui="archiveFilter" aria-label="Показывать площадки">'+[['active','Активные'],['archived','Архив'],['all','Все']].map(([id,label])=>'<option value="'+id+'" '+(ui.archiveFilter===id?'selected':'')+'>'+label+'</option>').join('')+'</select></label><label class="vw-compact-control">Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+state.guestCount+'" aria-label="Число гостей для пересчёта смет"></label><input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Найти площадку" aria-label="Поиск площадки (Enter)"><button type="button" data-clear-filters>Сбросить</button></div></div>'+
   '<div class="vw-scroll" role="region" tabindex="0" aria-label="Таблица площадок, прокрутка по горизонтали"><table class="vw-table vw-table-sortable"><thead><tr>'+
   columnHeading('name','Площадка','<div class="vw-head-filter-row">'+headerSelect('kind','Расположение',[['all','Все районы'],['city','Город'],['country','За городом']])+'</div>')+
   columnHeading('date','18 / 19 / 20 июня',headerSelect('dateFilter','Доступность по дате',[['all','Все даты'],['19:available','19 июня · свободно'],['19:unavailable','19 июня · занято'],['18:available','18 июня · свободно'],['18:unavailable','18 июня · занято'],['20:available','20 июня · свободно'],['20:unavailable','20 июня · занято']]))+
