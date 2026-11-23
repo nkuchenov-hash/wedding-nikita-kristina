@@ -413,6 +413,14 @@ function row(v){
 // Venue detail rendering is centralized in venue-detail-ui.js.
 const SORT_DEFAULTS={name:'asc',date:'asc',visit:'asc',price:'asc',capacity:'desc',score:'desc'};
 export const VENUE_DEFAULT_SORT=Object.freeze({sort:'score',sortDir:'desc'});
+// Keep unknown ratings last, regardless of ascending/descending user choice.
+export function compareVenueScoreValues(left,right,direction='desc'){
+ const a=typeof left==='number'&&Number.isFinite(left)?left:null;
+ const b=typeof right==='number'&&Number.isFinite(right)?right:null;
+ if(a===null)return b===null?0:1;
+ if(b===null)return -1;
+ return direction==='asc'?a-b:b-a;
+}
 let lastVenueListRoute=null;
 function applyListDefaultSort(route){
  if(route!==lastVenueListRoute){
@@ -437,6 +445,10 @@ function sortVenues(rows){
   return v.name;
  }
  rows.sort((a,b)=>{
+  if(ui.sort==='score'){
+   const byRating=compareVenueScoreValues(weighted(a).value,weighted(b).value,ui.sortDir);
+   return byRating||cmpName(a,b);
+  }
   const ak=key(a),bk=key(b);
   // Unknown costs, capacities and ratings always go last, even in descending order.
   if(ak===null||ak===undefined)return bk===null||bk===undefined?cmpName(a,b):1;
