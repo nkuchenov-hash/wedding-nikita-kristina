@@ -24,7 +24,7 @@ test('Working comparisons for 13 wedding venues are itemized, dynamic and visibl
   assert.equal(estimate.items.reduce((sum,x)=>sum+x.amount,0),total,id);
   assert.equal(estimate.missing.length,0,id);
   assert.match(estimate.note,/не (договорная|тариф|КП)|не подтвержд|рабоч|допущ/i,id);
-  assert.notEqual(estimateVenue(v,100).value,total,id+' guest count must recompute');
+  assert.notEqual(estimateVenue(v,id==='roof18'?140:100).value,total,id+' guest count must recompute when minimum-deposit threshold is surpassed');
   assert.ok(renderVenueNewPage(v,{guests:80,ui:{detailTab:'budget',photoSection:'all',photoView:'grid',photoSort:'original',photoIndex:0},estimate:x=>estimateVenue(x,80),extraTotal:()=>0,dayStatus:()=> 'unknown',dayText:()=> 'Нет подтверждения',weighted:()=>({value:null,complete:0,maximum:100})}).includes('Выбранный сценарий'),id);
  }
 });
