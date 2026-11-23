@@ -112,6 +112,21 @@ export function estimateVenue(v,guests){
 
 }
 
+
+/** The single cost calculation used for overview, budget, comparison and rating. */
+export function summarizeVenueBudget(v,guests,extraAmount=0){
+ const base=estimateVenue(v,guests);
+ const raw=Number(extraAmount);
+ const extra=Number.isFinite(raw)&&raw>0?raw:0;
+ const total=base.value===null?null:base.value+extra;
+ const supplement='; добавлены расходы организаторов: '+Math.round(extra).toLocaleString('ru-RU')+' ₽';
+ const scoreCost=extra===0?base:base.value===null
+  ?{...base,knownSubtotal:(base.knownSubtotal??0)+extra,note:base.note+supplement}
+  :{...base,value:total,basedOnQuote:base.isQuote===true&&!base.partial,
+    partial:true,isQuote:false,kind:'scenario',note:base.note+supplement};
+ return {base,extra,total,scoreCost};
+}
+
 /* Shared, evidence-based venue scoring. Every rule is the same for every venue.
    Unknown facts do not turn into automatic points or automatic failures.
    The administrator may change rules globally; all venues use the same rules. */

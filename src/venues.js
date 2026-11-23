@@ -11,7 +11,7 @@ import {VENUE_PRICING} from './venues-pricing.js';
 import {transcriptAddonTotal} from './venue-transcript-costs.js';
 import {renderVenueNewPage,renderVenueQuoteEditorRow,filteredVenuePhotos,getVenuePhotos,getVenueCover} from './venue-detail-ui.js';
 import {hydrateVenueFiles} from './venue-files-ui.js';
-import {estimateVenue,scoreVenue,OBJECTIVE_CRITERIA,DEFAULT_RATING_RULES,validateRatingRules,migrateRatingRules,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
+import {estimateVenue,summarizeVenueBudget,scoreVenue,OBJECTIVE_CRITERIA,DEFAULT_RATING_RULES,validateRatingRules,migrateRatingRules,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
 export const PUBLIC_VENUES = [
   {id:'360',name:'Пространство 360',region:'city',area:'Санкт-Петербург'},
   {id:'loft-roof',name:'Лофт на крыше',region:'city',area:'Обводный канал'},
@@ -362,15 +362,8 @@ function collectInlineQuote(form,v){
 function estimate(v){return estimateVenue(v,state.guestCount);}
 function extraTotal(v){return EXTRAS.reduce((s,[k])=>s+(numbers(v.extras?.[k])??0),0)+transcriptAddonTotal(v,state.guestCount)}
 // The comparison table and its cost score use the same total as the venue budget page.
-function totalEstimate(v){
- const base=estimate(v),extra=extraTotal(v);
- if(extra===0)return base;
- if(base.value===null)return {...base,knownSubtotal:(base.knownSubtotal??0)+extra,
-  note:base.note+'; также внесены дополнительные расходы: '+rub(extra)};
- return {...base,value:base.value+extra,basedOnQuote:base.isQuote===true&&!base.partial,
-  partial:true,isQuote:false,kind:'scenario',
-  note:base.note+'; добавлены расходы организаторов: '+rub(extra)};
-}
+function budgetSummary(v){return summarizeVenueBudget(v,state.guestCount,extraTotal(v))}
+function totalEstimate(v){return budgetSummary(v).scoreCost}
 function weighted(v){return scoreVenue(v,state.guestCount,totalEstimate(v),effectiveRatingRules());}
 function sourceThumb(g){if(!g)return '';const id=encodeURIComponent(g.id);return '<a href="https://drive.google.com/file/d/'+id+'/view" target="_blank" rel="noopener noreferrer" class="vw-photo"><img loading="lazy" src="https://drive.google.com/thumbnail?id='+id+'&sz=w800" alt="'+h(g.label)+'"><span>'+h(g.label)+'</span></a>'}
 function photoGallery(v){return v.gallery?.length?'<div class="vw-gallery">'+v.gallery.map(sourceThumb).join('')+'</div>':'<p class="vw-muted">Фотографий с телефона пока нет.</p>'}
@@ -541,7 +534,7 @@ export function renderVenueAdmin(){
  const list=visibleVenues(all);
  const detailVenue=all.find(v=>v.id===ui.expanded);
  if(match&&detailVenue){
-   return '<div class="vw-page" data-venues-page>'+renderVenueNewPage(detailVenue,{guests:state.guestCount,ui,estimate,extraTotal,dayStatus,dayText,weighted})+ratingDrawer()+'</div>';
+   return '<div class="vw-page" data-venues-page>'+renderVenueNewPage(detailVenue,{guests:state.guestCount,ui,estimate,extraTotal,budgetSummary,dayStatus,dayText,weighted})+ratingDrawer()+'</div>';
   }
  if(ratingMethodRoute)return ratingMethodPage();
  return '<div class="vw-page vw-control-board" data-venues-page>'+

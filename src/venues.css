@@ -525,3 +525,29 @@
 .vw-page .vw-rating-drawer{font-size:17px}
 .vw-page .vw-rating-drawer .vw-rating-rule input[type="number"]{min-height:44px;height:auto}
 .vw-rating-drawer-body h3{font-size:21px}
+
+/* Legible venue dates: cells retain full labels instead of breaking 18.06. */
+.vw-page.vw-control-board .vw-table-sortable{min-width:1460px;table-layout:fixed}
+.vw-page.vw-control-board .vw-table-sortable th:nth-child(1){width:23%}
+.vw-page.vw-control-board .vw-table-sortable th:nth-child(2){width:22%}
+.vw-page.vw-control-board .vw-table-sortable th:nth-child(3){width:12%}
+.vw-page.vw-control-board .vw-table-sortable th:nth-child(4){width:19%}
+.vw-page.vw-control-board .vw-table-sortable th:nth-child(5){width:10%}
+.vw-page.vw-control-board .vw-table-sortable th:nth-child(6){width:14%}
+.vw-page.vw-control-board .vw-table-sortable td:nth-child(2){
+ white-space:nowrap;overflow-wrap:normal;word-break:normal
+}
+.vw-page.vw-control-board .vw-date-list{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;width:100%}
+.vw-page.vw-control-board .vw-date-edit{
+ display:grid;grid-template-columns:67px minmax(0,1fr);
+ align-items:center;gap:7px;min-width:0;width:100%;min-height:43px;padding:4px 6px
+}
+.vw-page.vw-control-board .vw-date-edit>span{
+ display:block;width:auto;min-width:0;flex:none;white-space:nowrap;
+ overflow-wrap:normal;word-break:keep-all;font-variant-numeric:tabular-nums
+}
+.vw-page.vw-control-board .vw-date-edit select{
+ display:block;min-width:0;width:100%;max-width:100%;height:36px;min-height:36px;
+ white-space:nowrap;overflow-wrap:normal;text-overflow:ellipsis;
+ padding:5px 25px 5px 7px!important
+}

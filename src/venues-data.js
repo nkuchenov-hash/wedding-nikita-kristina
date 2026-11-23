@@ -241,6 +241,7 @@ export const VENUE_RECORDS = {
     }
   },
   "alex-park": {
+    "capacity": 300,
     "visitAddons": [
       {
         "id": "cocktail-bar",

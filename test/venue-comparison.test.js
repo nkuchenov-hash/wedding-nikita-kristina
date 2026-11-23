@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {VENUE_RECORDS} from '../src/venues-data.js';
-import {estimateVenue, scoreVenue, RATING_CRITERIA, RATING_MAX} from '../src/venue-evaluation.js';
+import {estimateVenue, summarizeVenueBudget, scoreVenue, RATING_CRITERIA, RATING_MAX} from '../src/venue-evaluation.js';
 import {VENUE_PRICING} from '../src/venues-pricing.js';
 
 const venue=(overrides={})=>({
@@ -245,4 +245,26 @@ test('broken venue thumbnails retry a same-venue image instead of showing broken
  assert.match(s,/data-fallback-cover/);
  assert.match(s,/root\.addEventListener\('error'/);
  assert.match(s,/img\.hidden=true/);
+});
+
+test('Alexandrovsky banquet capacity is a known field and scores for 80 guests',()=>{
+ assert.equal(VENUE_RECORDS['alex-park'].capacity,300);
+ const s=scoreVenue({...VENUE_RECORDS['alex-park'],region:'city'},80,{value:687760,isQuote:true,partial:false});
+ assert.equal(s.breakdown.find(x=>x.key==='capacity').value,
+  RATING_CRITERIA.find(x=>x[0]==='capacity')[2]);
+});
+test('one cost formula across venue card, table and rating with extra costs once',()=>{
+ const v=venue({cost:{menu:5000,rent:120000,service:10}});
+ const summary=summarizeVenueBudget(v,80,30000);
+ assert.equal(summary.base.value,560000);
+ assert.equal(summary.total,590000);
+ assert.equal(summary.scoreCost.value,590000);
+ assert.equal(summarizeVenueBudget(v,80,0).scoreCost.value,560000);
+ const missing=summarizeVenueBudget(venue({cost:{rent:120000},quotes:[]}),80,30000);
+ assert.equal(missing.total,null);
+});
+test('date cells preserve full June date labels',()=>{
+ const css=readFileSync(new URL('../src/venues.css',import.meta.url),'utf8');
+ assert.match(css,/\.vw-page\.vw-control-board \.vw-date-edit>span\{[\s\S]*?white-space:nowrap/);
+ assert.match(css,/\.vw-page\.vw-control-board \.vw-date-edit\{[\s\S]*?grid-template-columns:67px/);
 });
