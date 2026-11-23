@@ -128,7 +128,15 @@ export const VENUE_RECORDS = {
         "label": "Санузлы",
         "folder": "1MTZNK3kwGjPstSd8J7B69sJqC9cCyDA5"
       }
-    ]
+    ],
+    "ratingFacts": {
+      "includedEquipment": "yes",
+      "ownAlcohol": "yes"
+    },
+    "ratingFactSources": {
+      "includedEquipment": "Указано в комплектации: свет, звук, экран.",
+      "ownAlcohol": "В условиях: свой алкоголь без пробкового сбора."
+    }
   },
   "royal": {
     "visited": true,
@@ -220,7 +228,15 @@ export const VENUE_RECORDS = {
       "20": "available"
     },
     "availability": "unavailable",
-    "dateNote": "По сообщению Кристины от 18.11: только 20 июня свободно."
+    "dateNote": "По сообщению Кристины от 18.11: только 20 июня свободно.",
+    "ratingFacts": {
+      "ownAlcohol": "no",
+      "until23": "yes"
+    },
+    "ratingFactSources": {
+      "ownAlcohol": "Свой алкоголь: пробковый сбор 1 200 ₽/чел.",
+      "until23": "Продление отдельно тарифицируется после 23:00."
+    }
   },
   "alex-park": {
     "visitAddons": [
@@ -395,7 +411,17 @@ export const VENUE_RECORDS = {
         "url": "https://drive.google.com/file/d/1_q5lrQUEBlG_mlpY5ySlgOHoHh-E8Xn_/view?usp=drivesdk"
       }
     ],
-    "sourceStatus": "Техническое уточнение 23.11.2026: сообщение менеджера и PDF-райдер 2026. Цифры технического пакета 125 000 ₽ / 150 000 ₽ из ранее полученных смет не изменены."
+    "sourceStatus": "Техническое уточнение 23.11.2026: сообщение менеджера и PDF-райдер 2026. Цифры технического пакета 125 000 ₽ / 150 000 ₽ из ранее полученных смет не изменены.",
+    "ratingFacts": {
+      "includedEquipment": "yes",
+      "singleHall": "yes",
+      "indoorBackup": "yes"
+    },
+    "ratingFactSources": {
+      "includedEquipment": "Технический райдер: штатная система звука и освещения, техник подключает ведущего и DJ.",
+      "singleHall": "Основной крытый банкетный зал рассчитан до 300 гостей; 80 размещаются в нём.",
+      "indoorBackup": "Основной закрытый зал рассчитан до 300 гостей, погодная рассадка 80 внутри возможна."
+    }
   },
   "vinity": {
     "visitTranscriptNotes": "На осмотре уточнили: стандартный пакет — 5 часов банкета плюс 30 минут сбора гостей в welcome-зоне. В пакет входят сервировка/выбор текстиля, обслуживание, координатор площадки Алиса и базовые свет/звук для ведущего и танцев; сервис 15% уже входит в базовый пакет, но применяется дополнительно к заказанным сверх него услугам. Продление 30 000 ₽ за час, по словам менеджера ограничений по громкости ночью нет. Для кавер-группы требуется собственное техническое оборудование и предварительное согласование подключения со специалистом. Небольшая наружная терраса/фотозона предусмотрена возле входа, это не большая крыша.",
@@ -481,7 +507,15 @@ export const VENUE_RECORDS = {
         "applied": false
       }
     },
-    "offerNote": "20.06: скидка 10% — итог после уточнения условий"
+    "offerNote": "20.06: скидка 10% — итог после уточнения условий",
+    "ratingFacts": {
+      "includedEquipment": "yes",
+      "outdoorArea": "yes"
+    },
+    "ratingFactSources": {
+      "includedEquipment": "В пакете указаны свет, звук и светорежиссёр.",
+      "outdoorArea": "В комплектацию входит терраса; точный формат её использования уточняется."
+    }
   },
   "loft-roof": {
     "cost": {
@@ -547,7 +581,15 @@ export const VENUE_RECORDS = {
       }
     ],
     "archiveReason": "Исключено 17.11.2026: лофт на Апрашке не рассматриваем.",
-    "archived": true
+    "archived": true,
+    "ratingFacts": {
+      "includedEquipment": "yes",
+      "ownAlcohol": "yes"
+    },
+    "ratingFactSources": {
+      "includedEquipment": "В комплект включены звук, свет и экран.",
+      "ownAlcohol": "Можно свой алкоголь без пробкового сбора."
+    }
   },
   "kraft": {
     "drive": "https://drive.google.com/drive/folders/1a4vNr5YYcG9DCJdvlpjkm_OxUDeZKQGo",
@@ -635,7 +677,13 @@ export const VENUE_RECORDS = {
         "label": "Территория",
         "folder": "13hf_pA1hAjEmdMhaZ2_go0VEoBsVIGXx"
       }
-    ]
+    ],
+    "ratingFacts": {
+      "ownAlcohol": "yes"
+    },
+    "ratingFactSources": {
+      "ownAlcohol": "Свой алкоголь разрешён без пробкового сбора."
+    }
   },
   "k2": {
     "visitBudgetPlanning": {
@@ -938,7 +986,15 @@ export const VENUE_RECORDS = {
       "20": "unavailable"
     },
     "dateNote": "По сообщению 17.11.2026 свободно только 18 июня 2027; 19 и 20 июня заняты. Предложение по стоимости остаётся предварительным.",
-    "availability": "unavailable"
+    "availability": "unavailable",
+    "ratingFacts": {
+      "singleHall": "yes",
+      "indoorBackup": "yes"
+    },
+    "ratingFactSources": {
+      "singleHall": "Основной крытый зал на банкет до 90 гостей.",
+      "indoorBackup": "Основной крытый зал вмещает до 90 гостей."
+    }
   },
   "petr": {
     "visitAddons": [
@@ -1013,7 +1069,13 @@ export const VENUE_RECORDS = {
       "19": "unavailable",
       "20": "unavailable"
     },
-    "dateNote": "18 июня свободно, 19 и 20 июня недоступны (уточнение 18.11.2026)."
+    "dateNote": "18 июня свободно, 19 и 20 июня недоступны (уточнение 18.11.2026).",
+    "ratingFacts": {
+      "ownAlcohol": "yes"
+    },
+    "ratingFactSources": {
+      "ownAlcohol": "В условиях прямо указано: свой алкоголь без пробкового сбора."
+    }
   },
   "roof18": {
     "drive": "https://drive.google.com/drive/folders/1vObVCAtbaxGpJWeL-FlG6ST_Zlhd_zi3",
@@ -1043,7 +1105,13 @@ export const VENUE_RECORDS = {
     "cost": {
       "minSpend": 750000
     },
-    "costSummary": "Депозит 750 000 ₽ (сообщил организатор 23.11), расходуется на банкет из обычного меню. Сумму выбранных блюд и напитков сначала зачесть в депозит; доплата только при превышении, не считать депозит второй раз. Дополнительно около 60 000 ₽ за DJ/звук со специалистом из записи осмотра; рабочий резерв сервиса 10%, торта 30 000 ₽, декора 50 000 ₽. Пример на 80 гостей: ≈965 000 ₽; сервис и доплаты предварительные. План дождя для 80 человек не подтверждён."
+    "costSummary": "Депозит 750 000 ₽ (сообщил организатор 23.11), расходуется на банкет из обычного меню. Сумму выбранных блюд и напитков сначала зачесть в депозит; доплата только при превышении, не считать депозит второй раз. Дополнительно около 60 000 ₽ за DJ/звук со специалистом из записи осмотра; рабочий резерв сервиса 10%, торта 30 000 ₽, декора 50 000 ₽. Пример на 80 гостей: ≈965 000 ₽; сервис и доплаты предварительные. План дождя для 80 человек не подтверждён.",
+    "ratingFacts": {
+      "outdoorArea": "yes"
+    },
+    "ratingFactSources": {
+      "outdoorArea": "Основное место мероприятия — открытая панорамная терраса."
+    }
   },
   "bali": {
     "drive": "https://drive.google.com/drive/folders/14A22cPpLpEPzRHpfSJZ9YiVIm5rRO60V",
@@ -1184,7 +1252,17 @@ export const VENUE_RECORDS = {
       "Получить финальную персональную смету на 80–100 гостей по выбранному меню и уточнить, входит ли работа официантов в 10% сервис",
       "Подтвердить максимальную банкетную вместимость и рассадку",
       "Уточнить комплектацию включённых технических услуг и условия алкоголя"
-    ]
+    ],
+    "ratingFacts": {
+      "includedEquipment": "yes",
+      "ownAlcohol": "no",
+      "until23": "yes"
+    },
+    "ratingFactSources": {
+      "includedEquipment": "В аренду включены сцена, свет, звук и техперсонал.",
+      "ownAlcohol": "В условиях указан пробковый сбор 250–500 ₽/гость.",
+      "until23": "Продление оплачивается отдельно после 23:00."
+    }
   },
   "repino-riviera": {
     "visited": true,
@@ -1215,7 +1293,13 @@ export const VENUE_RECORDS = {
     "questions": [
       "Выбрать верхний зал или ресторан с террасой; уточнить одинаков ли депозит/аренда около 1 млн ₽ для обоих",
       "Уточнить актуальность меню 6 500 ₽/гость и сервиса для 18/20 июня 2027"
-    ]
+    ],
+    "ratingFacts": {
+      "outdoorArea": "yes"
+    },
+    "ratingFactSources": {
+      "outdoorArea": "В переписке предложены залы с террасой; включение террасы в конкретный договор проверить."
+    }
   },
   "panorama": {
     "cost": {
@@ -1290,7 +1374,17 @@ export const VENUE_RECORDS = {
       "19": "available",
       "20": "available"
     },
-    "dateNote": "По сообщению от 18.11.2026 18, 19 и 20 июня свободны; актуальность проверять при бронировании."
+    "dateNote": "По сообщению от 18.11.2026 18, 19 и 20 июня свободны; актуальность проверять при бронировании.",
+    "ratingFacts": {
+      "includedEquipment": "yes",
+      "ownAlcohol": "yes",
+      "outdoorArea": "yes"
+    },
+    "ratingFactSources": {
+      "includedEquipment": "В предложении: звук, свет, экран и техник.",
+      "ownAlcohol": "Прямо указано: свой алкоголь без пробкового сбора.",
+      "outdoorArea": "В предложении указана основная терраса."
+    }
   },
   "eva": {
     "cost": {
@@ -1359,7 +1453,19 @@ export const VENUE_RECORDS = {
       "18": "available",
       "20": "available"
     },
-    "dateNote": "По сообщению Кристины от 18.11.2026 свободны 18 и 20 июня 2027. Статус 19 июня не подтверждён."
+    "dateNote": "По сообщению Кристины от 18.11.2026 свободны 18 и 20 июня 2027. Статус 19 июня не подтверждён.",
+    "ratingFacts": {
+      "includedEquipment": "yes",
+      "ownAlcohol": "yes",
+      "outdoorArea": "yes",
+      "until23": "no"
+    },
+    "ratingFactSources": {
+      "includedEquipment": "В предложении включены штатные звук и свет, есть технический перечень.",
+      "ownAlcohol": "Свой алкоголь разрешён без пробкового сбора.",
+      "outdoorArea": "Презентация: шатёр с террасой и видом на залив.",
+      "until23": "Пакет до 22:00; ещё час до 23:00 стоит дополнительно 15 000 ₽."
+    }
   },
   "maryino": {
     "visited": true,
@@ -1572,7 +1678,17 @@ export const VENUE_RECORDS = {
       "20": "available"
     },
     "dateNote": "По сообщению 17.11.2026 все три даты 18, 19 и 20 июня 2027 свободны; бронирование не оформлено.",
-    "availability": "available"
+    "availability": "available",
+    "ratingFacts": {
+      "singleHall": "yes",
+      "indoorBackup": "yes",
+      "until23": "yes"
+    },
+    "ratingFactSources": {
+      "singleHall": "Белый зал рассчитан на 80 банкетных гостей.",
+      "indoorBackup": "Белый зал — крытое помещение для 80 гостей.",
+      "until23": "Указана стоимость продления после 23:00."
+    }
   },
   "harmony": {
     "visited": true,
@@ -1652,7 +1768,17 @@ export const VENUE_RECORDS = {
         "url": "https://drive.google.com/file/d/1PjAw62irJgQ6JgJ16Y9C1VHdz4jaXHUm/view?usp=drivesdk"
       }
     ],
-    "documentsFolder": "https://drive.google.com/drive/folders/1E3K3A6L5udVv6mdkghsBtCygogR55URq"
+    "documentsFolder": "https://drive.google.com/drive/folders/1E3K3A6L5udVv6mdkghsBtCygogR55URq",
+    "ratingFacts": {
+      "ownAlcohol": "no",
+      "singleHall": "yes",
+      "indoorBackup": "yes"
+    },
+    "ratingFactSources": {
+      "ownAlcohol": "На свой алкоголь указан пробковый сбор 700 ₽/бутылка (тариф 2026).",
+      "singleHall": "Конгресс-холл рассчитан на банкет до 170 гостей.",
+      "indoorBackup": "Конгресс-холл — крытый банкетный зал до 170 гостей."
+    }
   },
   "zarenkov-gallery": {
     "visitTranscriptNotes": "Из разговора на осмотре: видовая терраса может использоваться для отдельной welcome-/лаунж-зоны, упоминалась возможность отдельной аренды куполов или зон (состав и цена не названы). Площадка открыта к нестандартным творческим оформлениям и выступлениям гостей. Для охвата звуком всего пространства и живых выступлений потребуются согласование техники и отдельный расчёт. Менеджера просили составить приблизительную смету по длительности и составу услуг.",
@@ -1699,7 +1825,15 @@ export const VENUE_RECORDS = {
     "availability": "available",
     "drive": "https://drive.google.com/drive/folders/1BbOyVpRoF5OIKxiYb36luC2KppG3kMPT",
     "photos": "https://drive.google.com/drive/folders/1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6",
-    "documentsFolder": "https://drive.google.com/drive/folders/1s3EQWVMBOPYzd-14K5CiPH_125Xb0-uc"
+    "documentsFolder": "https://drive.google.com/drive/folders/1s3EQWVMBOPYzd-14K5CiPH_125Xb0-uc",
+    "ratingFacts": {
+      "includedEquipment": "yes",
+      "singleHall": "yes"
+    },
+    "ratingFactSources": {
+      "includedEquipment": "Официальный сайт перечисляет звук, микрофоны, свет, экраны и сцену.",
+      "singleHall": "Главный зал до 100 гостей; формат единого банкета на 80 требует подтверждения и остаётся условным."
+    }
   },
   "zhemchuzhny": {
     "summary": "Отдельная видовая банкетная площадка Event Hall «Жемчужный» на Приморском пр., 50Ж, у Большой Невки. Не путать с «Панорамой» в Репино, хотя в меню 2026 указан общий контактный блок. Есть основной зал до 150 гостей и малый зал до 50 гостей. На официальном сайте меню от 5 500 ₽/гость, сторонний каталог указывает аренду основного зала от 100 000 ₽. Персонального КП на 18–20 июня 2027 года нет.",
