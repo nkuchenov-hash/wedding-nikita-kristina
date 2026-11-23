@@ -94,22 +94,29 @@ jobs:
             -o /tmp/wedding-guests.json
           python3 -c 'import json;v=json.load(open("/tmp/wedding-guests.json"));g=v.get("guests",[]);assert v.get("ok") and len(g)>=114 and "source_person_id" in g[0];print("PRIVATE_GUEST_PROFILES_OK",len(g))'
 
-          for asset in admin-guests.js venue-files-ui.js venue-detail-ui.js admin-photos.js venue-transcript-costs.js venue-budget-coverage.js; do
+          for asset in admin-guests.js venue-files-ui.js venue-detail-ui.js admin-photos.js venue-transcript-costs.js venue-budget-coverage.js venues.js; do
             code=$(curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" -o "/tmp/$asset" \
               -w '%{http_code}' "https://nikitakristina.ru/admin/index.php?asset=src/$asset")
             test "$code" = 200
             test -s "/tmp/$asset"
           done
           grep -Fq 'activateGuestDirectory' /tmp/admin-guests.js
-          grep -Fq 'Дети: участвуют' /tmp/admin-guests.js
-          grep -Fq 'Перевести в резерв' /tmp/admin-guests.js
+          grep -Fq 'childrenEnabled' /tmp/admin-guests.js
+          grep -Fq "'reserve','Резерв'" /tmp/admin-guests.js
           grep -Fq 'SORT_FIELDS' /tmp/admin-guests.js
           grep -Fq 'admin/guests/revision' /tmp/admin-guests.js
-          grep -Fq 'invitations/sent' /tmp/admin-guests.js
+          grep -Fq 'invitation_sent_at' /tmp/admin-guests.js
           grep -Fq 'hydrateVenueFiles' /tmp/venue-files-ui.js
           grep -Fq 'transcriptAddonTotal' /tmp/venue-transcript-costs.js
           grep -Fq 'venueBudgetCoverage' /tmp/venue-budget-coverage.js
           grep -Fq 'data-venue-files' /tmp/venue-detail-ui.js
+          grep -Fq 'data-rating-fact' /tmp/venue-detail-ui.js
+          grep -Fq 'data-rating-open' /tmp/venues.js
+          grep -Fq 'venue_rating_rules' /tmp/venues.js
+          curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" \
+            'https://nikitakristina.ru/admin/index.php?api=admin%2Fsettings' \
+            -o /tmp/wedding-ranking-settings.json
+          python3 -c 'import json; d=json.load(open("/tmp/wedding-ranking-settings.json")); assert d.get("ok") and isinstance(d.get("settings"),dict); print("VENUE_RATING_SETTINGS_API_OK")'
           curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" \
             'https://nikitakristina.ru/admin/index.php?api=admin%2Fvenue-files&venue_id=vinity' \
             -o /tmp/wedding-vinity-files.json
