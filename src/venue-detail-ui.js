@@ -256,7 +256,7 @@ function ratingPane(v,ctx){
  const score=ctx.weighted(v);
  const facts=OBJECTIVE_CRITERIA.map(x=>{
   const value=v.ratingFacts?.[x.key]??'unknown';
-  const note=score.breakdown.find(y=>y.key===x.key);
+  const note=(score.breakdown||[]).find(y=>y.key===x.key);
   return '<label class="vdp-objective-fact"><span><b>'+h(x.label)+'</b><small>'+h(x.question)+'</small>'+
    '<small class="vdp-rating-source">Основание: '+h(x.evidence)+'</small></span>'+
    '<select data-venue="'+h(v.id)+'" data-rating-fact="'+h(x.key)+'" aria-label="'+h(x.label)+'">'+
@@ -269,7 +269,7 @@ function ratingPane(v,ctx){
   '<p><a class="vdp-rating-method-link" href="#/admin/venues/rating-method">Общие правила и веса критериев</a></p>'+
   '<div class="vdp-rating-summary"><strong>'+(score.value===null?'Нет оценки':score.value+' / '+RATING_MAX+' баллов')+'</strong>'+
   '<span>'+score.complete+' из '+RATING_CRITERIA.length+' критериев подтверждены · '+(score.provisional?'предварительный рейтинг':'все критерии известны')+'</span></div>'+
-  '<h3>Расчёт по каждому критерию</h3><div class="vdp-rating-breakdown">'+score.breakdown.map(x=>
+  '<h3>Расчёт по каждому критерию</h3><div class="vdp-rating-breakdown">'+(score.breakdown||[]).map(x=>
    '<div><span>'+h(x.label)+' <small>макс. '+x.maximum+'</small>'+
    '<small class="vdp-rating-reason">'+h(x.note||'Нет объяснения')+'</small></span>'+
    '<strong>'+(x.value===null?'Нет данных':Math.round(x.value*10)/10+' / '+x.maximum)+'</strong></div>').join('')+'</div>'+
