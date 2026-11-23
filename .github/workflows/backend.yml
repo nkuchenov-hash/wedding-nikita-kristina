@@ -84,6 +84,7 @@ jobs:
             if test -f '$PRIVATE/wedding.sqlite3'; then php bin/backup.php; fi
             # Idempotent migrations and seed while the previous API is still live.
             php bin/migrate.php
+            php bin/migrate-rating-rules-20261123.php
             php bin/backfill-guest-profiles.php
             php bin/backfill-guest-children.php
             php bin/backfill-guest-locations.php
