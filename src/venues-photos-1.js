@@ -349,21 +349,21 @@ export const VENUE_PHOTOS_1 = {
     },
     {
       "id": "1VTr5e0bZz74An49js2mjsHga1XNha_Jw",
-      "name": "Галерея — шторы и проход 06.jpg",
-      "section": "Входы и переходы",
-      "folder": "1nt2tbYfm76sFEf7R8RYLzxpcfNuxRCN8"
+      "name": "Крытая терраса — зона у штор 06.jpg",
+      "section": "Террасы и виды",
+      "folder": "17V-_fThWRq7z1s5219I9NIbEjMZ-vPni"
     },
     {
       "id": "1rxj_m8FvyUQrnZ_Nx-vDms6I2K2KuLZ4",
-      "name": "Галерея — стеклянные двери 05.jpg",
-      "section": "Входы и переходы",
-      "folder": "1nt2tbYfm76sFEf7R8RYLzxpcfNuxRCN8"
+      "name": "Крытая терраса — панорамное остекление 05.jpg",
+      "section": "Террасы и виды",
+      "folder": "17V-_fThWRq7z1s5219I9NIbEjMZ-vPni"
     },
     {
       "id": "1IBFm7pJCBJml34-_BsfMzJrjHuNQTVIC",
-      "name": "Галерея — остекление и плитка 04.jpg",
-      "section": "Входы и переходы",
-      "folder": "1nt2tbYfm76sFEf7R8RYLzxpcfNuxRCN8"
+      "name": "Крытая терраса — столики и вид на воду 04.jpg",
+      "section": "Террасы и виды",
+      "folder": "17V-_fThWRq7z1s5219I9NIbEjMZ-vPni"
     },
     {
       "id": "1k2LR13faD5e_AOAn7PewLy21r3eku6mL",
