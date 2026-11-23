@@ -11,7 +11,7 @@ import {VENUE_PRICING} from './venues-pricing.js';
 import {transcriptAddonTotal} from './venue-transcript-costs.js';
 import {renderVenueNewPage,renderVenueQuoteEditorRow,filteredVenuePhotos,getVenuePhotos,getVenueCover} from './venue-detail-ui.js';
 import {hydrateVenueFiles} from './venue-files-ui.js';
-import {estimateVenue,scoreVenue,PERSONAL_CRITERIA,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
+import {estimateVenue,scoreVenue,OBJECTIVE_CRITERIA,DEFAULT_RATING_RULES,validateRatingRules,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
 export const PUBLIC_VENUES = [
   {id:'360',name:'Пространство 360',region:'city',area:'Санкт-Петербург'},
   {id:'loft-roof',name:'Лофт на крыше',region:'city',area:'Обводный канал'},
@@ -81,7 +81,9 @@ function read(){
  return INITIAL();
 }
 let state=read();
-let ui={archiveFilter:'active',kind:'all',query:'',sort:'date',sortDir:'asc',expanded:null,detailTab:'overview',dateFilter:'all',budget:'all',visit:'all',capacity:'all',photoSection:'all',photoView:'gallery',photoSort:'original',photoIndex:0,photoLightbox:false};
+let ratingRules=DEFAULT_RATING_RULES;
+const effectiveRatingRules=()=>validateRatingRules(ui.ratingDraft)||ratingRules;
+let ui={archiveFilter:'active',kind:'all',query:'',sort:'date',sortDir:'asc',expanded:null,detailTab:'overview',dateFilter:'all',budget:'all',visit:'all',capacity:'all',photoSection:'all',photoView:'gallery',photoSort:'original',photoIndex:0,photoLightbox:false,ratingDrawer:false,ratingDraft:null,ratingDirty:false};
 const h=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rub=(v)=>typeof v==='number'&&Number.isFinite(v)?Math.round(v).toLocaleString('ru-RU')+' ₽':'—';
 const safeUrl=(v)=>{try{const u=new URL(String(v));return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
@@ -90,7 +92,7 @@ const get=(base)=>{
  const dates=venueDb.dates.get(base.id)||{};
  const dateAvailability=Object.fromEntries(['18','19','20'].map(day=>[day,dates[day]||'unknown']));
  return {...base,...d,...edit,cost:{...(base.publiclyAdvertised||{}),...(base.cost||{}),...(d.cost||{}),...(edit.cost||{})},
-  ratings:{...(edit.ratings||{})},extras:{...(edit.extras||{})},
+  ratings:{...(edit.ratings||{})},ratingFacts:{...(d.ratingFacts||{}),...(edit.ratingFacts||{})},extras:{...(edit.extras||{})},
   quotes:edit.quotes??d.quotes??[],gallery:d.gallery||[],
   dateAvailability,availability:dateAvailability['19']};
 };
@@ -147,8 +149,8 @@ async function initVenueDatabase(root,force=false){
  venueDb.loading=true;
  if(!background){venueDb.ready=false;redraw(root);}
  try{
-  const [session,data,availability]=await Promise.all([
-   venueApi('auth/session'),venueApi('admin/records?collection=venues'),venueApi('admin/venue-dates')
+  const [session,data,availability,settingsResponse]=await Promise.all([
+   venueApi('auth/session'),venueApi('admin/records?collection=venues'),venueApi('admin/venue-dates'),venueApi('admin/settings')
   ]);
   if(session.role!=='admin'||!session.csrf)throw new Error('Требуется вход администратора');
   venueDb.csrf=session.csrf;
@@ -176,10 +178,14 @@ async function initVenueDatabase(root,force=false){
     throw new Error('Не загружены статусы дат для '+venue.name);
   }
   // Revalidate silently: other-device edits redraw only when data has changed.
-  changed=JSON.stringify(state.venues)!==JSON.stringify(incoming)||
+  const serverRules=validateRatingRules(settingsResponse.settings?.venue_rating_rules)||DEFAULT_RATING_RULES;
+  changed=JSON.stringify(ratingRules)!==JSON.stringify(serverRules)||
+    JSON.stringify(state.venues)!==JSON.stringify(incoming)||
     JSON.stringify([...venueDb.dates].sort())!==JSON.stringify([...dates].sort());
   // Only server responses populate venue state. Browser caches guestCount only.
   state.venues=incoming;
+  ratingRules=serverRules;
+  if(!ui.ratingDirty)ui.ratingDraft=null;
   venueDb.rows=rows;
   venueDb.dates=dates;
   venueDb.ready=true;
@@ -365,7 +371,7 @@ function totalEstimate(v){
   partial:true,isQuote:false,kind:'scenario',
   note:base.note+'; добавлены расходы организаторов: '+rub(extra)};
 }
-function weighted(v){return scoreVenue(v,state.guestCount,totalEstimate(v));}
+function weighted(v){return scoreVenue(v,state.guestCount,totalEstimate(v),effectiveRatingRules());}
 function sourceThumb(g){if(!g)return '';const id=encodeURIComponent(g.id);return '<a href="https://drive.google.com/file/d/'+id+'/view" target="_blank" rel="noopener noreferrer" class="vw-photo"><img loading="lazy" src="https://drive.google.com/thumbnail?id='+id+'&sz=w800" alt="'+h(g.label)+'"><span>'+h(g.label)+'</span></a>'}
 function photoGallery(v){return v.gallery?.length?'<div class="vw-gallery">'+v.gallery.map(sourceThumb).join('')+'</div>':'<p class="vw-muted">Фотографий с телефона пока нет.</p>'}
 function budgetTotal(v){const e=estimate(v);return '<div class="vw-budget-boxes"><div><small>По смете / минимум</small><strong>'+rub(e.value)+'</strong></div><div><small>Добавленные доплаты</small><strong>'+rub(extraTotal(v))+'</strong></div><div><small>Суммарный известный бюджет</small><strong>'+rub(e.value===null?null:e.value+extraTotal(v))+'</strong></div></div><p class="vw-muted">Неизвестные позиции не считаются нулевыми. Не добавляйте депозит к уже оплаченному меню второй раз.</p>'}
