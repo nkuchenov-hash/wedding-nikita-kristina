@@ -519,7 +519,7 @@ export function renderVenueAdmin(){
  const list=visibleVenues(all);
  const detailVenue=all.find(v=>v.id===ui.expanded);
  if(match&&detailVenue){
-   return '<div class="vw-page" data-venues-page>'+renderVenueNewPage(detailVenue,{guests:state.guestCount,ui,estimate,extraTotal,dayStatus,dayText,weighted})+'</div>';
+   return '<div class="vw-page" data-venues-page>'+renderVenueNewPage(detailVenue,{guests:state.guestCount,ui,estimate,extraTotal,dayStatus,dayText,weighted})+ratingDrawer()+'</div>';
   }
  if(ratingMethodRoute)return ratingMethodPage();
  return '<div class="vw-page vw-control-board" data-venues-page>'+
@@ -729,7 +729,7 @@ export function activateVenueAdmin(root){
    form.dataset.saving='yes';const button=form.querySelector('[type="submit"]');if(button)button.disabled=true;
    try{
     await venueApi('admin/settings',{method:'POST',body:{key:'venue_rating_rules',value:validated}});
-    ratingRules=validated;ui.ratingDraft=null;ui.ratingDirty=false;redraw(root);
+    ratingRules=validated;ui.ratingDrawer=false;ui.ratingDraft=null;ui.ratingDirty=false;redraw(root);
     showAdminToast('Настройки сохранены. Рейтинг всех площадок пересчитан.');
    }catch(error){
     if(button?.isConnected)button.disabled=false;
