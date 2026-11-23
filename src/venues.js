@@ -605,7 +605,7 @@ function redraw(root){
   }
  }
  if(typeof document!=='undefined'){
-  document.documentElement.style.overflow=ui.photoLightbox?'hidden':'';
+  document.documentElement.style.overflow=(ui.photoLightbox||ui.ratingDrawer)?'hidden':'';
   const close=root.querySelector('[data-photo-close]');if(close)close.focus({preventScroll:true});
  }
  if(typeof window!=='undefined'&&Number.isFinite(y))window.scrollTo({top:y,behavior:'instant'});
@@ -616,7 +616,7 @@ export function activateVenueAdmin(root){
  const refresh=()=>{
   if(document.visibilityState!=='visible'||!root.querySelector('[data-venues-page]')||!venueDb.ready)return;
   // Never replace an inline editor or an unfinished save from another refresh.
-  if(root.querySelector('.vdp-inline-form,.vdp-inline-quote-form,.vdp-inline-quote-editor'))return;
+  if(ui.ratingDrawer||root.querySelector('.vdp-inline-form,.vdp-inline-quote-form,.vdp-inline-quote-editor'))return;
   const active=document.activeElement;
   if(active&&root.contains(active)&&active.matches('input,select,textarea,[contenteditable]'))return;
   initVenueDatabase(root,true);
@@ -636,10 +636,18 @@ export function activateVenueAdmin(root){
  redraw(root);
  initVenueDatabase(root);
  root.addEventListener('click',event=>{
-  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-venue-inline],[data-inline-quote],[data-add-inline-quote],[data-cancel-inline],[data-remove-venue-quote],[data-venue-retry],[data-venue-archive],[data-open-archive]');if(!target)return;
+  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-venue-inline],[data-inline-quote],[data-add-inline-quote],[data-cancel-inline],[data-remove-venue-quote],[data-venue-retry],[data-venue-archive],[data-open-archive],[data-rating-open],[data-rating-close],[data-rating-backdrop],[data-rating-defaults]');if(!target)return;
   const venueBase=PUBLIC_VENUES.find(x=>x.id===ui.expanded);
   const showError=message=>showAdminToast(message,{kind:'error'});
-  if(target.hasAttribute('data-open-archive')){
+  if(target.hasAttribute('data-rating-open')){
+   ui.ratingDrawer=true;ui.ratingDraft=cloneRatingRules(ratingRules);ui.ratingDirty=false;
+   redraw(root);root.querySelector('[data-rating-close]')?.focus();
+  }else if(target.hasAttribute('data-rating-close')||(target.hasAttribute('data-rating-backdrop')&&event.target===target)){
+   if(ui.ratingDirty&&!window.confirm('Закрыть без сохранения правил рейтинга?'))return;
+   ui.ratingDrawer=false;ui.ratingDraft=null;ui.ratingDirty=false;redraw(root);
+  }else if(target.hasAttribute('data-rating-defaults')){
+   ui.ratingDraft=cloneRatingRules(DEFAULT_RATING_RULES);ui.ratingDirty=true;redraw(root);
+  }else if(target.hasAttribute('data-open-archive')){
    event.preventDefault();
    Object.assign(ui,{archiveFilter:'archived',kind:'all',query:'',dateFilter:'all',budget:'all',visit:'all',capacity:'all'});
    if(location.hash!=='#/admin/venues/archive')location.hash='#/admin/venues/archive';
