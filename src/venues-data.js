@@ -1294,12 +1294,8 @@ export const VENUE_RECORDS = {
       "Выбрать верхний зал или ресторан с террасой; уточнить одинаков ли депозит/аренда около 1 млн ₽ для обоих",
       "Уточнить актуальность меню 6 500 ₽/гость и сервиса для 18/20 июня 2027"
     ],
-    "ratingFacts": {
-      "outdoorArea": "yes"
-    },
-    "ratingFactSources": {
-      "outdoorArea": "В переписке предложены залы с террасой; включение террасы в конкретный договор проверить."
-    }
+    "ratingFacts": {},
+    "ratingFactSources": {}
   },
   "panorama": {
     "cost": {
@@ -1827,12 +1823,10 @@ export const VENUE_RECORDS = {
     "photos": "https://drive.google.com/drive/folders/1KLnRhsmheiNohDQRqqugVcGTX5X1ozN6",
     "documentsFolder": "https://drive.google.com/drive/folders/1s3EQWVMBOPYzd-14K5CiPH_125Xb0-uc",
     "ratingFacts": {
-      "includedEquipment": "yes",
-      "singleHall": "yes"
+      "includedEquipment": "yes"
     },
     "ratingFactSources": {
-      "includedEquipment": "Официальный сайт перечисляет звук, микрофоны, свет, экраны и сцену.",
-      "singleHall": "Главный зал до 100 гостей; формат единого банкета на 80 требует подтверждения и остаётся условным."
+      "includedEquipment": "Официальный сайт перечисляет звук, микрофоны, свет, экраны и сцену."
     }
   },
   "zhemchuzhny": {
