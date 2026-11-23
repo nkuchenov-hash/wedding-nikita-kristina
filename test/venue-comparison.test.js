@@ -107,13 +107,14 @@ test('17 November updates preserve date specificity and only valid active June q
  assert.equal(price.quoteDate,'2027-06-20');
 });
 
-test('shortlist excludes six dismissed venues but retains archived records',()=>{
+test('dismissed venues remain restorable inside the archive',()=>{
  const source=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');
  const list=source.slice(source.indexOf('export const PUBLIC_VENUES'),source.indexOf('const DATE_CHOICES'));
  for(const id of ['kraft','loft-roof','360','zhemchuzhny','english-roof','admiralty-roof']){
-  assert.doesNotMatch(list,new RegExp("id:'"+id+"'"));
+  assert.match(list,new RegExp("id:'"+id+"'"));
   assert.equal(VENUE_RECORDS[id].archived,true);
  }
+ assert.match(source,/archiveFilter:'active'/);
  for(const id of ['vinity','vesenniy','k2','alex-park','ermolinsky','maryino','harmony','putilov']){
   assert.match(list,new RegExp("id:'"+id+"'"));
  }
@@ -123,11 +124,11 @@ test('shortlist excludes six dismissed venues but retains archived records',()=>
  assert.match(source,/guestCount:state\.guestCount/);
 });
 
-test('Royal Beach June 19 is unavailable; June 18/20 remain unconfirmed',()=>{
+test('Royal Beach June 19 is unavailable, June 20 available on 18 November',()=>{
  const royal=VENUE_RECORDS.royal;
  assert.equal(royal.dateAvailability['19'],'unavailable');
  assert.equal(royal.dateAvailability['18'],undefined);
- assert.equal(royal.dateAvailability['20'],undefined);
+ assert.equal(royal.dateAvailability['20'],'available');
  assert.equal(VENUE_RECORDS['alex-park'].dateAvailability['18'],'unavailable');
  assert.equal(VENUE_RECORDS['alex-park'].dateAvailability['20'],'available');
  const exporter=readFileSync(new URL('../tools/export-wedding-venues.mjs',import.meta.url),'utf8');
@@ -215,10 +216,10 @@ test('Palma menu tiers produce a dynamic, explicitly provisional 80 and 100 pers
 });
 
 
-test('Putilov personal quote adds a 2027 scenario without replacing original catalogue fields',()=>{
+test('Putilov has personal 2027 rental and menu quote',()=>{
  const source=VENUE_RECORDS.putilov;
- assert.equal(source.cost.rent,190000);
- assert.equal(source.cost.menu,6000);
+ assert.equal(source.cost.rent,430000);
+ assert.equal(source.cost.menu,7500);
  assert.equal(source.quotes[0].kind,'estimate');
  assert.equal(source.quotes[0].total,1200000);
  const v={id:'putilov',region:'city',cost:source.cost,quotes:source.quotes,dateAvailability:{'20':'available'},ratings:{}};
