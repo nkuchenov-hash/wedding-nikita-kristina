@@ -93,6 +93,7 @@ jobs:
             php bin/seed-venue-dates.php
             php bin/sync-santa-gloria-offer-20261123.php
             php bin/sync-alexandrovsky-rider-20261123.php
+            php bin/sync-working-budget-sources-20261123.php
             php bin/remove-invalid-chadu-20261123.php
             php bin/apply-venue-confirmations-20261118.php
             php bin/supplement-telegram-20261118.php
