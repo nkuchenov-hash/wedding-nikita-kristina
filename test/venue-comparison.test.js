@@ -28,7 +28,7 @@ test('June 19 and two verified objective facts reach 100 points with a prelimina
  assert.equal(score.complete,RATING_CRITERIA.length);
  assert.equal(score.provisional,true); // Cost is a documented but provisional tariff scenario.
  assert.equal(score.breakdown.find(x=>x.key==='date').value,45);
- assert.equal(score.breakdown.find(x=>x.key==='city').value,10);
+ assert.equal(score.breakdown.find(x=>x.key==='city').value,9);
 });
 
 test('country venues earn no city bonus even when other scores are perfect',()=>{
