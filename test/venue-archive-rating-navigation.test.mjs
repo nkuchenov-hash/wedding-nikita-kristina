@@ -47,7 +47,7 @@ test('Rating weights and price thresholds match the user-facing methodology',()=
  assert.equal(row(score,'capacity').value,10);
  assert.equal(row(score,'cost').value,15);
  assert.equal(row(score,'look').value,6);
- assert.equal(row(score,'comfort').value,2.4);
+ assert.ok(Math.abs(row(score,'comfort').value-2.4)<1e-9);
  for(const [price,expected] of [[650000,15],[800000,12],[1000000,9],[1200000,5],[1200001,0]]){
   const quote=scoreVenue(v,80,{value:price,isQuote:true,partial:false});
   assert.equal(row(quote,'cost').value,expected,'Price '+price);
