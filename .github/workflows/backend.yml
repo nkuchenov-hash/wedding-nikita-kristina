@@ -91,6 +91,7 @@ jobs:
             php bin/test-unified-guests.php
             php bin/seed-venues.php
             php bin/seed-venue-dates.php
+            php bin/remove-invalid-chadu-20261123.php
             php bin/apply-venue-confirmations-20261118.php
             php bin/supplement-telegram-20261118.php
             php bin/reconcile-palma-pricing-20261118.php
