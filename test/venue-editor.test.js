@@ -24,7 +24,7 @@ const context=(detailTab)=>({
 test('overview displays data directly as editable values, without an edit-only page',()=>{
  const html=renderVenueNewPage(venue,context('overview'));
  for(const key of ['name','area','capacity','capacityNote',
-  'date:18','date:19','date:20','cost:menu','cost:rent','cost:service']){
+  'date:18','date:19','date:20']){
   assert.ok(html.includes('data-venue-inline="'+key+'"'),key+' not clickable');
  }
  assert.match(html,/Нажмите на значение, чтобы изменить его/);
@@ -119,4 +119,14 @@ test('Overview is distinct from Conditions and Rating has direct fact editors',(
  for(const field of ['capacity','region','date:18','date:19','date:20'])
   assert.ok(rating.includes('data-venue-inline="'+field+'"'),field+' not editable in Rating');
  assert.match(rating,/Изменить тарифы и расходы в единой смете/);
+});
+
+test('Overview shows a shared read-only total, with tariff inputs exclusively in Budget',()=>{
+ const overview=renderVenueNewPage(venue,context('overview'));
+ const budget=renderVenueNewPage(venue,context('budget'));
+ assert.match(overview,/vdp-overview-budget-total/);
+ assert.doesNotMatch(overview,/data-venue-inline="cost:menu"/);
+ assert.match(budget,/data-venue-inline="cost:menu"/);
+ assert.match(overview,/700 000|700 000|700 000/);
+ assert.match(budget,/700 000|700 000|700 000/);
 });

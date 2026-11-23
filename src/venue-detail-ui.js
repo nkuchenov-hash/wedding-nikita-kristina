@@ -317,8 +317,6 @@ function venueOverview(v,ctx,photos){
  const day19=ctx.dayStatus(v,'19');
  const score=sc.value===null?'Не оценено':sc.value+' / '+RATING_MAX;
  const venueStatus=day19==='available'?'Свободно':ctx.dayText(v,'19');
- const prices=[['menu','Меню'],['rent','Аренда'],['deposit','Депозит'],['sound','Звук'],['light','Свет'],['service','Сервис']];
- const sourceCost=getCost(v);
  const metric=(label,main,note='',tone='')=>'<article class="vdp-overview-metric '+tone+'"><span class="vdp-overview-metric-label">'+label+'</span><div class="vdp-overview-metric-value">'+main+'</div>'+(note?'<small>'+note+'</small>':'')+'</article>';
  const head='<section class="vdp-parameter-dashboard" aria-label="Главные параметры площадки">'+
   '<div class="vdp-dashboard-title"><div><span class="vdp-dashboard-eyebrow">КРАТКО О ПЛОЩАДКЕ</span><h2>Параметры для выбора</h2></div><label class="vdp-dashboard-guest-count">Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+ctx.guests+'" aria-label="Число гостей для пересчёта сметы площадки"></label></div>'+
@@ -332,11 +330,10 @@ function venueOverview(v,ctx,photos){
   '</div></section>';
  const detail='<div class="vdp-dashboard-details">'+
   '<section class="vdp-pane"><h2>Даты и формат</h2>'+dates(v,ctx)+
-    '<p class="vdp-inline-label">Формат банкетной рассадки</p>'+
-    '<p class="vdp-inline-label">Особенности вместимости и рассадки</p>'+inlineValue('capacityNote',v.capacityNote,{label:'Формат и рассадка',kind:'multiline',className:'vdp-inline-block'})+'</section>'+
-  '<section class="vdp-pane"><h2>Стоимость и условия оплаты</h2>'+budget(v,ctx)+
-    '<div class="vdp-key-costs">'+prices.map(([key,label])=>'<div><span>'+label+'</span>'+
-       inlineValue('cost:'+({deposit:'minSpend'}[key]||key),sourceCost[key]?.value,{label,kind:'number',empty:'Нет данных'})+'</div>').join('')+'</div>'+
+    '<p class="vdp-inline-label">Формат банкетной рассадки</p>'+inlineValue('capacityNote',v.capacityNote,{label:'Формат и рассадка',kind:'multiline',className:'vdp-inline-block'})+'</section>'+
+  '<section class="vdp-pane"><h2>Бюджет</h2><p>Единый итог для всех площадок: на '+ctx.guests+' гостей, с учётом дополнительных расходов.</p>'+
+    '<strong class="vdp-overview-budget-total">'+(total===null?'Не рассчитано':money(total))+'</strong>'+
+    '<p class="vdp-overview-budget-status">'+h(quoted.value===null?'Нет полного исходного расчёта; известные суммы не считаются итогом':quoted.partial?'Предварительный расчёт; неподтверждённые строки не включены':'На основании полученной сметы')+'</p>'+
     '<div class="vdp-overview-actions"><a class="vdp-primary-link" href="#/admin/venues/'+encodeURIComponent(v.id)+'/budget">Полная смета по строкам →</a>'+
       '<a class="vdp-primary-link vdp-document-entry" href="#/admin/venues/'+encodeURIComponent(v.id)+'/documents">Файлы и предложения площадки →</a></div></section>'+
   '</div>';
