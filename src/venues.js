@@ -53,7 +53,6 @@ export const PUBLIC_VENUES = [
   {id:'milyutin',name:'Особняк Милютина',region:'city',area:'Садовая, 4',website:'https://milutin.spb.ru/contacts'},
   {id:'glukhovsky',name:'Особняк Глуховского',region:'city',area:'наб. Адмирала Лазарева, 10/18',website:'https://banket-parkking.ru/'},
   {id:'santa-gloria',name:'Санта Глория',region:'city',area:'Мытнинская наб., 6',website:'https://santagloria.ru/',capacity:100},
-  {id:'chadu',name:'Чаду',region:'city',area:'Боткинская улица, Санкт-Петербург'},
   {id:'harmony',name:'Harmony Hall — Гармония',region:'country',area:'Солнечное, Приморское ш., 380И',website:'https://harmony-hall.ru/',capacity:170,
     publicNote:'Конгресс-холл: банкет до 170 гостей; предложение менеджера на июнь 2027 — аренда 170 000 ₽. Питание по ставкам 2026, расчёт уточняется.'}
 ];
