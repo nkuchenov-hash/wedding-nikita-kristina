@@ -13,6 +13,12 @@ import {renderVenueNewPage,renderVenueQuoteEditorRow,filteredVenuePhotos,getVenu
 import {hydrateVenueFiles} from './venue-files-ui.js';
 import {estimateVenue,scoreVenue,PERSONAL_CRITERIA,RATING_CRITERIA,RATING_MAX} from './venue-evaluation.js';
 export const PUBLIC_VENUES = [
+  {id:'360',name:'Пространство 360',region:'city',area:'Санкт-Петербург'},
+  {id:'loft-roof',name:'Лофт на крыше',region:'city',area:'Обводный канал'},
+  {id:'kraft',name:'Крафт лофт',region:'city',area:'Обводный канал'},
+  {id:'zhemchuzhny',name:'Event Hall «Жемчужный»',region:'city',area:'Приморский пр., 50Ж',capacity:150},
+  {id:'english-roof',name:'Крыша на Английской набережной',region:'city',area:'Английская наб.'},
+  {id:'admiralty-roof',name:'Крыша у Адмиралтейства',region:'city',area:'Центр Санкт-Петербурга'},
   {id:'vesenniy',name:'Весенний',region:'city',area:'Обводный канал',website:''},
   {id:'alex-park',name:'Александровский парк',region:'city',area:'Санкт-Петербург',
     drive:'https://drive.google.com/drive/folders/1bzMTrULC8Qqve92-ugybFXZzHTu0A-9f',
