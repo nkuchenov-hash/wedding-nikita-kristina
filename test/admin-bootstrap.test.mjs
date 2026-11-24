@@ -9,17 +9,20 @@ test('the organizer app starts, shows the navigation and supports every route',a
    markup:'',
    set innerHTML(html){this.markup=String(html)},
    get innerHTML(){return this.markup},
-   querySelector(){return null}
+   querySelector(){return null},
+   addEventListener(){}
  };
  globalThis.document={
    querySelector:selector=>selector==='#app'?container:null,
    body:{classList:{add(){}}},
+   documentElement:{dataset:{}},
    addEventListener(){},
    visibilityState:'hidden'
  };
  globalThis.window={
    addEventListener:(name,fn)=>listeners.set(name,fn),
-   scrollTo(){}
+   scrollTo(){},
+   matchMedia:()=>({matches:true,addEventListener(){}})
  };
  globalThis.location={
    hash:'#/admin/overview',
@@ -34,6 +37,8 @@ test('the organizer app starts, shows the navigation and supports every route',a
  } finally {
    globalThis.setInterval=originalSetInterval;
  }
+ assert.equal(document.documentElement.dataset.adminTheme,'dark');
+ assert.match(container.markup,/id="admin-theme-toggle"/);
  assert.match(container.markup,/class="admin-layout"/);
  assert.match(container.markup,/class="admin-side"/);
  assert.doesNotMatch(container.markup,/Панель организаторов|admin-topbar/);

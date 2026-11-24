@@ -80,6 +80,18 @@ jobs:
           test "$asset_code" = 200
           grep -Fq 'activateAdminData' /tmp/admin-app.js
           echo 'ADMIN_END_TO_END_LOGIN_PASSED'
+          if grep -Fq 'wedding-admin-theme' /tmp/admin-app.js; then
+            grep -Fq 'id="login-theme"' /tmp/login-page.html
+            grep -Fq 'prefers-color-scheme: dark' /tmp/login-page.html
+            grep -Fq 'id="admin-theme-toggle"' /tmp/admin-app.js
+            grep -Fq 'wedding-admin-theme' /tmp/admin-page.html
+            for css in styles.css admin-heading.css admin-guests.css admin-program.css admin-data.css admin-photos.css venues.css venue-detail-ui.css venue-files-ui.css; do
+              curl --fail --silent --show-error --max-time 15 -b "$jar" "https://nikitakristina.ru/admin/index.php?asset=src/$css" -o "/tmp/theme-$css"
+              grep -Fq -- '--admin-dark-' "/tmp/theme-$css"
+            done
+            grep -Fq 'html[data-admin-theme="dark"]' /tmp/theme-admin-heading.css
+            echo 'LIVE_ADMIN_AND_LOGIN_DARK_THEME_CONFIRMED'
+          fi
           curl --fail --silent --show-error --max-time 15 -b "$jar" -c "$jar" \
             'https://nikitakristina.ru/admin/index.php?api=admin%2Frecords&collection=venues' \
             -o /tmp/wedding-venues.json
@@ -176,7 +188,8 @@ jobs:
           assert int(guest['total']) >= 0
           assert int(guest['reserved'])>=0
           assert isinstance(guest['children_enabled'],bool)
-          assert int(guest['children_total'])>=12
+          rows=json.load(open('/tmp/wedding-guests.json'))['guests']
+          assert int(guest['children_total'])==sum(g.get('status')!='archived' and g.get('age_group') in ('child','infant') for g in rows)
           assert int(guest['confirmed'])<=int(guest['registered'])
           assert int(guest['public_visible'])<=int(guest['confirmed'])
           assert int(guest['confirmed'])<=int(guest['responded'])

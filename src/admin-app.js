@@ -7,7 +7,7 @@ import {adminModules,weddingDays} from './data.js';
 import {VENUE_RECORDS} from './venues-data.js';
 const app=document.querySelector('#app');
 const themeKey='wedding-admin-theme';
-const systemTheme=matchMedia('(prefers-color-scheme: dark)');
+const systemTheme=window.matchMedia?.('(prefers-color-scheme: dark)')||{matches:false};
 let themePreference=null;
 try{const saved=localStorage.getItem(themeKey);if(saved==='light'||saved==='dark')themePreference=saved}catch{}
 function applyAdminTheme(){
@@ -17,8 +17,10 @@ function applyAdminTheme(){
  if(toggle){
    const dark=mode==='dark';
    toggle.setAttribute('aria-pressed',String(dark));
-   toggle.setAttribute('aria-label',dark?'Включить светлую тему':'Включить тёмную тему');
-   toggle.title=dark?'Светлая тема':'Тёмная тема';
+   toggle.dataset.preference=themePreference||'auto';
+   const modeLabel=themePreference==='dark'?'Тёмная':themePreference==='light'?'Светлая':'Системная';
+   toggle.setAttribute('aria-label','Тема: '+modeLabel+'. Нажмите для смены режима');
+   toggle.title='Тема: '+modeLabel+' · авто → светлая → тёмная';
    toggle.innerHTML=dark?'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M19 5l-1.5 1.5m-11 11L5 19"/></svg>':'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20.5 15.5A9 9 0 0 1 8.5 3.5 9 9 0 1 0 20.5 15.5Z"/></svg>';
  }
  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',mode==='dark'?'#101715':'#17332d');
@@ -28,8 +30,8 @@ systemTheme.addEventListener?.('change',()=>{if(!themePreference)applyAdminTheme
 window.addEventListener('storage',event=>{if(event.key===themeKey){themePreference=['light','dark'].includes(event.newValue)?event.newValue:null;applyAdminTheme()}});
 app.addEventListener('click',event=>{
  if(!event.target.closest('#admin-theme-toggle'))return;
- themePreference=document.documentElement.dataset.adminTheme==='dark'?'light':'dark';
- try{localStorage.setItem(themeKey,themePreference)}catch{}
+ themePreference=themePreference===null?'light':themePreference==='light'?'dark':null;
+ try{if(themePreference)localStorage.setItem(themeKey,themePreference);else localStorage.removeItem(themeKey)}catch{}
  applyAdminTheme();
 });
 const escapeHtml=str=>String(str??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
