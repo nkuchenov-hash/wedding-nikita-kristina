@@ -43,13 +43,39 @@ const venueSummary={
  inspected:venueIds.filter(id=>VENUE_RECORDS[id].visited===true).length,
  quotes:venueIds.filter(id=>VENUE_RECORDS[id].quotes?.length>0).length
 };
+const mobileNavMedia=window.matchMedia?.('(max-width: 900px)');
+function setMobileNav(open,{restoreFocus=true}={}){
+ const layout=app.querySelector('.admin-layout'),button=app.querySelector('#admin-menu-toggle'),panel=app.querySelector('#admin-navigation'),main=app.querySelector('.admin-main');
+ if(!layout||!button||!panel||!main)return;
+ const visible=!!open&&!!mobileNavMedia?.matches;
+ layout.toggleAttribute('data-mobile-nav-open',visible);
+ button.setAttribute('aria-expanded',String(visible));
+ if(mobileNavMedia?.matches){
+   panel.inert=!visible;
+   main.inert=visible;
+ }else{panel.inert=false;main.inert=false}
+ if(visible)panel.querySelector('[data-admin-menu-close]')?.focus();
+ else if(restoreFocus&&mobileNavMedia?.matches)button.focus();
+}
+mobileNavMedia?.addEventListener?.('change',()=>setMobileNav(false,{restoreFocus:false}));
+app.addEventListener('click',event=>{
+ const target=event.target.closest?.('#admin-menu-toggle,[data-admin-menu-close],.admin-side .side-link,.admin-side .admin-brand');
+ if(!target)return;
+ if(target.id==='admin-menu-toggle')setMobileNav(target.getAttribute('aria-expanded')!=='true');
+ else if(app.querySelector('.admin-layout')?.hasAttribute('data-mobile-nav-open'))setMobileNav(false,{restoreFocus:target.hasAttribute('data-admin-menu-close')});
+});
+document.addEventListener('keydown',event=>{
+ if(event.key==='Escape'&&app.querySelector('.admin-layout')?.hasAttribute('data-mobile-nav-open')){
+   event.preventDefault();setMobileNav(false);
+ }
+});
 function adminSidebar(active){
  const items=adminModules.filter(m=>m.id!=='settings');
  const settings=adminModules.find(m=>m.id==='settings');
- const navLink=m=>`<a href="#/admin/${m.id}" class="side-link ${active===m.id?'selected':''}"><span class="side-icon">${m.icon}</span>${m.label}</a>`;
- return `<aside class="admin-side">
+ const navLink=m=>`<a href="#/admin/${m.id}" class="side-link ${active===m.id?'selected':''}" ${active===m.id?'aria-current="page"':''}><span class="side-icon" aria-hidden="true">${m.icon}</span>${m.label}</a>`;
+ return `<aside class="admin-side" id="admin-navigation" aria-label="Навигация">
    <div class="admin-brand-row"><a href="#/admin/overview" class="admin-brand"><span class="admin-brand-logo">НК</span><span>Wedding</span></a><button id="admin-theme-toggle" class="admin-theme-toggle" type="button" aria-label="Переключить тему"></button></div>
-   <div class="side-caption">УПРАВЛЕНИЕ</div>
+   <button type="button" class="admin-menu-close" data-admin-menu-close aria-label="Закрыть меню"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg></button><div class="side-caption">УПРАВЛЕНИЕ</div>
    <nav aria-label="Разделы админки">${items.map(navLink).join('')}</nav>
    ${settings?`<div class="admin-settings-footer">${navLink(settings)}</div>`:''}
  </aside>`;
@@ -78,7 +104,10 @@ function adminProgram(){
  <div class="ad-wedding-days">${weddingDays.map((day,i)=>`<article class="ad-day-card"><div class="ad-day-number">0${i+1}</div><div class="ad-day-date"><span>${day.weekday}</span><strong>${day.label}</strong></div><div class="ad-day-content"><h2>${escapeHtml(day.title)}</h2><p>${escapeHtml(day.description)}</p><div class="ad-day-facts"><span>${day.time||'Время уточняется'}</span><span>${escapeHtml(day.place||'Место не определено')}</span></div></div></article>`).join('')}</div>`;
 }
 function adminGeneric(active){const m=adminModules.find(m=>m.id===active);if(!m)return adminOverview();if(active==='guests')return '';if(active==='venues')return renderVenueAdmin();if(active==='overview')return adminOverview();if(active==='schedule')return adminProgram();if(active==='settings')return '';return `<div class="dashboard-heading admin-page-heading"><div><div class="eyebrow">ОРГАНИЗАЦИЯ</div><h1>${m.label}</h1><p>${m.text}</p></div></div><div class="admin-panel module-empty"><div class="module-symbol">${m.icon}</div><h2>${m.label}</h2></div>`;}
-function admin(active='overview'){return `<div class="admin-layout">${adminSidebar(active)}<main class="admin-main"><div class="admin-content">${adminGeneric(active)}</div></main></div>`;}
+function admin(active='overview'){
+ const label=adminModules.find(m=>m.id===active)?.label||'Обзор';
+ return `<div class="admin-layout"><header class="admin-mobile-bar"><button type="button" id="admin-menu-toggle" aria-label="Открыть меню" aria-expanded="false" aria-controls="admin-navigation"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><span class="admin-mobile-title">${escapeHtml(label)}</span></header><button type="button" class="admin-menu-backdrop" data-admin-menu-close aria-label="Закрыть меню" tabindex="-1"></button>${adminSidebar(active)}<main class="admin-main"><div class="admin-content">${adminGeneric(active)}</div></main></div>`;
+}
 
 function render(){
  const p=decodeURIComponent((location.hash||'#/admin/overview').slice(1)).replace(/\/+$/,'')||'/admin';
@@ -88,6 +117,7 @@ function render(){
  if(section==='moderation'){location.replace('#/admin/photos');return;}
  if(!adminModules.some(m=>m.id===section)){location.replace('#/admin/overview');return;}
  app.innerHTML=admin(section);
+ setMobileNav(false,{restoreFocus:false});
  applyAdminTheme();
  if(section==='venues')activateVenueAdmin(app);
  if(section==='photos')activatePhotoArchive(app);

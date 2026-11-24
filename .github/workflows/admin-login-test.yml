@@ -78,6 +78,13 @@ jobs:
           test "$asset_code" = 200
           grep -Fq 'activateAdminData' /tmp/admin-app.js
           echo 'ADMIN_END_TO_END_LOGIN_PASSED'
+          if grep -Fq 'id="admin-menu-toggle"' /tmp/admin-app.js; then
+            curl --fail --silent --show-error --max-time 15 -b "$jar" 'https://nikitakristina.ru/admin/index.php?asset=src/admin-heading.css' -o /tmp/admin-responsive.css
+            grep -Fq 'data-mobile-nav-open' /tmp/admin-responsive.css
+            grep -Fq 'ad-gb-mobile-person' /tmp/admin-responsive.css
+            grep -Fq 'vw-mobile-filter-label' /tmp/admin-responsive.css
+            echo 'LIVE_MOBILE_ADMIN_LAYOUT_CONFIRMED'
+          fi
           if grep -Fq 'wedding-admin-theme' /tmp/admin-app.js; then
             ! grep -Fq 'id="login-theme"' /tmp/login-page.html
             grep -Fq 'name="color-scheme" content="light dark"' /tmp/login-page.html

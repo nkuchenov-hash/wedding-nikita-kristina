@@ -39,6 +39,9 @@ test('the organizer app starts, shows the navigation and supports every route',a
  }
  assert.equal(document.documentElement.dataset.adminTheme,'dark');
  assert.match(container.markup,/id="admin-theme-toggle"/);
+ assert.match(container.markup,/id="admin-menu-toggle"[^>]+aria-expanded="false"[^>]+aria-controls="admin-navigation"/);
+ assert.match(container.markup,/class="admin-menu-backdrop"/);
+ assert.match(container.markup,/id="admin-navigation"/);
  assert.match(container.markup,/class="admin-layout"/);
  assert.match(container.markup,/class="admin-side"/);
  assert.doesNotMatch(container.markup,/Панель организаторов|admin-topbar/);

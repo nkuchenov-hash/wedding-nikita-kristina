@@ -92,3 +92,103 @@ html[data-admin-theme="dark"] :is(.ad-tl-tag,.ad-tl-filter,.ad-tl-tag-select-lis
 }
 html[data-admin-theme="dark"] .ad-tl-calendar-card{border-color:color-mix(in srgb,var(--activity-color,#91ab96) 60%,#25352b)}
 html[data-admin-theme="dark"] .ad-tl-card :is(.ad-tl-card-title,.ad-tl-card-description,.ad-tl-clock){color:#e6eee8}
+
+/* Responsive admin shell: desktop navigation stays fixed, mobile uses an off-canvas drawer. */
+.admin-mobile-bar,.admin-menu-backdrop,.admin-menu-close,.ad-gb-mobile-view,.ad-gb-mobile-cards,.vw-mobile-filter-toggle,.vw-mobile-filter-label{display:none}
+@media(max-width:900px){
+ body.admin-body{min-width:0}
+ body.admin-body .admin-layout{display:block;min-height:100dvh;min-width:0}
+ body.admin-body .admin-mobile-bar{position:sticky;top:0;z-index:90;display:flex;align-items:center;gap:12px;min-height:56px;padding:6px 14px;background:#18342d;color:#fff;border-bottom:1px solid #436050}
+ .admin-mobile-bar #admin-menu-toggle,.admin-menu-close{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;padding:0;border:0;border-radius:9px;background:transparent;color:inherit;cursor:pointer}
+ .admin-mobile-bar #admin-menu-toggle:focus-visible,.admin-menu-close:focus-visible{outline:2px solid #b8d5c0;outline-offset:2px}
+ .admin-mobile-title{font-size:19px;font-weight:700;line-height:1.3;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ body.admin-body .admin-layout .admin-side{position:fixed;inset:0 auto 0 0;z-index:1100;width:min(320px,calc(100% - 46px));height:100dvh;max-height:100dvh;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:14px 12px max(14px,env(safe-area-inset-bottom));display:flex;flex-direction:column;visibility:hidden;transform:translateX(-105%);transition:transform .22s ease,visibility .22s;box-shadow:12px 0 40px #0004}
+ body.admin-body .admin-layout[data-mobile-nav-open] .admin-side{visibility:visible;transform:translateX(0)}
+ body.admin-body:has(.admin-layout[data-mobile-nav-open]){overflow:hidden}
+ body.admin-body .admin-menu-backdrop{position:fixed;inset:0;z-index:1090;border:0;padding:0;background:rgba(0,0,0,.52)}
+ body.admin-body .admin-layout[data-mobile-nav-open] .admin-menu-backdrop{display:block}
+ body.admin-body .admin-side .admin-brand-row{align-items:center;padding-right:42px;gap:4px;margin-bottom:12px}
+ body.admin-body .admin-side .admin-brand{padding:4px 0 4px 4px;gap:8px;font-size:16px}
+ body.admin-body .admin-side .admin-brand-logo{width:36px;height:36px;flex:0 0 36px;font-size:19px}
+ body.admin-body .admin-side .admin-theme-toggle{margin:0;flex-basis:38px;width:38px;height:38px}
+ body.admin-body .admin-side .admin-menu-close{position:absolute;right:8px;top:15px}
+ body.admin-body .admin-side .side-caption{display:none}
+ body.admin-body .admin-side nav[aria-label="Разделы админки"]{display:flex;flex:0 0 auto;flex-direction:column;gap:4px;overflow:visible!important;width:100%;min-width:0}
+ body.admin-body .admin-side nav[aria-label="Разделы админки"] .side-link,body.admin-body .admin-settings-footer .side-link{display:flex;flex:0 0 auto;flex-direction:row;justify-content:flex-start;align-items:center;gap:13px;min-height:48px;height:auto;max-height:none;padding:10px 12px;text-align:left;white-space:normal;font-size:17px;line-height:1.4}
+ body.admin-body .admin-side .side-icon{flex:0 0 23px;width:23px;font-size:20px}
+ body.admin-body .admin-settings-footer{margin:14px 0 0;padding-top:12px;width:100%}
+ body.admin-body .admin-main{width:100%;min-width:0;min-height:calc(100dvh - 56px)}
+ body.admin-body .admin-content{width:100%;max-width:100%;min-width:0;padding:18px 14px 32px}
+ body.admin-body .admin-content :is(.ad-live-panel,.ad-overview-dashboard,.ad-guestbook,.vw-page,.vdp-page,.ad-timeline-page,.ad-photo-page,.admin-panel){min-width:0;max-width:100%}
+ body.admin-body .admin-page-heading{min-width:0;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+ body.admin-body .admin-page-heading h1{font-size:clamp(30px,6.5vw,39px);overflow-wrap:anywhere}
+ body.admin-body .admin-content :is(button,a,input,select,textarea){max-width:100%}
+ body.admin-body .admin-content :is(input,select,textarea){min-width:0;font-size:16px}
+ body.admin-body .admin-content :is(.ad-live-table-scroll,.ad-gb-scroll,.ad-tl-calendar-scroll){max-width:100%;overscroll-behavior-inline:contain}
+ .ad-overview-heading{padding:0;gap:8px}.ad-overview-kicker{letter-spacing:.08em}
+ .ad-overview-sync{padding:4px 9px}.ad-overview-plan{gap:6px}.ad-overview-plan-day{padding:9px 11px;align-items:flex-start}
+ .ad-overview-dashboard{gap:12px}.ad-overview-stats{gap:8px}.ad-overview-stat{min-height:100px;padding:12px;justify-content:flex-start}
+ .ad-overview-sections{grid-template-columns:minmax(0,1fr)}
+ .ad-overview-card-head{flex-wrap:wrap;gap:5px}.ad-overview-more{white-space:normal}
+ /* Guest cards keep filters and profile editing without forcing the full-width desktop table. */
+ .ad-guestbook .ad-gb-top{flex-wrap:wrap;gap:12px}.ad-guestbook .ad-gb-top h1{white-space:normal}
+ .ad-guestbook .ad-gb-top-actions{flex-wrap:wrap;width:100%;margin:0;justify-content:flex-start;gap:8px}
+ .ad-guestbook .ad-gb-search-wrap.ad-gb-search-open>.ad-gb-search-field{left:0;right:auto;width:min(300px,calc(100vw - 32px))}
+ .ad-guestbook .ad-gb-column-prefs .ad-gb-columns-menu{position:fixed;top:72px;left:14px;right:14px;width:auto;max-width:none;z-index:100;max-height:calc(100dvh - 100px)}
+ .ad-gb-mobile-view{display:block;width:100%;min-height:44px;margin:0 0 12px;border:1px solid #cbdccf;border-radius:10px;background:#fff;color:#285b42;font:650 16px Manrope,system-ui,sans-serif;cursor:pointer}
+ .ad-gb-mobile-cards{display:grid;gap:8px}
+ .ad-gb-mobile-person{display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;padding:14px;border:1px solid #dce8dd;border-radius:12px;background:#fff;color:#203e2c;cursor:pointer;gap:10px}
+ .ad-gb-mobile-person-info{display:grid;gap:4px;min-width:0;overflow-wrap:anywhere;line-height:1.4}
+ .ad-gb-mobile-person-info strong{font-size:18px}.ad-gb-mobile-person-info>span{font-size:16px;color:#526d5b}
+ .ad-gb-mobile-person-status{font-weight:600}.ad-gb-mobile-arrow{font-size:28px;color:#52755e}
+ .ad-gb-mobile-group{font-size:18px;margin:10px 0 2px}.ad-gb-mobile-empty{margin:10px 0}
+ .ad-gb-list:not(.ad-gb-mobile-table)>.ad-gb-scroll{display:none}
+ .ad-gb-list.ad-gb-mobile-table>.ad-gb-mobile-cards{display:none}
+ /* Venue rows become cards with the same data and same live editing controls. */
+ body.admin-body .vw-page.vw-control-board .vw-scroll{overflow:visible;max-width:100%;border:0;background:transparent}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable{display:block;width:100%;min-width:0;max-width:100%;table-layout:auto}
+ .vw-mobile-filter-toggle{display:block;position:absolute;opacity:0;width:1px;height:1px;min-height:0!important}
+ .vw-mobile-filter-label{display:flex;align-items:center;justify-content:center;min-height:44px;margin:10px 0;border:1px solid #d0dfd2;border-radius:10px;background:#fff;color:#285b42;font-weight:650;cursor:pointer}
+ .vw-mobile-filter-toggle:focus-visible+.vw-mobile-filter-label{outline:2px solid #557b60;outline-offset:2px}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable thead{display:none}
+ body.admin-body .vw-page.vw-control-board .vw-mobile-filter-toggle:checked~.vw-table-sortable thead{display:block;margin-bottom:12px}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable thead tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable thead th{display:block;width:auto;min-width:0;position:static;padding:8px;white-space:normal;box-shadow:none}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable thead select{width:100%;min-width:0}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody{display:grid;gap:10px}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody tr.vw-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;padding:12px;border:1px solid #dce8dd;border-radius:12px;background:#fff;min-width:0}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td{position:static;display:block;width:auto;min-width:0;max-width:none;padding:10px 4px;border:0;box-shadow:none;white-space:normal;overflow-wrap:anywhere;background:transparent;text-align:left}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(1),body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(2),body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(4){grid-column:1/-1}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(1){padding-top:0;order:0;border-bottom:1px solid #e0e9df}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(4){order:1}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(5){order:2}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(6){order:3}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(3){order:4;grid-column:1/-1}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(2){order:5}
+ .vw-control-board tbody td:nth-child(4)::before,.vw-control-board tbody td:nth-child(5)::before,.vw-control-board tbody td:nth-child(6)::before{display:block;font-size:16px;font-weight:600;color:#617768;margin-bottom:4px}
+ .vw-control-board tbody td:nth-child(4)::before{content:"Бюджет"}.vw-control-board tbody td:nth-child(5)::before{content:"Вместимость"}.vw-control-board tbody td:nth-child(6)::before{content:"Рейтинг"}
+ body.admin-body .vw-control-board .vw-venue-media,body.admin-body .vw-control-board .vw-image-open{width:72px;height:72px;flex-basis:72px}
+ body.admin-body .vw-control-board .vw-image-open>.vw-row-thumb{width:72px;height:72px}
+ body.admin-body .vw-control-board .vw-venue-label{min-width:0}
+ body.admin-body .vw-control-board .vw-name{white-space:normal;text-align:left;overflow-wrap:anywhere;font-size:18px}
+ body.admin-body .vw-control-board .vw-date-edit select{min-height:40px}
+ body.admin-body .vw-control-board .vw-table-tools{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+ body.admin-body .vw-control-board .vw-table-tools>input[type=search]{flex:1 1 100%;width:100%;min-height:44px}
+ body.admin-body .vw-control-board .vw-compact-control{flex:1 1 42%;min-width:0}
+ body.admin-body .vw-control-board .vw-table-panel{padding:0;background:transparent;border:0;box-shadow:none}
+ body.admin-body .vw-control-board .vw-control-head{display:flex;flex-direction:column;align-items:flex-start}
+ body.admin-body .vdp-page :is(.vdp-overview,.vdp-dashboard-details,.vdp-terms-page,.vdp-rating-inputs){min-width:0;max-width:100%}
+ body.admin-body .vdp-page :is(.vdp-overview-metrics,.vdp-budget-header,.vdp-scope-grid){grid-template-columns:minmax(0,1fr)}
+ body.admin-body .ad-tl-header{flex-direction:column;align-items:stretch;padding-bottom:8px;gap:10px}
+ body.admin-body .ad-tl-header>div:first-child{flex-basis:auto}
+ body.admin-body .ad-tl-top-actions{margin-left:0;justify-content:flex-start}
+ body.admin-body .ad-tl-top-actions .ad-tl-button{flex:1;min-height:44px}
+ body.admin-body .ad-tl-section-controls .ad-tl-day-nav{grid-template-columns:repeat(3,minmax(0,1fr))}
+ body.admin-body .ad-tl-section-controls{flex-wrap:wrap}
+ body.admin-body .ad-tl-section-controls .ad-tl-main-switch{flex:1 1 100%}
+ body.admin-body .ad-photo-toolbar{flex-wrap:wrap;min-width:0}
+ body.admin-body .ad-photo-upload-fields{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:360px){body.admin-body .admin-content{padding-left:10px;padding-right:10px}.ad-overview-stats{gap:6px}.ad-overview-stat{padding:10px}}
+html[data-admin-theme="dark"] .admin-mobile-bar{background:#101715}
+@media(prefers-reduced-motion:reduce){body.admin-body .admin-layout .admin-side{transition:none}}

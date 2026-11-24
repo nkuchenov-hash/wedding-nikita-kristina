@@ -70,6 +70,9 @@ jobs:
           ! grep -Fq 'Разрешено детей с этим гостем' _admin-private/src/admin-guests.js
           ! grep -Fq 'Нужен трансфер' _admin-private/src/admin-guests.js
           grep -Fq 'checkRelease' _admin-private/src/admin-app.js
+          grep -Fq 'id="admin-menu-toggle"' _admin-private/src/admin-app.js
+          grep -Fq 'ad-gb-mobile-cards' _admin-private/src/admin-guests.js
+          grep -Fq 'data-mobile-nav-open' _admin-private/src/admin-heading.css
           test -s _admin-private/src/venue-transcript-costs.js
           test -s _admin-private/src/venue-budget-coverage.js
           test -s _admin-private/src/venues-photos-5.js

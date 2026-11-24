@@ -209,6 +209,7 @@ export async function activateGuestDirectory(root){
  footer.append(footerFeedback,footerControls);
  panel.append(panelHeader,detail,footer);overlay.append(panel);page.append(overlay);
  destination.append(page);
+ let mobileGuestTable=false;
  let people=[],csrf='',activeId=null,editing=false,lastSnapshot='',lastRevision=0,refreshing=false,childrenEnabled=true,descending=false;
  let visibleColumns=[...DEFAULT_GUEST_TABLE_COLUMNS],savingColumns=false,relationshipEdges=[];
  let tableLayout=normalizeGuestTableLayout(null),savingLayout=false;
@@ -576,6 +577,27 @@ export async function activateGuestDirectory(root){
      }
    }
    table.append(body);holder.append(table);list.append(holder);
+   // Phones show compact profiles by default, retaining the full editable table on demand.
+   list.classList.toggle('ad-gb-mobile-table',mobileGuestTable);
+   const mobileSwitch=mk('button','ad-gb-mobile-view',mobileGuestTable?'Карточки гостей':'Полная таблица');
+   mobileSwitch.type='button';mobileSwitch.addEventListener('click',()=>{mobileGuestTable=!mobileGuestTable;render()});
+   const mobileCards=mk('div','ad-gb-mobile-cards');
+   const optionLabel=(options,value)=>options.find(([v])=>v===value)?.[1]||'Не уточнено';
+   for(const group of groups){
+     if(grouped)mobileCards.append(mk('h3','ad-gb-mobile-group',group.label));
+     for(const p of group.members){
+       const card=mk('button','ad-gb-mobile-person');card.type='button';
+       card.setAttribute('aria-label','Открыть профиль: '+display(p));
+       const details=mk('span','ad-gb-mobile-person-info');
+       details.append(mk('strong','',display(p)));
+       const relation=[p.relation_to_couple||p.relationship,optionLabel(SIDES,p.side)].filter(Boolean).join(' · ');
+       details.append(mk('span','',relation),mk('span','ad-gb-mobile-person-status',[isReserve(p)?'Резерв':'Основной',isChild(p)?optionLabel(AGE,p.age_group):'',optionLabel(ANSWERS,p.attendance||'')].filter(Boolean).join(' · ')));
+       card.append(details,mk('span','ad-gb-mobile-arrow','›'));
+       card.addEventListener('click',()=>openGuest(p.id));mobileCards.append(card);
+     }
+   }
+   if(!chosen.length)mobileCards.append(mk('p','ad-gb-mobile-empty','Нет гостей по выбранным фильтрам.'));
+   list.prepend(mobileSwitch,mobileCards);
    table.addEventListener('pointerover',event=>{
      const el=event.target.closest?.('.ad-gb-cell-value');
      if(el&&table.contains(el))showClippedTooltip(el);
