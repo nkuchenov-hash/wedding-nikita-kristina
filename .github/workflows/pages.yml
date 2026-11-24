@@ -5,6 +5,7 @@ on:
     paths:
       - 'src/**'
       - 'tools/prepare-admin-release.mjs'
+      - 'tools/admin-dark-theme.mjs'
       - 'tools/stage-guest-online.mjs'
       - 'tools/admin-gateway.php'
       - '.github/workflows/pages.yml'

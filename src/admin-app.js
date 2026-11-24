@@ -6,6 +6,32 @@ import {activateGuestDirectory} from './admin-guests.js';
 import {adminModules,weddingDays} from './data.js';
 import {VENUE_RECORDS} from './venues-data.js';
 const app=document.querySelector('#app');
+const themeKey='wedding-admin-theme';
+const systemTheme=matchMedia('(prefers-color-scheme: dark)');
+let themePreference=null;
+try{const saved=localStorage.getItem(themeKey);if(saved==='light'||saved==='dark')themePreference=saved}catch{}
+function applyAdminTheme(){
+ const mode=themePreference||(systemTheme.matches?'dark':'light');
+ document.documentElement.dataset.adminTheme=mode;
+ const toggle=document.querySelector('#admin-theme-toggle');
+ if(toggle){
+   const dark=mode==='dark';
+   toggle.setAttribute('aria-pressed',String(dark));
+   toggle.setAttribute('aria-label',dark?'Включить светлую тему':'Включить тёмную тему');
+   toggle.title=dark?'Светлая тема':'Тёмная тема';
+   toggle.innerHTML=dark?'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M19 5l-1.5 1.5m-11 11L5 19"/></svg>':'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20.5 15.5A9 9 0 0 1 8.5 3.5 9 9 0 1 0 20.5 15.5Z"/></svg>';
+ }
+ document.querySelector('meta[name="theme-color"]')?.setAttribute('content',mode==='dark'?'#101715':'#17332d');
+}
+applyAdminTheme();
+systemTheme.addEventListener?.('change',()=>{if(!themePreference)applyAdminTheme()});
+window.addEventListener('storage',event=>{if(event.key===themeKey){themePreference=['light','dark'].includes(event.newValue)?event.newValue:null;applyAdminTheme()}});
+app.addEventListener('click',event=>{
+ if(!event.target.closest('#admin-theme-toggle'))return;
+ themePreference=document.documentElement.dataset.adminTheme==='dark'?'light':'dark';
+ try{localStorage.setItem(themeKey,themePreference)}catch{}
+ applyAdminTheme();
+});
 const escapeHtml=str=>String(str??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const link=(path,title,className='')=>`<a href="#${path}" class="${className}">${escapeHtml(title)}</a>`;
 const stamp=(t='Дата и место уточняются')=>`<span class="status-stamp"><span class="stamp-dot"></span>${t}</span>`;
@@ -20,7 +46,7 @@ function adminSidebar(active){
  const settings=adminModules.find(m=>m.id==='settings');
  const navLink=m=>`<a href="#/admin/${m.id}" class="side-link ${active===m.id?'selected':''}"><span class="side-icon">${m.icon}</span>${m.label}</a>`;
  return `<aside class="admin-side">
-   <a href="#/admin/overview" class="admin-brand"><span class="admin-brand-logo">НК</span><span>Wedding</span></a>
+   <div class="admin-brand-row"><a href="#/admin/overview" class="admin-brand"><span class="admin-brand-logo">НК</span><span>Wedding</span></a><button id="admin-theme-toggle" class="admin-theme-toggle" type="button" aria-label="Переключить тему"></button></div>
    <div class="side-caption">УПРАВЛЕНИЕ</div>
    <nav aria-label="Разделы админки">${items.map(navLink).join('')}</nav>
    ${settings?`<div class="admin-settings-footer">${navLink(settings)}</div>`:''}
@@ -60,6 +86,7 @@ function render(){
  if(section==='moderation'){location.replace('#/admin/photos');return;}
  if(!adminModules.some(m=>m.id===section)){location.replace('#/admin/overview');return;}
  app.innerHTML=admin(section);
+ applyAdminTheme();
  if(section==='venues')activateVenueAdmin(app);
  if(section==='photos')activatePhotoArchive(app);
  if(section==='guests')activateGuestDirectory(app);

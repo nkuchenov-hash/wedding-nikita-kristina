@@ -69,3 +69,26 @@ body.admin-body .admin-content small{font-size:16px}
 body.admin-body .admin-content :is(input,select,textarea){min-height:42px}
 body.admin-body .admin-page-heading p{font-size:17px}
 body.admin-body .admin-page-heading :is(.eyebrow,.ad-overview-kicker,.ad-photo-eyebrow){font-size:16px}
+
+/* The brand-row toggle remains visible on narrow screens without a new sidebar row. */
+.admin-brand-row{display:flex;align-items:flex-start;gap:4px;flex:0 0 auto;min-width:0}
+.admin-brand-row .admin-brand{flex:1 1 auto;min-width:0}
+.admin-theme-toggle{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;margin:3px 4px 0 0;border:1px solid #779585;border-radius:9px;background:transparent;color:#e4efe7;cursor:pointer}
+.admin-theme-toggle:hover{background:#2c4a3e}
+.admin-theme-toggle:focus-visible{outline:2px solid #a8c5ad;outline-offset:2px}
+@media(max-width:760px){.admin-brand-row{align-items:center}.admin-theme-toggle{margin:0 4px 0 0}}
+html[data-admin-theme="dark"] .admin-body{background:#151c19;color:#e6eee8}
+html[data-admin-theme="dark"] .admin-side,html[data-admin-theme="dark"] .admin-settings-footer{background:#101715}
+html[data-admin-theme="dark"] .admin-content :is(input,select,textarea):not([type=color]):not([type=checkbox]):not([type=radio]){color-scheme:dark}
+html[data-admin-theme="dark"] .admin-content :is(input,textarea)::placeholder{color:#a5b4a9}
+html[data-admin-theme="dark"] .ad-gb-settings-icon svg circle[fill="white"]{fill:#222e27}
+html[data-admin-theme="dark"] .ad-tl-card{
+ background:linear-gradient(105deg,color-mix(in srgb,var(--activity-color,#93ac98) 24%,#1c2720),#1b2420 88%)!important;
+}
+html[data-admin-theme="dark"] :is(.ad-tl-tag,.ad-tl-filter,.ad-tl-tag-select-list .ad-tl-tag-select.is-selected){
+ background:color-mix(in srgb,var(--tag-color,#91ab96) 28%,#19221d)!important;
+ color:#f0f5f0!important;
+ border-color:color-mix(in srgb,var(--tag-color,#91ab96) 55%,#26362b)!important;
+}
+html[data-admin-theme="dark"] .ad-tl-calendar-card{border-color:color-mix(in srgb,var(--activity-color,#91ab96) 60%,#25352b)}
+html[data-admin-theme="dark"] .ad-tl-card :is(.ad-tl-card-title,.ad-tl-card-description,.ad-tl-clock){color:#e6eee8}
