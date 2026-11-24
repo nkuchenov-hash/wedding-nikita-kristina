@@ -116,6 +116,9 @@ function render(){
  // Old bookmarks and links to the duplicate photo section lead to the single archive.
  if(section==='moderation'){location.replace('#/admin/photos');return;}
  if(!adminModules.some(m=>m.id===section)){location.replace('#/admin/overview');return;}
+ // Release any scroll lock left by a drawer on the previous route.
+ if(document.documentElement.style)document.documentElement.style.overflow='';
+ document.body.classList.remove?.('ad-gb-lock');
  app.innerHTML=admin(section);
  setMobileNav(false,{restoreFocus:false});
  applyAdminTheme();

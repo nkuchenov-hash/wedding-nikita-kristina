@@ -83,7 +83,7 @@ function read(){
 let state=read();
 let ratingRules=DEFAULT_RATING_RULES;
 const effectiveRatingRules=()=>validateRatingRules(ui.ratingDraft)||ratingRules;
-let ui={archiveFilter:'active',kind:'all',query:'',sort:'score',sortDir:'desc',expanded:null,detailTab:'overview',dateFilter:'all',budget:'all',visit:'all',capacity:'all',photoSection:'all',photoView:'gallery',photoSort:'original',photoIndex:0,photoLightbox:false,ratingDrawer:false,ratingDraft:null,ratingDirty:false};
+let ui={mobileFilters:false,archiveFilter:'active',kind:'all',query:'',sort:'score',sortDir:'desc',expanded:null,detailTab:'overview',dateFilter:'all',budget:'all',visit:'all',capacity:'all',photoSection:'all',photoView:'gallery',photoSort:'original',photoIndex:0,photoLightbox:false,ratingDrawer:false,ratingDraft:null,ratingDirty:false};
 const h=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rub=(v)=>typeof v==='number'&&Number.isFinite(v)?Math.round(v).toLocaleString('ru-RU')+' ₽':'—';
 const safeUrl=(v)=>{try{const u=new URL(String(v));return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
@@ -540,7 +540,7 @@ export function renderVenueAdmin(){
  return '<div class="vw-page vw-control-board" data-venues-page>'+
   '<div class="vw-control-head admin-page-heading"><div><h1>Площадки <span>'+activeCount+'</span></h1><p>19 июня — приоритет · 18 и 20 июня — альтернативы</p></div><div class="vw-control-facts"><span>'+visited+' осмотрено</span><span>'+all.filter(v=>!v.archived&&DATE_CHOICES.some(([d])=>dayStatus(v,d)==='available')).length+' со свободной датой</span><a class="vw-archive-counter" data-open-archive href="#/admin/venues/archive" aria-label="Открыть архив: '+archivedCount+' площадок">'+archivedCount+' в архиве</a><button type="button" class="vw-rating-trigger" data-rating-open>Настроить рейтинг</button></div></div>'+
   '<div class="vw-panel vw-table-panel"><div class="vw-panel-title vw-table-panel-title"><div><h2>'+(ui.archiveFilter==='archived'?'Архив площадок':'Управление площадками')+'</h2><span><b data-venues-visible>'+list.length+'</b> из '+(ui.archiveFilter==='active'?activeCount:ui.archiveFilter==='archived'?archivedCount:all.length)+'</span></div><div class="vw-table-tools"><label class="vw-compact-control">Список <select data-ui="archiveFilter" aria-label="Показывать площадки">'+[['active','Активные'],['archived','Архив'],['all','Все']].map(([id,label])=>'<option value="'+id+'" '+(ui.archiveFilter===id?'selected':'')+'>'+label+'</option>').join('')+'</select></label><label class="vw-compact-control">Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+state.guestCount+'" aria-label="Число гостей для пересчёта смет"></label><input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Найти площадку" aria-label="Поиск площадки (Enter)"><button type="button" data-clear-filters>Сбросить</button></div></div>'+
-  '<div class="vw-scroll" role="region" tabindex="0" aria-label="Список площадок"><input class="vw-mobile-filter-toggle" type="checkbox" id="vw-mobile-filters"><label class="vw-mobile-filter-label" for="vw-mobile-filters">Фильтры и сортировка</label><table class="vw-table vw-table-sortable"><thead><tr>'+
+  '<div class="vw-scroll" role="region" tabindex="0" aria-label="Список площадок"><input class="vw-mobile-filter-toggle" type="checkbox" id="vw-mobile-filters"'+(ui.mobileFilters?' checked':'')+'><label class="vw-mobile-filter-label" for="vw-mobile-filters">Фильтры и сортировка</label><table class="vw-table vw-table-sortable"><thead><tr>'+
   columnHeading('name','Площадка','<div class="vw-head-filter-row">'+headerSelect('kind','Расположение',[['all','Все районы'],['city','Город'],['country','За городом']])+'</div>')+
   columnHeading('date','18 / 19 / 20 июня',headerSelect('dateFilter','Доступность по дате',[['all','Все даты'],['19:available','19 июня · свободно'],['19:unavailable','19 июня · занято'],['18:available','18 июня · свободно'],['18:unavailable','18 июня · занято'],['20:available','20 июня · свободно'],['20:unavailable','20 июня · занято']]))+
   columnHeading('visit','Осмотр',headerSelect('visit','Фильтр по осмотру',[['all','Все'],['yes','Были лично'],['no','Не подтверждено']]))+
@@ -553,6 +553,7 @@ export function renderVenueAdmin(){
 function redraw(root){
  const el=root.querySelector('[data-venues-page]');if(!el)return;
  const y=typeof window!=='undefined'?window.scrollY:0;
+ const mobileFilter=root.querySelector('#vw-mobile-filters');if(mobileFilter)ui.mobileFilters=mobileFilter.checked;
  const tableScroll=root.querySelector('.vw-scroll')?.scrollLeft??0;
  const categoryScroll=root.querySelector('.vdp-photo-categories')?.scrollLeft??0;
  const stripScroll=root.querySelector('.vdp-filmstrip')?.scrollLeft??0;
@@ -585,8 +586,12 @@ function redraw(root){
 let stopVenueAutoSync=null;
 export function activateVenueAdmin(root){
  stopVenueAutoSync?.();
+ let lastInteraction=0;
+ const markInteraction=()=>{lastInteraction=Date.now()};
+ root.addEventListener('touchstart',markInteraction,{passive:true});
+ root.addEventListener('touchmove',markInteraction,{passive:true});
  const refresh=()=>{
-  if(document.visibilityState!=='visible'||!root.querySelector('[data-venues-page]')||!venueDb.ready)return;
+  if(document.visibilityState!=='visible'||!root.querySelector('[data-venues-page]')||!venueDb.ready||Date.now()-lastInteraction<1800)return;
   // Never replace an inline editor or an unfinished save from another refresh.
   if(ui.ratingDrawer||root.querySelector('.vdp-inline-form,.vdp-inline-quote-form,.vdp-inline-quote-editor'))return;
   const active=document.activeElement;
@@ -601,7 +606,7 @@ export function activateVenueAdmin(root){
  const visible=()=>{if(document.visibilityState==='visible')refresh();};
  window.addEventListener('focus',focus);
  document.addEventListener('visibilitychange',visible);
- stopVenueAutoSync=()=>{clearInterval(interval);window.removeEventListener('focus',focus);document.removeEventListener('visibilitychange',visible);};
+ stopVenueAutoSync=()=>{root.removeEventListener('touchstart',markInteraction);root.removeEventListener('touchmove',markInteraction);clearInterval(interval);window.removeEventListener('focus',focus);document.removeEventListener('visibilitychange',visible);};
 
  if(root.dataset.venuesReady==='yes'){redraw(root);initVenueDatabase(root,true);return;}
  root.dataset.venuesReady='yes';

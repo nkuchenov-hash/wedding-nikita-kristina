@@ -289,3 +289,61 @@ html[data-admin-theme="dark"] .admin-mobile-bar{background:#101715}
  body.admin-body .admin-content :is(input[type=checkbox],input[type=radio]){min-height:0}
 }
 @media(max-width:360px){body.admin-body{--admin-mobile-edge:12px}body.admin-body .ad-overview-stat{grid-template-columns:minmax(0,1fr);gap:3px}body.admin-body .ad-overview-stat-value{text-align:left}}
+
+/* Mobile interaction corrections: short list rows, normal document scrolling, touch grips. */
+.ad-tl-touch-move,.ad-tl-touch-resize{display:none}
+@media(max-width:900px){
+ body.admin-body .admin-layout:not([data-mobile-nav-open]) .admin-mobile-bar{position:sticky;top:0;flex-shrink:0}
+ body.admin-body .admin-layout[data-admin-section="venues"] .admin-main,
+ body.admin-body .admin-layout[data-admin-section="venues"] .admin-content,
+ body.admin-body .vw-page.vw-control-board,
+ body.admin-body .vw-page.vw-control-board .vw-table-panel,
+ body.admin-body .vw-page.vw-control-board .vw-scroll{height:auto;max-height:none;overflow:visible;touch-action:pan-y;overscroll-behavior:auto}
+ body.admin-body .vw-page.vw-control-board .vw-control-head{margin:0 0 8px;gap:6px}
+ body.admin-body .vw-page.vw-control-board .vw-control-head p{margin:0;line-height:1.3}
+ body.admin-body .vw-page.vw-control-board .vw-control-facts{gap:5px;flex-wrap:wrap}
+ body.admin-body .vw-page.vw-control-board .vw-control-facts span{padding:4px 7px}
+ body.admin-body .vw-page.vw-control-board .vw-table-panel-title>div:first-child h2{display:none}
+ body.admin-body .vw-page.vw-control-board .vw-table-panel-title>div:first-child{display:flex;align-items:center;gap:4px}
+ body.admin-body .vw-page.vw-control-board .vw-table-panel-title{margin-bottom:6px;border:0;padding:0}
+ body.admin-body .vw-page.vw-control-board .vw-table-tools{gap:5px}
+ body.admin-body .vw-page.vw-control-board .vw-compact-control{padding:4px 7px;gap:5px}
+ body.admin-body .vw-page.vw-control-board .vw-table-tools>input[type=search]{min-height:40px}
+ body.admin-body .vw-page.vw-control-board .vw-mobile-filter-label{margin:5px 0 8px;min-height:40px}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody{gap:6px}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody tr.vw-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;padding:9px 10px;border-radius:10px;touch-action:pan-y}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td{padding:0;line-height:1.35;min-height:0}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(1){padding:0 0 5px;border:0}
+ body.admin-body .vw-page.vw-control-board .vw-venue-cell{gap:9px;align-items:center}
+ body.admin-body .vw-page.vw-control-board .vw-venue-media,body.admin-body .vw-page.vw-control-board .vw-image-open{width:56px;height:56px;flex-basis:56px}
+ body.admin-body .vw-page.vw-control-board .vw-image-open>.vw-row-thumb{width:56px;height:56px}
+ body.admin-body .vw-page.vw-control-board .vw-name{font-size:18px;line-height:1.25}
+ body.admin-body .vw-page.vw-control-board .vw-venue-label{display:grid;gap:2px}
+ body.admin-body .vw-page.vw-control-board .vw-archive-action{display:none}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(4){grid-column:1;order:1}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(6){grid-column:2;order:2;text-align:right}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(5){grid-column:1;order:3}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(3){grid-column:2;order:4;text-align:right}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(2){grid-column:1/-1;order:5;margin-top:4px}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(4)::before,body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(6)::before{display:none}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(5)::before{display:inline;content:"Мест: ";font-weight:400}
+ body.admin-body .vw-page.vw-control-board .vw-money strong,body.admin-body .vw-page.vw-control-board .vw-score-link{font-size:18px}
+ body.admin-body .vw-page.vw-control-board .vw-money small,body.admin-body .vw-page.vw-control-board .vw-score small{display:none}
+ body.admin-body .vw-page.vw-control-board .vw-date-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+ body.admin-body .vw-page.vw-control-board .vw-date-edit{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px}
+ body.admin-body .vw-page.vw-control-board .vw-date-edit select{width:100%;min-height:32px;height:auto;padding:3px 2px!important;white-space:normal;text-align:center}
+ /* Restore the large editable name; the generic mobile input rule must not shrink it. */
+ body.admin-body .admin-content .ad-gb-panel .ad-gb-title-input{font:400 30px/1.2 Georgia,serif;min-height:44px;margin:0;padding:2px 0;border-radius:6px}
+ body.admin-body .admin-content .ad-gb-panel .ad-gb-subtitle-input{font-size:17px;min-height:32px;margin:0;padding:2px 0}
+ body.admin-body .ad-gb-panel-header{padding:12px 14px;align-items:flex-start;gap:6px}
+ body.admin-body .ad-gb-panel-identity{gap:2px}
+ body.admin-body .ad-gb-details{padding:14px 14px 24px}
+ body.admin-body .ad-gb-panel .ad-gb-section{padding:14px 0}
+ body.admin-body .ad-gb-panel .ad-gb-section h3{margin:0 0 8px}
+ body.admin-body .ad-tl-calendar-scroll{max-height:calc(100dvh - 230px);min-height:220px;touch-action:pan-y;overscroll-behavior-y:contain}
+ body.admin-body .ad-tl-calendar-card{touch-action:pan-y;padding-right:40px!important}
+ body.admin-body .ad-tl-calendar-card .ad-tl-touch-move{display:grid;place-items:center;position:absolute;right:0;top:0;bottom:14px;width:34px;min-height:0;z-index:6;touch-action:none;user-select:none;cursor:grab;color:#47745a;font-size:21px;background:#b8d0bd44;border-left:1px solid #a5bea766}
+ body.admin-body .ad-tl-calendar-card .ad-tl-touch-resize{display:block;position:absolute;left:0;right:0;bottom:0;height:14px;z-index:7;touch-action:none;cursor:ns-resize;background:#a5bea744}
+ body.admin-body .ad-tl-calendar-card.ad-tl-micro-event .ad-tl-touch-move{bottom:8px;width:28px}
+ body.admin-body .ad-tl-calendar-card.ad-tl-micro-event .ad-tl-touch-resize{height:8px}
+}
