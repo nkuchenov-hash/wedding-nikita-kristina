@@ -1,5 +1,8 @@
 import {showAdminToast} from './admin-toast.js';
 import {weddingDays} from './data.js';
+const adminProgramDays=[...weddingDays,
+ {date:'2027-06-20',label:'20 июня',weekday:'Воскресенье'},
+ {date:'2027-06-21',label:'21 июня',weekday:'Понедельник'}];
 import {renderWeddingProgram} from './admin-program.js';
 import {renderWeddingSettings} from './admin-settings.js';
 import {PUBLIC_VENUES} from './venues.js';
@@ -283,7 +286,7 @@ async function collection(host,type){
 async function renderSection(host,section){
  if(section==='overview'){await overview(host);return}
  if(section==='menu'){await collection(host,'menu_options');return}
- if(section==='schedule'){await renderWeddingProgram(host,call,weddingDays,PUBLIC_VENUES);return}
+ if(section==='schedule'){await renderWeddingProgram(host,call,adminProgramDays,PUBLIC_VENUES);return}
  if(section==='settings'){await renderWeddingSettings(host,call);return}
  if(mapSection[section]){
    await collection(host,mapSection[section]);

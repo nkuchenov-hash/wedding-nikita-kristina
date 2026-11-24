@@ -23,7 +23,7 @@ const mins=value=>{
 const clock=minutes=>String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0');
 const duration=entry=>Math.max(5,Number(entry?.duration_min)||30);
 export const scheduled=entry=>entry?.stage==='program'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d/.test(entry.start_at||'');
-export const assignedDay=entry=>{const date=entry?.activity_date||String(entry?.start_at||'').slice(0,10);return /^2027-06-(17|18|19)$/.test(date)?date:'2027-06-19';};
+export const assignedDay=entry=>{const date=entry?.activity_date||String(entry?.start_at||'').slice(0,10);return /^2027-06-(17|18|19|20|21)$/.test(date)?date:'2027-06-19';};
 export const itemTags=item=>{
  try{const tags=JSON.parse(item?.tags_json||'[]');return Array.isArray(tags)?tags.filter(x=>typeof x==='string'):[]}
  catch{return []}
@@ -49,7 +49,9 @@ export function cardColorStyle(item,definitions){
 export const DEFAULT_DAY_HOURS={
  '2027-06-17':{from:'11:00',to:'22:00'},
  '2027-06-18':{from:'10:00',to:'23:00'},
- '2027-06-19':{from:'12:00',to:'23:00'}
+ '2027-06-19':{from:'12:00',to:'23:00'},
+ '2027-06-20':{from:'09:00',to:'23:00'},
+ '2027-06-21':{from:'09:00',to:'23:00'}
 };
 export function displayHoursForDay(date,saved){
  const fallback=DEFAULT_DAY_HOURS[date]||{from:'09:00',to:'23:00'};

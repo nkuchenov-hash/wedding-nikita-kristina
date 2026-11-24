@@ -165,7 +165,7 @@ export async function activateGuestDirectory(root){
  search.type='search';search.placeholder='Найти гостя';search.setAttribute('aria-label','Поиск по имени, связям, группе, контактам');
  search.autocomplete='off';searchField.append(search);searchWrap.append(searchField,searchToggle);
  const side=select(SIDES,'all'),
-   filter=select([['all','Все гости'],['base','В основном списке'],['question','Под вопросом'],['no-name','Нет имени'],['duplicates','Возможные дубли'],['reserve','Резерв'],['kids','Дети'],['yes','Будут'],['maybe','Не решили'],['no','Не придут'],['unsent','Не отправлено'],['archived','Архив']],'all');
+   filter=select([['all','Все активные'],['base','Основной состав'],['question','Под вопросом'],['reserve','Резерв'],['kids','Дети в базе'],['archived','Архив']],'all');
  side.className=filter.className='ad-gb-select';
  const sort=select(SORT_FIELDS,'display_name'),direction=mk('button','ad-gb-sort-direction','А → Я');
  sort.className='ad-gb-select ad-gb-sort-select';sort.setAttribute('aria-label','Сортировать по полю');
@@ -179,6 +179,17 @@ export async function activateGuestDirectory(root){
  columnPrefs.append(columnsButton,columnsMenu);
  actions.append(searchWrap,columnPrefs,add);head.append(heading,actions);page.append(head);
  const metrics=mk('div','ad-gb-metrics');page.append(metrics);
+ const filterBar=mk('div','ad-gb-visible-filters');
+ const childrenLabel=mk('label','ad-gb-participation-switch');
+ const childrenToggle=mk('input');childrenToggle.type='checkbox';childrenToggle.disabled=true;
+ childrenLabel.append(childrenToggle,mk('span','','Учитывать детей'));
+ const filterField=(label,control)=>{const el=mk('label','ad-gb-visible-filter');el.append(mk('span','',label),control);return el};
+ const rsvpFilter=select([['all','Любой ответ'],['yes','Будут'],['maybe','Не решили'],['no','Не придут'],['unanswered','Нет ответа']],'all');
+ const qualityFilter=select([['all','Все записи'],['no-name','Нет имени'],['duplicates','Возможные дубли'],['unsent','Не отправлено']],'all');
+ rsvpFilter.className=qualityFilter.className='ad-gb-select';
+ const resetFilters=mk('button','ad-gb-columns-reset','Сбросить фильтры');resetFilters.type='button';
+ filterBar.append(childrenLabel,filterField('Сторона',side),filterField('Состав',filter),filterField('Ответ RSVP',rsvpFilter),filterField('Проверка данных',qualityFilter),resetFilters);
+ page.append(filterBar);
  const list=mk('div','ad-gb-list');page.append(list);
  const overlay=mk('div','ad-gb-shade');overlay.hidden=true;overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
  const panel=mk('section','ad-gb-panel'),panelHeader=mk('header','ad-gb-panel-header'),
@@ -298,24 +309,15 @@ export async function activateGuestDirectory(root){
  function renderColumnMenu(){
    columnsMenu.replaceChildren();
    const filters=mk('div','ad-gb-menu-filters');
-   filters.append(mk('strong','ad-gb-columns-heading','Порядок и фильтры'));
+   filters.append(mk('strong','ad-gb-columns-heading','Сортировка'));
    const filterField=(label,control)=>{
      const row=mk('label','ad-gb-menu-filter-row');
      row.append(mk('span','',label),control);filters.append(row);
    };
-   filterField('Сторона',side);
-   filterField('Показать',filter);
    filterField('Сортировка',sort);
    const directionRow=mk('div','ad-gb-menu-sort-direction');
    directionRow.append(mk('span','','Направление'),direction);
    filters.append(directionRow);
-   const clearFilters=mk('button','ad-gb-columns-reset','Сбросить фильтры');
-   clearFilters.type='button';
-   clearFilters.addEventListener('click',()=>{
-     side.value='all';filter.value='all';sort.value='display_name';descending=false;
-     direction.textContent='А → Я';render();saveSortMode();
-   });
-   filters.append(clearFilters);
    columnsMenu.append(filters);
    const appearance=mk('div','ad-gb-menu-layout');
    appearance.append(mk('strong','ad-gb-columns-heading','Размер ячеек'));
@@ -419,6 +421,7 @@ export async function activateGuestDirectory(root){
  }
  function render(){
    hideClippedTooltip();metrics.replaceChildren();
+   childrenToggle.checked=childrenEnabled;
    const current=people.filter(p=>p.status!=='archived');
    const actual=current.filter(eligible);
    const children=current.filter(isChild);
@@ -433,18 +436,19 @@ export async function activateGuestDirectory(root){
    for(const p of current){const key=display(p).toLocaleLowerCase('ru').replace(/\s+/g,' ').trim();duplicateCounts.set(key,(duplicateCounts.get(key)||0)+1)}
    const chosen=people.filter(p=>{
      if(side.value!=='all'&&p.side!==side.value)return false;
-     if(filter.value==='archived')return p.status==='archived';
-     if(p.status==='archived')return false;
+     if(filter.value==='archived' ? p.status!=='archived' : p.status==='archived')return false;
+     if(!childrenEnabled&&isChild(p)&&filter.value!=='kids'&&filter.value!=='archived')return false;
      if(filter.value==='base'&&!eligible(p))return false;
      if(filter.value==='reserve'&&!isReserve(p))return false;
      if(filter.value==='kids'&&!isChild(p))return false;
      if(filter.value==='question'&&!isQuestion(p))return false;
-     if(filter.value==='no-name'&&!missingName(p))return false;
-     if(filter.value==='duplicates'&&(duplicateCounts.get(display(p).toLocaleLowerCase('ru').replace(/\s+/g,' ').trim())||0)<2)return false;
-     if(filter.value==='yes'&&p.attendance!=='yes')return false;
-     if(filter.value==='maybe'&&p.attendance!=='maybe')return false;
-     if(filter.value==='no'&&p.attendance!=='no')return false;
-     if(filter.value==='unsent'&&p.invitation_sent_at)return false;
+     if(qualityFilter.value==='no-name'&&!missingName(p))return false;
+     if(qualityFilter.value==='duplicates'&&(duplicateCounts.get(display(p).toLocaleLowerCase('ru').replace(/\s+/g,' ').trim())||0)<2)return false;
+     if(rsvpFilter.value==='yes'&&p.attendance!=='yes')return false;
+     if(rsvpFilter.value==='maybe'&&p.attendance!=='maybe')return false;
+     if(rsvpFilter.value==='no'&&p.attendance!=='no')return false;
+     if(qualityFilter.value==='unsent'&&p.invitation_sent_at)return false;
+     if(rsvpFilter.value==='unanswered'&&p.attendance)return false;
      return !query||[p.display_name,p.name_en,p.relationship,p.relation_to_couple,p.seating_group,p.community,p.city,p.country,p.origin_place,p.origin_country,p.birth_city,p.birth_country,p.email,p.phone,p.source_person_id].some(v=>s(v).toLocaleLowerCase('ru').includes(query));
    });
    const grouped=sort.value==='__connections';
@@ -936,7 +940,22 @@ export async function activateGuestDirectory(root){
      finally{panelBusy=false;footerSave.disabled=footerCancel.disabled=false}
    });
  }
- for(const x of [search,side,filter])x.addEventListener(x===search?'input':'change',render);
+ for(const x of [search,side,filter,rsvpFilter,qualityFilter])x.addEventListener(x===search?'input':'change',render);
+ resetFilters.addEventListener('click',()=>{side.value=filter.value=rsvpFilter.value=qualityFilter.value='all';search.value='';render()});
+ childrenToggle.addEventListener('change',async()=>{
+   const next=childrenToggle.checked;
+   if(!csrf){childrenToggle.checked=childrenEnabled;return}
+   childrenToggle.disabled=true;
+   try{
+     await request('admin/settings',{method:'POST',csrf,body:{key:'children_enabled',value:next}});
+     childrenEnabled=next;
+     if(!next&&filter.value==='kids')filter.value='all';
+     render();
+     await reloadData();
+     notice(next?'Учёт детей включён.':'Дети исключены из планирования. Записи сохранены.');
+   }catch(error){childrenToggle.checked=childrenEnabled;notice(error.message,true)}
+   finally{childrenToggle.disabled=false}
+ });
  const saveSortMode=async()=>{if(!csrf)return;
    try{await request('admin/settings',{method:'POST',csrf,
      body:{key:'guest_sort_mode',value:sort.value==='__connections'?'connections':'alphabetical'}})}
@@ -964,7 +983,7 @@ export async function activateGuestDirectory(root){
      tableLayout=normalizeGuestTableLayout(saved.settings?.guest_table_layout);
      if(saved.settings?.guest_sort_mode==='connections')sort.value='__connections';
    }catch(error){notice('Настройки столбцов недоступны; выбран стандартный вид.',true)}
-   await reloadData();
+   await reloadData();childrenToggle.disabled=false;
  }
  catch(err){list.replaceChildren(mk('p','ad-gb-error','Не удалось открыть базу: '+err.message))}
  const updateFromServer=async()=>{

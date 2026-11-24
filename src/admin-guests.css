@@ -602,3 +602,11 @@ body.ad-gb-is-resizing,body.ad-gb-is-resizing *{cursor:col-resize!important;user
 .ad-gb-global-layout-controls select{min-height:40px;min-width:210px;border-radius:8px;padding:8px 10px;
  background:#fff;border:1px solid #cadbcc;color:#27533c;font:inherit}
 .ad-gb-global-layout-controls .ad-gb-menu-wrap-choice{display:flex;min-height:40px;align-items:center}
+
+.ad-gb-visible-filters{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:12px 0 18px;font-size:16px}
+.ad-gb-visible-filter{display:grid;gap:5px;flex:1 1 140px;min-width:0;font-size:16px}
+.ad-gb-visible-filter .ad-gb-select{width:100%;min-height:40px;font-size:16px}
+.ad-gb-participation-switch{display:flex;align-items:center;gap:9px;min-height:40px;white-space:nowrap;font-size:16px;cursor:pointer}
+.ad-gb-participation-switch input{width:19px;height:19px;accent-color:#24663d;flex:none}
+.ad-gb-visible-filters .ad-gb-columns-reset{min-height:40px;font-size:16px}
+@media(max-width:600px){.ad-gb-visible-filter{flex:1 1 42%}.ad-gb-participation-switch{flex:1 1 100%}}

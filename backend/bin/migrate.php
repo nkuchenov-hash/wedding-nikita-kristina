@@ -74,12 +74,12 @@ if(!in_array('activity_date',array_column($scheduleColumns,'name'),true)){
     $database->exec("ALTER TABLE schedule_items ADD COLUMN activity_date TEXT NOT NULL DEFAULT '2027-06-19'");
     // Preserve the wedding date of timed events and date-only legacy ideas.
     $database->exec("UPDATE schedule_items SET activity_date=substr(start_at,1,10)
-      WHERE substr(start_at,1,10) IN ('2027-06-17','2027-06-18','2027-06-19')");
+      WHERE substr(start_at,1,10) IN ('2027-06-17','2027-06-18','2027-06-19','2027-06-20','2027-06-21')");
 }
 // Restore day ownership after the obsolete shared pool. Existing dated ideas keep
 // their original day; legacy undated ideas default to the main celebration, June 19.
 $database->exec("UPDATE schedule_items SET activity_date=CASE
-  WHEN substr(start_at,1,10) IN ('2027-06-17','2027-06-18','2027-06-19')
+  WHEN substr(start_at,1,10) IN ('2027-06-17','2027-06-18','2027-06-19','2027-06-20','2027-06-21')
   THEN substr(start_at,1,10) ELSE '2027-06-19' END
   WHERE stage='idea' AND (activity_date='' OR activity_date IS NULL)");
 if(!in_array('tags_json',array_column($scheduleColumns,'name'),true))

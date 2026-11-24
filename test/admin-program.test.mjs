@@ -203,8 +203,8 @@ test('the first selected tag alone sets the card color and additional tags remai
 });
 
 
-test('three independent hour ranges are validated and bound to the selected calendar day',()=>{
- assert.deepEqual(Object.keys(DEFAULT_DAY_HOURS),['2027-06-17','2027-06-18','2027-06-19']);
+test('five independent hour ranges are validated and bound to the selected calendar day',()=>{
+ assert.deepEqual(Object.keys(DEFAULT_DAY_HOURS),['2027-06-17','2027-06-18','2027-06-19','2027-06-20','2027-06-21']);
  assert.deepEqual(displayHoursForDay('2027-06-19'),{from:'12:00',to:'23:00'});
  const custom={
   '2027-06-17':{from:'09:00',to:'17:00'},
@@ -240,7 +240,7 @@ test('settings saves daily visible hours, and the left sidebar places settings l
  assert.match(settings,/Сохранить часы/);
  assert.match(settings,/program_day_hours/);
  assert.match(settings,/input.*type='time'/);
- for(const day of ['2027-06-17','2027-06-18','2027-06-19'])assert.ok(settings.includes(day));
+ for(const day of ['2027-06-17','2027-06-18','2027-06-19','2027-06-20','2027-06-21'])assert.ok(settings.includes(day));
  const list=data.slice(data.indexOf('export const adminModules'));
  assert.ok(list.lastIndexOf("id:'settings'")>list.lastIndexOf("id:'tasks'"));
  assert.match(css,/\.admin-settings-footer/);
@@ -299,4 +299,13 @@ test('program confirmations use the shared transient bottom toast',()=>{
  assert.doesNotMatch(source,/host\.append\(n\)/);
  assert.match(css,/\.ad-global-toast\{/);
  assert.match(css,/bottom:max\(22px,env\(safe-area-inset-bottom\)\)/);
+});
+
+test('June 20 and 21 remain independent program dates',()=>{
+ for(const date of ['2027-06-20','2027-06-21']){
+  assert.equal(assignedDay({activity_date:date,stage:'idea'}),date);
+  assert.equal(assignedDay({stage:'program',start_at:date+'T12:00:00'}),date);
+  assert.deepEqual(displayHoursForDay(date),{from:'09:00',to:'23:00'});
+  assert.ok(api.includes(date));
+ }
 });

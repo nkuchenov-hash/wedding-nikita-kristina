@@ -28,7 +28,7 @@ export async function renderWeddingSettings(host,api){
  hoursPanel.append(hoursHelp);
  const hoursGrid=$('div','ad-tl-hours-grid');
  const values=new Map();
- for(const [date,label] of [['2027-06-17','17 июня'],['2027-06-18','18 июня'],['2027-06-19','19 июня']]){
+ for(const [date,label] of [['2027-06-17','17 июня'],['2027-06-18','18 июня'],['2027-06-19','19 июня'],['2027-06-20','20 июня'],['2027-06-21','21 июня']]){
    const row=$('div','ad-tl-hours-row'),dayLabel=$('strong','ad-tl-hours-day',label);
    const from=$('input');from.type='time';from.value=dayHours[date].from;from.step=300;
    const to=$('input');to.type='time';to.value=dayHours[date].to;to.step=300;

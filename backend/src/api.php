@@ -246,8 +246,8 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
                     fail(422,'field','Недопустимое поле таблицы гостей');
             }
         } elseif($key==='program_day_hours'){
-            $days=['2027-06-17','2027-06-18','2027-06-19'];
-            if(!is_array($value)||array_is_list($value)||count($value)!==3||
+            $days=['2027-06-17','2027-06-18','2027-06-19','2027-06-20','2027-06-21'];
+            if(!is_array($value)||array_is_list($value)||count($value)!==count($days)||
                array_diff(array_keys($value),$days)||array_diff($days,array_keys($value)))
                 fail(422,'field','Для каждого дня задайте начало и конец отображения');
             foreach($days as $date){
@@ -669,7 +669,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $day=strval($d,'day',10,true);
         $start=strval($d,'start_time',5,true);
         $length=intvalField($d,'duration_min',5,600);
-        if(!in_array($day,['2027-06-17','2027-06-18','2027-06-19'],true)||
+        if(!in_array($day,['2027-06-17','2027-06-18','2027-06-19','2027-06-20','2027-06-21'],true)||
            !preg_match('/^([01]\\d|2[0-3]):[0-5]\\d$/',$start))
             fail(422,'schedule','Некорректные дата или время');
         $first=(int)substr($start,0,2)*60+(int)substr($start,3,2);
@@ -705,7 +705,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $day=strval($d,'day',10,true);
         $start=strval($d,'start_time',5,true);
         $ids=$d['ids']??null;
-        if(!in_array($day,['2027-06-17','2027-06-18','2027-06-19'],true)||
+        if(!in_array($day,['2027-06-17','2027-06-18','2027-06-19','2027-06-20','2027-06-21'],true)||
            !preg_match('/^([01]\\d|2[0-3]):[0-5]\\d$/',$start)||
            !is_array($ids)||!array_is_list($ids)||count($ids)>250||
            count($ids)!==count(array_unique($ids,SORT_REGULAR)))
@@ -764,7 +764,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
             }
             if($collection==='schedule_items'){
                 if($field==='activity_date' &&
-                   (!is_string($value)||!in_array($value,['2027-06-17','2027-06-18','2027-06-19'],true)))
+                   (!is_string($value)||!in_array($value,['2027-06-17','2027-06-18','2027-06-19','2027-06-20','2027-06-21'],true)))
                     fail(422,'field','Выберите день свадьбы');
                 if($field==='tags_json'){
                     if(!is_string($value))fail(422,'field','Неверный набор тегов');

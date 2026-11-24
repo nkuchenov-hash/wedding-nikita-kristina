@@ -91,7 +91,7 @@ test('three-day wedding itinerary contains only organizer-confirmed events',asyn
  assert.match(backend,/INSERT OR IGNORE INTO schedule_items\(id,title,start_at,place,notes,is_public,sort_order,stage,activity_type,duration_min,activity_date\)/);
  const admin=await read('../src/admin-data-ui.js');
  const program=await read('../src/admin-program.js');
- assert.match(admin,/renderWeddingProgram\(host,call,weddingDays,PUBLIC_VENUES\)/);
+ assert.match(admin,/renderWeddingProgram\(host,call,adminProgramDays,PUBLIC_VENUES\)/);
  assert.match(admin,/section==='schedule'/);
  assert.match(program,/admin\/records\?collection=schedule_items/);
  assert.match(program,/admin\/schedule\/slot/);

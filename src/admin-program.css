@@ -524,3 +524,9 @@
     column-gap:18px;row-gap:12px;margin-bottom:18px;
   }
 }
+
+/* Five planning dates; keep 16px labels and allow mobile wrapping. */
+.ad-tl-section-controls .ad-tl-day-nav{grid-template-columns:repeat(5,minmax(0,1fr));flex:1 1 100%}
+.ad-tl-section-controls{flex-wrap:wrap}
+.ad-tl-section-controls .ad-tl-main-switch{flex:1 1 100%}
+@media(max-width:480px){.ad-tl-section-controls .ad-tl-day-nav{grid-template-columns:repeat(3,minmax(0,1fr))}}
