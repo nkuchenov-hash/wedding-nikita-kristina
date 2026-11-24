@@ -361,8 +361,13 @@ export async function renderWeddingProgram(host,api,days){
    const header=$('header','ad-tl-header admin-page-heading'),intro=$('div');
    intro.append($('h1','','Программа мероприятия'));
    const commands=$('div','ad-tl-top-actions');
-   commands.append(makeButton('+ '+(view==='program'?'Активность':'Идея'),
-     ()=>openCard(null,{stage:view}),'ad-tl-primary'));
+   const actionLabel='+ '+(view==='program'?'Активность':'Идея');
+   const addActivity=()=>openCard(null,{stage:view});
+   commands.append(makeButton(actionLabel,addActivity,'ad-tl-primary'));
+   const mobileActions=document.querySelector('.admin-mobile-actions');
+   if(mobileActions&&host.isConnected&&mobileActions.closest('[data-admin-section="schedule"]')){
+     const mobileAdd=makeButton(actionLabel,addActivity,'admin-mobile-primary');mobileActions.replaceChildren(mobileAdd);
+   }
    header.append(intro,commands);host.append(header);
    // One compact navigation row: the date is primary, the program/idea
    // selector is secondary, and both remain visible without tall stacked bars.
@@ -408,6 +413,9 @@ export async function renderWeddingProgram(host,api,days){
        b.style.setProperty('--tag-color',tagColor(tag));b.setAttribute('aria-pressed',String(filter===tag.id));filters.append(b);
      }
      compactTools.append(filters);
+     const tagSelect=$('select','ad-tl-mobile-tag-select');tagSelect.setAttribute('aria-label','Фильтр по тегу');
+     for(const [id,label] of [['all','Все теги'],...tags.map(t=>[t.id,t.label])]){const option=$('option','',label);option.value=id;tagSelect.append(option)}
+     tagSelect.value=filter;tagSelect.addEventListener('change',()=>{filter=tagSelect.value;render()});compactTools.append(tagSelect);
    }
    const visibleRows=current.filter(visible);
    if(view==='program'){

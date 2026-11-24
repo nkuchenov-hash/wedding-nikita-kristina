@@ -83,6 +83,8 @@ jobs:
             grep -Fq 'data-mobile-nav-open' /tmp/admin-responsive.css
             grep -Fq 'ad-gb-mobile-person' /tmp/admin-responsive.css
             grep -Fq 'vw-mobile-filter-label' /tmp/admin-responsive.css
+            grep -Fq 'admin-mobile-actions' /tmp/admin-app.js
+            grep -Fq 'ad-gb-settings-close' /tmp/admin-responsive.css
             echo 'LIVE_MOBILE_ADMIN_LAYOUT_CONFIRMED'
           fi
           if grep -Fq 'wedding-admin-theme' /tmp/admin-app.js; then

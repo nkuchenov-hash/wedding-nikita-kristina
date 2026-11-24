@@ -58,8 +58,7 @@ async function overview(host){
  headingText.append($('span','ad-overview-kicker','ЦЕНТР ПОДГОТОВКИ СВАДЬБЫ'),
    $('h1','','Никита и Кристина'),
    $('p','','Общая картина подготовки · 17–19 июня 2027'));
- const sync=$('span','ad-overview-sync','Загрузка данных…');
- head.append(headingText,sync);page.append(head);
+ head.append(headingText);page.append(head);
  const plan=$('div','ad-overview-plan');
  const registry=$('div','ad-overview-plan-day');
  registry.append($('strong','','17 июня'),$('span','','Регистрация · 14:00 · Марьино'));
@@ -143,7 +142,9 @@ async function overview(host){
    const note=$('p','ad-overview-muted','Место торжества ещё выбирается. Предложения не означают бронирование.');
    venueBox.append(main,sub,note);
  };
+ let overviewOffline=false;
  const renderOverview=data=>{
+   overviewOffline=false;
    const g=data.guests||{},budget=data.budget||{},tasks=data.tasks||{};
    const number=(v)=>Number(v||0);
    const paid=number(budget.paid),planned=number(budget.planned),committed=number(budget.committed);
@@ -151,7 +152,7 @@ async function overview(host){
    statistic('Гости',number(g.total),'Ответили «буду»: '+number(g.attending),'guests');
    statistic('Площадки',venueCount,'Осмотрели: '+visited,'venues');
    statistic('Задачи',number(tasks.open),'В работе','tasks');
-   statistic('Бюджет',planned>0?planned.toLocaleString('ru-RU')+' ₽':'Не задан',paid>0?'Оплачено: '+paid.toLocaleString('ru-RU')+' ₽':'Суммы из утверждённого плана','budget');
+   statistic('Бюджет',planned>0?planned.toLocaleString('ru-RU')+' ₽':'Не задан',paid>0?'Оплачено: '+paid.toLocaleString('ru-RU')+' ₽':'','budget');
    guestStats.replaceChildren();
    for(const [value,label]of [
      [number(g.total),'В списке'],[number(g.sent),'Пригласили'],
@@ -167,7 +168,7 @@ async function overview(host){
    const paidText=$('p','ad-overview-muted',paid>0?'Оплачено: '+paid.toLocaleString('ru-RU')+' ₽':'Подтверждённых платежей в базе пока нет');
    const important=$('p','ad-overview-budget-note','Сметы площадок — альтернативные предложения, не общая сумма расходов.');
    budgetBox.append(amount,note,paidText,important);
-   sync.textContent='Обновлено '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+
  };
  renderVenues();renderDocs();renderTasks();
  const initial=await call('admin/overview');
@@ -193,7 +194,7 @@ async function overview(host){
  overviewTimer=setInterval(()=>{
    if(!host.isConnected){clearInterval(overviewTimer);overviewTimer=null;return}
    if(document.visibilityState==='visible')call('admin/overview').then(renderOverview)
-     .catch(()=>{sync.textContent='Нет связи — показаны последние данные'});
+     .catch(()=>{if(!overviewOffline){overviewOffline=true;showAdminToast('Нет связи. Показаны последние данные.',{kind:'error'})}});
  },15000);
 }
 

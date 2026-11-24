@@ -192,3 +192,100 @@ html[data-admin-theme="dark"] .ad-tl-card :is(.ad-tl-card-title,.ad-tl-card-desc
 @media(max-width:360px){body.admin-body .admin-content{padding-left:10px;padding-right:10px}.ad-overview-stats{gap:6px}.ad-overview-stat{padding:10px}}
 html[data-admin-theme="dark"] .admin-mobile-bar{background:#101715}
 @media(prefers-reduced-motion:reduce){body.admin-body .admin-layout .admin-side{transition:none}}
+
+/* Mobile revision: a single page title, consistent edge rhythm, content first. */
+.admin-mobile-actions,.ad-gb-settings-label,.ad-tl-mobile-tag-select{display:none}
+.ad-gb-settings-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 10px;margin:0 0 8px;border-bottom:1px solid #dce8dd;background:#fff;position:sticky;top:0;z-index:2}
+.ad-gb-settings-head strong{font-size:18px;color:#214b33}
+.ad-gb-settings-close{display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;padding:0;border:1px solid #dce8dd;border-radius:9px;background:#f7faf7;color:#214b33;font:500 26px/1 system-ui;cursor:pointer}
+.ad-gb-settings-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;background:#edf3ed;border-radius:10px;margin:0 0 12px}
+.ad-gb-settings-tab{border:0;border-radius:7px;background:transparent;color:#496a56;font-size:16px;font-weight:650;min-height:42px;cursor:pointer}
+.ad-gb-settings-tab.is-active{background:#fff;color:#214b33;box-shadow:0 1px 4px #0001}
+.ad-gb-columns-menu .ad-gb-visible-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 12px}
+.ad-gb-columns-menu .ad-gb-visible-filter{display:grid;gap:4px;min-width:0}
+.ad-gb-columns-menu .ad-gb-visible-filters .ad-gb-columns-reset{grid-column:1/-1;text-align:left}
+.ad-gb-settings-done{display:block;width:100%;min-height:44px;margin-top:12px}
+@media(max-width:900px){
+ body.admin-body{--admin-mobile-edge:14px;--admin-mobile-gap:10px}
+ body.admin-body .admin-content{padding:12px var(--admin-mobile-edge) 24px}
+ body.admin-body .admin-mobile-bar{gap:8px;padding:6px var(--admin-mobile-edge);min-height:56px}
+ body.admin-body .admin-mobile-title{flex:1 1 auto;font-size:19px;white-space:nowrap;min-width:0}
+ .admin-mobile-actions{display:flex;flex:0 0 auto;align-items:center;gap:6px;min-width:0}
+ .admin-mobile-primary,.admin-mobile-actions .ad-tl-button.admin-mobile-primary{min-height:42px;padding:8px 11px;border:1px solid #326747;border-radius:9px;background:#285b42;color:#fff;font:650 16px/1.3 Manrope,system-ui,sans-serif;white-space:nowrap;cursor:pointer}
+ body.admin-body [data-admin-section="overview"] .ad-overview-heading,body.admin-body [data-admin-section="overview"] .dashboard-heading{display:none}
+ body.admin-body .ad-live-panel.ad-overview-shell{padding:0;margin:0}
+ body.admin-body .ad-overview-dashboard{gap:var(--admin-mobile-gap)}
+ body.admin-body .ad-overview-plan{display:grid;grid-template-columns:minmax(0,1fr);gap:5px;padding:0;margin:0}
+ body.admin-body .ad-overview-plan-day{padding:7px 10px;align-items:baseline;gap:8px;border-radius:8px}
+ body.admin-body .ad-overview-stats{gap:6px}
+ body.admin-body .ad-overview-stat{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;align-content:start;gap:3px 6px;min-height:0;padding:9px 10px;border-radius:9px}
+ body.admin-body .ad-overview-stat-label{font-size:16px;line-height:1.3}
+ body.admin-body .ad-overview-stat-value{font-size:19px;line-height:1.25;text-align:right}
+ body.admin-body .ad-overview-stat small{grid-column:1/-1;font-size:16px;line-height:1.25}
+ body.admin-body .ad-overview-stat small:empty{display:none}
+ body.admin-body .ad-overview-card{min-height:0;padding:12px;border-radius:10px}
+ body.admin-body .ad-overview-card-head{margin-bottom:8px}
+ body.admin-body .ad-overview-task{padding:7px 0;min-height:0}
+ body.admin-body .ad-overview-guest-stat,body.admin-body .ad-overview-doc-item{padding:9px;gap:4px}
+ body.admin-body .ad-overview-guest-stat strong,body.admin-body .ad-overview-doc-item strong{font-size:20px}
+ body.admin-body .ad-overview-guest-stats,body.admin-body .ad-overview-docs{gap:6px}
+ body.admin-body .ad-overview-sections{gap:var(--admin-mobile-gap)}
+ /* Guests: summary in one compact block, toolbar starts immediately after it. */
+ body.admin-body .ad-guestbook .ad-gb-top{margin:0 0 10px;gap:0}
+ body.admin-body .ad-guestbook .ad-gb-top>div:first-child,body.admin-body .ad-guestbook .ad-gb-top-actions>.ad-gb-primary{display:none}
+ body.admin-body .ad-guestbook .ad-gb-top-actions{display:flex;justify-content:flex-start;flex-wrap:nowrap;gap:8px;width:100%;margin:0}
+ body.admin-body .ad-guestbook .ad-gb-search-wrap{flex:0 0 44px;width:44px;min-width:44px}
+ body.admin-body .ad-guestbook .ad-gb-column-prefs{flex:0 1 auto;width:auto;min-width:0}
+ body.admin-body .ad-guestbook .ad-gb-column-prefs>.ad-gb-settings-icon{display:flex;align-items:center;gap:8px;width:auto;min-height:44px;padding:7px 10px;border:1px solid #dce8dd;border-radius:9px}
+ .ad-gb-settings-label{display:inline;font-size:16px}
+ body.admin-body .ad-guestbook .ad-gb-column-prefs.ad-gb-settings-open{z-index:130}
+ body.admin-body .ad-guestbook .ad-gb-column-prefs .ad-gb-columns-menu{position:fixed;top:64px;left:var(--admin-mobile-edge);right:var(--admin-mobile-edge);width:auto;max-width:none;max-height:calc(100dvh - 80px);padding:10px 12px 12px;z-index:140;overscroll-behavior:contain}
+ body.admin-body .ad-guestbook .ad-gb-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin:0 0 10px;padding:6px 10px;border:1px solid #dce8dd;border-radius:10px;background:#fff}
+ body.admin-body .ad-guestbook .ad-gb-metric{display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:6px;padding:7px 6px;min-height:0;border:0;border-radius:0;background:transparent}
+ body.admin-body .ad-guestbook .ad-gb-metric strong{order:2;font-size:19px;line-height:1.2;flex:0 0 auto}
+ body.admin-body .ad-guestbook .ad-gb-metric span{font-size:16px;line-height:1.25;overflow-wrap:anywhere}
+ body.admin-body .ad-gb-mobile-view{margin-bottom:8px;min-height:40px}
+ body.admin-body .ad-gb-mobile-cards{gap:6px}
+ body.admin-body .ad-gb-mobile-person{padding:10px 12px;border-radius:9px}
+ body.admin-body .ad-gb-mobile-person-info{gap:2px}
+ /* No duplicated page heading: actions are in the top app bar. */
+ body.admin-body [data-admin-section="schedule"] .ad-timeline-page .ad-tl-header{display:none}
+ body.admin-body [data-admin-section="schedule"] .ad-live-panel.ad-timeline-page{margin:0;padding:0}
+ body.admin-body .ad-timeline-page .ad-tl-section-controls{gap:6px;margin:0 0 8px}
+ body.admin-body .ad-timeline-page .ad-tl-section-controls .ad-tl-day-nav{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+ body.admin-body .ad-timeline-page .ad-tl-section-controls .ad-tl-day-tab{padding:6px 3px;white-space:normal;min-height:42px;line-height:1.15}
+ body.admin-body .ad-timeline-page .ad-tl-section-controls .ad-tl-main-tab{padding:8px 4px;min-height:38px}
+ body.admin-body .ad-timeline-page .ad-tl-compact-tools{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:0 0 9px}
+ body.admin-body .ad-timeline-page .ad-tl-compact-tools .ad-tl-tag-filters{display:none}
+ body.admin-body .ad-timeline-page .ad-tl-mobile-tag-select{display:block;flex:1 1 100px;width:auto;min-height:42px;padding:6px 8px;border:1px solid #cfded0;border-radius:8px;background:#fff;color:#214734;font:400 16px Manrope,system-ui,sans-serif}
+ body.admin-body .ad-timeline-page .ad-tl-compact-tools .ad-tl-display-modes{flex:0 0 auto;margin:0;gap:3px}
+ body.admin-body .ad-timeline-page .ad-tl-compact-tools .ad-tl-display-modes::before{display:none}
+ body.admin-body .ad-timeline-page .ad-tl-program-list{gap:8px}
+ body.admin-body .ad-timeline-page .ad-tl-ideas-grid .ad-tl-card:not(.ad-tl-calendar-card){min-height:0;padding:12px;gap:4px}
+ body.admin-body .ad-timeline-page .ad-tl-program-list .ad-tl-card-head{min-height:0;margin:0;gap:6px}
+ body.admin-body .ad-timeline-page .ad-tl-program-list .ad-tl-card-title{font-size:18px!important;margin:0!important;line-height:1.35}
+ body.admin-body .ad-timeline-page .ad-tl-card-description:empty,body.admin-body .ad-timeline-page .ad-tl-tags-inline:empty{display:none}
+ body.admin-body .ad-timeline-page .ad-tl-program-list .ad-tl-tags-inline{margin-top:4px}
+ body.admin-body .ad-timeline-page .ad-tl-length{min-height:28px;padding:4px 8px}
+ /* Common page alignment; retain unique venue-detail names and editor titles. */
+ body.admin-body [data-admin-section="venues"] .vw-control-head h1,
+ body.admin-body [data-admin-section="photos"] .ad-photo-head h1,
+ body.admin-body [data-admin-section="photos"] .ad-photo-eyebrow,
+ body.admin-body [data-admin-section="settings"] .ad-tl-settings-head h1,
+ body.admin-body [data-admin-section="budget"] .ad-live-panel>h2:first-child,
+ body.admin-body [data-admin-section="tasks"] .ad-live-panel>h2:first-child,
+ body.admin-body [data-admin-section="menu"] .ad-live-panel>h2:first-child{display:none}
+ body.admin-body .admin-content .ad-live-panel:not(.ad-overview-shell):not(.ad-timeline-page){padding:12px;margin:0 0 10px;border-radius:10px}
+ body.admin-body .ad-photo-head{padding:0;margin:0 0 10px}
+ body.admin-body .ad-photo-head .ad-photo-lead{margin:0}
+ body.admin-body .ad-photo-upload-form,body.admin-body .ad-tl-settings-content{padding:12px;margin:0 0 10px;border-radius:10px}
+ body.admin-body .vw-control-head,body.admin-body .vw-table-panel-title{gap:8px;margin:0 0 10px;padding:0}
+ body.admin-body .vw-control-facts{gap:5px}
+ body.admin-body .vw-control-board .vw-table-tools{gap:6px}
+ body.admin-body .vw-control-board .vw-table-sortable tbody tr.vw-row{padding:10px}
+ body.admin-body .vw-control-board .vw-table-sortable tbody td{padding:7px 2px}
+ body.admin-body .vdp-page .vdp-overview-metric{min-height:0;padding:12px}
+ body.admin-body .vdp-page .vdp-dashboard-details{gap:10px}
+ body.admin-body .admin-content :is(input[type=checkbox],input[type=radio]){min-height:0}
+}
+@media(max-width:360px){body.admin-body{--admin-mobile-edge:12px}body.admin-body .ad-overview-stat{grid-template-columns:minmax(0,1fr);gap:3px}body.admin-body .ad-overview-stat-value{text-align:left}}

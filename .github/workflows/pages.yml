@@ -73,6 +73,9 @@ jobs:
           grep -Fq 'id="admin-menu-toggle"' _admin-private/src/admin-app.js
           grep -Fq 'ad-gb-mobile-cards' _admin-private/src/admin-guests.js
           grep -Fq 'data-mobile-nav-open' _admin-private/src/admin-heading.css
+          grep -Fq 'admin-mobile-actions' _admin-private/src/admin-app.js
+          grep -Fq 'ad-gb-settings-close' _admin-private/src/admin-guests.js
+          ! grep -Fq 'Обновлено ' _admin-private/src/admin-data-ui.js
           test -s _admin-private/src/venue-transcript-costs.js
           test -s _admin-private/src/venue-budget-coverage.js
           test -s _admin-private/src/venues-photos-5.js
