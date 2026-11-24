@@ -1,7 +1,5 @@
 name: Verify real wedding admin login
 on:
-  push:
-    paths: ['.github/workflows/admin-login-test.yml', 'tools/admin-gateway.php']
   workflow_run:
     workflows: ['Install private wedding database backend', 'Publish admin-only wedding site']
     types: [completed]
@@ -81,7 +79,8 @@ jobs:
           grep -Fq 'activateAdminData' /tmp/admin-app.js
           echo 'ADMIN_END_TO_END_LOGIN_PASSED'
           if grep -Fq 'wedding-admin-theme' /tmp/admin-app.js; then
-            grep -Fq 'id="login-theme"' /tmp/login-page.html
+            ! grep -Fq 'id="login-theme"' /tmp/login-page.html
+            grep -Fq 'name="color-scheme" content="light dark"' /tmp/login-page.html
             grep -Fq 'prefers-color-scheme: dark' /tmp/login-page.html
             grep -Fq 'id="admin-theme-toggle"' /tmp/admin-app.js
             grep -Fq 'wedding-admin-theme' /tmp/admin-page.html
