@@ -104,7 +104,7 @@ export function parallelEventLayout(items){
 }
 
 export async function renderWeddingProgram(host,api,days){
- let entries=[],tags=[],day='2027-06-19',view='program',programDisplay=window.matchMedia?.('(max-width: 900px)').matches?'list':'timeline',dayHours={...DEFAULT_DAY_HOURS};
+ let entries=[],tags=[],day='2027-06-19',view='program',programDisplay=globalThis.matchMedia?.('(max-width: 900px)')?.matches?'list':'timeline',dayHours={...DEFAULT_DAY_HOURS};
  let filter='all',notification='',busy=false;
  const timelineScrollByDay=new Map();
  const dateName=value=>days.find(d=>d.date===value)?.label||value;

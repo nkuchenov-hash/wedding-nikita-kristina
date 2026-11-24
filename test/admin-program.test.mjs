@@ -222,7 +222,7 @@ test('five independent hour ranges are validated and bound to the selected calen
  assert.match(api,/to-\$from<60/);
 });
 test('the program has list and timeline views, independently from day and idea tabs',()=>{
- assert.match(source,/programDisplay='timeline'/);
+ assert.match(source,/programDisplay=globalThis\.matchMedia.*\?'list':'timeline'/);
  assert.match(source,/\['timeline','Таймлайн'\]/);
  assert.match(source,/\['list','Список'\]/);
  assert.match(source,/if\(programDisplay==='timeline'\)host\.append\(renderTimeline\(visibleRows\)\)/);
