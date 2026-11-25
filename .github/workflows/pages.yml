@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'src/**'
+      - 'design-preview/**'
       - 'tools/prepare-admin-release.mjs'
       - 'tools/admin-dark-theme.mjs'
       - 'tools/stage-guest-online.mjs'
@@ -108,6 +109,15 @@ jobs:
           test ! -e _site/preview/src/admin-app.js
           test ! -e _site/preview/backend
           grep -Fq 'src/guest-online-entry.js' _pages/preview/index.html
+      - name: Stage standalone design prototype
+        shell: bash
+        run: |
+          set -euo pipefail
+          for target in _site/design-preview _pages/design-preview; do
+            mkdir -p "$target"
+            cp design-preview/index.html "$target/index.html"
+            cmp design-preview/index.html "$target/index.html"
+          done
       - name: Package website for purchased hosting
         uses: actions/upload-artifact@v4
         with:
@@ -186,6 +196,10 @@ jobs:
             exit 1
           fi
           echo "Guest browser preview uploaded to REG.RU at /preview/."
+          design_sha=$(sha256sum _site/design-preview/index.html | awk '{print $1}')
+          remote_design_sha=$(ssh $SSH_OPTS "$USERNAME@$HOST" "sha256sum '$DESTINATION/design-preview/index.html'" | awk '{print $1}')
+          test "$design_sha" = "$remote_design_sha"
+          echo "Standalone design preview verified on REG.RU at /design-preview/."
           # Inspect the actual private files installed at the production path.
           # A successful GitHub commit is NOT sufficient release evidence.
           ssh $SSH_OPTS "$USERNAME@$HOST" \
