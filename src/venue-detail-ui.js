@@ -32,6 +32,7 @@ function photoSection(v,p){
  if(FEATURED_COVERS[v.id]===p.id&&FEATURED_SECTIONS[v.id])return FEATURED_SECTIONS[v.id];
  if(/сануз|туалет|унитаз|раковин|писсуар|\bwc\b/.test(name)||section==='Санузлы')return 'Санузлы';
  if(/техническ|техзон|пульт|оборудован|аппаратур|коммуникаци|монтаж|вентиляци|кабель|щитова|подсоб|служеб|грим[её]р|гардероб|кухн|склад/.test(name))return 'Служебные и гримёрки';
+ if(section==='Welcome-зона')return section;
  if(/детал|аквариум|поручень|табличк|крупн[оы]|скульптура льва|интерьер — (декор|статуя)|макет усадьбы|декоративн.*ваза/.test(name))return 'Детали интерьера';
  if(/^(банкетный зал.*переход|парадные залы — дверной|коридор|т[её]мный проход|лестниц|парадная лестница|лифт|межкомнатная дверь|входная зона — лестница)/.test(name))return 'Входы и переходы';
  if(/^(фасад|главный вход|особняк.*вход|дворец.*фасад|дворец — общий вид)/.test(name))return 'Фасад и вход';
@@ -85,7 +86,7 @@ const groupCompare=(v,a,b)=>{
  // A reviewed terrace/facade can lead its venue's album, without splitting categories.
  const featuredGroup=preferred||(v.id==='roof18'?'Террасы и виды':null);
  const rank=p=>p.section===featuredGroup?-1:photoPriority(p);
- return rank(a)-rank(b)||(a.id===featured?-1:b.id===featured?1:0);
+ return rank(a)-rank(b)||(Number(b.id===featured)-Number(a.id===featured));
 };
 export function getVenuePhotos(v){
  const files=ALL_PHOTOS[v.id]?.length?ALL_PHOTOS[v.id]:(v.gallery||[]).map(x=>({id:x.id,name:x.label||'Фотография',section:x.section||x.label||'Общий альбом',folder:x.folder||null}));
