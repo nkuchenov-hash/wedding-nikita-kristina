@@ -20,7 +20,7 @@ export const vendorIconPaths={
 };
 const zones=['Гостевые столы','Рассадка','Стол молодожёнов','Входная зона','Фотозона','Интерактивные зоны','Церемония','Другое'];
 const specs={'Ведущий':['Часы работы','Подготовка сценария','Языки'],'Диджей':['Часы работы','Оборудование','Музыкальная программа'],'Музыкальный коллектив':['Состав','Жанр','Количество сетов','Длительность сета','Технический райдер'],'Фотограф':['Часы съёмки','Количество фото','Срок готовности'],'Видеограф':['Количество операторов','Длительность фильма','Срок готовности'],'Декоратор':['Монтаж','Демонтаж','Материалы'],'Кондитер':['Вес','Цена за кг','Доставка']};
-const statuses={candidate:'Кандидат / идея',research:'Кандидат',negotiating:'На согласовании',selected:'Выбран / утверждён',ordered:'Заказан',ready:'Готов',archived:'Архив'};
+const statuses={candidate:'Кандидат',research:'Кандидат',negotiating:'На согласовании',selected:'Выбран',ordered:'Заказан',ready:'Готов',archived:'Архив'};
 const costFields=['fee','travel','hotel','food','equipment','extras'];
 const costLabels=['Гонорар','Проезд','Проживание','Питание','Оборудование','Дополнительные расходы'];
 const el=(tag,cls='',text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e};
@@ -33,6 +33,8 @@ function vendorIcon(type){
  if(path)svg.innerHTML=path;else{const box=document.createElementNS(svg.namespaceURI,'rect');for(const [k,v] of Object.entries({x:'2',y:'2',width:'20',height:'20',rx:'5'}))box.setAttribute(k,v);svg.append(box);const text=document.createElementNS(svg.namespaceURI,'text');for(const [k,v] of Object.entries({x:'12',y:'15.5','text-anchor':'middle','font-size':'9',stroke:'none',fill:'currentColor'}))text.setAttribute(k,v);text.textContent=type.split(/\s+/).map(s=>s[0]).join('').slice(0,2).toUpperCase();svg.append(text)}
  return svg;
 }
+const vendorTones=['sage','blue','violet','rose','amber','blue','rose','sage','amber','rose','violet','sage','blue','amber','violet','slate'];
+function typeTile(types){const type=types[0]||'Подрядчик',tile=el('span','production-type-tile');tile.dataset.tone=vendorTones[vendorTypes.indexOf(type)]||'slate';tile.title=type;tile.append(vendorIcon(type));return tile}
 function typeTags(types,decor){const row=el('div','production-type-tags');for(const type of types){const tag=el('span','production-type-tag');if(!decor)tag.append(vendorIcon(type));tag.append(el('span','',type));row.append(tag)}return row}
 const safeJson=x=>{try{return JSON.parse(x)||{}}catch{return {}}};
 const money=x=>x==null?'Уточняется':Number(x).toLocaleString('ru-RU')+' ₽';
@@ -107,24 +109,48 @@ export async function renderProduction(host,call,section){
   }catch(e){err(e)}finally{submit.disabled=false}};
  }
  function draw(){actions.replaceChildren(btn(archive?'Активные':'Архив',()=>{archive=!archive;filter='all';draw()}),btn('Импорт',importPrivate),btn('Добавить',()=>edit(),'ad-tl-button ad-tl-primary'));toolbar.replaceChildren();
+  if(venueFilter){const back=el('a','ad-tl-button','К площадке');back.href='#/admin/venues/'+encodeURIComponent(venueFilter);actions.prepend(back,btn('Привязать существующего',()=>{const d=openDrawer('Привязать к площадке'),form=el('form','production-form'),choice=select([['','Выберите запись'],...items.filter(r=>r.status!=='archived').map(r=>[r.id,r.name])],'');choice.required=true;const submit=el('button','ad-tl-button ad-tl-primary','Продолжить');submit.type='submit';form.append(choice,submit);d.append(form);form.onsubmit=e=>{e.preventDefault();const r=items.find(x=>x.id===choice.value);if(r){d.close();editVenues(r)}}}));}
   const active=items.filter(r=>(r.status==='archived')===archive);count.textContent=String(active.length);count.setAttribute('aria-label','Количество записей: '+active.length);
   const tabs=el('div','production-tabs ad-tl-main-switch'),filters=el('div','production-filters');toolbar.append(tabs,filters);
   for(const [v,t] of [['cards','Карточки'],['table','Таблица'],[decor?'refs':'compare',decor?'Референсы':'Сравнение'],...(decor?[['budget','Смета']]:[])]){const b=btn(t,()=>{view=v;draw()},'ad-tl-main-tab'+(view===v?' is-active':''));b.setAttribute('aria-pressed',String(view===v));tabs.append(b)}
   const cats=select([['','Все категории'],...[...new Set([...(decor?zones:vendorTypes),...items.flatMap(tags)])].map(t=>[t,t])],category);cats.setAttribute('aria-label','Категория');cats.onchange=()=>{category=cats.value;draw()};filters.append(cats);
-  const vf=select([['','Все площадки'],...places.map(v=>[v.id,v.name])],venueFilter);vf.setAttribute('aria-label','Площадка');vf.onchange=()=>{venueFilter=vf.value;draw()};filters.append(vf);
+ 
   const stat=select([['all','Все статусы'],...Object.entries(statuses).filter(([k])=>k!=='archived')],filter);stat.setAttribute('aria-label','Статус');stat.onchange=()=>{filter=stat.value;draw()};filters.append(stat);
   const q=el('input');q.placeholder='Поиск';q.type='search';q.setAttribute('aria-label','Поиск по записям');q.value=search;q.oninput=()=>{search=q.value;renderBody()};filters.append(q);renderBody();
  }
  function renderBody(){body.replaceChildren();const list=items.filter(r=>(r.status==='archived')===archive&&(!category||tags(r).includes(category))&&(!venueFilter||details(r).venue===venueFilter||(details(r).venues||[]).some(v=>v.id===venueFilter))&&(filter==='all'||r.status===filter)&&String(r.name+' '+r.category+' '+r.notes).toLowerCase().includes(search.toLowerCase())).sort((a,b)=>Number(b.status==='selected')-Number(a.status==='selected')||a.name.localeCompare(b.name,'ru'));
   if(view==='compare'&&!category){body.append(el('p','','Выберите категорию для сравнения исполнителей.'));return}
-  if(!list.length){const empty=el('div','production-empty');empty.append(el('h2','',items.length?'Ничего не найдено':decor?'Добавьте первую идею оформления':'Добавьте первого подрядчика'));empty.append(btn(items.length?'Сбросить фильтры':'Добавить',()=>{if(items.length){category='';venueFilter='';filter='all';search='';draw()}else edit()}));body.append(empty);return}
+  if(!list.length){const empty=el('div','production-empty');empty.append(el('h2','',items.length?'Ничего не найдено':decor?'Добавьте первую идею оформления':'Добавьте первого подрядчика'));empty.append(btn(items.length?'Сбросить фильтры':'Добавить',()=>{if(items.length){category='';filter='all';search='';draw()}else edit()}));body.append(empty);return}
   const displayCost=r=>{const d=details(r),c=productionCost(d,decor,guests),v=(d.venues||[]).find(x=>x.id===d.venue);return ((decor&&d.included)||v?.mode==='included')?'Включено':(c.unknown&&c.sum+(v?.extra||0)===0?'Уточняется':money(c.sum+(v?.extra||0))+(c.unknown?' + уточняется':''))};
-  if(['table','compare','budget'].includes(view)){const wrap=el('div','ad-live-table-scroll'),table=el('table','ad-live-table'),head=el('thead'),hr=el('tr'),tbody=el('tbody');const keys=view==='compare'?[...new Set(list.flatMap(r=>Object.keys(details(r).specs||{})))]:[];for(const h of ['Название','Категории','Статус','Площадка','Стоимость','Оплачено',...keys,''])hr.append(el('th','',h));head.append(hr);for(const r of list){const d=details(r),tr=el('tr');tr.append(el('td','',r.name));const typeCell=el('td');typeCell.append(typeTags(tags(r),decor));tr.append(typeCell);for(const v of [statuses[r.status]||r.status,venueName(d.venue),displayCost(r),money(d.paid),...keys.map(k=>d.specs?.[k]||'—')])tr.append(el('td','',v));const a=el('td');a.append(btn('Открыть',()=>edit(r)),btn('Площадки',()=>editVenues(r)));tr.append(a);tbody.append(tr)}table.append(head,tbody);wrap.append(table);body.append(wrap);return}
+  if(['table','compare','budget'].includes(view)){
+   const wrap=el('div','ad-live-table-scroll production-table-wrap'),table=el('table','ad-live-table production-table'),head=el('thead'),hr=el('tr'),tbody=el('tbody');
+   const keys=view==='compare'?[...new Set([...(specs[category]||[]),...list.flatMap(r=>Object.keys(details(r).specs||{}))])]:[];
+   for(const h of [...(!decor?['Тип']:[]),'Название','Категории','Статус',...(!decor?['Гонорар','Проезд']:[]),'Стоимость','Оплачено',...keys,''])hr.append(el('th','',h));head.append(hr);
+   for(const r of list){const d=details(r),tr=el('tr');if(!decor){const iconCell=el('td','production-icon-cell');iconCell.append(typeTile(tags(r)));tr.append(iconCell)}
+    const nameCell=el('td','production-name-cell');nameCell.append(btn(r.name,()=>edit(r),'production-name-link'));tr.append(nameCell);
+    const typeCell=el('td');typeCell.append(typeTags(tags(r),decor));tr.append(typeCell);
+    for(const v of [statuses[r.status]||r.status,...(!decor?[money(d.fee),money(d.travel)]:[]),displayCost(r),money(d.paid),...keys.map(k=>d.specs?.[k]||'—')])tr.append(el('td','',v));
+    const a=el('td'),row=el('div','production-table-actions');row.append(btn('Открыть',()=>edit(r)));if(venueFilter)row.append(btn('Условия',()=>editVenues(r)));a.append(row);tr.append(a);tbody.append(tr)}
+   table.append(head,tbody);wrap.append(table);body.append(wrap);return
+  }
   if(view==='refs'){const grid=el('div','production-ref-grid');body.append(grid);for(const r of list){const card=el('article','production-card');card.append(el('h2','',r.name),btn('Добавить / редактировать',()=>refs(r)));grid.append(card);call('admin/production-images?item='+encodeURIComponent(r.id)).then(data=>{for(const x of data.items){const im=el('img');im.src='data:'+x.mime+';base64,'+x.data;im.alt=r.name;card.append(im)}}).catch(err)}return}
-  const grid=el('div','production-grid');for(const r of list){const d=details(r),card=el('article','production-card');const top=el('div','production-card-top'),identity=el('div');identity.append(typeTags(tags(r),decor),el('h2','',r.name));const status=el('span','production-status'+(['selected','ordered','ready'].includes(r.status)?' is-selected':''),statuses[r.status]||r.status);top.append(identity,status);card.append(top);
+  const grid=el('div','production-grid');for(const r of list){
+   const d=details(r),types=tags(r),card=el('article','production-card'+(decor?'':' production-vendor-card'));
+   const top=el('div','production-card-top'),identity=el('div','production-card-identity');
+   if(!decor)top.append(typeTile(types));
+   const status=el('span','production-status'+(['selected','ordered','ready'].includes(r.status)?' is-selected':''),statuses[r.status]||r.status);top.append(status);
+   identity.append(el('h2','',r.name),typeTags(types,decor));card.append(top,identity);
    const facts=el('dl','production-facts');const fact=(label,value)=>{const row=el('div');row.append(el('dt','',label),el('dd','',value));facts.append(row)};
-   if(!decor){fact('Гонорар',money(d.fee));fact('Проезд',money(d.travel));if(d.city)fact('Город отправления',d.city)}else{fact('Количество',d.unit==='guest'?guests+' гостей':String(d.quantity??'—'));fact('Цена за единицу',money(d.unitPrice))}
-   if(d.venue)fact('Площадка',venueName(d.venue));card.append(facts);const cost=el('div','production-cost');cost.append(el('span','','Общая стоимость'),el('strong','production-price',displayCost(r)));card.append(cost);if(d.venue){const a=el('a','','Карточка площадки');a.href='#/admin/venues/'+encodeURIComponent(d.venue);card.append(a)}if(d.reference&&/^https?:\/\//i.test(d.reference)){const a=el('a','','Материалы');a.href=d.reference;a.target='_blank';a.rel='noopener noreferrer';card.append(a)}if(r.notes)card.append(el('p','production-note',r.notes));const row=el('div','production-actions production-card-actions');row.append(btn('Открыть',()=>edit(r),'ad-tl-button ad-tl-primary'),btn('Площадки',()=>editVenues(r)));if(decor){row.append(btn('Референсы',()=>refs(r)));call('admin/production-images?item='+encodeURIComponent(r.id)).then(data=>{if(data.items?.length&&card.isConnected){const im=el('img','production-cover');im.src='data:'+data.items[0].mime+';base64,'+data.items[0].data;im.alt=r.name;card.prepend(im)}}).catch(()=>{})}if(r.status!=='selected'&&!archive)row.append(btn('Выбрать',()=>save(r,{status:'selected'}).catch(err)));row.append(btn(archive?'Восстановить':'В архив',()=>archiveItem(r)));card.append(row);grid.append(card)}body.append(grid)
+   if(!decor){fact('Гонорар',money(d.fee));fact('Проезд',money(d.travel));fact('Город отправления',d.city||'—')}else{fact('Количество',d.unit==='guest'?guests+' гостей':String(d.quantity??'—'));fact('Цена за единицу',money(d.unitPrice))}
+   card.append(facts);const cost=el('div','production-cost');cost.append(el('span','','Общая стоимость'),el('strong','production-price',displayCost(r)));card.append(cost);
+   const notes=el('div','production-card-notes');if(d.reference&&/^https?:\/\//i.test(d.reference)){const a=el('a','','Материалы');a.href=d.reference;a.target='_blank';a.rel='noopener noreferrer';notes.append(a)}if(r.notes)notes.append(el('p','production-note',r.notes));card.append(notes);
+   const row=el('div','production-actions production-card-actions');row.append(btn('Открыть',()=>edit(r),'ad-tl-button ad-tl-primary'));
+   if(venueFilter)row.append(btn('Условия',()=>editVenues(r)));
+   if(decor){row.append(btn('Референсы',()=>refs(r)));call('admin/production-images?item='+encodeURIComponent(r.id)).then(data=>{if(data.items?.length&&card.isConnected){const im=el('img','production-cover');im.src='data:'+data.items[0].mime+';base64,'+data.items[0].data;im.alt=r.name;card.prepend(im)}}).catch(()=>{})}
+   if(r.status!=='selected'&&!archive)row.append(btn('Выбрать',()=>save(r,{status:'selected'}).catch(err)));
+   const archiveButton=btn('',()=>archiveItem(r),'ad-tl-button production-archive-action');archiveButton.title=archive?'Восстановить':'В архив';archiveButton.setAttribute('aria-label',archiveButton.title);
+   const archiveIcon=document.createElementNS('http://www.w3.org/2000/svg','svg');for(const [k,v] of Object.entries({viewBox:'0 0 24 24',fill:'none',stroke:'currentColor','stroke-width':'1.7','stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true'}))archiveIcon.setAttribute(k,v);archiveIcon.innerHTML=archive?'<path d="M4 12a8 8 0 1 1 3 6M4 5v7h7"/>':'<rect x="3" y="3" width="18" height="4" rx="1"/><path d="M5 7v14h14V7m-10 5h6"/>';archiveButton.append(archiveIcon);row.append(archiveButton);card.append(row);grid.append(card)
+  }body.append(grid)
  }
  draw();
 }
