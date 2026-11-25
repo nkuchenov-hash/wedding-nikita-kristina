@@ -223,6 +223,44 @@ for kind, photo in photos.items():
         rw, rh = jpeg_dimensions(resized.read_bytes())
         assert min(rw, rh) >= 1400, (kind, rw, rh)
         resized.replace(target)
+    # Match the approved invitation's warm summer palette without changing
+    # the underlying photograph or losing resolution. The correction is
+    # baked into the JPEG, so the lightbox and card use identical colors.
+    assert convert, 'ImageMagick required for the welcome photo color grade'
+    ppm = subprocess.check_output([convert, str(target), '-colorspace', 'sRGB', '-depth', '8', 'ppm:-'])
+    header = re.match(rb'P6\s+(\d+)\s+(\d+)\s+255[\r\n ]', ppm)
+    assert header, 'Unexpected RGB image header'
+    pw, ph = map(int, header.groups())
+    rgb = ppm[header.end():]
+    assert len(rgb) == pw*ph*3
+    graded = bytearray(len(rgb))
+    # A continuous, selective grade: muted pastel skies, olive garden greens,
+    # golden midtones, soft lifted shadows and cream rather than blue whites.
+    def clamp(v, low=0., high=1.):
+        return max(low, min(high, v))
+    for i in range(0,len(rgb),3):
+        r,g,b = rgb[i]/255.,rgb[i+1]/255.,rgb[i+2]/255.
+        lum = .2126*r+.7152*g+.0722*b
+        blue = clamp((b-r-.025)*2.4)*clamp((b-g+.12)*3.)
+        green = clamp((g-r-.015)*3.2)*clamp((g-b-.015)*3.2)
+        sat = .80 - .34*blue - .19*green
+        # Gentle film curve: retain the dark foliage but avoid crushed blacks.
+        lift = .025 + .10*(1-lum)**2
+        y = clamp(lum*.95 + lift + .085*blue + .035*green)
+        rr = y+(r-lum)*sat + .035 + .043*blue + .038*green
+        gg = y+(g-lum)*sat + .012 + .016*green
+        bb = y+(b-lum)*sat - .033 - .028*green - .015*blue
+        # Sun-warmed highlights, neutral skin/architecture and no orange cast.
+        white = clamp((lum-.62)*2.1)
+        rr += .012*white
+        bb -= .009*white
+        graded[i:i+3] = bytes((round(clamp(rr)*255),round(clamp(gg)*255),round(clamp(bb)*255)))
+    out_ppm = target.with_suffix('.ppm')
+    out_ppm.write_bytes(f'P6\n{pw} {ph}\n255\n'.encode()+graded)
+    subprocess.run([convert, str(out_ppm), '-sampling-factor', '4:4:4', '-strip', '-quality', '92', str(target)],check=True)
+    out_ppm.unlink()
+    assert jpeg_dimensions(target.read_bytes()) == (pw,ph)
+    print('WELCOME_WARM_GRADE',kind,pw,ph)
     w, h = jpeg_dimensions(target.read_bytes())
     print('WELCOME_HD_PHOTO', kind, w, h, target.stat().st_size)
     pattern = r'(<figure class="photo-frame frame-' + kind + r'">.*?)(<img\b[^>]*>)(.*?</figure>)'
@@ -250,7 +288,7 @@ js = js.replace(anchor, """if(source.dataset.photoCredit){
    author.href=source.dataset.photoSource;author.textContent=source.dataset.photoCredit;author.target='_blank';author.rel='noopener noreferrer';
    license.href=source.dataset.photoLicenseUrl;license.textContent=source.dataset.photoLicense;license.target='_blank';license.rel='noopener noreferrer';
    credit.style.cssText='display:block;margin-top:5px;font-size:12px';
-   credit.append('Фото: ',author,' · ',license,' · кадрирование/масштабирование');caption.append(credit);
+   credit.append('Фото: ',author,' · ',license,' · кадрирование и цветокоррекция');caption.append(credit);
   }
   """+anchor)
 script.write_text(js)
