@@ -63,6 +63,15 @@ export function normalizeGuestTableColumns(value){
  return columns;
 }
 // Display-only grouping: never modifies guest rows, IDs, families or seating plans.
+// Recognise only explicit spouse/partner-of-a-couple labels, never infer a couple from names or seating.
+export function guestRelationshipType(link){
+ const kind=String(link.relation_type||'').toLowerCase();
+ if(kind==='couple')return 'couple';
+ if(['family','other',''].includes(kind)&&[link.relation_1_to_2,link.relation_2_to_1].some(x=>/^(муж|жена|супруг|супруга|husband|wife|spouse|пара)$/i.test(String(x||'').trim())))return 'couple';
+ if(kind==='family')return 'family';
+ if(['friend','acquaintance'].includes(kind))return 'friend';
+ return 'other';
+}
 export function groupGuestsByConnections(selected,allGuests,links,descending=false){
  const full=new Map(allGuests.map(p=>[String(p.id),p]));
  const parent=new Map([...full.keys()].map(id=>[id,id]));
@@ -795,7 +804,7 @@ export async function activateGuestDirectory(root){
      form.addEventListener('submit',event=>{event.preventDefault();panelSave?.()});
      const household=section('Связи с гостями',{collapsed:true});
      const relationTypes=[['couple','Пара'],['family','Родственные связи'],['friend','Дружеские связи'],['other','Другие связи']];
-     const typeOf=link=>relationTypes.some(([key])=>key===link.relation_type)?link.relation_type: 'other';
+     const typeOf=link=>guestRelationshipType(link);
      const relList=mk('div','ad-gb-relations');household.append(relList);
      const editor=mk('div','ad-gb-relation-editor');household.append(editor);
      const addButton=mk('button','ad-gb-light','+ Добавить связь');addButton.type='button';household.append(addButton);
