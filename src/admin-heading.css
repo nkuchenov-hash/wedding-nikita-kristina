@@ -167,8 +167,6 @@ html[data-admin-theme="dark"] .ad-tl-card :is(.ad-tl-card-title,.ad-tl-card-desc
  body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(2){order:5}
  .vw-control-board tbody td:nth-child(4)::before,.vw-control-board tbody td:nth-child(5)::before,.vw-control-board tbody td:nth-child(6)::before{display:block;font-size:16px;font-weight:600;color:#617768;margin-bottom:4px}
  .vw-control-board tbody td:nth-child(4)::before{content:"Бюджет"}.vw-control-board tbody td:nth-child(5)::before{content:"Вместимость"}.vw-control-board tbody td:nth-child(6)::before{content:"Рейтинг"}
- body.admin-body .vw-control-board .vw-venue-media,body.admin-body .vw-control-board .vw-image-open{width:72px;height:72px;flex-basis:72px}
- body.admin-body .vw-control-board .vw-image-open>.vw-row-thumb{width:72px;height:72px}
  body.admin-body .vw-control-board .vw-venue-label{min-width:0}
  body.admin-body .vw-control-board .vw-name{white-space:normal;text-align:left;overflow-wrap:anywhere;font-size:18px}
  body.admin-body .vw-control-board .vw-date-edit select{min-height:40px}
@@ -315,8 +313,6 @@ html[data-admin-theme="dark"] .admin-mobile-bar{background:#101715}
  body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td{padding:0;line-height:1.35;min-height:0}
  body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td:nth-child(1){padding:0 0 5px;border:0}
  body.admin-body .vw-page.vw-control-board .vw-venue-cell{gap:9px;align-items:center}
- body.admin-body .vw-page.vw-control-board .vw-venue-media,body.admin-body .vw-page.vw-control-board .vw-image-open{width:56px;height:56px;flex-basis:56px}
- body.admin-body .vw-page.vw-control-board .vw-image-open>.vw-row-thumb{width:56px;height:56px}
  body.admin-body .vw-page.vw-control-board .vw-name{font-size:18px;line-height:1.25}
  body.admin-body .vw-page.vw-control-board .vw-venue-label{display:grid;gap:2px}
  body.admin-body .vw-page.vw-control-board .vw-archive-action{display:none}
@@ -690,23 +686,29 @@ body.admin-body .admin-side .admin-settings-footer .side-link{flex:1 1 auto;min-
  body.admin-body .admin-side .side-group+.side-group{margin-top:12px;padding-top:12px}
 }
 
-/* Venue comparison: recognizable landscape preview, not an icon-sized crop. */
-body.admin-body .vw-page.vw-control-board{--venue-thumb-w:144px;--venue-thumb-h:96px}
-body.admin-body .vw-page.vw-control-board .vw-venue-cell{gap:14px;align-items:center}
-body.admin-body .vw-page.vw-control-board :is(.vw-venue-media,.vw-image-open){width:var(--venue-thumb-w);height:var(--venue-thumb-h);flex:0 0 var(--venue-thumb-w)}
-body.admin-body .vw-page.vw-control-board .vw-image-open>.vw-row-thumb{width:var(--venue-thumb-w);height:var(--venue-thumb-h);object-fit:cover;object-position:center}
+/* Venue table: image occupies a substantial part of the first column, at every breakpoint. */
+body.admin-body .vw-page.vw-control-board{--venue-thumb-w:220px;--venue-thumb-h:144px}
+body.admin-body .vw-page.vw-control-board .vw-venue-cell{display:grid;grid-template-columns:var(--venue-thumb-w) minmax(0,1fr);gap:16px;align-items:center}
+body.admin-body .vw-page.vw-control-board .vw-venue-media{display:block;width:var(--venue-thumb-w);height:var(--venue-thumb-h);min-width:var(--venue-thumb-w);min-height:var(--venue-thumb-h)}
+body.admin-body .vw-page.vw-control-board .vw-image-open{display:block;width:100%;height:100%;max-width:none;padding:0;overflow:hidden}
+body.admin-body .vw-page.vw-control-board .vw-image-open>.vw-row-thumb{display:block;width:100%;height:100%;min-width:0;max-width:none;object-fit:cover;object-position:center}
+body.admin-body .vw-page.vw-control-board .vw-image-open.vw-photo-unavailable{display:grid;place-items:center}
 body.admin-body .vw-page.vw-control-board .vw-venue-label{min-width:0}
 @media(min-width:901px){
- body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(1){width:28%}
- body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(2){width:20%}
- body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(3){width:11%}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable{min-width:1530px}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(1){width:31%}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(2){width:19%}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(3){width:10%}
  body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(4){width:18%}
  body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(5){width:9%}
- body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(6){width:14%}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(6){width:13%}
 }
 @media(max-width:900px){
- body.admin-body .vw-page.vw-control-board{--venue-thumb-w:112px;--venue-thumb-h:84px}
+ body.admin-body .vw-page.vw-control-board{--venue-thumb-w:148px;--venue-thumb-h:104px}
  body.admin-body .vw-page.vw-control-board .vw-venue-cell{gap:12px}
+}
+@media(max-width:380px){
+ body.admin-body .vw-page.vw-control-board{--venue-thumb-w:128px;--venue-thumb-h:96px}
 }
 body.admin-body .vdp-photo-group{margin:20px 0 24px;min-width:0}
 body.admin-body .vdp-photo-group h3{font-size:18px;font-weight:500;margin:0 0 12px;display:flex;align-items:center;gap:10px}

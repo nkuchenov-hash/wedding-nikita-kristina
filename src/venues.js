@@ -397,8 +397,8 @@ function row(v){
  const score=weighted(v),cost=totalEstimate(v),pic=getVenueCover(v);
  const offer=v.offerNote?'<small class="vw-offer-note">'+h(v.offerNote)+'</small>':'';
  const alternate=getVenueCoverCandidates(v).find(p=>p.id!==pic?.id);
- const fallback=alternate?(alternate.src?safeUrl(alternate.src):'https://drive.google.com/thumbnail?id='+encodeURIComponent(alternate.id)+'&sz=w480'):'';
- const image=pic?'<img loading="lazy" class="vw-row-thumb" referrerpolicy="no-referrer" src="'+h(pic.src?safeUrl(pic.src):'https://drive.google.com/thumbnail?id='+encodeURIComponent(pic.id)+'&sz=w480')+'" data-fallback-cover="'+h(fallback)+'" alt="Фото площадки: '+h(v.name)+'">':'<span class="vw-row-thumb vw-no-image"></span>';
+ const fallback=alternate?(alternate.src?safeUrl(alternate.src):'https://drive.google.com/thumbnail?id='+encodeURIComponent(alternate.id)+'&sz=w800'):'';
+ const image=pic?'<img loading="lazy" class="vw-row-thumb" referrerpolicy="no-referrer" src="'+h(pic.src?safeUrl(pic.src):'https://drive.google.com/thumbnail?id='+encodeURIComponent(pic.id)+'&sz=w800')+'" data-fallback-cover="'+h(fallback)+'" alt="Фото площадки: '+h(v.name)+'">':'<span class="vw-row-thumb vw-no-image"></span>';
  const complete=cost.value!==null&&!cost.partial;
  const amount=cost.value===null?'Не рассчитано':(cost.kind==='planning'?'≈ '+rub(cost.value):complete?rub(cost.value):'от '+rub(cost.value));
  const known=cost.value===null&&cost.knownSubtotal>0?'Известно: '+rub(cost.knownSubtotal)+' (не итог)':'';
