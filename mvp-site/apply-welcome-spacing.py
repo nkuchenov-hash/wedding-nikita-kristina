@@ -11,3 +11,10 @@ s=s.replace(anchor,anchor.replace('</figure></div>','</figure>'+berry+'</div>'))
 p.write_text(s)
 css=Path('_mvp/style.css')
 css.write_text(css.read_text()+'\n'+Path('mvp-site/welcome-spacing.css').read_text())
+
+# Install the full-resolution transparent gold engraving into the original hero slot.
+from shutil import copyfile
+art = Path('mvp-site/hero-skyline-engraving.png')
+assert art.stat().st_size > 1000000
+assert 'src="assets/skyline.png"' in p.read_text()
+copyfile(art, '_mvp/assets/skyline.png')
