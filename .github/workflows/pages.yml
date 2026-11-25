@@ -7,6 +7,7 @@ on:
       - 'design-preview/**'
       - 'tools/prepare-admin-release.mjs'
       - 'tools/admin-dark-theme.mjs'
+      - 'tools/admin-design-system.mjs'
       - 'tools/stage-guest-online.mjs'
       - 'tools/admin-gateway.php'
       - '.github/workflows/pages.yml'

@@ -2,13 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const read=f=>readFileSync(new URL('../src/'+f,import.meta.url),'utf8');
-test('touch dragging has a dedicated gesture target and follows scrolled timeline coordinates',()=>{
+test('compact chronology has handle-free long press, scrolling and valid time anchors',()=>{
  const js=read('admin-program.js'),css=read('admin-heading.css');
- assert.match(js,/if\(touch&&!moveHandle&&!resizeHandle\)return/);
- assert.match(js,/y-state\.initialY\+scrollDelta/);
- assert.match(js,/requestAnimationFrame\(autoScroll\)/);
- assert.match(css,/\.ad-tl-calendar-card\{touch-action:pan-y/);
- assert.match(css,/\.ad-tl-touch-move\{[^}]*touch-action:none/);
+ assert.match(js,/setTimeout\(arm,340\)/);
+ assert.match(js,/touchmove/);
+ assert.match(js,/if\(state\.armed&&e\.cancelable\)e\.preventDefault\(\)/);
+ assert.match(js,/data(?:set)\.activityId/);
+ assert.match(js,/requestAnimationFrame\(auto\)/);
+ assert.doesNotMatch(js,/node\.append\(mobileDrag\)/);
+ assert.match(css,/\.ad-tl-chronology-card[^}]*height:auto!important/);
 });
 test('mobile venue list scrolls normally and guest name keeps title scale',()=>{
  const css=read('admin-heading.css'),app=read('admin-app.js');

@@ -97,9 +97,9 @@ test('triple parallel events have 3 lanes and time sizing is proportional to min
  assert.equal(snapToFive(29),30);
  assert.equal(snapToFive(32),30);
 });
-test('calendar supports vertical time dragging, bottom-edge resizing and manual concurrency',()=>{
+test('compact chronology supports long-press time dragging, editor and keyboard duration changes',()=>{
  assert.match(source,/attachTimelineHandles/);
- assert.match(source,/setTimeout\(\(\)=>arm\(state\),230\)/);
+ assert.match(source,/setTimeout\(arm,340\)/);
  assert.match(source,/baseLength/);
  assert.doesNotMatch(source,/ad-tl-move-grip/);
  assert.doesNotMatch(source,/ad-tl-resize-grip/);

@@ -138,117 +138,59 @@ export async function renderWeddingProgram(host,api,days){
    }catch(error){await reload('Не удалось сохранить время: '+error.message);return false}
    finally{busy=false}
  }
+ // A card is a compact time anchor, not a height proportional to duration.
  function attachTimelineHandles(node,item,clockLabel,lengthLabel){
-   const start=mins(hm(item.start_at));
+   const start=mins(hm(item.start_at)),baseLength=duration(item);
    if(start===null)return;
-   let pointer=null,ignoreNextClick=false;
-   const mobileDrag=$('span','ad-tl-touch-move','⋮⋮');
-   mobileDrag.setAttribute('aria-label','Переместить активность');mobileDrag.title='Потяните для изменения времени';
-   node.append(mobileDrag);
-   const mobileResize=$('span','ad-tl-touch-resize');mobileResize.setAttribute('aria-label','Изменить длительность');node.append(mobileResize);
-   // A short click edits the card. Hold for 230 ms, then drag the whole card
-   // to another time slot. The bottom 16 px are the unmarked resize edge.
-   node.addEventListener('click',event=>{
-     if(!ignoreNextClick)return;
-     ignoreNextClick=false;
-     event.preventDefault();event.stopImmediatePropagation();
-   },true);
-   const refresh=(state,y)=>{
-     const scrollDelta=(state.scroller?.scrollTop||0)-state.initialScroll;
-     const delta=snapToFive((y-state.initialY+scrollDelta)/MINUTE_PX);
-     if(state.mode==='resize'){
-       state.length=Math.max(5,Math.min(600,1435-state.baseStart,
-         snapToFive(state.baseLength+delta)));
-       node.style.height=Math.max(15,state.length*MINUTE_PX)+'px';
-     }else{
-       state.start=Math.max(0,Math.min(1435-state.baseLength,
-         snapToFive(state.baseStart+delta)));
-       node.style.transform='translateY('+((state.start-state.baseStart)*MINUTE_PX)+'px)';
+   let state=null,suppress=false;
+   const cleanup=()=>{
+     if(!state)return;
+     clearTimeout(state.timer);cancelAnimationFrame(state.frame);
+     state.target?.classList.remove('ad-tl-drop-target');
+     node.classList.remove('ad-tl-dragging');state.float?.remove();state=null;
+   };
+   function targetAt(y){
+     const candidates=[...host.querySelectorAll('.ad-tl-chronology-row')].filter(r=>r.dataset.activityId!==String(item.id));
+     if(!candidates.length)return null;
+     return candidates.reduce((best,r)=>Math.abs(r.getBoundingClientRect().top+r.getBoundingClientRect().height/2-y)<Math.abs(best.getBoundingClientRect().top+best.getBoundingClientRect().height/2-y)?r:best,candidates[0]);
+   }
+   function move(x,y){
+     if(!state)return;
+     state.x=x;state.y=y;
+     if(!state.armed){if(Math.hypot(x-state.x0,y-state.y0)>12)cleanup();return}
+     const target=targetAt(y);state.target?.classList.remove('ad-tl-drop-target');state.target=target;
+     if(target){
+       const bounds=target.getBoundingClientRect();
+       const next=y>bounds.top+bounds.height/2?Number(target.dataset.end):Number(target.dataset.start);
+       state.next=Math.max(0,Math.min(1435-baseLength,snapToFive(next)));
+       target.classList.add('ad-tl-drop-target');
      }
-     clockLabel.textContent=clock(state.start)+' — '+clock(state.start+state.length);
-     lengthLabel.textContent=state.length+' мин';
-   };
-   const arm=state=>{
-     if(pointer!==state)return;
-     state.armed=true;ignoreNextClick=true;
-     const autoScroll=()=>{
-       if(pointer!==state||!state.armed)return;
-       if(state.scroller){const r=state.scroller.getBoundingClientRect();const edge=48;
-         const speed=state.lastY<r.top+edge?-Math.min(18,(r.top+edge-state.lastY)/3):state.lastY>r.bottom-edge?Math.min(18,(state.lastY-r.bottom+edge)/3):0;
-         if(speed){state.scroller.scrollTop+=speed;refresh(state,state.lastY)}
-       }
-       state.frame=requestAnimationFrame(autoScroll);
-     };state.frame=requestAnimationFrame(autoScroll);
-     node.classList.add('ad-tl-adjusting','ad-tl-grabbing');
-     refresh(state,state.lastY);
-   };
-   const reset=state=>{
-     if(state.holdTimer!==null)clearTimeout(state.holdTimer);
-     if(state.frame!==null)cancelAnimationFrame(state.frame);
-     node.classList.remove('ad-tl-adjusting','ad-tl-grabbing');
-     node.style.transform='';node.style.height='';
-     clockLabel.textContent=clock(state.baseStart)+' — '+clock(state.baseStart+state.baseLength);
-     lengthLabel.textContent=state.baseLength+' мин';
-     try{if(node.hasPointerCapture(state.pointerId))node.releasePointerCapture(state.pointerId)}catch{}
-     pointer=null;
-   };
-   node.addEventListener('pointerdown',event=>{
-     if(busy||pointer||(event.pointerType==='mouse'&&event.button!==0)||
-       event.target.closest('button,input,select,textarea,a'))return;
-     const touch=event.pointerType==='touch'||event.pointerType==='pen';
-     const moveHandle=event.target.closest('.ad-tl-touch-move');
-     const resizeHandle=event.target.closest('.ad-tl-touch-resize');
-     if(touch&&!moveHandle&&!resizeHandle)return;
-     const bounds=node.getBoundingClientRect();
-     const resizing=touch?!!resizeHandle:event.clientY>=bounds.bottom-16;
-     const scroller=node.closest('.ad-tl-calendar-scroll');
-     ignoreNextClick=false;
-     const state={
-       pointerId:event.pointerId,initialY:event.clientY,lastY:event.clientY,
-       baseStart:start,baseLength:duration(item),start,length:duration(item),
-       mode:resizing?'resize':'move',armed:false,holdTimer:null,frame:null,scroller,initialScroll:scroller?.scrollTop||0
-     };
-     pointer=state;
-     try{node.setPointerCapture(event.pointerId)}catch{}
-     if(resizing||touch){
-       arm(state);
-       if(resizing){node.classList.remove('ad-tl-grabbing');node.classList.add('ad-tl-resizing')}
-       event.preventDefault();
-     }else{
-       state.holdTimer=setTimeout(()=>arm(state),230);
-     }
-   });
-   node.addEventListener('pointermove',event=>{
-     if(!pointer||pointer.pointerId!==event.pointerId)return;
-     pointer.lastY=event.clientY;
-     if(pointer.armed){event.preventDefault();refresh(pointer,event.clientY)}
-   });
-   node.addEventListener('pointerup',event=>{
-     if(!pointer||pointer.pointerId!==event.pointerId)return;
-     const state=pointer;
-     if(state.armed)refresh(state,event.clientY);
-     const changed=state.armed&&(state.start!==state.baseStart||state.length!==state.baseLength);
-     if(state.armed)ignoreNextClick=true;
-     reset(state);
-     node.classList.remove('ad-tl-resizing');
-     if(changed)void saveSlot(item,state.start,state.length,
-       state.mode==='resize'?'Длительность изменена.':'Время начала изменено.');
-   });
-   node.addEventListener('pointercancel',event=>{
-     if(!pointer||pointer.pointerId!==event.pointerId)return;
-     const state=pointer;
-     ignoreNextClick=false;
-     reset(state);node.classList.remove('ad-tl-resizing');
-   });
-   // Keyboard users can move by 5 minutes or resize with Shift + arrows.
+     state.float.style.top=Math.max(0,y-36)+'px';state.float.style.left=Math.max(8,Math.min(x-90,window.innerWidth-190))+'px';
+     state.float.textContent=clock(state.next)+' · '+item.title;
+   }
+   function arm(){
+     if(!state||busy)return;
+     state.armed=true;state.float=$('div','ad-tl-drag-preview');document.body.append(state.float);node.classList.add('ad-tl-dragging');
+     const auto=()=>{if(!state?.armed)return;const y=state.y,edge=72;if(y<edge)window.scrollBy(0,-10);else if(y>window.innerHeight-edge)window.scrollBy(0,10);move(state.x,y);state.frame=requestAnimationFrame(auto)};
+     move(state.x,state.y);state.frame=requestAnimationFrame(auto);
+   }
+   function begin(x,y){if(busy||state)return;suppress=false;state={x0:x,y0:y,x,y,next:start,armed:false,frame:0,timer:setTimeout(arm,340),target:null,float:null}}
+   function finish(cancel=false){if(!state)return;const {armed,next}=state;cleanup();if(armed){suppress=true;setTimeout(()=>{suppress=false},500);if(!cancel&&next!==start)void saveSlot(item,next,baseLength,'Время начала изменено.')}}
+   node.addEventListener('click',e=>{if(suppress){e.preventDefault();e.stopImmediatePropagation();suppress=false}},true);
+   node.addEventListener('contextmenu',e=>e.preventDefault());
+   node.addEventListener('touchstart',e=>{if(e.touches.length===1)begin(e.touches[0].clientX,e.touches[0].clientY)},{passive:true});
+   node.addEventListener('touchmove',e=>{if(!state)return;if(state.armed&&e.cancelable)e.preventDefault();const t=e.touches[0];if(t)move(t.clientX,t.clientY)},{passive:false});
+   node.addEventListener('touchend',e=>{if(state?.armed&&e.cancelable)e.preventDefault();finish()},{passive:false});
+   node.addEventListener('touchcancel',()=>finish(true));
+   node.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'||e.button!==0)return;begin(e.clientX,e.clientY);try{node.setPointerCapture(e.pointerId)}catch{}});
+   node.addEventListener('pointermove',e=>{if(e.pointerType!=='touch')move(e.clientX,e.clientY)});
+   node.addEventListener('pointerup',e=>{if(e.pointerType!=='touch')finish()});
+   node.addEventListener('pointercancel',e=>{if(e.pointerType!=='touch')finish(true)});
    node.addEventListener('keydown',event=>{
      if(event.target!==node||!['ArrowUp','ArrowDown'].includes(event.key))return;
-     event.preventDefault();event.stopPropagation();
-     const delta=event.key==='ArrowDown'?5:-5;
-     if(event.shiftKey)void saveSlot(item,start,Math.max(5,
-       Math.min(600,1435-start,duration(item)+delta)),'Длительность изменена.');
-     else void saveSlot(item,Math.max(0,Math.min(1435-duration(item),start+delta)),
-       duration(item),'Время начала изменено.');
+     event.preventDefault();event.stopPropagation();const delta=event.key==='ArrowDown'?5:-5;
+     if(event.shiftKey)void saveSlot(item,start,Math.max(5,Math.min(600,1435-start,baseLength+delta)),'Длительность изменена.');
+     else void saveSlot(item,Math.max(0,Math.min(1435-baseLength,start+delta)),baseLength,'Время начала изменено.');
    });
  }
  async function removeItem(item){
@@ -269,7 +211,7 @@ export async function renderWeddingProgram(host,api,days){
    node.setAttribute('tabindex','0');
    node.setAttribute('aria-label','Открыть активность: '+item.title);
    node.addEventListener('click',e=>{
-     if(e.target.closest('button,.ad-tl-touch-move,.ad-tl-touch-resize'))return;
+     if(e.target.closest('button'))return;
      openCard(item);
    });
    node.addEventListener('keydown',e=>{
@@ -314,65 +256,27 @@ export async function renderWeddingProgram(host,api,days){
      // Do not clip tag chips when the time slot is shorter than the label area.
      if(scheduledCard && duration(item)<25)node.classList.add('ad-tl-has-short-tags');
    }
-   if(view==='program'&&programDisplay==='timeline')attachTimelineHandles(node,item,clockLabel,lengthLabel);
+   if(view==='program')attachTimelineHandles(node,item,clockLabel,lengthLabel);
    return node;
  }
  function renderTimeline(items){
-   const container=$('section','ad-tl-calendar');
-   const layout=parallelEventLayout(items);
-   const interval=displayHoursForDay(day,dayHours);
-   const axisStart=mins(interval.from),axisEnd=mins(interval.to);
-   const height=(axisEnd-axisStart)*MINUTE_PX;
-   const visible=layout.filter(slot=>slot.end>axisStart&&slot.start<axisEnd);
-   const outside=layout.length-visible.length;
-   const scroller=$('div','ad-tl-calendar-scroll');
-   scroller.setAttribute('aria-label','Расписание по часам с параллельными дорожками');
-   const grid=$('div','ad-tl-calendar-grid');
-   grid.style.height=height+'px';
-   const board=$('div','ad-tl-calendar-board');
-   board.style.height=height+'px';
-   for(let minute=Math.ceil(axisStart/30)*30;minute<=axisEnd;minute+=30){
-     const major=minute%60===0;
-     const top=(minute-axisStart)*MINUTE_PX;
-     const label=$('span','ad-tl-time-tick'+(major?' is-hour':''),clock(minute));
-     label.style.top=top+'px';grid.append(label);
-     const line=$('div','ad-tl-calendar-line'+(major?' is-hour':''));
-     line.style.top=top+'px';board.append(line);
+   const container=$('section','ad-tl-chronology');
+   const interval=displayHoursForDay(day,dayHours),axisStart=mins(interval.from),axisEnd=mins(interval.to);
+   const layout=parallelEventLayout(items),byId=new Map(layout.map(s=>[String(s.id),s]));
+   const head=$('div','ad-tl-chronology-head');
+   head.append($('h2','',dateName(day)));
+   const settings=$('a','ad-tl-day-settings','Настройки дня');settings.href='#/admin/settings';head.append(settings);container.append(head);
+   const list=$('div','ad-tl-chronology-list');container.append(list);
+   if(!items.length)list.append($('p','ad-tl-empty','Для этого дня программа пока не составлена.'));
+   for(const item of items){
+     const slot=byId.get(String(item.id));if(!slot)continue;
+     const row=$('div','ad-tl-chronology-row');row.dataset.activityId=String(item.id);row.dataset.start=String(slot.start);row.dataset.end=String(slot.end);
+     const time=$('div','ad-tl-chronology-time');time.append($('strong','',clock(slot.start)),$('small','',duration(item)+' мин'));
+     const tile=card(item,items);tile.classList.add('ad-tl-chronology-card');
+     if(slot.laneCount>1)tile.append($('span','ad-tl-parallel-label','Параллельно'));
+     if(slot.start<axisStart||slot.end>axisEnd)tile.append($('span','ad-tl-outside-label','Вне заданных часов'));
+     row.append(time,tile);list.append(row);
    }
-   const byId=new Map(items.map(x=>[x.id,x]));
-   for(const slot of visible){
-     const item=byId.get(slot.id);
-     if(!item)continue;
-     const tile=card(item,items);
-     tile.classList.add('ad-tl-calendar-card');
-     // Clip entries that cross the configured visible-hour boundary.
-     const shownStart=Math.max(slot.start,axisStart),shownEnd=Math.min(slot.end,axisEnd);
-     tile.style.top=((shownStart-axisStart)*MINUTE_PX)+'px';
-     tile.style.height=((shownEnd-shownStart)*MINUTE_PX)+'px';
-     tile.style.left=(slot.lane/slot.laneCount*100)+'%';
-     tile.style.width='calc('+(100/slot.laneCount)+'% - 8px)';
-     tile.setAttribute('data-parallel-lane',String(slot.lane));
-     tile.title=item.title+' · '+clock(slot.start)+'–'+clock(slot.end);
-     if(slot.laneCount>1)tile.classList.add('ad-tl-is-parallel');
-     board.append(tile);
-   }
-   grid.append(board);scroller.append(grid);container.append(scroller);
-   const footer=$('p','ad-tl-timeline-foot',
-     interval.from+'–'+interval.to+' · '+visible.length+' событий'+
-     (layout.some(x=>x.laneCount>1)?' · Есть параллельные активности':''));
-   container.append(footer);
-   if(!items.length)container.append($('p','ad-tl-help','Для этого дня программа пока не составлена.'));
-   if(outside)container.append($('p','ad-tl-warning',
-     'За пределами выбранных часов: '+outside+' событий. Измените интервал в общих настройках, чтобы увидеть их на таймлайне.'));
-   // Initial scroll keeps the first event in sight without a blank prelude.
-   const savedScroll=timelineScrollByDay.has(day)
-     ?timelineScrollByDay.get(day)
-     :Math.max(0,((visible[0]?.start??axisStart)-axisStart)*MINUTE_PX-84);
-   // The scrollable element receives real dimensions only after it joins the DOM.
-   requestAnimationFrame(()=>{
-     if(scroller.isConnected)scroller.scrollTop=savedScroll;
-     scroller.addEventListener('scroll',()=>timelineScrollByDay.set(day,scroller.scrollTop));
-   });
    return container;
  }
  function render(){
@@ -395,9 +299,10 @@ export async function renderWeddingProgram(host,api,days){
    const daysBar=$('nav','ad-tl-day-nav');
    daysBar.setAttribute('aria-label','Выбор дня свадьбы');
    for(const d of days){
-     const b=makeButton(d.label,()=>{
+     const b=makeButton(d.date.slice(-2),()=>{
        day=d.date;filter='all';notification='';render();
      },'ad-tl-day-tab'+(day===d.date?' is-active':''));
+     b.setAttribute('aria-label',d.label);b.append($('small','ad-tl-weekday',d.weekday.slice(0,2).toLowerCase()));
      b.setAttribute('aria-pressed',String(day===d.date));
      daysBar.append(b);
    }

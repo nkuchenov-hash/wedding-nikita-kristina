@@ -23,7 +23,7 @@ function applyAdminTheme(){
    toggle.title='Тема: '+modeLabel+' · авто → светлая → тёмная';
    toggle.innerHTML=dark?'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M19 5l-1.5 1.5m-11 11L5 19"/></svg>':'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20.5 15.5A9 9 0 0 1 8.5 3.5 9 9 0 1 0 20.5 15.5Z"/></svg>';
  }
- document.querySelector('meta[name="theme-color"]')?.setAttribute('content',mode==='dark'?'#101715':'#17332d');
+ document.querySelector('meta[name="theme-color"]')?.setAttribute('content',mode==='dark'?'#151d18':'#ffffff');
 }
 applyAdminTheme();
 systemTheme.addEventListener?.('change',()=>{if(!themePreference)applyAdminTheme()});

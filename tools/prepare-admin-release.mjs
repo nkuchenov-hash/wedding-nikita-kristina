@@ -1,6 +1,7 @@
 import {mkdirSync,cpSync,writeFileSync,rmSync,readdirSync,existsSync,readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {themeAdminStyles,darkAdminVariables} from './admin-dark-theme.mjs';
+import {unifyAdminPalette} from './admin-design-system.mjs';
 import {execFileSync} from 'node:child_process';
 execFileSync(process.execPath,['tools/check-single-photo-section.mjs'],{stdio:'inherit'});
 const root='_site';
@@ -18,14 +19,14 @@ for(const name of required){
 const themeTokens=new Map();
 for(const name of required.filter(n=>n.endsWith('.css'))){
  const file=join(assets,name);
- writeFileSync(file,themeAdminStyles(readFileSync(file,'utf8'),themeTokens));
+ writeFileSync(file,themeAdminStyles(unifyAdminPalette(readFileSync(file,'utf8')),themeTokens));
 }
 const headingCss=join(assets,'admin-heading.css');
 writeFileSync(headingCss,readFileSync(headingCss,'utf8')+darkAdminVariables(themeTokens));
 mkdirSync(join(admin,'public'),{recursive:true});
 cpSync(join(root,'public','mark.svg'),join(admin,'public','mark.svg'));
 const styles=['styles.css','venues.css','venue-detail-ui.css','admin-data.css','admin-program.css','admin-photos.css','venue-files-ui.css','admin-guests.css','admin-heading.css'].map(n=>'<link rel="stylesheet" href="./index.php?asset=src/'+n+'&v='+sha+'">').join('\n');
-const adminHtml='<!doctype html>\n<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#17332d"><title>Никита и Кристина — управление свадьбой</title><link rel="icon" href="./public/mark.svg">\n'+"<script>try{var t=localStorage.getItem(\"wedding-admin-theme\");document.documentElement.dataset.adminTheme=t===\"light\"||t===\"dark\"?t:(matchMedia(\"(prefers-color-scheme: dark)\").matches?\"dark\":\"light\")}catch(e){document.documentElement.dataset.adminTheme=matchMedia(\"(prefers-color-scheme: dark)\").matches?\"dark\":\"light\"}</script>"+'\n'+styles+'\n</head><body class="admin-body"><div id="app"></div><script type="module" src="./index.php?asset=src/admin-app.js&v='+sha+'"></script></body></html>\n';
+const adminHtml='<!doctype html>\n<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#ffffff"><title>Никита и Кристина — управление свадьбой</title><link rel="icon" href="./public/mark.svg">\n'+"<script>try{var t=localStorage.getItem(\"wedding-admin-theme\");document.documentElement.dataset.adminTheme=t===\"light\"||t===\"dark\"?t:(matchMedia(\"(prefers-color-scheme: dark)\").matches?\"dark\":\"light\")}catch(e){document.documentElement.dataset.adminTheme=matchMedia(\"(prefers-color-scheme: dark)\").matches?\"dark\":\"light\"}</script>"+'\n'+styles+'\n</head><body class="admin-body"><div id="app"></div><script type="module" src="./index.php?asset=src/admin-app.js&v='+sha+'"></script></body></html>\n';
 writeFileSync(join(privateDir,'index.html'),adminHtml);
 cpSync('tools/admin-gateway.php',join(admin,'index.php'));
 for(const name of required){
