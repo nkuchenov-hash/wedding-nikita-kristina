@@ -312,9 +312,9 @@ const budgetRub=v=>Math.round(Number(v)||0).toLocaleString('ru-RU')+' ₽';
 const budgetNumber=v=>Number(v)||0;
 const budgetDetails=r=>{try{return JSON.parse(r?.details_json||'{}')||{}}catch{return {}}};
 export function budgetTotals(rows,limit=null){
- const result={planned:0,committed:0,paid:0,remaining:0,unknown:0};
- for(const r of rows){result.planned+=budgetNumber(r.planned_rub);result.committed+=budgetNumber(r.committed_rub);result.paid+=budgetNumber(r.paid_rub);result.remaining+=Math.max(0,budgetNumber(r.committed_rub)-budgetNumber(r.paid_rub));if(r.unknown)result.unknown++}
- return {...result,free:limit==null?null:limit-Math.max(result.planned,result.committed,result.paid)};
+ const result={planned:0,committed:0,paid:0,remaining:0,unknown:0};let allocated=0;
+ for(const r of rows){result.planned+=budgetNumber(r.planned_rub);result.committed+=budgetNumber(r.committed_rub);result.paid+=budgetNumber(r.paid_rub);result.remaining+=Math.max(0,budgetNumber(r.committed_rub)-budgetNumber(r.paid_rub));if(r.unknown)result.unknown++;allocated+=Math.max(budgetNumber(r.planned_rub),budgetNumber(r.committed_rub),budgetNumber(r.paid_rub))}
+ return {...result,free:limit==null?null:limit-allocated};
 }
 export function budgetRows(lines,vendors,decor,guests){
  const sources=new Map([...vendors.map(r=>[r.id,{r,section:'vendors'}]),...decor.map(r=>[r.id,{r,section:'decor'}])]);
@@ -357,7 +357,7 @@ async function renderBudget(host){
     const agreed=$('label','budget-agreed'),check=$('input');check.type='checkbox';check.checked=!!row.details.agreed;agreed.append(check,$('span','','Известная сумма согласована'));form.append(agreed);
     submitForm(d,form,()=>call('admin/records',{method:'PATCH',body:{collection:source.section==='vendors'?'vendors':'decor_items',id:source.r.id,fields:{details_json:JSON.stringify({...row.details,paid:budgetNumber(p.value),due:due.value,agreed:check.checked})}}}));
    }else{
-    const data={...prefill,...row},categoryField=field(form,'Категория','category',data.category||category||'Прочее'),name=field(form,'Статья расходов','description',data.description);name.required=true;categoryField.required=true;
+    const data={...row,...prefill},categoryField=field(form,'Категория','category',data.category||category||'Прочее'),name=field(form,'Статья расходов','description',data.description);name.required=true;categoryField.required=true;
     const plan=field(form,'План, ₽','planned_rub',data.planned_rub??0,'number'),committed=field(form,'Согласовано, ₽','committed_rub',data.committed_rub??0,'number'),paid=field(form,'Оплачено всего, ₽','paid_rub',data.paid_rub??0,'number'),due=field(form,'Срок оплаты','due_at',String(data.due_at||'').slice(0,10),'date'),notes=field(form,'Примечание / источник','notes',data.notes);
     submitForm(d,form,()=>call('admin/records',{method:row.id?'PATCH':'POST',body:{collection:'budget_lines',...(row.id?{id:row.id}:{}),fields:{category:categoryField.value.trim(),description:name.value.trim(),planned_rub:budgetNumber(plan.value),committed_rub:budgetNumber(committed.value),paid_rub:budgetNumber(paid.value),due_at:due.value||null,notes:notes.value}}}));
    }
@@ -373,7 +373,7 @@ async function renderBudget(host){
   }
   body.append(summary);
   const cap=$('section','budget-panel budget-limit'),caphead=$('div','budget-panel-head');caphead.append($('h2','','Общий лимит'),secondary(limit==null?'Задать лимит':'Изменить',editLimit));cap.append(caphead);
-  if(limit==null)cap.append($('p','budget-muted','Не задан'));else{const line=$('div','budget-limit-values');line.append($('strong','',budgetRub(limit)), $('span',totals.free<0?'budget-over':'',totals.free<0?'Превышение '+budgetRub(-totals.free):'Остаток '+budgetRub(totals.free)));const p=$('progress');p.max=Math.max(1,limit);p.value=Math.min(p.max,Math.max(totals.planned,totals.committed,totals.paid));p.setAttribute('aria-label','Использование лимита');cap.append(line,p)}
+  if(limit==null)cap.append($('p','budget-muted','Не задан'));else{const line=$('div','budget-limit-values');line.append($('strong','',budgetRub(limit)), $('span',totals.free<0?'budget-over':'',totals.free<0?'Превышение '+budgetRub(-totals.free):'Остаток '+budgetRub(totals.free)));const p=$('progress');p.max=Math.max(1,limit);p.value=Math.min(p.max,Math.max(0,limit-totals.free));p.setAttribute('aria-label','Использование лимита');cap.append(line,p)}
   body.append(cap);
   const scenario=$('section','budget-panel budget-scenario'),sh=$('div','budget-panel-head');sh.append($('h2','','Площадка и банкет'),$('span','budget-muted',guests+' гостей'));scenario.append(sh);
   const selectVenue=select([['','Выберите вариант для расчёта'],...venueOptions.map(v=>[v.id,v.name])],venueId,v=>{venueId=v;draw()});scenario.append(selectVenue);
@@ -384,7 +384,9 @@ async function renderBudget(host){
    const link=$('a','budget-source-link','Открыть смету площадки →');link.href='#/admin/venues/'+encodeURIComponent(selected.id)+'/budget';scenario.append(link);
    const existing=rows.find(r=>!r.linked&&String(r.notes||'').startsWith('План площадки:'));
    const anyVenue=rows.some(r=>r.category==='Площадка'&&r!==existing);
-   if(e.value!=null&&!anyVenue){const apply=secondary(existing?'Обновить статью площадки':'Включить в план',()=>edit(existing?{...existing,description:selected.name,planned_rub:Math.round(e.value),notes:'План площадки: '+selected.id+'; '+guests+' гостей; '+(e.note||'') }:{},{category:'Площадка',description:selected.name,planned_rub:Math.round(e.value),notes:'План площадки: '+selected.id+'; '+guests+' гостей; '+(e.note||'')}));scenario.append(apply)}
+   const changingCommittedVenue=existing&&(!String(existing.notes||'').startsWith('План площадки: '+selected.id+';'))&&(budgetNumber(existing.paid_rub)>0||budgetNumber(existing.committed_rub)>0);
+   if(e.value!=null&&!anyVenue&&!changingCommittedVenue){const apply=secondary(existing?'Обновить статью площадки':'Включить в план',()=>edit(existing?{...existing,description:selected.name,planned_rub:Math.round(e.value),notes:'План площадки: '+selected.id+'; '+guests+' гостей; '+(e.note||'') }:{},{category:'Площадка',description:selected.name,planned_rub:Math.round(e.value),notes:'План площадки: '+selected.id+'; '+guests+' гостей; '+(e.note||'')}));scenario.append(apply)}
+   else if(changingCommittedVenue)scenario.append($('p','budget-muted','По прежней площадке уже есть обязательства или платежи. Сначала урегулируйте их, не переносите автоматически на другой вариант.'));
    else if(anyVenue)scenario.append($('p','budget-muted','Статья площадки уже существует — измените её в списке, чтобы не задвоить сумму.'));
    scenario.append($('small','budget-muted','Расчёт не включается в общий план автоматически. Дополнительные расходы организаторов не прибавляются повторно.'));
   }
