@@ -512,7 +512,6 @@ body.admin-body :is(.ad-tl-main-tab.is-active,.ad-tl-display-option.is-active){b
 
 /* Shared layout and component geometry. Preserve module-specific semantic colors. */
 body.admin-body{
- --admin-workspace-max:1440px;
  --admin-workspace-edge:clamp(20px,2.2vw,44px);
  --admin-page-title-size:42px;
  --admin-section-title-size:23px;
@@ -525,8 +524,8 @@ body.admin-body{
 body.admin-body .admin-main{min-width:0}
 body.admin-body .admin-content{
  box-sizing:border-box;width:100%;min-width:0;
- max-width:calc(var(--admin-workspace-max) + var(--admin-workspace-edge) * 2);
- margin:0 auto;padding:30px var(--admin-workspace-edge) 56px;
+ max-width:none;
+ margin:0;padding:30px var(--admin-workspace-edge) 56px;
 }
 body.admin-body .admin-content > :is(.ad-live-panel,.ad-guestbook,.ad-photo-archive,.vw-page,.vdp-page,.admin-panel),
 body.admin-body .admin-content :is(.ad-premium,.ad-overview-dashboard,.ad-work-dashboard,.ad-tl-calendar,.ad-tl-settings-content,.vw-detail-single,.vw-method-page){

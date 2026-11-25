@@ -4,8 +4,9 @@ import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 test('all organizer workspaces share the same content width and heading tokens',()=>{
  const css=read('src/admin-heading.css'),ui=read('src/admin-data-ui.js');
- assert.match(css,/--admin-workspace-max:1440px/);
- assert.match(css,/max-width:calc\(var\(--admin-workspace-max\) \+ var\(--admin-workspace-edge\) \* 2\)/);
+ assert.doesNotMatch(css,/--admin-workspace-max/);
+ assert.match(css,/\.admin-content\{\s*box-sizing:border-box;width:100%;min-width:0;\s*max-width:none;\s*margin:0;padding:30px var\(--admin-workspace-edge\) 56px;/);
+ assert.match(css,/--admin-workspace-edge:clamp\(20px,2\.2vw,44px\)/);
  assert.match(css,/\.ad-premium,\.ad-overview-dashboard,\.ad-work-dashboard,\.ad-tl-calendar,\.ad-tl-settings-content,\.vw-detail-single,\.vw-method-page/);
  assert.match(css,/--admin-page-title-size:42px/);
  assert.match(ui,/const header=\$\('header','admin-page-heading'\);header.append\(\$\('h1','',heading\)\)/);
