@@ -6,8 +6,8 @@ test('program keeps original primary-tag color gradients and exact minute drag/r
  const css=read('src/admin-program.css'),shared=read('src/admin-heading.css'),js=read('src/admin-program.js');
  assert.match(css,/color-mix\(in srgb,var\(--activity-color/);
  assert.doesNotMatch(shared,/color-mix\(in srgb,var\(--activity-color,var\(--wd-soft\)\) 15%/);
- assert.match(js,/setTimeout\(\(\)=>arm\(state\),230\)/);
- assert.match(js,/snapToFive\(\(y-state.initialY\+scrollDelta\)\/MINUTE_PX\)/);
+ assert.match(js,/Math\.hypot\(event\.clientX-pointer\.initialX,event\.clientY-pointer\.initialY\)>=4/);
+ assert.match(js,/pointerMinuteDelta\(y-state.initialY,scrollDelta,state.scale\)/);
  assert.match(js,/data-parallel-lane/);
  assert.match(js,/saveSlot\(item,/);
 });
