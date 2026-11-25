@@ -81,10 +81,10 @@ jobs:
               });
               assert.deepEqual(report.bad,[]);
               assert.equal(report.overflow,false);
-              assert.equal(await p.$eval('.day',e=>e.length),3);
-              assert.equal(await p.$eval('img[data-photo-slot]',e=>e.length),6);
-              assert.equal(await p.$eval('.day-copy h3',e=>e.length),3);
-              assert.equal(await p.$eval('.hero > img.hero-couple,.hero > img.hero-bg,.hero > img.hero-skyline',e=>e.length),3);
+              assert.equal(await p.evaluate(sel=>document.querySelectorAll(sel).length,'.day'),3);
+              assert.equal(await p.evaluate(sel=>document.querySelectorAll(sel).length,'img[data-photo-slot]'),6);
+              assert.equal(await p.evaluate(sel=>document.querySelectorAll(sel).length,'.day-copy h3'),3);
+              assert.equal(await p.evaluate(()=>document.querySelectorAll('.hero > img.hero-couple,.hero > img.hero-bg,.hero > img.hero-skyline').length),3);
               await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/'+name+'.png',fullPage:true});
               await p.click('.hero-cta');
               assert.equal(await p.$eval('dialog',d=>d.open),true);
