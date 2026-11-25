@@ -687,7 +687,7 @@ body.admin-body .admin-side .admin-settings-footer .side-link{flex:1 1 auto;min-
 }
 
 /* Venue table: image occupies a substantial part of the first column, at every breakpoint. */
-body.admin-body .vw-page.vw-control-board{--venue-thumb-w:220px;--venue-thumb-h:144px}
+body.admin-body .vw-page.vw-control-board{--venue-thumb-w:240px;--venue-thumb-h:160px}
 body.admin-body .vw-page.vw-control-board .vw-venue-cell{display:grid;grid-template-columns:var(--venue-thumb-w) minmax(0,1fr);gap:16px;align-items:center}
 body.admin-body .vw-page.vw-control-board .vw-venue-media{display:block;width:var(--venue-thumb-w);height:var(--venue-thumb-h);min-width:var(--venue-thumb-w);min-height:var(--venue-thumb-h)}
 body.admin-body .vw-page.vw-control-board .vw-image-open{display:block;width:100%;height:100%;max-width:none;padding:0;overflow:hidden}
@@ -704,7 +704,7 @@ body.admin-body .vw-page.vw-control-board .vw-venue-label{min-width:0}
  body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(6){width:13%}
 }
 @media(max-width:900px){
- body.admin-body .vw-page.vw-control-board{--venue-thumb-w:148px;--venue-thumb-h:104px}
+ body.admin-body .vw-page.vw-control-board{--venue-thumb-w:160px;--venue-thumb-h:112px}
  body.admin-body .vw-page.vw-control-board .vw-venue-cell{gap:12px}
 }
 @media(max-width:380px){
@@ -714,3 +714,20 @@ body.admin-body .vdp-photo-group{margin:20px 0 24px;min-width:0}
 body.admin-body .vdp-photo-group h3{font-size:18px;font-weight:500;margin:0 0 12px;display:flex;align-items:center;gap:10px}
 body.admin-body .vdp-photo-group h3 span{font-size:16px;font-weight:400;opacity:.7}
 body.admin-body .vdp-photo-group+.vdp-photo-group{padding-top:20px;border-top:1px solid var(--wd-line,currentColor)}
+
+/* Shared select popup: native form values with a consistent app-owned listbox. */
+body.admin-body .admin-select-popup{position:fixed;inset:auto;margin:0;z-index:2147483000;box-sizing:border-box;min-width:0;padding:5px;border:1px solid var(--wd-line);border-radius:12px;background:var(--wd-surface);color:var(--wd-ink);font:400 16px/1.4 var(--wd-body);box-shadow:0 12px 36px rgba(0,0,0,.16);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;outline:none}
+body.admin-body .admin-select-popup .admin-select-option{appearance:none;width:100%;display:flex;align-items:center;gap:10px;text-align:left;min-height:42px;padding:9px 10px;border:0;border-radius:7px;background:transparent;color:inherit;font:inherit;cursor:pointer;box-sizing:border-box}
+body.admin-body .admin-select-popup .admin-select-option.is-highlighted{background:var(--wd-soft)}
+body.admin-body .admin-select-popup .admin-select-option.is-selected{color:var(--wd-accent);font-weight:600}
+body.admin-body .admin-select-popup .admin-select-option:disabled{opacity:.42;cursor:not-allowed}
+body.admin-body .admin-select-popup .admin-select-option-label{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+body.admin-body .admin-select-popup .admin-select-check{width:18px;flex:0 0 18px;text-align:center;visibility:hidden;color:var(--wd-accent)}
+body.admin-body .admin-select-popup .is-selected .admin-select-check{visibility:visible}
+body.admin-body .admin-select-popup .admin-select-group{padding:10px 10px 5px;font-size:16px;color:var(--wd-muted);font-weight:500}
+body.admin-body .admin-select-popup .admin-select-status{width:9px;height:9px;flex:0 0 9px;border-radius:50%;background:#98a69c}
+body.admin-body .admin-select-popup .admin-select-status[data-status="available"]{background:#429662}
+body.admin-body .admin-select-popup .admin-select-status[data-status="pending"]{background:#c79744}
+body.admin-body .admin-select-popup .admin-select-status[data-status="unavailable"]{background:#c76b6b}
+body.admin-body select[aria-expanded="true"]{outline:2px solid var(--wd-accent);outline-offset:1px}
+@media(max-width:900px){body.admin-body .admin-select-popup .admin-select-option{min-height:48px}}

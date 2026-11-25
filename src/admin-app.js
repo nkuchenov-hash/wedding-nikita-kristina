@@ -130,7 +130,142 @@ function admin(active='overview'){
  return `<div class="admin-layout" data-admin-section="${escapeHtml(active)}"><header class="admin-mobile-bar"><button type="button" id="admin-menu-toggle" aria-label="Открыть меню" aria-expanded="false" aria-controls="admin-navigation"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><span class="admin-mobile-title">${escapeHtml(label)}</span><div class="admin-mobile-actions"></div></header><button type="button" class="admin-menu-backdrop" data-admin-menu-close aria-label="Закрыть меню" tabindex="-1"></button>${adminSidebar(active)}<main class="admin-main"><div class="admin-content">${adminGeneric(active)}</div></main></div>`;
 }
 
+
+// One popup for all single-choice controls, including dynamically rendered forms.
+// Keep the actual select in place for form values, labels, validation and existing handlers.
+const adminSelectSelector='select:not([multiple]):not([size]),select[size="1"]:not([multiple])';
+let selectPopup=null,selectTypeahead='',selectTypeTime=0;
+function adminSelectTarget(target){
+ const select=target?.closest?.(adminSelectSelector);
+ return select&&!select.disabled&&select.closest('.admin-body')?select:null;
+}
+function closeAdminSelect(){
+ if(!selectPopup)return;
+ const {select,menu}=selectPopup;selectPopup=null;
+ select.removeAttribute('aria-controls');select.removeAttribute('aria-activedescendant');
+ select.setAttribute('aria-expanded','false');
+ menu.remove();
+}
+function positionAdminSelect(){
+ if(!selectPopup)return;
+ const {select,menu}=selectPopup;
+ if(!select.isConnected){closeAdminSelect();return}
+ const r=select.getBoundingClientRect(),vw=window.innerWidth,vh=window.innerHeight;
+ if(r.bottom<0||r.top>vh||r.right<0||r.left>vw){closeAdminSelect();return}
+ const width=Math.min(vw-16,Math.max(196,r.width));
+ menu.style.width=width+'px';
+ menu.style.left=Math.max(8,Math.min(r.left,vw-width-8))+'px';
+ const below=vh-r.bottom-12,above=r.top-12,up=below<Math.min(menu.scrollHeight+8,260)&&above>below;
+ const limit=Math.max(40,Math.min(320,up?above:below));
+ menu.style.maxHeight=limit+'px';
+ menu.style.top=(up?Math.max(8,r.top-6-Math.min(menu.scrollHeight+2,limit)):r.bottom+6)+'px';
+}
+function highlightAdminOption(index,scroll=true){
+ if(!selectPopup)return;
+ const {select,rows}=selectPopup;
+ if(index<0||index>=rows.length||rows[index].disabled)return;
+ selectPopup.index=index;
+ rows.forEach((row,i)=>row.classList.toggle('is-highlighted',i===index));
+ select.setAttribute('aria-activedescendant',rows[index].id);
+ if(scroll)rows[index].scrollIntoView({block:'nearest'});
+}
+function commitAdminSelect(index){
+ if(!selectPopup)return;
+ const {select,rows}=selectPopup;
+ if(!rows[index]||rows[index].disabled)return;
+ const old=select.selectedIndex;
+ closeAdminSelect();
+ if(!select.isConnected)return;
+ select.selectedIndex=index;
+ select.focus({preventScroll:true});
+ if(old!==index){
+  select.dispatchEvent(new Event('input',{bubbles:true}));
+  select.dispatchEvent(new Event('change',{bubbles:true}));
+ }
+}
+function openAdminSelect(select){
+ if(selectPopup?.select===select)return;
+ closeAdminSelect();
+ select.focus({preventScroll:true});
+ const menu=document.createElement('div');
+ menu.className='admin-select-popup';menu.id='admin-select-popup';
+ menu.setAttribute('role','listbox');
+ menu.setAttribute('aria-label',select.getAttribute('aria-label')||select.labels?.[0]?.textContent?.trim()||'Выберите значение');
+ const rows=[];
+ const date=select.matches('[data-list-date],.vw-date-edit select');
+ let group=null;
+ Array.from(select.options).forEach((option,index)=>{
+  if(option.parentElement?.tagName==='OPTGROUP'&&option.parentElement!==group){
+   group=option.parentElement;const title=document.createElement('div');title.className='admin-select-group';title.textContent=group.label;menu.append(title);
+  }
+  const row=document.createElement('button');
+  row.type='button';row.tabIndex=-1;row.className='admin-select-option';row.id='admin-select-option-'+index;row.setAttribute('role','option');row.setAttribute('aria-selected',String(option.selected));
+  row.disabled=option.disabled||(option.parentElement?.tagName==='OPTGROUP'&&option.parentElement.disabled);
+  row.classList.toggle('is-selected',option.selected);
+  if(date){
+   const marker=document.createElement('span');marker.className='admin-select-status';
+   marker.dataset.status=option.value;row.append(marker);
+  }
+  const label=document.createElement('span');label.className='admin-select-option-label';label.textContent=date&&option.value==='unknown'?'Нет подтверждения':option.label;row.append(label);
+  const check=document.createElement('span');check.className='admin-select-check';check.setAttribute('aria-hidden','true');check.textContent='✓';row.append(check);
+  row.addEventListener('pointerdown',event=>{if(event.pointerType==='mouse')event.preventDefault()});
+  row.addEventListener('pointermove',event=>{if(event.pointerType==='mouse')highlightAdminOption(index,false)});
+  row.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();commitAdminSelect(index)});
+  rows.push(row);menu.append(row);
+ });
+ if(!rows.length)return;
+ selectPopup={select,menu,rows,index:-1};
+ select.setAttribute('aria-expanded','true');select.setAttribute('aria-controls',menu.id);
+ selectTypeahead='';selectTypeTime=0;
+ // Use the top layer so the menu is never clipped by a scrolling table or modal.
+ const parent=select.closest('dialog[open]')||document.body;
+ if(typeof menu.showPopover==='function')menu.setAttribute('popover','manual');
+ parent.append(menu);
+ if(typeof menu.showPopover==='function'){try{menu.showPopover()}catch{menu.removeAttribute('popover')}}
+ positionAdminSelect();
+ const initial=rows[select.selectedIndex]&&!rows[select.selectedIndex].disabled?select.selectedIndex:rows.findIndex(row=>!row.disabled);
+ highlightAdminOption(initial);
+}
+document.addEventListener('pointerdown',event=>{
+ const select=adminSelectTarget(event.target);
+ if(select&&event.button===0){event.preventDefault();openAdminSelect(select);return}
+ if(selectPopup&&!selectPopup.menu.contains(event.target))closeAdminSelect();
+},true);
+document.addEventListener('mousedown',event=>{if(event.button===0&&adminSelectTarget(event.target))event.preventDefault()},true);
+document.addEventListener('click',event=>{
+ const select=adminSelectTarget(event.target);
+ if(select){event.preventDefault();openAdminSelect(select)}
+},true);
+document.addEventListener('keydown',event=>{
+ const select=adminSelectTarget(event.target);
+ if(!select)return;
+ if(event.key==='Tab'){closeAdminSelect();return}
+ if(event.key==='Escape'&&selectPopup){event.preventDefault();event.stopPropagation();closeAdminSelect();return}
+ if(['ArrowDown','ArrowUp','Enter',' ','Home','End','F4'].includes(event.key)){
+  event.preventDefault();event.stopPropagation();
+  if(!selectPopup||selectPopup.select!==select){openAdminSelect(select);return}
+  if(event.key==='Enter'||event.key===' '){commitAdminSelect(selectPopup.index);return}
+  if(event.key==='F4'){closeAdminSelect();return}
+  const {rows,index}=selectPopup;
+  const enabled=rows.map((row,i)=>row.disabled?-1:i).filter(i=>i>=0);
+  if(!enabled.length)return;
+  const n=enabled.indexOf(index);
+  highlightAdminOption(event.key==='Home'?enabled[0]:event.key==='End'?enabled.at(-1):enabled[Math.max(0,Math.min(enabled.length-1,n+(event.key==='ArrowUp'?-1:1)))]);
+ }else if(event.key.length===1&&!event.ctrlKey&&!event.metaKey&&!event.altKey){
+  event.preventDefault();event.stopPropagation();
+  if(!selectPopup||selectPopup.select!==select)openAdminSelect(select);
+  if(!selectPopup)return;
+  const now=Date.now();selectTypeahead=(now-selectTypeTime>700?'':selectTypeahead)+event.key.toLocaleLowerCase('ru');selectTypeTime=now;
+  const match=selectPopup.rows.findIndex((row,i)=>!row.disabled&&select.options[i].label.toLocaleLowerCase('ru').startsWith(selectTypeahead));
+  if(match>=0)highlightAdminOption(match);
+ }
+},true);
+document.addEventListener('focusin',event=>{if(selectPopup&&event.target!==selectPopup.select&&!selectPopup.menu.contains(event.target))closeAdminSelect()},true);
+document.addEventListener('scroll',event=>{if(selectPopup&&!selectPopup.menu.contains(event.target))positionAdminSelect()},true);
+window.addEventListener('resize',positionAdminSelect);
+
 function render(){
+ closeAdminSelect();
  const p=decodeURIComponent((location.hash||'#/admin/overview').slice(1)).replace(/\/+$/,'')||'/admin';
  if(!/^\/admin(?:\/|$)/.test(p)){location.replace('#/admin/overview');return;}
  const section=(p.split('/')[2]||'overview');
