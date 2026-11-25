@@ -97,8 +97,9 @@ test('three-day wedding itinerary contains only organizer-confirmed events',asyn
  assert.match(program,/admin\/schedule\/slot/);
  assert.match(program,/pointerdown/);
  assert.match(program,/parallelEventLayout/);
- assert.match(program,/ad-tl-resizing/);
- assert.match(program,/230/);
+ assert.match(program,/ad-tl-chronology-row/);
+ assert.match(program,/setTimeout\(arm,340\)/);
+ assert.match(program,/event.shiftKey/);
  assert.match(program,/ad-tl-tag-select/);
  assert.match(program,/activity_tags/);
  assert.match(program,/tags_json/);
