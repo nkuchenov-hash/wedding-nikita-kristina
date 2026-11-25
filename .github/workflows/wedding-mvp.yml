@@ -117,7 +117,7 @@ jobs:
               assert.deepEqual(report.bad,[]);
               assert.equal(report.overflow,false);
               if(name!=='mobile'){
-                const nav=await p.$eval('.mvp-compact-nav-link',els=>els.filter(e=>e.getClientRects().length).map(e=>({label:e.textContent.trim(),size:parseFloat(getComputedStyle(e).fontSize)})));
+                const nav=await p.evaluate(()=>Array.from(document.querySelectorAll('.mvp-compact-nav-link')).filter(e=>e.getClientRects().length).map(e=>({label:e.textContent.trim(),size:parseFloat(getComputedStyle(e).fontSize)})));
                 console.log('COMPACT_NAV',JSON.stringify(nav));
                 assert.ok(nav.length===5 && nav.every(e=>e.size<=28));
               }
