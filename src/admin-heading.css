@@ -653,8 +653,8 @@ body.admin-body .admin-content :is(.production-page,.production-drawer) :is(inpu
 
 /* Keep the production toolbar independent of the full-width drawer controls. */
 body.admin-body .admin-content .production-page .production-heading{margin:0;align-items:center}
-body.admin-body .admin-content .production-page .production-tabs{width:max-content;max-width:100%;flex:none}
-body.admin-body .admin-content .production-page .production-tabs .ad-tl-main-tab{min-height:36px;white-space:nowrap;flex:0 0 auto}
+body.admin-body .admin-content .production-page .production-tabs{width:max-content;max-width:100%;flex:none;margin:0;padding:3px;gap:3px;align-self:center}
+body.admin-body .admin-content .production-page .production-tabs .ad-tl-main-tab{min-height:36px;white-space:nowrap;flex:0 0 auto;padding:8px 12px}
 
 /* Grouped organizer navigation. Group captions are intentionally small;
    all interactive labels retain the readable admin type scale. */
