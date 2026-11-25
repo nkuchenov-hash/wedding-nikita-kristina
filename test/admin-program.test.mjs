@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {assignedDay,scheduled,itemTags,parallelEventLayout,snapToFive,MINUTE_PX,cardDescription,cardColorStyle,cardTagColors,DEFAULT_DAY_HOURS,displayHoursForDay} from '../src/admin-program.js';
+import {assignedDay,scheduled,itemTags,parallelEventLayout,snapToFive,MINUTE_PX,timelineCardGeometry,pointerMinuteDelta,cardDescription,cardColorStyle,cardTagColors,DEFAULT_DAY_HOURS,displayHoursForDay} from '../src/admin-program.js';
 
 const source=readFileSync(new URL('../src/admin-program.js',import.meta.url),'utf8');
 const schema=readFileSync(new URL('../backend/schema.sql',import.meta.url),'utf8');
@@ -99,7 +99,7 @@ test('triple parallel events have 3 lanes and time sizing is proportional to min
 });
 test('calendar supports vertical time dragging, bottom-edge resizing and manual concurrency',()=>{
  assert.match(source,/attachTimelineHandles/);
- assert.match(source,/setTimeout\(\(\)=>arm\(state\),230\)/);
+ assert.match(source,/Math\.hypot\(event\.clientX-pointer\.initialX,event\.clientY-pointer\.initialY\)>=4/);
  assert.match(source,/baseLength/);
  assert.doesNotMatch(source,/ad-tl-move-grip/);
  assert.doesNotMatch(source,/ad-tl-resize-grip/);
@@ -198,7 +198,7 @@ test('the first selected tag alone sets the card color and additional tags remai
  assert.match(source,/node\.style\.setProperty\('--activity-color',palette\.primary\)/);
  assert.doesNotMatch(source,/node\.style\.setProperty\('--activity-stripe'/);
  assert.match(css,/\.ad-tl-calendar-card\.ad-tl-short-event \.ad-tl-tags-inline,[\s\S]*?display:flex!important/);
- assert.match(css,/\.ad-tl-calendar-card\.ad-tl-has-short-tags\{[\s\S]*?overflow:visible!important/);
+ assert.match(css,/\.ad-tl-calendar-card\.ad-tl-has-short-tags\{[^}]*overflow:hidden!important/);
  assert.match(css,/color-mix\(in srgb,var\(--activity-color/);
 });
 
@@ -308,4 +308,17 @@ test('June 20 and 21 remain independent program dates',()=>{
   assert.deepEqual(displayHoursForDay(date),{from:'09:00',to:'23:00'});
   assert.ok(api.includes(date));
  }
+});
+
+test('consecutive cards retain a four pixel gap, including clipped and short slots',()=>{
+ const a=timelineCardGeometry(950,1020,720,1380),b=timelineCardGeometry(1020,1080,720,1380);
+ assert.equal(b.top-(a.top+a.height),4);
+ assert.deepEqual(timelineCardGeometry(710,725,720,1380),{top:2,height:26});
+ assert.deepEqual(timelineCardGeometry(720,725,720,1380),{top:2,height:26});
+});
+test('drag delta follows the scrolled time grid even when CSS is scaled',()=>{
+ assert.equal(pointerMinuteDelta(30,0,1),5);
+ assert.equal(pointerMinuteDelta(15,0,.5),5);
+ assert.equal(pointerMinuteDelta(15,30,.5),10);
+ assert.equal(pointerMinuteDelta(-15,-30,.5),-10);
 });

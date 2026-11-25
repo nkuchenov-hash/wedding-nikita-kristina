@@ -72,6 +72,14 @@ export function cardDescription(item,isScheduled){
    :notes.trim();
 }
 export const MINUTE_PX=6;
+export const CARD_GAP_PX=4;
+export function timelineCardGeometry(start,end,axisStart,axisEnd){
+ const shownStart=Math.max(start,axisStart),shownEnd=Math.min(end,axisEnd);
+ return {top:(shownStart-axisStart)*MINUTE_PX+CARD_GAP_PX/2,height:Math.max(0,(shownEnd-shownStart)*MINUTE_PX-CARD_GAP_PX)};
+}
+export function pointerMinuteDelta(clientDelta,scrollDelta,scale=1){
+ return snapToFive((clientDelta/(scale>0?scale:1)+scrollDelta)/MINUTE_PX);
+}
 export const snapToFive=value=>Math.round(value/5)*5;
 export function parallelEventLayout(items){
  const slots=items.map(item=>{
@@ -138,7 +146,7 @@ export async function renderWeddingProgram(host,api,days){
    }catch(error){await reload('Не удалось сохранить время: '+error.message);return false}
    finally{busy=false}
  }
- // A card is a compact time anchor, not a height proportional to duration.
+ // Move and resize against the same time geometry used by the calendar.
  function attachTimelineHandles(node,item,clockLabel,lengthLabel){
    const start=mins(hm(item.start_at));
    if(start===null)return;
@@ -147,8 +155,8 @@ export async function renderWeddingProgram(host,api,days){
    mobileDrag.setAttribute('aria-label','Переместить активность');mobileDrag.title='Потяните для изменения времени';
    node.append(mobileDrag);
    const mobileResize=$('span','ad-tl-touch-resize');mobileResize.setAttribute('aria-label','Изменить длительность');node.append(mobileResize);
-   // A short click edits the card. Hold for 230 ms, then drag the whole card
-   // to another time slot. The bottom 16 px are the unmarked resize edge.
+   // A short click edits the card; actual pointer movement starts dragging.
+   // The narrow bottom edge changes duration.
    node.addEventListener('click',event=>{
      if(!ignoreNextClick)return;
      ignoreNextClick=false;
@@ -156,21 +164,24 @@ export async function renderWeddingProgram(host,api,days){
    },true);
    const refresh=(state,y)=>{
      const scrollDelta=(state.scroller?.scrollTop||0)-state.initialScroll;
-     const delta=snapToFive((y-state.initialY+scrollDelta)/MINUTE_PX);
+     const delta=pointerMinuteDelta(y-state.initialY,scrollDelta,state.scale);
      if(state.mode==='resize'){
        state.length=Math.max(5,Math.min(600,1435-state.baseStart,
          snapToFive(state.baseLength+delta)));
-       node.style.height=Math.max(15,state.length*MINUTE_PX)+'px';
+
      }else{
        state.start=Math.max(0,Math.min(1435-state.baseLength,
          snapToFive(state.baseStart+delta)));
-       node.style.transform='translateY('+((state.start-state.baseStart)*MINUTE_PX)+'px)';
+
      }
+     const geometry=timelineCardGeometry(state.start,state.start+state.length,state.axisStart,state.axisEnd);
+     node.style.top=geometry.top+'px';
+     node.style.height=geometry.height+'px';
      clockLabel.textContent=clock(state.start)+' — '+clock(state.start+state.length);
      lengthLabel.textContent=state.length+' мин';
    };
    const arm=state=>{
-     if(pointer!==state)return;
+     if(pointer!==state||state.armed)return;
      state.armed=true;ignoreNextClick=true;
      const autoScroll=()=>{
        if(pointer!==state||!state.armed)return;
@@ -180,18 +191,19 @@ export async function renderWeddingProgram(host,api,days){
        }
        state.frame=requestAnimationFrame(autoScroll);
      };state.frame=requestAnimationFrame(autoScroll);
-     node.classList.add('ad-tl-adjusting','ad-tl-grabbing');
+     node.classList.add('ad-tl-adjusting',state.mode==='resize'?'ad-tl-resizing':'ad-tl-grabbing');
      refresh(state,state.lastY);
    };
-   const reset=state=>{
-     if(state.holdTimer!==null)clearTimeout(state.holdTimer);
+   const reset=(state,restore=true)=>{
      if(state.frame!==null)cancelAnimationFrame(state.frame);
-     node.classList.remove('ad-tl-adjusting','ad-tl-grabbing');
-     node.style.transform='';node.style.height='';
-     clockLabel.textContent=clock(state.baseStart)+' — '+clock(state.baseStart+state.baseLength);
-     lengthLabel.textContent=state.baseLength+' мин';
-     try{if(node.hasPointerCapture(state.pointerId))node.releasePointerCapture(state.pointerId)}catch{}
      pointer=null;
+     node.classList.remove('ad-tl-adjusting','ad-tl-grabbing','ad-tl-resizing');
+     if(restore){
+       node.style.top=state.originalTop;node.style.height=state.originalHeight;
+       clockLabel.textContent=clock(state.baseStart)+' — '+clock(state.baseStart+state.baseLength);
+       lengthLabel.textContent=state.baseLength+' мин';
+     }
+     try{if(node.hasPointerCapture(state.pointerId))node.releasePointerCapture(state.pointerId)}catch{}
    };
    node.addEventListener('pointerdown',event=>{
      if(busy||pointer||(event.pointerType==='mouse'&&event.button!==0)||
@@ -201,27 +213,26 @@ export async function renderWeddingProgram(host,api,days){
      const resizeHandle=event.target.closest('.ad-tl-touch-resize');
      if(touch&&!moveHandle&&!resizeHandle)return;
      const bounds=node.getBoundingClientRect();
-     const resizing=touch?!!resizeHandle:event.clientY>=bounds.bottom-16;
+     const resizing=!!resizeHandle||(!touch&&event.clientY>=bounds.bottom-Math.min(12,bounds.height/4));
      const scroller=node.closest('.ad-tl-calendar-scroll');
+     const grid=node.closest('.ad-tl-calendar-grid');
+     const scale=grid?.offsetHeight?grid.getBoundingClientRect().height/grid.offsetHeight:1;
+     const interval=displayHoursForDay(day,dayHours);
      ignoreNextClick=false;
      const state={
-       pointerId:event.pointerId,initialY:event.clientY,lastY:event.clientY,
+       pointerId:event.pointerId,initialY:event.clientY,initialX:event.clientX,lastY:event.clientY,
        baseStart:start,baseLength:duration(item),start,length:duration(item),
-       mode:resizing?'resize':'move',armed:false,holdTimer:null,frame:null,scroller,initialScroll:scroller?.scrollTop||0
+       mode:resizing?'resize':'move',armed:false,frame:null,scroller,initialScroll:scroller?.scrollTop||0,
+       scale,axisStart:mins(interval.from),axisEnd:mins(interval.to),originalTop:node.style.top,originalHeight:node.style.height
      };
      pointer=state;
      try{node.setPointerCapture(event.pointerId)}catch{}
-     if(resizing||touch){
-       arm(state);
-       if(resizing){node.classList.remove('ad-tl-grabbing');node.classList.add('ad-tl-resizing')}
-       event.preventDefault();
-     }else{
-       state.holdTimer=setTimeout(()=>arm(state),230);
-     }
+     if(touch)event.preventDefault();
    });
    node.addEventListener('pointermove',event=>{
      if(!pointer||pointer.pointerId!==event.pointerId)return;
      pointer.lastY=event.clientY;
+     if(!pointer.armed&&Math.hypot(event.clientX-pointer.initialX,event.clientY-pointer.initialY)>=4)arm(pointer);
      if(pointer.armed){event.preventDefault();refresh(pointer,event.clientY)}
    });
    node.addEventListener('pointerup',event=>{
@@ -230,17 +241,20 @@ export async function renderWeddingProgram(host,api,days){
      if(state.armed)refresh(state,event.clientY);
      const changed=state.armed&&(state.start!==state.baseStart||state.length!==state.baseLength);
      if(state.armed)ignoreNextClick=true;
-     reset(state);
-     node.classList.remove('ad-tl-resizing');
+     if(state.scroller)timelineScrollByDay.set(day,state.scroller.scrollTop);
+     reset(state,!changed);
      if(changed)void saveSlot(item,state.start,state.length,
        state.mode==='resize'?'Длительность изменена.':'Время начала изменено.');
    });
-   node.addEventListener('pointercancel',event=>{
+   const cancel=event=>{
      if(!pointer||pointer.pointerId!==event.pointerId)return;
      const state=pointer;
-     ignoreNextClick=false;
-     reset(state);node.classList.remove('ad-tl-resizing');
-   });
+     ignoreNextClick=state.armed;
+     reset(state);
+   };
+   node.addEventListener('pointercancel',cancel);
+   node.addEventListener('lostpointercapture',cancel);
+   node.addEventListener('dragstart',event=>event.preventDefault());
    // Keyboard users can move by 5 minutes or resize with Shift + arrows.
    node.addEventListener('keydown',event=>{
      if(event.target!==node||!['ArrowUp','ArrowDown'].includes(event.key))return;
@@ -347,9 +361,9 @@ export async function renderWeddingProgram(host,api,days){
      const tile=card(item,items);
      tile.classList.add('ad-tl-calendar-card');
      // Clip entries that cross the configured visible-hour boundary.
-     const shownStart=Math.max(slot.start,axisStart),shownEnd=Math.min(slot.end,axisEnd);
-     tile.style.top=((shownStart-axisStart)*MINUTE_PX)+'px';
-     tile.style.height=((shownEnd-shownStart)*MINUTE_PX)+'px';
+     const geometry=timelineCardGeometry(slot.start,slot.end,axisStart,axisEnd);
+     tile.style.top=geometry.top+'px';
+     tile.style.height=geometry.height+'px';
      tile.style.left=(slot.lane/slot.laneCount*100)+'%';
      tile.style.width='calc('+(100/slot.laneCount)+'% - 8px)';
      tile.setAttribute('data-parallel-lane',String(slot.lane));
