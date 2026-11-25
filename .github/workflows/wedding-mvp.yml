@@ -30,6 +30,8 @@ jobs:
           unzip -oq mvp-site/botanical-patch.zip -d _mvp
           echo '79e659a1a173e0990f85f2f2a29bd9a2d3fedfd140b752d7c81f2f0132172c83  mvp-site/botanical-v4.zip' | sha256sum -c -
           unzip -oq mvp-site/botanical-v4.zip -d _mvp
+          echo '3fe83bf818572ae4116d6b667ed8cc0b97255e3df1b30ce006fd3fdf1c045094  mvp-site/botanical-v5.zip' | sha256sum -c -
+          unzip -oq mvp-site/botanical-v5.zip -d _mvp
           test -s _mvp/index.html
           node --check _mvp/script.js
           python3 - <<'PY'
@@ -41,7 +43,7 @@ jobs:
               assert b[25] in (4,6) or b'tRNS' in b, name+' must have alpha transparency'
           css=Path('_mvp/style.css')
           styles=css.read_text()
-          assert '@media(hover:hover) and (pointer:fine)' in styles
+          assert '@media not (pointer:coarse)' in styles or '@media(hover:hover) and (pointer:fine)' in styles
           css.write_text(styles.replace('@media(hover:hover) and (pointer:fine)','@media not (pointer:coarse)'))
           p=Path('_mvp/index.html')
           html=p.read_text()
@@ -49,6 +51,9 @@ jobs:
           assert html.count('<article class="day">')==3
           assert html.count('<figure class="photo-frame')==2
           assert '<h1>Никита' in html
+          assert 'class="hero-ladybird' not in html, 'No floating ladybird'
+          assert html.count('class="hero-birch ornament"')==1
+          assert html.count('class="hero-leaves ornament"')==1
           assert not re.search(r'assets/(day-.*base|title-.*|mobile-portrait|hero-background)\.png',html)
           rev=os.environ['GITHUB_SHA'][:12]
           html=re.sub(r'(src|href)="(assets/[^"]+|style\.css|script\.js)"',lambda m:f'{m[1]}="{m[2]}?v={rev}"',html)
