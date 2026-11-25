@@ -41,9 +41,9 @@ def paeth(a,b,c):
     pa,pb,pc=abs(p-a),abs(p-b),abs(p-c)
     return a if pa<=pb and pa<=pc else b if pb<=pc else c
 for y in range(h):
-    p=y*(stride+1)
-    mode=scan[p]
-    row=bytearray(scan[p+1:p+1+stride])
+    offset=y*(stride+1)
+    mode=scan[offset]
+    row=bytearray(scan[offset+1:offset+1+stride])
     for i in range(stride):
         a=row[i-4] if i>=4 else 0
         b=prev[i]
