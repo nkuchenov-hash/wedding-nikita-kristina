@@ -20,7 +20,9 @@ test('Archive stays available in the list selector and global rating remains acc
  assert.match(source,/admin\/settings/);
  assert.doesNotMatch(source,/\n  renderVenueRatingGuide\(\)\+/);
  assert.match(source,/data-venue-archive/);
- assert.match(source,/Вернуть из архива/);
+ const detail=readFileSync(new URL('../src/venue-detail-ui.js',import.meta.url),'utf8');
+ assert.match(detail,/Вернуть из архива/);
+ assert.match(detail,/vdp-archive-footer/);
 });
 
 test('There are 100 adjustable points and no subjective rating criteria',()=>{
