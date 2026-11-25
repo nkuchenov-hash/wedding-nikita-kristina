@@ -28,6 +28,8 @@ jobs:
           unzip -oq mvp-site/edge-fix.zip -d _mvp
           echo '589554acc14a77f976776283bf1687c38d2e0859784bb957849fc113d9fcd508  mvp-site/botanical-patch.zip' | sha256sum -c -
           unzip -oq mvp-site/botanical-patch.zip -d _mvp
+          echo '79e659a1a173e0990f85f2f2a29bd9a2d3fedfd140b752d7c81f2f0132172c83  mvp-site/botanical-v4.zip' | sha256sum -c -
+          unzip -oq mvp-site/botanical-v4.zip -d _mvp
           test -s _mvp/index.html
           node --check _mvp/script.js
           python3 - <<'PY'
@@ -86,6 +88,15 @@ jobs:
               if(name==='reference-scale')assert.ok(Math.abs(await p.evaluate(()=>document.querySelector('.page').getBoundingClientRect().height)-1672)<2);
               await p.evaluate(()=>Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,3000))]));
               await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/'+name+'.png',fullPage:true});
+              assert.equal(await p.evaluate(()=>document.querySelectorAll('.day-shell').length),3);
+              if(name==='desktop'){
+                await p.hover('.day-shell');
+                await new Promise(r=>setTimeout(r,800));
+                const motion=await p.$eval('.day-shell',e=>({lift:new DOMMatrix(getComputedStyle(e).transform).m42,zoom:new DOMMatrix(getComputedStyle(e.querySelector('.day-photo img')).transform).a,shadow:getComputedStyle(e).filter}));
+                assert.ok(motion.lift < -3 && motion.zoom > 1.01 && motion.shadow.includes('drop-shadow'));
+                await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/hover.png'});
+                await p.mouse.move(0,0);
+              }
               await p.$eval('.hero-cta',b=>b.click());
               assert.equal(await p.$eval('dialog',d=>d.open),true);
               await p.$eval('.close',b=>b.click());
