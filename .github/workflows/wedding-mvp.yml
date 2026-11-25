@@ -123,7 +123,7 @@ jobs:
               assert.ok(editorial.leftRotate!=='none'&&editorial.rightRotate!=='none');
               assert.ok(editorial.noTextOverlap && editorial.photoOverlap);
               assert.equal(editorial.botanicals,3);
-              assert.equal(await p.$eval('.welcome .welcome-botanical',imgs=>imgs.every(i=>i.naturalWidth>0&&new URL(i.src).pathname.endsWith('.png'))),true);
+              assert.equal(await p.evaluate(()=>[...document.querySelectorAll('.welcome .welcome-botanical')].every(i=>i.naturalWidth>0&&new URL(i.src).pathname.endsWith('.png'))),true);
               await p.evaluate(()=>Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,3000))]));
               await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/'+name+'.png',fullPage:true});
               assert.equal(await p.evaluate(()=>document.querySelectorAll('.day-shell').length),3);
