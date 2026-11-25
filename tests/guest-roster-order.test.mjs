@@ -51,7 +51,13 @@ test('guest toolbar uses only header add, expandable search and icon-only settin
  assert.match(css,/\.ad-guestbook \.ad-gb-top-actions>\.ad-gb-primary\{order:3/);
  assert.match(js,/searchToggle\.addEventListener\('click'/);
  assert.match(js,/filterField\('Сторона',side\)/);
- assert.match(js,/filterField\('Сортировка',sort\)/);
+ assert.match(js,/filterField\('Поле',sort\)/);
+ assert.match(js,/ad-gb-columns-heading','Сортировка'/);
+ assert.match(js,/mk\('dialog','ad-gb-columns-menu ad-gb-settings-drawer'\)/);
+ assert.match(js,/columnsMenu\.showModal\(\)/);
+ assert.match(js,/columnsMenu\.append\(content,actions\)/);
+ assert.match(css,/width:min\(480px,100%\);max-width:none;height:100dvh/);
+ assert.match(css,/\.ad-gb-settings-drawer \.ad-gb-settings-body\{flex:1 1 auto;min-height:0;overflow-y:auto/);
  assert.doesNotMatch(js,/bar\.append\(search,side,filter,sort,direction/);
  assert.match(css,/\.ad-gb-settings-icon\{[\s\S]*?border:0!important/);
  assert.match(css,/\.ad-gb-search-field\[hidden\]\{display:none!important\}/);
