@@ -793,75 +793,75 @@ export async function activateGuestDirectory(root){
 
      profile.append(form);
      form.addEventListener('submit',event=>{event.preventDefault();panelSave?.()});
-     const household=section('Семья и сопровождающие',{collapsed:true});
-
-     const relList=mk('div','ad-gb-relations');
+     const household=section('Связи с гостями',{collapsed:true});
+     const relationTypes=[['couple','Пара'],['family','Родственные связи'],['friend','Дружеские связи'],['other','Другие связи']];
+     const typeOf=link=>relationTypes.some(([key])=>key===link.relation_type)?link.relation_type: 'other';
+     const relList=mk('div','ad-gb-relations');household.append(relList);
+     const editor=mk('div','ad-gb-relation-editor');household.append(editor);
+     const addButton=mk('button','ad-gb-light','+ Добавить связь');addButton.type='button';household.append(addButton);
+     function closeRelationEditor(){editor.replaceChildren();addButton.hidden=false}
+     function editRelation(link=null){
+       editor.replaceChildren();addButton.hidden=true;
+       const form=mk('form','ad-gb-relation-edit-form'),grid=mk('div','ad-gb-edit-grid');form.append(grid);
+       const left=link?.guest_id_1===id,otherId=link?(left?link.guest_id_2:link.guest_id_1):'';
+       const others=people.filter(x=>x.id!==id&&(x.status!=='archived'||x.id===otherId)).map(x=>[x.id,display(x)]).sort((a,b)=>a[1].localeCompare(b[1],'ru'));
+       const person=field(grid,'Гость','related_guest',otherId,'select',[['','Выберите гостя'],...others]);person.required=true;person.disabled=!!link;
+       const type=field(grid,'Тип связи','relation_type',link?typeOf(link):'','select',[['','Выберите тип'],...relationTypes]);type.required=true;
+       const forward=field(grid,'Кем текущий гость приходится выбранному','forward',link?(left?link.relation_1_to_2:link.relation_2_to_1):'');
+       const reverse=field(grid,'Кем выбранный гость приходится текущему','reverse',link?(left?link.relation_2_to_1:link.relation_1_to_2):'');
+       forward.maxLength=reverse.maxLength=120;
+       function updateType(){forward.required=type.value!=='couple'&&(!link||left);reverse.required=type.value!=='couple'&&!!link&&!left;forward.placeholder=reverse.placeholder=type.value==='couple'?'Пара':'Например, брат';}
+       type.onchange=updateType;updateType();
+       const controls=mk('div','ad-gb-relation-edit-actions'),cancel=mk('button','ad-gb-light','Отмена'),save=mk('button','ad-gb-primary',link?'Сохранить связь':'Добавить связь');cancel.type='button';save.type='submit';cancel.onclick=closeRelationEditor;controls.append(cancel,save);form.append(controls);editor.append(form);
+       form.onsubmit=async ev=>{
+         ev.preventDefault();save.disabled=true;
+         const a=s(forward.value)||(type.value==='couple'?'Пара':''),b=s(reverse.value)||(type.value==='couple'?'Пара':'');
+         try{
+           if(link)await request('admin/guest/connections',{method:'PATCH',csrf,body:{id:link.id,relation_1_to_2:left?a:b,relation_2_to_1:left?b:a,relation_type:type.value}});
+           else await request('admin/guest/connections',{method:'POST',csrf,body:{guest_id:id,other_guest_id:person.value,relation_to_other:a,other_relation_to_guest:b,relation_type:type.value}});
+           closeRelationEditor();await refreshRel();await reloadData();
+         }catch(err){notice(err.message,true)}finally{save.disabled=false}
+       };
+       (link?type:person).focus();
+     }
+     addButton.onclick=()=>editRelation();
      async function refreshRel(){
        const response=await request('admin/guest-profile?guest_id='+encodeURIComponent(id));
        relList.replaceChildren();
-       for(const link of response.relations||[]){
-         const left=link.guest_id_1===id,otherId=left?link.guest_id_2:link.guest_id_1;
-         const other=left?link.person_two:link.person_one;
-         const label=left?link.relation_2_to_1:link.relation_1_to_2;
-         const line=mk('div','ad-gb-related');
-         const go=mk('button','ad-gb-related-name',other||'Уточнить имя');go.type='button';go.addEventListener('click',()=>openGuest(otherId));
-         const relation=mk('span','',label||link.relation_type||'Связь не уточнена');
-         const edit=mk('button','ad-gb-small','Изменить');edit.type='button';
-         edit.addEventListener('click',async()=>{
-           const forward=prompt('Кем первый человек приходится второму?',link.relation_1_to_2||'');
-           if(forward===null)return;
-           const reverse=prompt('Кем второй человек приходится первому?',link.relation_2_to_1||'');
-           if(reverse===null)return;
-           try{await request('admin/guest/connections',{method:'PATCH',csrf,body:{id:link.id,relation_1_to_2:forward,relation_2_to_1:reverse}});await refreshRel();await reloadData()}
-           catch(err){notice(err.message,true)}
-         });
-         const remove=mk('button','ad-gb-small ad-gb-danger','Убрать связь');remove.type='button';
-         remove.addEventListener('click',async()=>{
-           if(!confirm('Удалить эту связь? Сами гости сохранятся.'))return;
-           try{await request('admin/guest/connections',{method:'DELETE',csrf,body:{id:link.id}});await refreshRel();await reloadData()}
-           catch(err){notice(err.message,true)}
-         });
-         line.append(go,relation,edit,remove);relList.append(line);
+       for(const [type,title] of relationTypes){
+         const links=(response.relations||[]).filter(link=>typeOf(link)===type);if(!links.length)continue;
+         const group=mk('div','ad-gb-relation-group');group.append(mk('h4','ad-gb-relation-group-title',title));
+         for(const link of links){
+           const left=link.guest_id_1===id,otherId=left?link.guest_id_2:link.guest_id_1;
+           const other=left?link.person_two:link.person_one;
+           const label=left?link.relation_2_to_1:link.relation_1_to_2;
+           const line=mk('div','ad-gb-related');
+           const go=mk('button','ad-gb-related-name',other||'Уточнить имя');go.type='button';go.onclick=()=>openGuest(otherId);
+           const relation=mk('span','',label||(type==='couple'?'Пара':'Связь не уточнена'));
+           const edit=mk('button','ad-gb-small','Изменить');edit.type='button';edit.onclick=()=>editRelation(link);
+           const remove=mk('button','ad-gb-small ad-gb-danger','Убрать связь');remove.type='button';
+           remove.onclick=async()=>{if(!confirm('Удалить эту связь? Сами гости сохранятся.'))return;
+             try{await request('admin/guest/connections',{method:'DELETE',csrf,body:{id:link.id}});await refreshRel();await reloadData()}catch(err){notice(err.message,true)}
+           };
+           line.append(go,relation,edit,remove);group.append(line);
+         }
+         relList.append(group);
        }
        if(!relList.children.length)relList.append(mk('p','ad-gb-note','Связей пока нет'));
      }
-     await refreshRel();household.append(relList);
-     const addRel=mk('form','ad-gb-relation-form');
-     const linkSelect=select(people.filter(x=>x.id!==id&&x.status!=='archived').map(x=>[x.id,display(x)]).sort((a,b)=>a[1].localeCompare(b[1],'ru')),'');
-     const relText=mk('input');relText.placeholder='Кем этот гость приходится выбранному';relText.required=true;relText.maxLength=120;
-     const relBack=mk('input');relBack.placeholder='Обратная связь (если известна)';relBack.maxLength=120;
-     const linkBtn=mk('button','ad-gb-light','Добавить связь');linkBtn.type='submit';
-     addRel.append(linkSelect,relText,relBack,linkBtn);household.append(addRel);
-     addRel.addEventListener('submit',async ev=>{
-       ev.preventDefault();linkBtn.disabled=true;
-       try{await request('admin/guest/connections',{method:'POST',csrf,body:{
-         guest_id:id,other_guest_id:linkSelect.value,relation_to_other:s(relText.value),
-         other_relation_to_guest:s(relBack.value),relation_type:'other'
-       }});relText.value='';relBack.value='';await refreshRel();await reloadData()}
-       catch(err){notice(err.message,true)}finally{linkBtn.disabled=false}
-     });
-     const companions=mk('div','ad-gb-relations');household.append(mk('h4','','Сопровождающие'),companions);
-     async function refreshComp(){
-       const data=await request('admin/companions?guest_id='+encodeURIComponent(id));
-       companions.replaceChildren();
-       for(const c of data.companions||[]){
+     await refreshRel();
+     // Historical invitation extras are not independent guest records.
+     // Preserve existing entries without creating a second manual guest register.
+     const invitationExtras=companionsData.companions||[];
+     if(invitationExtras.length){
+       const extraSection=section('Дополнительные гости по приглашению',{collapsed:true});
+       extraSection.append(mk('p','ad-gb-note','Эти люди указаны в приглашении, но не имеют отдельной карточки в списке гостей. Новых гостей добавляйте в общий список и связывайте с нужным человеком.'));
+       const extraList=mk('div','ad-gb-relations');extraSection.append(extraList);
+       for(const c of invitationExtras){
          const line=mk('div','ad-gb-related');
-         line.append(mk('span','',c.display_name+' · '+({adult:'Взрослый',child:'Ребёнок',infant:'Младенец'}[c.age_group]||c.age_group)));
-         const del=mk('button','ad-gb-small ad-gb-danger','Удалить');del.type='button';
-         del.addEventListener('click',async()=>{if(!confirm('Удалить сопровождающего из этого приглашения?'))return;
-           try{await request('admin/companions',{method:'DELETE',csrf,body:{guest_id:id,id:c.id}});await refreshComp()}catch(err){notice(err.message,true)}
-         });line.append(del);companions.append(line);
+         line.append(mk('span','',c.display_name+' · '+({adult:'Взрослый',child:'Ребёнок',infant:'Младенец'}[c.age_group]||c.age_group)));extraList.append(line);
        }
-       if(!companions.children.length)companions.append(mk('p','ad-gb-note','Пока никого нет'));
      }
-     await refreshComp();
-     const compForm=mk('form','ad-gb-relation-form'),compName=mk('input'),compAge=select([['adult','Взрослый'],['child','Ребёнок'],['infant','Младенец']],'adult'),
-         compAdd=mk('button','ad-gb-light','Добавить сопровождающего');compAdd.type='submit';
-     compName.placeholder='Имя сопровождающего';compName.required=true;compName.maxLength=255;compForm.append(compName,compAge,compAdd);household.append(compForm);
-     compForm.addEventListener('submit',async ev=>{ev.preventDefault();compAdd.disabled=true;
-       try{await request('admin/companions',{method:'POST',csrf,body:{guest_id:id,display_name:s(compName.value),age_group:compAge.value}});
-         compName.value='';await refreshComp()}catch(err){notice(err.message,true)}finally{compAdd.disabled=false}
-     });
      // Active guests have exactly one Main/Reserve control, in Planning.
      // Only legacy archived records require an additional recovery action.
      if(g.status==='archived'){

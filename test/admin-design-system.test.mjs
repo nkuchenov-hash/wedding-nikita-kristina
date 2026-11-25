@@ -20,3 +20,5 @@ test('dashboard and login use separate high-resolution WebP artwork',()=>{
   assert.ok((bytes.readUInt16LE(26)&0x3fff)>=w);assert.ok((bytes.readUInt16LE(28)&0x3fff)>=h);
  }
 });
+
+test('Guest relationships distinguish couples from family, with one guest database and preserved invitation extras',()=>{const s=read('src/admin-guests.js'),api=read('backend/src/api.php');assert.match(s,/section\('Связи с гостями'/);assert.match(s,/\['couple','Пара'\],\['family','Родственные связи'\]/);assert.match(s,/relation_type:type.value/);assert.match(api,/UPDATE guest_relationships SET relation_1_to_2=\?,relation_2_to_1=\?,relation_type=\?/);assert.doesNotMatch(s,/Добавить сопровождающего/);assert.match(s,/if\(invitationExtras.length\)/);assert.match(read('src/admin-heading.css'),/\.ad-gb-section>h3,\.ad-gb-field-group>h4,\.ad-gb-legacy-details>summary,\.ad-gb-secondary-section>summary/)});

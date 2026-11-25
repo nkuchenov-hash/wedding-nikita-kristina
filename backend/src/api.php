@@ -369,11 +369,12 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
     }
     if ($route==='admin/guest/connections' && $method==='PATCH') {
         $d=payload(4096);$id=strval($d,'id',40,true);
-        if(!one($db,'SELECT id FROM guest_relationships WHERE id=?',[$id]))
-            fail(404,'relation','Связь не найдена');
+        $existing=one($db,'SELECT id,relation_type FROM guest_relationships WHERE id=?',[$id]);
+        if(!$existing)fail(404,'relation','Связь не найдена');
         $forward=strval($d,'relation_1_to_2',120,true);
         $reverse=strval($d,'relation_2_to_1',120);
-        statement($db,'UPDATE guest_relationships SET relation_1_to_2=?,relation_2_to_1=? WHERE id=?',[$forward,$reverse,$id]);
+        $type=array_key_exists('relation_type',$d)?choice($d,'relation_type',['family','couple','friend','other'],'other'):$existing['relation_type'];
+        statement($db,'UPDATE guest_relationships SET relation_1_to_2=?,relation_2_to_1=?,relation_type=? WHERE id=?',[$forward,$reverse,$type,$id]);
         audit($db,'admin',$actor,'update','guest_relationship',$id);
         json(['ok'=>true]);
     }
