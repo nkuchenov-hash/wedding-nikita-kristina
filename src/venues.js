@@ -83,12 +83,21 @@ function read(){
 let state=read();
 let ratingRules=DEFAULT_RATING_RULES;
 let selectedVenueId=null,venueSelectionSaving=false;
+const venueColumns=[['name','Площадка',470,260],['date','Даты',280,195],['visit','Осмотр',170,120],['price','Бюджет',285,160],['capacity','Вместимость',145,125],['score','Рейтинг',180,120],['archive','Архив',140,120]];
+export function normalizeVenueTableLayout(value){const widths={};for(const [key,,def,min] of venueColumns){const n=value?.widths?.[key];if(Number.isFinite(n))widths[key]=Math.max(min,Math.min(1000,Math.round(n)))}return {row_height:[96,128,160,192,0].includes(value?.row_height)?value.row_height:192,truncate:typeof value?.truncate==='boolean'?value.truncate:true,widths}}
+let tableLayout=normalizeVenueTableLayout(null),layoutSaving=false,layoutDragging=false;
+function columnWidth(key){const col=venueColumns.find(c=>c[0]===key);return tableLayout.widths[key]??col[2]}
+function tableWidth(){return venueColumns.reduce((n,c)=>n+columnWidth(c[0]),0)}
+async function saveTableLayout(next,root){if(layoutSaving||!venueDb.ready)return;const prev=tableLayout;tableLayout=normalizeVenueTableLayout(next);layoutSaving=true;redraw(root);try{await venueApi('admin/settings',{method:'POST',body:{key:'venue_table_layout',value:tableLayout}})}catch(e){tableLayout=prev;redraw(root);showAdminToast('Настройки не сохранены: '+e.message,{kind:'error'})}finally{layoutSaving=false}}
+function resizeHandle(key,label){return '<span class="vw-col-resize" data-vw-resize="'+key+'" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Ширина: '+h(label)+'" title="Потяните для изменения ширины"></span>'}
+function tableSettings(){if(!ui.tableSettings)return '';return '<div class="vw-rating-overlay" data-table-backdrop><aside class="vw-rating-drawer vw-table-settings" role="dialog" aria-modal="true" aria-labelledby="vw-table-title"><header class="vw-rating-drawer-header"><h2 id="vw-table-title">Настройки таблицы</h2><button type="button" data-table-close aria-label="Закрыть">×</button></header><div class="vw-rating-drawer-body"><h3>Размер строк</h3><label class="vw-rating-rule"><span>Высота строки</span><select data-layout-height>'+[[96,'Компактная · 96 px'],[128,'Средняя · 128 px'],[160,'Высокая · 160 px'],[192,'Большая · 192 px'],[0,'По содержимому']].map(([n,l])=>'<option value="'+n+'" '+(tableLayout.row_height===n?'selected':'')+'>'+l+'</option>').join('')+'</select></label><label class="vw-rating-check"><input type="checkbox" data-layout-truncate '+(tableLayout.truncate?'checked':'')+'> Обрезать длинный текст</label><h3>Ширина столбцов</h3><p>Перетаскивайте границы заголовков или задавайте ширину здесь. Наведите курсор на обрезанный текст для просмотра целиком.</p>'+venueColumns.map(([k,l,,min])=>'<label class="vw-rating-rule small"><span>'+h(l)+'</span><input type="number" data-layout-width="'+k+'" min="'+min+'" max="1000" step="1" value="'+columnWidth(k)+'"></label>').join('')+'</div><footer class="vw-rating-drawer-footer"><button type="button" data-layout-reset>По умолчанию</button><button type="button" class="vw-rating-save" data-table-close>Готово</button></footer></aside></div>'}
+function applyTableGeometry(root){const table=root.querySelector('.vw-table-sortable');if(!table)return;table.style.setProperty('--vw-table-width',tableWidth()+'px');table.style.setProperty('--vw-row-height',(tableLayout.row_height||192)+'px');table.classList.toggle('vw-layout-clipped',tableLayout.truncate&&!!tableLayout.row_height);table.classList.toggle('vw-layout-auto',!tableLayout.truncate||!tableLayout.row_height);for(const [key] of venueColumns){const col=table.querySelector('col[data-vw-col="'+key+'"]');if(col)col.style.width=columnWidth(key)+'px'}for(const cell of table.querySelectorAll('tbody .vw-venue-label small,tbody .vw-money small,tbody .vw-score small,tbody .vw-name,tbody .vw-state')){if(tableLayout.truncate)cell.title=cell.textContent.trim();else cell.removeAttribute('title')}}
 export function applyVenueSelection(venue,selectedId){
  if(!selectedId)return {...venue,selected:false};
  return {...venue,selected:venue.id===selectedId,archived:venue.id!==selectedId,archiveReason:venue.id!==selectedId?(venue.archived?venue.archiveReason:'Другая площадка выбрана'):''};
 }
 const effectiveRatingRules=()=>validateRatingRules(ui.ratingDraft)||ratingRules;
-let ui={mobileFilters:false,archiveFilter:'active',kind:'all',query:'',sort:'score',sortDir:'desc',expanded:null,detailTab:'overview',dateFilter:'all',budget:'all',visit:'all',capacity:'all',photoSection:'all',photoView:'gallery',photoSort:'original',photoIndex:0,photoLightbox:false,ratingDrawer:false,ratingDraft:null,ratingDirty:false};
+let ui={tableSettings:false,mobileFilters:false,archiveFilter:'active',kind:'all',query:'',sort:'score',sortDir:'desc',expanded:null,detailTab:'overview',dateFilter:'all',budget:'all',visit:'all',capacity:'all',photoSection:'all',photoView:'gallery',photoSort:'original',photoIndex:0,photoLightbox:false,ratingDrawer:false,ratingDraft:null,ratingDirty:false};
 const h=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rub=(v)=>typeof v==='number'&&Number.isFinite(v)?Math.round(v).toLocaleString('ru-RU')+' ₽':'—';
 const safeUrl=(v)=>{try{const u=new URL(String(v));return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}};
@@ -184,13 +193,14 @@ async function initVenueDatabase(root,force=false){
   }
   // Revalidate silently: other-device edits redraw only when data has changed.
   const serverRules=migrateRatingRules(settingsResponse.settings?.venue_rating_rules)||DEFAULT_RATING_RULES;
+  const serverLayout=normalizeVenueTableLayout(settingsResponse.settings?.venue_table_layout);
   const serverSelection=PUBLIC_VENUES.some(v=>v.id===settingsResponse.settings?.selected_venue_id)?settingsResponse.settings.selected_venue_id:null;
-  changed=selectedVenueId!==serverSelection||JSON.stringify(ratingRules)!==JSON.stringify(serverRules)||
+  changed=(!layoutSaving&&!layoutDragging&&JSON.stringify(tableLayout)!==JSON.stringify(serverLayout))||selectedVenueId!==serverSelection||JSON.stringify(ratingRules)!==JSON.stringify(serverRules)||
     JSON.stringify(state.venues)!==JSON.stringify(incoming)||
     JSON.stringify([...venueDb.dates].sort())!==JSON.stringify([...dates].sort());
   // Only server responses populate venue state. Browser caches guestCount only.
   state.venues=incoming;
-  ratingRules=serverRules;
+  ratingRules=serverRules;if(!layoutSaving&&!layoutDragging)tableLayout=serverLayout;
   if(selectedVenueId!==serverSelection){selectedVenueId=serverSelection;if(ui.archiveFilter==='active')Object.assign(ui,{kind:'all',query:'',dateFilter:'all',visit:'all',budget:'all',capacity:'all'});}
   if(!ui.ratingDirty)ui.ratingDraft=null;
   venueDb.rows=rows;
@@ -422,7 +432,7 @@ function row(v){
  '<td><span class="vw-state '+(v.visited?'vw-seen':'')+'">'+(v.visited?'● Были лично':'○ Не подтверждено')+'</span></td>'+
  '<td class="vw-money'+(complete?' vw-complete':' vw-incomplete')+'" title="'+h(cost.note||'')+'"><strong>'+h(amount)+'</strong><small>'+h(type)+(cost.value!==null?' · '+state.guestCount+' гостей':'')+'</small>'+(hint?'<small class="vw-cost-gap">'+h(hint)+'</small>':'')+offer+'</td>'+
  '<td>'+h(v.capacity??'—')+'</td><td class="vw-score"><a class="vw-score-link" href="#/admin/venues/'+encodeURIComponent(v.id)+'/rating" title="Открыть баллы и причины оценки">'+(score.value===null?'—':score.value+' / '+RATING_MAX)+'</a><small>'+(score.provisional?'Предварительно':'Проверено')+' · '+score.complete+'/'+RATING_CRITERIA.length+' критериев</small></td>'+
- '</tr>';
+ '<td class="vw-archive-cell">'+(!selectedVenueId?'<button type="button" class="vw-archive-action" data-venue-archive="'+h(v.id)+'">'+(v.archived?'Вернуть':'В архив')+'</button>':'')+'</td></tr>';
 }
 // Venue detail rendering is centralized in venue-detail-ui.js.
 const SORT_DEFAULTS={name:'asc',date:'asc',visit:'asc',price:'asc',capacity:'desc',score:'desc'};
@@ -491,7 +501,7 @@ function visibleVenues(all){
 }
 function columnHeading(key,label,filters=''){
  const active=ui.sort===key,arrow=!active?'↕':ui.sortDir==='asc'?'↑':'↓';
- return '<th scope="col" aria-sort="'+(active?(ui.sortDir==='asc'?'ascending':'descending'):'none')+'"><button type="button" class="vw-th-sort" data-sort-col="'+key+'" aria-label="Сортировать: '+h(label)+'; '+(active?(ui.sortDir==='asc'?'сейчас по возрастанию':'сейчас по убыванию'):'нажмите для сортировки')+'"><span>'+h(label)+'</span><span class="vw-sort-arrow'+(active?' active':'')+'" aria-hidden="true">'+arrow+'</span></button>'+filters+'</th>';
+ return '<th scope="col" aria-sort="'+(active?(ui.sortDir==='asc'?'ascending':'descending'):'none')+'"><button type="button" class="vw-th-sort" data-sort-col="'+key+'" aria-label="Сортировать: '+h(label)+'; '+(active?(ui.sortDir==='asc'?'сейчас по возрастанию':'сейчас по убыванию'):'нажмите для сортировки')+'"><span>'+h(label)+'</span><span class="vw-sort-arrow'+(active?' active':'')+'" aria-hidden="true">'+arrow+'</span></button>'+filters+resizeHandle(key,label)+'</th>';
 }
 function headerSelect(id,aria,options){
  return '<select class="vw-head-filter" aria-label="'+h(aria)+'" data-ui="'+h(id)+'">'+options.map(([value,label])=>'<option value="'+h(value)+'" '+(ui[id]===value?'selected':'')+'>'+h(label)+'</option>').join('')+'</select>';
@@ -561,17 +571,17 @@ export function renderVenueAdmin(){
   }
  if(ratingMethodRoute)return ratingMethodPage();
  return '<div class="vw-page vw-control-board" data-venues-page>'+
-  '<div class="vw-control-head admin-page-heading"><div><h1>Площадки</h1></div><div class="vw-control-facts"><button type="button" class="vw-rating-trigger" data-rating-open>Настроить рейтинг</button></div></div>'+
+  '<div class="vw-control-head admin-page-heading"><div><h1>Площадки</h1></div><div class="vw-control-facts"><button type="button" class="vw-rating-trigger" data-rating-open>Настроить рейтинг</button><button type="button" class="vw-rating-trigger" data-table-settings>Настройки таблицы</button></div></div>'+
   '<div class="vw-panel vw-table-panel"><div class="vw-panel-title vw-table-panel-title"><div class="vw-list-count" aria-label="Количество площадок"><span><b data-venues-visible>'+list.length+'</b> из '+(ui.archiveFilter==='active'?activeCount:ui.archiveFilter==='archived'?archivedCount:all.length)+'</span></div><div class="vw-table-tools"><select class="vw-list-select" data-ui="archiveFilter" aria-label="Показывать площадки">'+[['active','Активные'],['all','Все'],['archived','Архив']].map(([id,label])=>'<option value="'+id+'" '+(ui.archiveFilter===id?'selected':'')+'>'+label+'</option>').join('')+'</select><label class="vw-compact-control vw-guest-control">Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+state.guestCount+'" aria-label="Число гостей для пересчёта смет"></label><input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Найти площадку" aria-label="Поиск площадки (Enter)"><button type="button" data-clear-filters>Сбросить</button></div></div>'+
-  '<div class="vw-scroll" role="region" tabindex="0" aria-label="Список площадок"><input class="vw-mobile-filter-toggle" type="checkbox" id="vw-mobile-filters"'+(ui.mobileFilters?' checked':'')+'><label class="vw-mobile-filter-label" for="vw-mobile-filters">Фильтры и сортировка</label><table class="vw-table vw-table-sortable"><thead><tr>'+
+  '<div class="vw-scroll" role="region" tabindex="0" aria-label="Список площадок"><input class="vw-mobile-filter-toggle" type="checkbox" id="vw-mobile-filters"'+(ui.mobileFilters?' checked':'')+'><label class="vw-mobile-filter-label" for="vw-mobile-filters">Фильтры и сортировка</label><table class="vw-table vw-table-sortable"><colgroup>'+venueColumns.map(([key])=>'<col data-vw-col="'+key+'">').join('')+'</colgroup><thead><tr>'+
   columnHeading('name','Площадка','<div class="vw-head-filter-row">'+headerSelect('kind','Расположение',[['all','Все районы'],['city','Город'],['country','За городом']])+'</div>')+
   columnHeading('date','18 / 19 / 20 июня',headerSelect('dateFilter','Доступность по дате',[['all','Все даты'],['19:available','19 июня · свободно'],['19:unavailable','19 июня · занято'],['18:available','18 июня · свободно'],['18:unavailable','18 июня · занято'],['20:available','20 июня · свободно'],['20:unavailable','20 июня · занято']]))+
   columnHeading('visit','Осмотр',headerSelect('visit','Фильтр по осмотру',[['all','Все'],['yes','Были лично'],['no','Не подтверждено']]))+
   columnHeading('price','Бюджет',headerSelect('budget','Верхняя граница бюджета',[['all','Любой бюджет'],['650000','До 650 тыс.'],['800000','До 800 тыс.'],['1000000','До 1 млн'],['1200000','До 1,2 млн']]))+
   columnHeading('capacity','Вместимость',headerSelect('capacity','Минимальная вместимость',[['all','Все'],['80','80+ гостей'],['100','100+ гостей']]))+
-  columnHeading('score','Рейтинг')+
+  columnHeading('score','Рейтинг')+'<th scope="col">Архив'+resizeHandle('archive','Архив')+'</th>'+
   '</tr></thead><tbody>'+list.map(row).join('')+'</tbody></table></div>'+(list.length?'':'<p class="vw-empty">Нет площадок по выбранным фильтрам.</p>')+'</div>'+
-  ratingDrawer()+'</div>';
+  ratingDrawer()+tableSettings()+'</div>';
 }
 function redraw(root){
  const el=root.querySelector('[data-venues-page]');if(!el)return;
@@ -580,7 +590,7 @@ function redraw(root){
  const tableScroll=root.querySelector('.vw-scroll')?.scrollLeft??0;
  const categoryScroll=root.querySelector('.vdp-photo-categories')?.scrollLeft??0;
  const stripScroll=root.querySelector('.vdp-filmstrip')?.scrollLeft??0;
- el.outerHTML=renderVenueAdmin();
+ el.outerHTML=renderVenueAdmin();applyTableGeometry(root);
  hydrateVenueFiles(root);
  const boardScroll=root.querySelector('.vw-scroll');if(boardScroll)boardScroll.scrollLeft=tableScroll;
  const n=root.querySelector('[data-state="guestCount"]');if(n)n.value=String(state.guestCount);
@@ -601,7 +611,7 @@ function redraw(root){
   }
  }
  if(typeof document!=='undefined'){
-  document.documentElement.style.overflow=(ui.photoLightbox||ui.ratingDrawer)?'hidden':'';
+  document.documentElement.style.overflow=(ui.photoLightbox||ui.ratingDrawer||ui.tableSettings)?'hidden':'';
   const close=root.querySelector('[data-photo-close]');if(close)close.focus({preventScroll:true});
  }
  if(typeof window!=='undefined'&&Number.isFinite(y))window.scrollTo({top:y,behavior:'instant'});
@@ -616,7 +626,7 @@ export function activateVenueAdmin(root){
  const refresh=()=>{
   if(document.visibilityState!=='visible'||!root.querySelector('[data-venues-page]')||!venueDb.ready||Date.now()-lastInteraction<1800)return;
   // Never replace an inline editor or an unfinished save from another refresh.
-  if(venueSelectionSaving||ui.ratingDrawer||root.querySelector('.vdp-inline-form,.vdp-inline-quote-form,.vdp-inline-quote-editor'))return;
+  if(venueSelectionSaving||ui.ratingDrawer||ui.tableSettings||layoutSaving||layoutDragging||root.querySelector('.vdp-inline-form,.vdp-inline-quote-form,.vdp-inline-quote-editor'))return;
   const active=document.activeElement;
   if(active&&root.contains(active)&&active.matches('input,select,textarea,[contenteditable]'))return;
   initVenueDatabase(root,true);
@@ -636,9 +646,12 @@ export function activateVenueAdmin(root){
  redraw(root);
  initVenueDatabase(root);
  root.addEventListener('click',event=>{
-  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-venue-inline],[data-inline-quote],[data-add-inline-quote],[data-cancel-inline],[data-remove-venue-quote],[data-venue-retry],[data-venue-archive],[data-venue-select],[data-venue-unselect],[data-open-archive],[data-rating-open],[data-rating-close],[data-rating-backdrop],[data-rating-defaults]');if(!target)return;
+  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-venue-inline],[data-inline-quote],[data-add-inline-quote],[data-cancel-inline],[data-remove-venue-quote],[data-venue-retry],[data-venue-archive],[data-venue-select],[data-venue-unselect],[data-open-archive],[data-rating-open],[data-rating-close],[data-rating-backdrop],[data-rating-defaults],[data-table-settings],[data-table-close],[data-table-backdrop],[data-layout-reset]');if(!target)return;
   const venueBase=PUBLIC_VENUES.find(x=>x.id===ui.expanded);
   const showError=message=>showAdminToast(message,{kind:'error'});
+  if(target.hasAttribute('data-table-settings')){ui.tableSettings=true;redraw(root);root.querySelector('[data-table-close]')?.focus();return}
+  if(target.hasAttribute('data-table-close')||(target.hasAttribute('data-table-backdrop')&&target===event.target)){ui.tableSettings=false;redraw(root);root.querySelector('[data-table-settings]')?.focus();return}
+  if(target.hasAttribute('data-layout-reset')){void saveTableLayout(null,root);return}
   if(target.hasAttribute('data-rating-open')){
    ui.ratingDrawer=true;ui.ratingDraft=cloneRatingRules(ratingRules);ui.ratingDirty=false;
    redraw(root);root.querySelector('[data-rating-close]')?.focus();
@@ -826,8 +839,21 @@ export function activateVenueAdmin(root){
    }
   }finally{form.dataset.saving='';if(button&&button.isConnected)button.disabled=false}
  });
+ root.addEventListener('pointerdown',event=>{
+  const handle=event.target.closest('[data-vw-resize]');if(!handle||event.button!==0||layoutSaving)return;
+  event.preventDefault();event.stopPropagation();const key=handle.dataset.vwResize,start=event.clientX,original=columnWidth(key),previous=tableLayout;
+  layoutDragging=true;handle.setPointerCapture(event.pointerId);
+  const move=e=>{tableLayout=normalizeVenueTableLayout({...previous,widths:{...previous.widths,[key]:original+e.clientX-start}});applyTableGeometry(root)};
+  const finish=e=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',finish);handle.removeEventListener('pointercancel',cancel);layoutDragging=false;const next=tableLayout;tableLayout=previous;void saveTableLayout(next,root)};
+  const cancel=()=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',finish);handle.removeEventListener('pointercancel',cancel);tableLayout=previous;layoutDragging=false;applyTableGeometry(root)};
+  handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',finish);handle.addEventListener('pointercancel',cancel);
+ });
+ root.addEventListener('keydown',event=>{const handle=event.target.closest('[data-vw-resize]');if(!handle||!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const k=handle.dataset.vwResize;void saveTableLayout({...tableLayout,widths:{...tableLayout.widths,[k]:columnWidth(k)+(event.key==='ArrowRight'?16:-16)}},root)});
  root.addEventListener('change',async event=>{
   const t=event.target;
+  if(t.hasAttribute('data-layout-height')){await saveTableLayout({...tableLayout,row_height:Number(t.value)},root);return}
+  if(t.hasAttribute('data-layout-truncate')){await saveTableLayout({...tableLayout,truncate:t.checked},root);return}
+  if(t.hasAttribute('data-layout-width')){await saveTableLayout({...tableLayout,widths:{...tableLayout.widths,[t.dataset.layoutWidth]:Number(t.value)}},root);return}
   if(t.hasAttribute('data-transcript-addon')){
    const base=PUBLIC_VENUES.find(x=>x.id===ui.expanded);
    if(!base||!venueDb.ready){redraw(root);return;}
@@ -890,6 +916,7 @@ export function activateVenueAdmin(root){
   }
  });
  document.addEventListener('keydown',event=>{
+   if(event.key==='Escape'&&ui.tableSettings){event.preventDefault();ui.tableSettings=false;redraw(root);return}
    if(event.key==='Escape'&&ui.ratingDrawer){
     event.preventDefault();
     if(ui.ratingDirty&&!window.confirm('Закрыть настройки без сохранения?'))return;

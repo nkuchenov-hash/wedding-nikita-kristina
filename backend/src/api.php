@@ -189,7 +189,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $d=payload(16384);
         $allowed=['event_date','event_time','event_venue','venue_address','rsvp_deadline',
           'dress_code','transport_info','public_notes','menu_open','directory_open',
-          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','guest_table_columns','guest_table_layout','guest_sort_mode','activity_types','activity_tags','program_day_hours','venue_rating_rules','budget_limit_rub','selected_venue_id'];
+          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','guest_table_columns','guest_table_layout','guest_sort_mode','activity_types','activity_tags','program_day_hours','venue_rating_rules','budget_limit_rub','selected_venue_id','venue_table_layout'];
         $key=choice($d,'key',$allowed,'');
         if(!array_key_exists('value',$d))
             fail(422,'field','Значение настройки недопустимо');
@@ -246,6 +246,13 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
             }
             if(!is_bool($value['includeWorkingBudgets']))
                 fail(422,'field','Неверная настройка рабочих смет');
+        } elseif($key==='venue_table_layout'){
+            $min=['name'=>260,'date'=>195,'visit'=>120,'price'=>160,'capacity'=>125,'score'=>120,'archive'=>120];
+            if(!is_array($value)||array_is_list($value)||array_diff(array_keys($value),['row_height','truncate','widths'])||
+                !isset($value['row_height'],$value['truncate'],$value['widths'])||
+                !in_array($value['row_height'],[96,128,160,192,0],true)||!is_bool($value['truncate'])||!is_array($value['widths'])||count($value['widths'])>count($min))
+                fail(422,'field','Некорректные параметры таблицы площадок');
+            foreach($value['widths'] as $column=>$width)if(!isset($min[$column])||!is_int($width)||$width<$min[$column]||$width>1000)fail(422,'field','Недопустимая ширина столбца');
         } elseif($key==='guest_table_layout'){
             $allowedHeights=[56,72,96,128,0];
             $allowedFields=['display_name','side','community','relation_to_couple','about',
