@@ -98,7 +98,7 @@ test('three-day wedding itinerary contains only organizer-confirmed events',asyn
  assert.match(program,/pointerdown/);
  assert.match(program,/parallelEventLayout/);
  assert.match(program,/ad-tl-resizing/);
- assert.match(program,/230/);
+ assert.match(program,/Math\.hypot\(event\.clientX-pointer\.initialX,event\.clientY-pointer\.initialY\)>=4/);
  assert.match(program,/ad-tl-tag-select/);
  assert.match(program,/activity_tags/);
  assert.match(program,/tags_json/);
