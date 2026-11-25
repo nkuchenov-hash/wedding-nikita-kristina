@@ -165,7 +165,7 @@
 }
 
 /* Contractors and decor share the administrative design system. */
-.production-page{width:100%;min-width:0;font-size:15px}
+.production-page{width:100%;min-width:0;font-size:17px}
 .production-heading,.production-toolbar,.production-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .production-heading{justify-content:space-between}.production-toolbar{margin:12px 0 18px}
 .production-toolbar input,.production-toolbar select,.production-form input,.production-form select,.production-form textarea{font:inherit;color:inherit;background:transparent;border:1px solid currentColor;border-color:var(--ad-border,#9a9a9a);border-radius:8px;padding:9px;min-width:0}

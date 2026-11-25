@@ -51,7 +51,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site/src _site/public
-          cp src/admin-app.js src/admin-toast.js src/admin-data-ui.js src/admin-production.js src/admin-data.css src/admin-program.js src/admin-program.css src/admin-settings.js src/admin-photos.js src/admin-photos.css src/venue-files-ui.js src/venue-files-ui.css src/admin-guests.js src/admin-guests.css src/admin-heading.css src/data.js src/styles.css \
+          cp src/admin-app.js src/admin-toast.js src/admin-data-ui.js src/admin-data.css src/admin-production.js src/admin-program.js src/admin-program.css src/admin-settings.js src/admin-photos.js src/admin-photos.css src/venue-files-ui.js src/venue-files-ui.css src/admin-guests.js src/admin-guests.css src/admin-heading.css src/data.js src/styles.css \
              src/venues.js src/venues-data.js src/venues.css \
              src/venue-detail-ui.js src/venue-detail-ui.css src/venues-pricing.js src/venue-evaluation.js \
              src/venue-transcript-costs.js src/venue-budget-coverage.js \
