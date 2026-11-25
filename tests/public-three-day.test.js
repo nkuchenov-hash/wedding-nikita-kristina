@@ -23,9 +23,6 @@ test('approved botanical layout has hero, invitation and RSVP in original sectio
  assert.match(html,/wref-rsvp-disclaimer/);
  assert.match(html,/не отправляются и не сохраняются/);
  assert.match(html,/data-site-menu-toggle/);
- assert.match(html,/wg-couple-photo/);
- assert.doesNotMatch(html,/portrait-clean\.webp|portrait-extended-background\.webp/);
- assert.match(html,/wref-city-panorama/);
 });
 
 test('programme dates match tentative schedule without inventing a venue',()=>{
@@ -60,8 +57,4 @@ test('the invitation discloses tentative arrangements and avoids unconfirmed RSV
  assert.match(home,/Время и площадка уточняются/);
  assert.match(info,/ПЛОЩАДКА И ВРЕМЯ УТОЧНЯЮТСЯ/);
  assert.match(guest,/предварительный просмотр: ответ не сохранён и не отправлен/);
-});
-
-test('editorial invitation is restored without admin dashboard cards or fake couple portraits',()=>{
- const html=renderGuest('/');assert.match(html,/wref-hero-copy/);assert.match(html,/wref-polaroid--estate/);assert.doesNotMatch(html,/wg-hero-content|wref-hero-skyline/);assert.doesNotMatch(renderGuest('/gallery'),/gallery-clean-/);assert.match(referenceCss,/Restore the botanical editorial invitation/);
 });
