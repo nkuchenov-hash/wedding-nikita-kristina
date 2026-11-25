@@ -1027,6 +1027,7 @@ export async function activateGuestDirectory(root){
    if(route[4]==='yes'||route[4]==='unanswered')rsvpFilter.value=route[4];
    if(route[4]==='unsent')qualityFilter.value='unsent';
    await reloadData();childrenToggle.disabled=false;
+   if(route[3]==='profile'&&route[4]&&byId(decodeURIComponent(route[4])))await openGuest(decodeURIComponent(route[4]));
  }
  catch(err){list.replaceChildren(mk('p','ad-gb-error','Не удалось открыть базу: '+err.message))}
  const updateFromServer=async()=>{

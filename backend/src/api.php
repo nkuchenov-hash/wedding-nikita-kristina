@@ -386,7 +386,17 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
           WHERE (a.actor_type='guest' AND a.action IN ('login','update','submit'))
             OR (a.actor_type='admin' AND a.action IN ('mark_sent','mark_not_sent'))
           ORDER BY a.id DESC LIMIT 25");
-        json(['ok'=>true,'guests'=>$guest,'rsvp'=>$rsvps,'photos_pending'=>(int)$pendingPhotos['n'],
+        $dashboardActivity=all($db,"SELECT a.action,a.entity_type,a.entity_id,a.created_at,
+          CASE WHEN a.entity_type IN ('guest','guest_profile','rsvp','profile') THEN g.id ELSE NULL END AS guest_id,
+          COALESCE(t.title,s.title,g.display_name,v.name) AS entity_label
+          FROM audit_log a
+          LEFT JOIN tasks t ON a.entity_type='tasks' AND t.id=a.entity_id
+          LEFT JOIN schedule_items s ON a.entity_type='schedule_items' AND s.id=a.entity_id
+          LEFT JOIN guests g ON a.entity_type IN ('guest','guest_profile','rsvp','profile') AND g.id=a.entity_id
+          LEFT JOIN venues v ON a.entity_type='venues' AND v.id=a.entity_id
+          WHERE a.action!='login' AND a.entity_type IN ('tasks','schedule_items','guest','guest_profile','rsvp','profile','venues','venue_date_status','event_setting','budget_lines','menu_options','menu','gallery_photo','photo','guest_relationship','companion','invitation')
+          ORDER BY a.id DESC LIMIT 50");
+        json(['ok'=>true,'dashboard_activity'=>$dashboardActivity,'guests'=>$guest,'rsvp'=>$rsvps,'photos_pending'=>(int)$pendingPhotos['n'],
           'stories_pending'=>(int)$pendingStories['n'],'budget'=>$budget,'tasks'=>$tasks,
           'recent_activity'=>$activity]);
     }

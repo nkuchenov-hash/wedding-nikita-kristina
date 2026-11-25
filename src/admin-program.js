@@ -615,4 +615,5 @@ export async function renderWeddingProgram(host,api,days){
  if(days.some(d=>d.date===route[3]))day=route[3];
  if(route[4]==='ideas')view='idea';
  render();
+ if(route[5]&&['event','ideas'].includes(route[4])){const target=entries.find(e=>String(e.id)===decodeURIComponent(route[5])&&assignedDay(e)===day);if(target)openCard(target)}
 }
