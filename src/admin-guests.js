@@ -64,12 +64,14 @@ export function normalizeGuestTableColumns(value){
 }
 // Display-only grouping: never modifies guest rows, IDs, families or seating plans.
 // Recognise only explicit spouse/partner-of-a-couple labels, never infer a couple from names or seating.
+const normalizeRelationLabel=value=>String(value||'').trim().toLocaleLowerCase('ru').replace(/ё/g,'е').replace(/\s+/g,' ');
+const familyRelationLabel=/^(?:(?:родной|родная|сводный|сводная|двоюродный|двоюродная|троюродный|троюродная|единокровный|единокровная|единоутробный|единоутробная) )?(?:брат|сестра|дядя|тетя|племянник|племянница)$|^(?:мать|мама|отец|папа|родитель|сын|дочь|дочка|ребенок|бабушка|дедушка|дед|внук|внучка|прабабушка|прадедушка|правнук|правнучка|тесть|теща|свекор|свекровь|зять|невестка|сноха|деверь|золовка|шурин|свояченица|отчим|мачеха|пасынок|падчерица|mother|father|parent|son|daughter|child|brother|sister|aunt|uncle|cousin|nephew|niece|grandmother|grandfather|grandson|granddaughter)$/u;
 export function guestRelationshipType(link){
- const kind=String(link.relation_type||'').toLowerCase();
- if(kind==='couple')return 'couple';
- if(['family','other',''].includes(kind)&&[link.relation_1_to_2,link.relation_2_to_1].some(x=>/^(муж|жена|супруг|супруга|husband|wife|spouse|пара)$/i.test(String(x||'').trim())))return 'couple';
- if(kind==='family')return 'family';
- if(['friend','acquaintance'].includes(kind))return 'friend';
+ const kind=String(link.relation_type||'').trim().toLowerCase();
+ const labels=[link.relation_1_to_2,link.relation_2_to_1].map(normalizeRelationLabel);
+ if(kind==='couple'||labels.some(x=>/^(муж|жена|супруг|супруга|husband|wife|spouse|пара)$/.test(x)))return 'couple';
+ if(kind==='family'||labels.some(x=>familyRelationLabel.test(x)))return 'family';
+ if(['friend','acquaintance'].includes(kind)||labels.some(x=>/^(друг|подруга|приятель|приятельница|friend)$/.test(x)))return 'friend';
  return 'other';
 }
 export function groupGuestsByConnections(selected,allGuests,links,descending=false){
@@ -846,7 +848,7 @@ export async function activateGuestDirectory(root){
            const label=left?link.relation_2_to_1:link.relation_1_to_2;
            const line=mk('div','ad-gb-related');
            const go=mk('button','ad-gb-related-name',other||'Уточнить имя');go.type='button';go.onclick=()=>openGuest(otherId);
-           const relation=mk('span','',label||(type==='couple'?'Пара':'Связь не уточнена'));
+           const relation=mk('span','',label?String(label).trim().toLocaleLowerCase('ru'):(type==='couple'?'пара':'Связь не уточнена'));
            const edit=mk('button','ad-gb-small','Изменить');edit.type='button';edit.onclick=()=>editRelation(link);
            const remove=mk('button','ad-gb-small ad-gb-danger','Убрать связь');remove.type='button';
            remove.onclick=async()=>{if(!confirm('Удалить эту связь? Сами гости сохранятся.'))return;
