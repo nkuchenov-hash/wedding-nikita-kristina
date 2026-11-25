@@ -610,3 +610,45 @@ body.ad-gb-is-resizing,body.ad-gb-is-resizing *{cursor:col-resize!important;user
 .ad-gb-participation-switch input{width:19px;height:19px;accent-color:#24663d;flex:none}
 .ad-gb-visible-filters .ad-gb-columns-reset{min-height:40px;font-size:16px}
 @media(max-width:600px){.ad-gb-visible-filter{flex:1 1 42%}.ad-gb-participation-switch{flex:1 1 100%}}
+
+/* Right-hand guest settings drawer. Header, tabs and footer remain visible. */
+body.admin-body .ad-guestbook dialog.ad-gb-settings-drawer{
+ position:fixed;inset:0 0 0 auto;margin:0;box-sizing:border-box;
+ width:min(480px,100%);max-width:none;height:100dvh;max-height:none;padding:0;
+ border:0;border-left:1px solid var(--wd-line,#dce8dd);border-radius:0;
+ background:var(--wd-surface,#fff);color:var(--wd-ink,#203b2c);
+ box-shadow:-12px 0 40px #142a2026;overflow:hidden;text-align:left;
+}
+body.admin-body .ad-guestbook dialog.ad-gb-settings-drawer[open]{display:flex;flex-direction:column;animation:guest-settings-enter .2s ease-out}
+body.admin-body .ad-guestbook dialog.ad-gb-settings-drawer[hidden]{display:none!important}
+.ad-gb-settings-drawer::backdrop{background:rgba(9,28,20,.32)}
+@keyframes guest-settings-enter{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.ad-gb-settings-drawer .ad-gb-settings-head{flex:none;position:static;margin:0;padding:20px 24px 16px;background:var(--wd-surface,#fff);border-color:var(--wd-line,#dce8dd)}
+.ad-gb-settings-drawer .ad-gb-settings-head strong{font-size:23px;color:var(--wd-ink,#203b2c)}
+.ad-gb-settings-drawer .ad-gb-settings-close{background:var(--wd-soft,#edf3ed);color:var(--wd-ink,#203b2c);border-color:var(--wd-line,#dce8dd)}
+.ad-gb-settings-drawer .ad-gb-settings-tabs{flex:none;margin:16px 24px 0;background:var(--wd-soft,#edf3ed)}
+.ad-gb-settings-drawer .ad-gb-settings-tab{color:var(--wd-muted,#496a56);min-height:44px}
+.ad-gb-settings-drawer .ad-gb-settings-tab.is-active{background:var(--wd-surface,#fff);color:var(--wd-ink,#203b2c)}
+.ad-gb-settings-drawer .ad-gb-settings-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:24px;scrollbar-width:thin}
+.ad-gb-settings-drawer.ad-gb-columns-menu .ad-gb-visible-filters{gap:16px;margin:0 0 8px}
+.ad-gb-settings-drawer.ad-gb-columns-menu .ad-gb-visible-filter{gap:8px;color:var(--wd-ink,#203b2c)}
+.ad-gb-settings-drawer .ad-gb-menu-filters{gap:16px;margin:0;padding:0;border:0}
+.ad-gb-settings-drawer .ad-gb-menu-filters>.ad-gb-columns-heading{border-top:1px solid var(--wd-line,#dce8dd);padding-top:20px;margin:0}
+.ad-gb-settings-drawer .ad-gb-columns-heading{font-size:18px;color:var(--wd-ink,#203b2c)}
+.ad-gb-settings-drawer :is(.ad-gb-menu-filter-row,.ad-gb-menu-sort-direction,.ad-gb-columns-hint,.ad-gb-columns-reset){color:var(--wd-muted,#53695a)}
+.ad-gb-settings-drawer :is(.ad-gb-menu-wrap-choice,.ad-gb-columns-toggle){color:var(--wd-ink,#203b2c)}
+.ad-gb-settings-drawer :is(.ad-gb-select,.ad-gb-sort-direction){min-height:44px;max-width:100%;box-sizing:border-box;font-size:16px;background:var(--wd-surface,#fff);color:var(--wd-ink,#203b2c);border-color:var(--wd-line,#dce8dd)}
+.ad-gb-settings-drawer :is(.ad-gb-menu-layout,.ad-gb-columns-option,.ad-gb-columns-footer){border-color:var(--wd-line,#dce8dd)}
+.ad-gb-settings-drawer :is(.ad-gb-columns-settings-link,.ad-gb-columns-move-button){color:var(--wd-accent,#214d35)}
+.ad-gb-settings-drawer .ad-gb-columns-option{min-height:44px}
+.ad-gb-settings-drawer .ad-gb-settings-actions{flex:none;padding:14px 24px max(16px,env(safe-area-inset-bottom));border-top:1px solid var(--wd-line,#dce8dd);background:var(--wd-surface,#fff)}
+.ad-gb-settings-drawer .ad-gb-settings-actions .ad-gb-settings-done{margin:0;min-height:44px;width:100%}
+@media(max-width:600px){
+ body.admin-body .ad-guestbook dialog.ad-gb-settings-drawer{width:100%;border:0}
+ .ad-gb-settings-drawer .ad-gb-settings-head{padding:16px 18px}
+ .ad-gb-settings-drawer .ad-gb-settings-tabs{margin:14px 18px 0}
+ .ad-gb-settings-drawer .ad-gb-settings-body{padding:20px 18px}
+ .ad-gb-settings-drawer .ad-gb-settings-actions{padding-inline:18px}
+}
+@media(max-width:360px){.ad-gb-settings-drawer.ad-gb-columns-menu .ad-gb-visible-filters{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){body.admin-body .ad-guestbook dialog.ad-gb-settings-drawer[open]{animation:none}}
