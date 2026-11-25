@@ -26,6 +26,8 @@ jobs:
           unzip -q mvp-site/site.zip -d _mvp
           echo 'fffe9e59a23cf677a5010f798562072bcf46e9dcafe18c693a55800153aeb99d  mvp-site/edge-fix.zip' | sha256sum -c -
           unzip -oq mvp-site/edge-fix.zip -d _mvp
+          echo '589554acc14a77f976776283bf1687c38d2e0859784bb957849fc113d9fcd508  mvp-site/botanical-patch.zip' | sha256sum -c -
+          unzip -oq mvp-site/botanical-patch.zip -d _mvp
           test -s _mvp/index.html
           node --check _mvp/script.js
           python3 - <<'PY'
@@ -139,7 +141,7 @@ jobs:
           curl -fsSL --retry 3 --max-time 20 "$BASE/version.json?v=${GITHUB_SHA:0:12}" | grep -Fq "\"revision\":\"${GITHUB_SHA:0:12}\""
           curl -fsSL --retry 3 --max-time 20 "$BASE/index.html?v=${GITHUB_SHA:0:12}" -o /tmp/mvp-live.html
           cmp /tmp/mvp-live.html _mvp/index.html
-          for asset in couple birch-right ladybird strawberry bridge skyline forest; do
+          for asset in couple birch-right birch-top-left hero-lower-left welcome-left welcome-right welcome-small-left program-right flowers-left flowers-right sprig ladybird strawberry bridge skyline forest; do
             curl -fsSL --retry 3 --max-time 20 "$BASE/assets/$asset.png?v=${GITHUB_SHA:0:12}" -o /tmp/mvp-live.png
             cmp /tmp/mvp-live.png "_mvp/assets/$asset.png"
           done
