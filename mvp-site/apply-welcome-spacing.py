@@ -110,14 +110,14 @@ asset.write_bytes(encoded)
 copyfile(asset,qa/'refined-skyline.png')
 print('ORIGINAL_ART_RESAMPLED',w,h,'->',W,H,'bytes',len(raw),'->',len(encoded))
 
-# Reuse the original painted, transparent PNG artwork. No synthetic SVG plants.
+
+# Remove all old ornaments from the welcome block only; retain photo masks and divider.
 import re
 html=p.read_text()
 start=re.search(r'<section\b[^>]*class="[^"]*\bwelcome\b[^"]*"[^>]*>',html)
-assert start, 'Welcome section not found'
+assert start
 end=html.index('</section>',start.end())
-assets=[('cascade-blossom','welcome-small-left'),('cascade-blossom cascade-blossom-upper','flowers-right'),('cascade-hydrangea','flowers-left')]
-for cls,name in assets:
-    assert Path('_mvp/assets',name+'.png').is_file()
-art=''.join(f'<img class="welcome-botanical {cls}" src="assets/{name}.png" alt="" aria-hidden="true">' for cls,name in assets)
-p.write_text(html[:end]+art+html[end:])
+section=html[start.end():end]
+section,count=re.subn(r'<img\b(?=[^>]*class="[^"]*\b(?:ornament|welcome-botanical)\b)[^>]*>', '',section)
+assert count>=3, count
+p.write_text(html[:start.end()]+section+html[end:])

@@ -98,8 +98,8 @@ jobs:
               assert.equal(await p.evaluate(sel=>document.querySelectorAll(sel).length,'.day-copy h3'),3);
               assert.equal(await p.evaluate(()=>document.querySelectorAll('.hero > img.hero-couple,.hero > img.hero-bg,.hero > img.hero-skyline').length),3);
               const spacing=await p.evaluate(()=>{
-                const h=document.querySelector('.hero').getBoundingClientRect(),w=document.querySelector('.welcome').getBoundingClientRect(),pr=document.querySelector('.program').getBoundingClientRect(),b=document.querySelector('.welcome-berry'),f=b.closest('.photo-shell');
-                return {before:w.top-h.bottom,after:pr.top-w.bottom,branches:document.querySelectorAll('.welcome > .ornament').length,berryAttached:!!f?.querySelector('.frame-city'),berryOffset:f?Math.abs(b.getBoundingClientRect().bottom-f.getBoundingClientRect().bottom):999};
+                const h=document.querySelector('.hero').getBoundingClientRect(),w=document.querySelector('.welcome').getBoundingClientRect(),pr=document.querySelector('.program').getBoundingClientRect();
+                return {before:w.top-h.bottom,after:pr.top-w.bottom,branches:document.querySelectorAll('.welcome .ornament,.welcome .welcome-botanical').length};
               });
               const heroPolish=await p.evaluate(()=>{
                 const hero=document.querySelector('.hero'),leaf=hero.querySelector('.hero-top-left'),lower=hero.querySelector('.hero-leaves'),wave=hero.querySelector('.hero-wave');
@@ -111,9 +111,7 @@ jobs:
               assert.ok(heroPolish.lowerZ>heroPolish.waveZ);
               console.log('WELCOME_SPACING',JSON.stringify(spacing));
               assert.ok(spacing.before>=30 && spacing.after>=35);
-              assert.equal(spacing.branches,2);
-              assert.equal(spacing.berryAttached,true);
-              assert.ok(spacing.berryOffset<30);
+              assert.equal(spacing.branches,0);
               const editorial=await p.evaluate(()=>{
                 const left=document.querySelector('.welcome .photo-shell:has(.frame-estate)'),right=document.querySelector('.welcome .photo-shell:has(.frame-city)'),copy=document.querySelector('.welcome-text'),lr=left.getBoundingClientRect(),rr=right.getBoundingClientRect(),cr=copy.getBoundingClientRect();
                 return {leftRatio:lr.height/lr.width,rightRatio:rr.height/rr.width,leftRotate:getComputedStyle(left).rotate,rightRotate:getComputedStyle(right).rotate,noTextOverlap:innerWidth<=700?cr.top>=Math.max(lr.bottom,rr.bottom)-2:Math.max(lr.right,rr.right)<cr.left,photoOverlap:lr.right>rr.left&&lr.bottom>rr.top,botanicals:document.querySelectorAll('.welcome .welcome-botanical').length};
@@ -122,8 +120,7 @@ jobs:
               assert.ok(editorial.leftRatio>1.06&&editorial.rightRatio<.99);
               assert.ok(editorial.leftRotate!=='none'&&editorial.rightRotate!=='none');
               assert.ok(editorial.noTextOverlap && editorial.photoOverlap);
-              assert.equal(editorial.botanicals,3);
-              assert.equal(await p.evaluate(()=>[...document.querySelectorAll('.welcome .welcome-botanical')].every(i=>i.naturalWidth>0&&new URL(i.src).pathname.endsWith('.png'))),true);
+              assert.equal(editorial.botanicals,0);
               await p.evaluate(()=>Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,3000))]));
               await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/'+name+'.png',fullPage:true});
               assert.equal(await p.evaluate(()=>document.querySelectorAll('.day-shell').length),3);

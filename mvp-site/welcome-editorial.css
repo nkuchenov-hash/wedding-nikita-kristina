@@ -6,7 +6,6 @@
 .welcome .welcome-text p{color:#454336;text-wrap:pretty}
 .welcome .welcome-text h2{font-weight:400;letter-spacing:-.042em}
 .welcome .divider img{opacity:.83}
-.welcome .photo-shell:has(.frame-city) .welcome-berry{left:-8%!important;bottom:-2%!important;width:31%!important;transform:rotate(6deg)!important}
 @media(min-width:701px){
  .welcome{height:35.8cqw!important}
  .welcome .welcome-text{top:4.1cqw;left:33.5cqw;width:33cqw}
@@ -17,8 +16,6 @@
  .welcome .photo-shell:has(.frame-estate){left:6.1cqw;top:2.6cqw;width:24.3cqw;height:28.2cqw;rotate:-2.4deg}
  .welcome .photo-shell:has(.frame-city){left:70.1cqw;top:9.2cqw;width:25.1cqw;height:23.1cqw;rotate:2.1deg}
  .welcome .photo-frame{padding:.45cqw!important}
- .welcome .welcome-birch-left{left:-1.2cqw!important;top:1.5cqw!important;width:9.6cqw!important;opacity:.78!important}
- .welcome .welcome-birch-right{right:-.5cqw!important;top:5.3cqw!important;width:11cqw!important;opacity:.78!important}
 }
 @media(max-width:700px){
  .welcome{padding-inline:7%!important}
@@ -29,39 +26,24 @@
  .welcome .photo-shell:has(.frame-estate){aspect-ratio:.87;rotate:-2deg}
  .welcome .photo-shell:has(.frame-city){aspect-ratio:1.06;rotate:2deg;align-self:end;margin-bottom:0}
  .welcome .photo-frame{padding:4px!important}
- .welcome .welcome-birch-left{top:auto!important;bottom:19%!important;width:15%!important;left:-1%!important}
- .welcome .welcome-birch-right{top:auto!important;bottom:27%!important;width:16%!important;right:-1%!important}
- .welcome .photo-shell:has(.frame-city) .welcome-berry{left:-8%!important;bottom:-2%!important;width:31%!important}
 }
 @media not (pointer:coarse){
  .welcome .photo-shell:hover{transform:translateY(-4px);filter:drop-shadow(0 5px 5px #51442d1a) drop-shadow(0 13px 16px #51442d20)}
  .welcome .photo-shell:hover .photo-frame img{transform:scale(1.025)}
- .welcome .photo-shell:hover .welcome-berry{transform:rotate(6deg)!important}
 }
 @media(prefers-reduced-motion:reduce){.welcome .photo-shell:hover,.welcome .photo-shell:hover .photo-frame img{transform:none!important}}
 
 /* Original curved photo frames, cascading with independent transparent plants. */
 .welcome{isolation:isolate}
-.welcome .welcome-botanical{position:absolute;display:block;pointer-events:none;max-width:none;height:auto;object-fit:contain;transform-origin:center;filter:drop-shadow(0 3px 4px #50442619)}
 .welcome .photo-shell:has(.frame-estate){z-index:2}
 .welcome .photo-shell:has(.frame-city){z-index:4}
 .welcome .welcome-text{z-index:8}
-.welcome .welcome-birch-left,.welcome .welcome-birch-right{z-index:1}
-.welcome .cascade-hydrangea,.welcome .cascade-strawberry{z-index:6}
-.welcome .cascade-blossom{z-index:1}
 @media(min-width:701px){
  .welcome{height:40cqw!important}
  .welcome .welcome-text{left:59cqw;top:7.6cqw;width:35cqw}
  .welcome .welcome-text p{font-size:1.62cqw}
  .welcome .photo-shell:has(.frame-estate){left:9cqw;top:3.4cqw;width:27cqw;height:31cqw;rotate:-3.4deg}
  .welcome .photo-shell:has(.frame-city){left:30.1cqw;top:13.2cqw;width:24cqw;height:20.4cqw;rotate:2.6deg}
- .welcome .welcome-birch-left{left:2cqw!important;top:-.6cqw!important;width:13cqw!important;opacity:.95!important}
- .welcome .welcome-birch-right{left:34cqw!important;right:auto!important;top:4.5cqw!important;width:17cqw!important;opacity:.95!important}
- .welcome .cascade-blossom{left:4.5cqw;top:18cqw;width:11.8cqw;rotate:-19deg}
- .welcome .cascade-blossom-upper{left:35cqw;top:4.3cqw;width:15cqw;rotate:22deg}
- .welcome .cascade-hydrangea{left:19cqw;top:27.3cqw;width:17cqw;rotate:-7deg}
- .welcome .cascade-strawberry{left:37cqw;top:30cqw;width:10.5cqw;rotate:15deg}
- .welcome .photo-shell:has(.frame-city) .welcome-berry{left:-7%!important;bottom:-2%!important;width:23%!important}
 }
 @media(max-width:700px){
  .welcome{height:auto!important;padding:0 6% 0!important}
@@ -69,27 +51,6 @@
  .welcome .photo-shell:has(.frame-estate){grid-row:1;grid-column:1;position:relative!important;inset:auto!important;width:112%!important;height:auto!important;aspect-ratio:.87;rotate:-3deg;margin:0 0 0 10%!important;align-self:start}
  .welcome .photo-shell:has(.frame-city){grid-row:1;grid-column:2;position:relative!important;inset:auto!important;width:108%!important;height:auto!important;aspect-ratio:1.15;rotate:3deg;margin:19vw 0 0 -17%!important;align-self:start}
  .welcome .welcome-text{grid-row:2;grid-column:1/-1;position:relative!important;inset:auto!important;width:100%!important;margin:13vw auto 0!important}
- .welcome .welcome-birch-left{left:0!important;top:0!important;bottom:auto!important;width:24%!important;opacity:.92!important}
- .welcome .welcome-birch-right{left:56%!important;right:auto!important;top:5vw!important;bottom:auto!important;width:26%!important;opacity:.9!important}
- .welcome .cascade-blossom{left:1%;top:28vw;width:22%;rotate:-19deg}
- .welcome .cascade-blossom-upper{left:54%;top:6vw;width:25%;rotate:22deg}
- .welcome .cascade-hydrangea{left:25%;top:47vw;width:30%;rotate:-7deg}
- .welcome .cascade-strawberry{left:59%;top:51vw;width:20%;rotate:15deg}
- .welcome .photo-shell:has(.frame-city) .welcome-berry{width:24%!important;left:-8%!important;bottom:-2%!important}
 }
 
-/* Painted raster ornaments only. Keep the flowers asymmetrical and the original strawberry accent. */
-.welcome .welcome-botanical{filter:none;object-fit:contain}
-.welcome .cascade-hydrangea{z-index:5}
-@media(min-width:701px){
- .welcome .cascade-blossom{left:3.6cqw;top:18.2cqw;width:12.5cqw;rotate:-9deg}
- .welcome .cascade-blossom-upper{left:34.5cqw;top:4.5cqw;width:16cqw;rotate:12deg}
- .welcome .cascade-hydrangea{left:19cqw;top:27.5cqw;width:17.5cqw;rotate:0deg}
- .welcome .photo-shell:has(.frame-city) .welcome-berry{left:5%!important;bottom:-3%!important;width:29%!important}
-}
-@media(max-width:700px){
- .welcome .cascade-blossom{left:1%;top:28vw;width:20%;rotate:-9deg}
- .welcome .cascade-blossom-upper{left:54%;top:6vw;width:24%;rotate:12deg}
- .welcome .cascade-hydrangea{left:25%;top:47vw;width:30%;rotate:0deg}
- .welcome .photo-shell:has(.frame-city) .welcome-berry{left:5%!important;bottom:-3%!important;width:29%!important}
-}
+
