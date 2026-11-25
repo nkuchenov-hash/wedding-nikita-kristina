@@ -433,7 +433,7 @@ html[data-admin-theme="dark"] .ad-premium .pd-hero-link:hover{background:rgba(25
 .pd-progress p{margin:0;color:#d3e0d1;font-size:16px}
 .pd-task{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--pd-line);min-width:0}
 .pd-task:last-child{border-bottom:0}
-.pd-task.featured{background:var(--pd-soft);border-radius:12px;padding:11px 10px;border-bottom:0}
+.pd-task.featured{background:var(--pd-soft);border-radius:12px;border-bottom-color:transparent}
 .ad-premium .pd-check{width:32px;height:32px;border:1.5px solid var(--pd-muted);border-radius:7px;flex:none;position:relative}
 .ad-premium .pd-check::after{content:"";position:absolute;inset:-6px}
 .pd-check:hover{background:var(--pd-soft)}
