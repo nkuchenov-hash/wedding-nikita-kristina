@@ -21,19 +21,35 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo '4f4b27a2471eeae7d7c3c0f146ca741aedb303900705107c2d497e111ba33d30  mvp-site/site.zip' | sha256sum -c -
+          echo '97e2e1f3f164fbb4b701ef98551925eeb1d2f3e18f23ad808f7d54ef3a4554bc  mvp-site/site.zip' | sha256sum -c -
           mkdir -p _mvp
           unzip -q mvp-site/site.zip -d _mvp
+          cp public/production/invitation-flowers-left.png _mvp/assets/flowers-left.png
+          cp public/production/invitation-flowers-right.png _mvp/assets/flowers-right.png
+          cp public/production/invitation-leaves-top.png _mvp/assets/leaves.png
+          cp public/board/02-invitation/estate-sunny-clean.webp _mvp/assets/maryino.webp
+          cp public/board/03-program/banquet-clean.webp _mvp/assets/banquet.webp
+          cp public/reference/venue-left-hi.jpg _mvp/assets/maryino-garden.jpg
           test -s _mvp/index.html
           node --check _mvp/script.js
           python3 - <<'PY'
           from pathlib import Path
-          import struct
-          for name in ['hero-leaf-right','ladybird','welcome-berry','hero-city','bridge','hero-transition','welcome-leaves-left','welcome-leaves-right','rsvp-flowers-left','rsvp-flowers-right']:
+          import re, os
+          for name in ['couple','birch-right','ladybird','strawberry','skyline','bridge','flowers-left','flowers-right','leaves','sprig']:
               b=Path('_mvp/assets/'+name+'.png').read_bytes()
               assert b[:8]==b'\x89PNG\r\n\x1a\n'
               assert b[25] in (4,6) or b'tRNS' in b, name+' must have alpha transparency'
-          print('ALPHA_ASSETS_OK')
+          p=Path('_mvp/index.html')
+          html=p.read_text()
+          assert html.count('data-photo-slot=')==6
+          assert html.count('<article class="day">')==3
+          assert html.count('<figure class="photo-frame')==2
+          assert '<h1>Никита' in html
+          assert not re.search(r'assets/(day-.*base|title-.*|mobile-portrait|hero-background)\.png',html)
+          rev=os.environ['GITHUB_SHA'][:12]
+          html=re.sub(r'(src|href)="(assets/[^"]+|style\.css|script\.js)"',lambda m:f'{m[1]}="{m[2]}?v={rev}"',html)
+          p.write_text(html)
+          print('INDEPENDENT_HTML_COMPONENTS_AND_ALPHA_ASSETS_OK')
           PY
           printf '{"revision":"%s","mode":"separate-mvp"}\n' "${GITHUB_SHA:0:12}" > _mvp/version.json
       - name: Browser test desktop and mobile before deployment
@@ -65,9 +81,17 @@ jobs:
               });
               assert.deepEqual(report.bad,[]);
               assert.equal(report.overflow,false);
+              assert.equal(await p.$eval('.day',e=>e.length),3);
+              assert.equal(await p.$eval('img[data-photo-slot]',e=>e.length),6);
+              assert.equal(await p.$eval('.day-copy h3',e=>e.length),3);
+              assert.equal(await p.$eval('.hero > img.hero-couple,.hero > img.hero-bg,.hero > img.hero-skyline',e=>e.length),3);
               await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/'+name+'.png',fullPage:true});
               await p.click('.hero-cta');
               assert.equal(await p.$eval('dialog',d=>d.open),true);
+              await p.click('.close');
+              await p.evaluate(()=>weddingMvp.replacePhoto('day-17',document.querySelector('[data-photo-slot=day-19]').src));
+              assert.equal(await p.$eval('[data-photo-slot=day-17]',i=>i.src),await p.$eval('[data-photo-slot=day-19]',i=>i.src));
+              assert.equal(await p.$eval('.day h3',e=>e.textContent),'17 июня');
               await p.close();
               console.log('BROWSER_TEST_OK',name);
             }
@@ -117,7 +141,7 @@ jobs:
           curl -fsSL --retry 3 --max-time 20 "$BASE/version.json?v=${GITHUB_SHA:0:12}" | grep -Fq "\"revision\":\"${GITHUB_SHA:0:12}\""
           curl -fsSL --retry 3 --max-time 20 "$BASE/index.html?v=${GITHUB_SHA:0:12}" -o /tmp/mvp-live.html
           cmp /tmp/mvp-live.html _mvp/index.html
-          for asset in hero-leaf-right ladybird welcome-berry bridge hero-city hero-transition; do
+          for asset in couple birch-right ladybird strawberry bridge skyline forest; do
             curl -fsSL --retry 3 --max-time 20 "$BASE/assets/$asset.png?v=${GITHUB_SHA:0:12}" -o /tmp/mvp-live.png
             cmp /tmp/mvp-live.png "_mvp/assets/$asset.png"
           done
