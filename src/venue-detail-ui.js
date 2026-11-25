@@ -28,6 +28,7 @@ const FEATURED_SECTIONS={
 };
 function photoSection(v,p){
  const name=String(p.name||'').toLowerCase(),section=p.section||'';
+ if(p.reviewedCategory&&PHOTO_GROUPS.includes(section))return section;
  if(KNOWN_TECHNICAL.has(p.id))return p.id==='1CYyg_cZbFreCVrWC3ML8CzOqTNhSMyzo'?'Входы и переходы':'Служебные и гримёрки';
  if(FEATURED_COVERS[v.id]===p.id&&FEATURED_SECTIONS[v.id])return FEATURED_SECTIONS[v.id];
  if(/сануз|туалет|унитаз|раковин|писсуар|\bwc\b/.test(name)||section==='Санузлы')return 'Санузлы';
@@ -53,7 +54,8 @@ const FEATURED_COVERS={
  'santa-gloria':'1uYYIQZ8o8H8T6RVzx6k3GC_J8A2RVY0x', // inspected waterside dining hall
  'roof18':'1nS6BYMQX0N5VHvddrZXBDP-5IQm-igtx', // inspected open panoramic terrace
  'vesenniy':'1xrDBe6UYNcGcxGFadQ-Di8LCnHeM36Ux',    // verified wide banquet hall 02 (3072x1728)
- 'putilov':'1Yo4j6ZhK_ycH38ZeHXKCGnaMmQfcHme4',       // ceremonial grand hall
+ 'putilov':'1rLIGZTEMw0POGHXkAStPushaoVjV_Pqr',       // ceremonial grand hall
+ 'zarenkov-gallery':'1xlgbOZUvXPv27pLMFrBvb9ddwVk_WNKK', // reviewed horizontal main hall
  'repino-riviera':'1PCv5jMFTatJ21kuaUD2RaPx7JFXYsfPM', // building and bay
  'panorama':'1PwrAgzMU1kmK772YRhQWuQNGrfaU1d0X',     // building from outside
  'harmony':'1giLTNx8i-okBCfyiZChmaC0I3MTVsaAe',      // wide main event hall

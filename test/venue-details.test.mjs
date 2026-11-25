@@ -78,7 +78,8 @@ test('Photo archive contains 479 indexed photographs, including 103 new original
 test('Main covers use banquet halls or building facades; technical photos sort last',()=>{
  const expected={
   'vesenniy':'1xrDBe6UYNcGcxGFadQ-Di8LCnHeM36Ux',
-  'putilov':'1Yo4j6ZhK_ycH38ZeHXKCGnaMmQfcHme4',
+  'putilov':'1rLIGZTEMw0POGHXkAStPushaoVjV_Pqr',
+  'zarenkov-gallery':'1xlgbOZUvXPv27pLMFrBvb9ddwVk_WNKK',
   'repino-riviera':'1PCv5jMFTatJ21kuaUD2RaPx7JFXYsfPM',
   'panorama':'1PwrAgzMU1kmK772YRhQWuQNGrfaU1d0X',
   'harmony':'1giLTNx8i-okBCfyiZChmaC0I3MTVsaAe',
@@ -211,4 +212,11 @@ test('Unknown photos are not used as covers and album categories remain contiguo
  }
  assert.equal(getVenuePhotos(v).find(p=>p.id==='unknown').section,'Не разобрано');
  assert.match(renderVenueNewPage(venue('alex-park'),context('photos',{photoView:'grid'})),/class="vdp-photo-group"/);
+});
+
+test('Zarenkov album has all 26 visually reviewed photos and a main hall cover',()=>{
+ const v=venue('zarenkov-gallery'),photos=getVenuePhotos(v);
+ assert.equal(photos.length,26);
+ assert.ok(photos.every(p=>p.section!=='Не разобрано'));
+ assert.equal(getVenueCover(v)?.section,'Залы');
 });

@@ -3,117 +3,155 @@ export const VENUE_PHOTOS_3 = {
   "putilov": [
     {
       "id": "11x3ndmpq3z1U3ELrQc7kdlZxEYDg6B7Z",
-      "name": "IMG_20261114_114807_448.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Лестница — вид снизу",
+      "section": "Входы и переходы",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_114807_448.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1HmU_4h6xrXAEaUbO4HdrCQ1wmQlzGH9n",
-      "name": "IMG_20261114_114812_304.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Лестница — верхняя площадка",
+      "section": "Входы и переходы",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_114812_304.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1vk2b_ug6fSZnuTRZrY_Ezgc3aM88o1hA",
-      "name": "IMG_20261114_114835_258.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Лаунж — диван у окна",
+      "section": "Лаунж и фотозоны",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_114835_258.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1LmxieJqwv3_Uq5wpxelyVvSvfJF5Mf0E",
-      "name": "IMG_20261114_114838_043.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Санузел — двери кабин",
+      "section": "Санузлы",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_114838_043.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1VBBVH6mF20BLN6X8BoEVxiE2AlOlibcC",
-      "name": "IMG_20261114_114839_900.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Санузел — фото с человеком",
+      "section": "Санузлы",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_114839_900.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1A74QlGuoFJuAmgpKe0DT19PHJmVNpdXa",
-      "name": "IMG_20261114_114847_890.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Лаунж — зеркало",
+      "section": "Лаунж и фотозоны",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_114847_890.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1rCNzX7ZDED-ZMfSK01N9Y2jW2IQlQpr9",
-      "name": "IMG_20261114_114854_267.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Лаунж — диван и окна",
+      "section": "Лаунж и фотозоны",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_114854_267.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1jZy7zHPvkna7_9GC7za7AsxBQycs7Z2g",
-      "name": "IMG_20261114_114859_264.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Лаунж — кресла",
+      "section": "Лаунж и фотозоны",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_114859_264.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1X2UyPaBKzbjLI59Q814ZO1BTympGiUzJ",
-      "name": "IMG_20261114_114920_553.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Гостиная — диваны",
+      "section": "Лаунж и фотозоны",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_114920_553.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1wIVNliZD23kA3A3T0k11BK-MLt3H_IfH",
-      "name": "IMG_20261114_114941_048.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Парадный зал — вид вдоль окон 01",
+      "section": "Залы",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_114941_048.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1M3bYm7MoSBOR-doncfpdLPlvWYYgFdUP",
-      "name": "IMG_20261114_114942_735.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Парадный зал — вид вдоль окон 02",
+      "section": "Залы",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_114942_735.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1F-QMbLq4LLcAxfkBTWjJ_8Zj4n4wDAbD",
-      "name": "IMG_20261114_114946_586.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Интерьер — кресло",
+      "section": "Детали интерьера",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_114946_586.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1MUJJFxAJ3CLA-qxwIcYzwJGX1czUa8CJ",
-      "name": "IMG_20261114_114950_206.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Малый зал — окна и люстра",
+      "section": "Залы",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_114950_206.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1Yo4j6ZhK_ycH38ZeHXKCGnaMmQfcHme4",
-      "name": "IMG_20261114_120510_637.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Парадный зал — вид на анфиладу",
+      "section": "Залы",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_120510_637.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1oZ0AsDXQQULGDFdauS5i-7kxJERTpL__",
-      "name": "IMG_20261114_120512_804.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Малый зал — окна",
+      "section": "Залы",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_120512_804.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1SgZNiWx0Qjy1OzQ0QbUnyMFVUNwVqIJ2",
-      "name": "IMG_20261114_120514_569.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Малый зал — вид на стены",
+      "section": "Залы",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_120514_569.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1qJ4Roeq2SrjnD7UJXqeqS5C7f0ogbd66",
-      "name": "IMG_20261114_120519_228.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Малый зал — общий вид",
+      "section": "Залы",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_120519_228.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1rLIGZTEMw0POGHXkAStPushaoVjV_Pqr",
-      "name": "IMG_20261114_120522_605.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Парадный зал — общий горизонтальный вид",
+      "section": "Залы",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_120522_605.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1GLcDLZ0NF8UIl0Y8W8yRaMMXQmCjwtez",
-      "name": "IMG_20261114_120552_755.jpg",
-      "section": "Общий альбом",
-      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF"
+      "name": "Балкон — колонны и ограждение",
+      "section": "Террасы и виды",
+      "folder": "17xyOW87_4effQq5pSQIYLAsyJmQu0QlF",
+      "originalName": "IMG_20261114_120552_755.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1pdxRIr2gqe7sqCbk7SnvUUp1VShdS--o",
