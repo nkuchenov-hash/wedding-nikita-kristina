@@ -802,7 +802,7 @@ export async function activateGuestDirectory(root){
        for(const link of response.relations||[]){
          const left=link.guest_id_1===id,otherId=left?link.guest_id_2:link.guest_id_1;
          const other=left?link.person_two:link.person_one;
-         const label=left?link.relation_1_to_2:link.relation_2_to_1;
+         const label=left?link.relation_2_to_1:link.relation_1_to_2;
          const line=mk('div','ad-gb-related');
          const go=mk('button','ad-gb-related-name',other||'Уточнить имя');go.type='button';go.addEventListener('click',()=>openGuest(otherId));
          const relation=mk('span','',label||link.relation_type||'Связь не уточнена');

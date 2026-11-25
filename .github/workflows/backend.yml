@@ -44,6 +44,7 @@ jobs:
           done
           php backend/bin/smoke.php
           php backend/bin/test-guest-progress.php
+          php backend/bin/backfill-guest-relationships.php --test
           node --test test/kristina-ideas.test.mjs
       - name: Install on REG.RU outside document root
         timeout-minutes: 4
@@ -105,6 +106,7 @@ jobs:
             php bin/import-kristina-ideas-20261120.php
             php bin/import-production.php
             php bin/backfill-couple-relation.php
+            php bin/backfill-guest-relationships.php
             php bin/smoke.php
             test -f '$PRIVATE/wedding.sqlite3'
             test -f '$PRIVATE/wedding-config.json'
