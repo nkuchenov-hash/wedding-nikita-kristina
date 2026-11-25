@@ -1,4 +1,4 @@
-import {renderProduction} from './admin-production.js';
+import {renderProduction,productionCost} from './admin-production.js';
 import {showAdminToast} from './admin-toast.js';
 import {weddingDays,adminModules} from './data.js';
 const adminProgramDays=[...weddingDays,
@@ -6,7 +6,7 @@ const adminProgramDays=[...weddingDays,
  {date:'2027-06-21',label:'21 июня',weekday:'Понедельник'}];
 import {renderWeddingProgram} from './admin-program.js';
 import {renderWeddingSettings} from './admin-settings.js';
-import {PUBLIC_VENUES,loadVenueDashboard} from './venues.js';
+import {PUBLIC_VENUES,loadVenueDashboard,loadVenueBudgetOptions} from './venues.js';
 import {assignedDay,scheduled} from './admin-program.js';
 // Wedding admin live-data layer. Never stores guest details in browser storage.
 const API='/admin/index.php?api=';
@@ -21,7 +21,7 @@ const fields={
   menu_options:[['category','Категория'],['title','Блюдо'],['description','Описание'],['allergens','Аллергены']]
 };
 const numeric=new Set(['capacity_max','quoted_total_rub','estimate_rub','planned_rub','committed_rub','paid_rub']);
-const mapSection={budget:'budget_lines',tasks:'tasks'};
+const mapSection={tasks:'tasks'};
 function errorText(e){return e instanceof Error?e.message:'Не удалось выполнить запрос'}
 async function call(route,{method='GET',body,form=false}={}){
  const headers={'Accept':'application/json'};
@@ -306,7 +306,132 @@ async function collection(host,type){
  if(requested){const target=items.find(item=>String(item.id)===decodeURIComponent(requested));if(target)edit(target)}
 }
 
+
+const budgetCategories=['Площадка','Подрядчики','Декор','Фото и видео','Образы и кольца','Транспорт','Алкоголь и торт','Полиграфия и подарки','Прочее'];
+const budgetRub=v=>Math.round(Number(v)||0).toLocaleString('ru-RU')+' ₽';
+const budgetNumber=v=>Number(v)||0;
+const budgetDetails=r=>{try{return JSON.parse(r?.details_json||'{}')||{}}catch{return {}}};
+export function budgetTotals(rows,limit=null){
+ const result={planned:0,committed:0,paid:0,remaining:0,unknown:0};
+ for(const r of rows){result.planned+=budgetNumber(r.planned_rub);result.committed+=budgetNumber(r.committed_rub);result.paid+=budgetNumber(r.paid_rub);result.remaining+=Math.max(0,budgetNumber(r.committed_rub)-budgetNumber(r.paid_rub));if(r.unknown)result.unknown++}
+ return {...result,free:limit==null?null:limit-Math.max(result.planned,result.committed,result.paid)};
+}
+export function budgetRows(lines,vendors,decor,guests){
+ const sources=new Map([...vendors.map(r=>[r.id,{r,section:'vendors'}]),...decor.map(r=>[r.id,{r,section:'decor'}])]);
+ return lines.map(row=>{
+  const linked=String(row.id).startsWith('prod-'),source=linked?sources.get(String(row.id).slice(5)):null;
+  const details=budgetDetails(source?.r),isDecor=source?.section==='decor';
+  const inclusion=(isDecor&&details.included)||(details.venues||[]).some(v=>v.id===details.venue&&v.mode==='included');
+  const fallback=!isDecor&&!['fee','travel','hotel','food','equipment','extras'].some(k=>Object.hasOwn(details,k));
+  const unknown=linked&&(!source||(!inclusion&&(fallback?source.r.estimate_rub==null:productionCost(details,isDecor,guests).unknown)));
+  return {...row,linked,source,details,unknown,due:linked?details.due||null:row.due_at||null};
+ });
+}
+async function renderBudget(host){
+ host.classList.add('ad-budget-shell','ad-collection-page');host.replaceChildren();
+ const header=$('header','admin-page-heading budget-heading');header.append($('h1','','Бюджет'));
+ const actions=$('div','budget-actions');header.append(actions);host.append(header);
+ const body=$('div','budget-body');host.append(body);
+ let rows=[],limit=null,guests=80,category='',status='all',search='',venueId='',venueOptions=[],loading=false;
+ const primary=(label,fn)=>button(label,fn);
+ const secondary=(label,fn)=>{const b=button(label,fn);b.classList.add('budget-secondary');return b};
+ const error=e=>showAdminToast(errorText(e),{kind:'error'});
+ const select=(options,value,change)=>{const s=$('select');for(const [v,label] of options){const o=$('option','',label);o.value=v;s.append(o)}s.value=value;s.addEventListener('change',()=>change(s.value));return s};
+ const field=(form,label,key,value='',type='text')=>{const l=$('label','production-field');l.append($('span','',label));const x=$('input');x.name=key;x.type=type;x.value=value??'';if(type==='number'){x.min='0';x.max='100000000';x.step='1'}l.append(x);form.append(l);return x};
+ function drawer(title,build){
+  const d=$('dialog','production-drawer budget-drawer'),h=$('header','production-drawer-head'),close=secondary('Закрыть',()=>d.close());h.append($('h2','',title),close);d.append(h);host.append(d);d.addEventListener('close',()=>d.remove());build(d);d.showModal();
+ }
+ function submitForm(d,form,save){
+  const footer=$('div','production-footer'),saveButton=$('button','ad-live-button','Сохранить');saveButton.type='submit';footer.append(secondary('Отмена',()=>d.close()),saveButton);form.append(footer);
+  form.addEventListener('submit',async e=>{e.preventDefault();saveButton.disabled=true;try{await save();d.close();await reload();showAdminToast('Изменения сохранены.')}catch(e){error(e)}finally{saveButton.disabled=false}});
+ }
+ function edit(row={},prefill={}){
+  const linked=row.linked,source=row.source;
+  if(linked&&!source){error(new Error('Исходная карточка недоступна'));return}
+  drawer(row.id?row.description:'Новая статья расходов',d=>{
+   const form=$('form','production-form budget-form');d.append(form);
+   if(linked){
+    const info=$('p','budget-muted',row.unknown?'Часть стоимости пока неизвестна. Уточните состав расходов в карточке.':'Изменения оплаты сохраняются в исходной карточке.');
+    const a=$('a','budget-source-link','Открыть исходную карточку →');a.href='#/admin/'+source.section+'/item/'+encodeURIComponent(source.r.id);a.addEventListener('click',()=>d.close());form.append(info,a);
+    const p=field(form,'Оплачено всего, ₽','paid',row.paid_rub,'number'),due=field(form,'Срок следующей оплаты','due',row.details.due,'date');
+    const agreed=$('label','budget-agreed'),check=$('input');check.type='checkbox';check.checked=!!row.details.agreed;agreed.append(check,$('span','','Известная сумма согласована'));form.append(agreed);
+    submitForm(d,form,()=>call('admin/records',{method:'PATCH',body:{collection:source.section==='vendors'?'vendors':'decor_items',id:source.r.id,fields:{details_json:JSON.stringify({...row.details,paid:budgetNumber(p.value),due:due.value,agreed:check.checked})}}}));
+   }else{
+    const data={...prefill,...row},categoryField=field(form,'Категория','category',data.category||category||'Прочее'),name=field(form,'Статья расходов','description',data.description);name.required=true;categoryField.required=true;
+    const plan=field(form,'План, ₽','planned_rub',data.planned_rub??0,'number'),committed=field(form,'Согласовано, ₽','committed_rub',data.committed_rub??0,'number'),paid=field(form,'Оплачено всего, ₽','paid_rub',data.paid_rub??0,'number'),due=field(form,'Срок оплаты','due_at',String(data.due_at||'').slice(0,10),'date'),notes=field(form,'Примечание / источник','notes',data.notes);
+    submitForm(d,form,()=>call('admin/records',{method:row.id?'PATCH':'POST',body:{collection:'budget_lines',...(row.id?{id:row.id}:{}),fields:{category:categoryField.value.trim(),description:name.value.trim(),planned_rub:budgetNumber(plan.value),committed_rub:budgetNumber(committed.value),paid_rub:budgetNumber(paid.value),due_at:due.value||null,notes:notes.value}}}));
+   }
+  });
+ }
+ function editLimit(){drawer('Лимит бюджета',d=>{const f=$('form','production-form budget-form');d.append(f);const v=field(f,'Общий лимит, ₽','limit',limit??'','number');f.append($('p','budget-muted','Оставьте поле пустым, если общий лимит ещё не определён.'));submitForm(d,f,()=>call('admin/settings',{method:'POST',body:{key:'budget_limit_rub',value:v.value===''?null:budgetNumber(v.value)}}))})}
+ actions.append(secondary('Лимит',editLimit),primary('+ Расход',()=>edit()));
+ function draw(){
+  body.replaceChildren();const totals=budgetTotals(rows,limit);
+  const summary=$('div','budget-summary');
+  for(const [label,value,sub] of [['Учтено в плане',budgetRub(totals.planned),totals.unknown?totals.unknown+' позиций требуют уточнения':'Известные суммы'],['Согласовано',budgetRub(totals.committed),'Принятые обязательства'],['Оплачено',budgetRub(totals.paid),'Фактические платежи'],['К оплате',budgetRub(totals.remaining),'По согласованным статьям']]){
+   const c=$('article','budget-stat');c.append($('span','',label),$('strong','',value),$('small','',sub));summary.append(c)
+  }
+  body.append(summary);
+  const cap=$('section','budget-panel budget-limit'),caphead=$('div','budget-panel-head');caphead.append($('h2','','Общий лимит'),secondary(limit==null?'Задать лимит':'Изменить',editLimit));cap.append(caphead);
+  if(limit==null)cap.append($('p','budget-muted','Не задан'));else{const line=$('div','budget-limit-values');line.append($('strong','',budgetRub(limit)), $('span',totals.free<0?'budget-over':'',totals.free<0?'Превышение '+budgetRub(-totals.free):'Остаток '+budgetRub(totals.free)));const p=$('progress');p.max=Math.max(1,limit);p.value=Math.min(p.max,Math.max(totals.planned,totals.committed,totals.paid));p.setAttribute('aria-label','Использование лимита');cap.append(line,p)}
+  body.append(cap);
+  const scenario=$('section','budget-panel budget-scenario'),sh=$('div','budget-panel-head');sh.append($('h2','','Площадка и банкет'),$('span','budget-muted',guests+' гостей'));scenario.append(sh);
+  const selectVenue=select([['','Выберите вариант для расчёта'],...venueOptions.map(v=>[v.id,v.name])],venueId,v=>{venueId=v;draw()});scenario.append(selectVenue);
+  const selected=venueOptions.find(v=>v.id===venueId);
+  if(selected){
+   const e=selected.estimate,known=e.value??e.knownSubtotal??null;
+   const line=$('div','budget-scenario-value');line.append($('strong','',known==null?'Сумма уточняется':(e.partial?'≈ ':'')+budgetRub(known)),$('span','budget-muted',e.note||''));scenario.append(line);
+   const link=$('a','budget-source-link','Открыть смету площадки →');link.href='#/admin/venues/'+encodeURIComponent(selected.id)+'/budget';scenario.append(link);
+   const existing=rows.find(r=>!r.linked&&String(r.notes||'').startsWith('План площадки:'));
+   const anyVenue=rows.some(r=>r.category==='Площадка'&&r!==existing);
+   if(e.value!=null&&!anyVenue){const apply=secondary(existing?'Обновить статью площадки':'Включить в план',()=>edit(existing?{...existing,description:selected.name,planned_rub:Math.round(e.value),notes:'План площадки: '+selected.id+'; '+guests+' гостей; '+(e.note||'') }:{},{category:'Площадка',description:selected.name,planned_rub:Math.round(e.value),notes:'План площадки: '+selected.id+'; '+guests+' гостей; '+(e.note||'')}));scenario.append(apply)}
+   else if(anyVenue)scenario.append($('p','budget-muted','Статья площадки уже существует — измените её в списке, чтобы не задвоить сумму.'));
+   scenario.append($('small','budget-muted','Расчёт не включается в общий план автоматически. Дополнительные расходы организаторов не прибавляются повторно.'));
+  }
+  body.append(scenario);
+  const panel=$('section','budget-panel budget-ledger'),ph=$('div','budget-panel-head');ph.append($('h2','','Статьи расходов'),$('span','budget-muted',rows.length+' записей'));panel.append(ph);
+  const filters=$('div','budget-filters'),q=$('input');q.type='search';q.placeholder='Найти расход';q.value=search;
+  const categories=[...new Set([...budgetCategories,...rows.map(r=>r.category)])];
+  const cat=select([['','Все категории'],...categories.map(c=>[c,c])],category,v=>{category=v;draw()});
+  const st=select([['all','Все расходы'],['unknown','Уточнить стоимость'],['due','К оплате'],['paid','Оплачено']],status,v=>{status=v;draw()});
+  filters.append(q,cat,st);panel.append(filters);
+  const content=$('div','budget-ledger-content');panel.append(content);body.append(panel);
+  const showRows=()=>{
+   content.replaceChildren();const visible=rows.filter(r=>(!category||r.category===category)&&(!search||[r.description,r.category,r.notes].join(' ').toLowerCase().includes(search.toLowerCase()))&&(status==='all'||status==='unknown'&&r.unknown||status==='due'&&budgetNumber(r.committed_rub)>budgetNumber(r.paid_rub)||status==='paid'&&budgetNumber(r.paid_rub)>0));
+   for(const c of categories.filter(c=>!category||c===category)){
+    const group=visible.filter(r=>r.category===c);if(!group.length&&status!=='all'||!group.length&&search)continue;
+    const section=$('section','budget-category'),top=$('div','budget-category-head');top.append($('h3','',c),$('strong','',group.length?budgetRub(group.reduce((sum,r)=>sum+budgetNumber(r.planned_rub),0)):'—'));section.append(top);
+    if(!group.length){section.append($('p','budget-muted','Расходы пока не добавлены'));section.append(secondary('+ Добавить',()=>edit({}, {category:c})))}
+    for(const r of group){
+     const entry=$('button','budget-entry');entry.type='button';entry.addEventListener('click',()=>edit(r));
+     const desc=$('div','budget-entry-name');desc.append($('strong','',r.description),$('small','budget-muted',r.linked?'Связано с карточкой':r.notes||'Ручная статья'));
+     if(r.unknown)desc.append($('span','budget-unknown','Стоимость уточняется'));
+     const amounts=$('div','budget-entry-amounts');
+     for(const [label,val] of [['План',r.unknown&&!budgetNumber(r.planned_rub)?'—':(r.unknown?'от ':'')+budgetRub(r.planned_rub)],['Согласовано',budgetRub(r.committed_rub)],['Оплачено',budgetRub(r.paid_rub)],['К оплате',budgetRub(Math.max(0,budgetNumber(r.committed_rub)-budgetNumber(r.paid_rub)))]]){const cell=$('div');cell.append($('small','',label),$('strong','',val));amounts.append(cell)}
+     entry.append(desc,amounts,$('span','budget-entry-arrow','›'));section.append(entry);
+     if(r.due)section.append($('p','budget-due','Срок оплаты: '+String(r.due).slice(0,10).split('-').reverse().join('.')));
+    }
+    content.append(section);
+   }
+   if(!content.childElementCount)content.append($('p','budget-muted','Нет расходов по выбранным фильтрам.'));
+  };
+  q.addEventListener('input',()=>{search=q.value;showRows()});showRows();
+ }
+ async function reload(){
+  if(loading)return;loading=true;
+  try{
+   const [lines,vendors,decor,settings,overview]=await Promise.all([call('admin/records?collection=budget_lines'),call('admin/records?collection=vendors'),call('admin/records?collection=decor_items'),call('admin/settings'),call('admin/overview')]);
+   guests=Math.max(1,Number(overview.guests?.total)||80);limit=settings.settings?.budget_limit_rub??null;
+   rows=budgetRows(lines.items||[],vendors.items||[],decor.items||[],guests);
+   try{venueOptions=await loadVenueBudgetOptions(host,guests)}catch{venueOptions=[];showAdminToast('Сметы площадок недоступны.',{kind:'error'})}
+   draw();
+  }finally{loading=false}
+ }
+ await reload();
+}
+
 async function renderSection(host,section){
+ if(section==='budget'){await renderBudget(host);return}
  if(section==='vendors'||section==='decor'){await renderProduction(host,call,section);return}
  if(section==='overview'){await overview(host);return}
  if(section==='menu'){await collection(host,'menu_options');return}
@@ -350,6 +475,6 @@ export async function activateAdminData(root,section){
    if(section!=='venues')destination.replaceChildren(host);
  }catch(err){
    // Live API is not enabled on this release. Leave the existing authenticated admin tools visible.
-   if(['overview','vendors','decor'].includes(section)&&host.isConnected)host.replaceChildren($('p','ad-work-muted','Раздел недоступен: '+errorText(err)));else host.remove();
+   if(['overview','vendors','decor','budget'].includes(section)&&host.isConnected)host.replaceChildren($('p','ad-work-muted','Раздел недоступен: '+errorText(err)));else host.remove();
  }
 }

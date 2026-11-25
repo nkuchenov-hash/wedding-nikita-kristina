@@ -225,3 +225,25 @@
 .production-table-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px}
 .production-table th,.production-table td{font-size:16px}
 @media(max-width:600px){.production-vendor-card .production-card-identity{min-height:0}.production-card-actions{flex-wrap:wrap}}
+
+/* Budget workspace: same headings, surfaces, controls and drawer as the organizer modules. */
+body.admin-body .admin-content .ad-budget-shell{padding:0;background:transparent;border:0;box-shadow:none}
+.budget-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.budget-actions{display:flex;gap:8px;flex-wrap:wrap}
+.budget-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;min-width:0}
+.budget-summary{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.budget-stat,.budget-panel{border:1px solid var(--wd-line);background:var(--wd-surface);border-radius:var(--admin-card-radius,14px);padding:20px;min-width:0}
+.budget-stat{display:flex;flex-direction:column;gap:8px}.budget-stat>span,.budget-stat small,.budget-muted{color:var(--wd-muted);font-size:16px}
+.budget-stat strong{font:400 32px/1.2 var(--wd-heading);color:var(--wd-ink);overflow-wrap:anywhere}
+.budget-panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.budget-panel-head h2{font:400 23px/1.25 var(--wd-heading);margin:0;color:var(--wd-ink)}
+.budget-limit-values,.budget-scenario-value{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:12px 0}.budget-limit-values strong,.budget-scenario-value strong{font:400 26px/1.2 var(--wd-heading)}
+.budget-limit progress{width:100%;height:12px;accent-color:#285b42}.budget-over,.budget-unknown{color:var(--wd-danger)}.budget-unknown{font-size:16px}
+body.admin-body .admin-content .budget-secondary{background:var(--wd-surface);border:1px solid var(--wd-line);color:var(--wd-accent)}
+.budget-panel select,.budget-filters input,.budget-form input:not([type=checkbox]){background:var(--wd-surface);color:var(--wd-ink);border:1px solid var(--wd-line);padding:10px 12px;border-radius:10px;min-height:44px;font:inherit;min-width:0;width:100%;box-sizing:border-box}
+.budget-source-link{color:var(--wd-accent);display:inline-block;margin:8px 12px 8px 0;font-weight:600}.budget-scenario small{display:block;margin-top:10px}
+.budget-ledger{grid-column:1/-1}.budget-filters{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:20px}
+.budget-category{border-top:1px solid var(--wd-line);padding:14px 0}.budget-category-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}.budget-category-head h3{font:400 21px/1.3 var(--wd-heading);margin:0}.budget-category>p{margin:6px 0 10px}
+.budget-entry{box-sizing:border-box;width:100%;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,2fr) auto;align-items:center;gap:12px;text-align:left;background:var(--wd-soft);color:var(--wd-ink);border:1px solid var(--wd-line);border-radius:10px;padding:12px;margin:6px 0;font:inherit;cursor:pointer}
+.budget-entry:hover{border-color:var(--wd-accent)}.budget-entry-name{display:grid;gap:4px;min-width:0;overflow-wrap:anywhere}.budget-entry-amounts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.budget-entry-amounts>div{display:grid;gap:4px;min-width:0}.budget-entry-amounts small{color:var(--wd-muted);font-size:16px}.budget-entry-amounts strong{font-size:17px;overflow-wrap:anywhere}.budget-entry-arrow{font-size:24px;color:var(--wd-muted)}.budget-due{font-size:16px;color:var(--wd-muted);padding-inline:12px}
+.budget-form{display:grid;gap:14px;padding-top:16px}.budget-form .production-footer{gap:8px}.budget-agreed{display:flex;align-items:center;gap:8px}
+@media(max-width:900px){.budget-body{grid-template-columns:minmax(0,1fr);gap:12px}.budget-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.budget-stat,.budget-panel{padding:14px}.budget-stat strong{font-size:26px}.budget-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.budget-filters input{grid-column:1/-1}.budget-entry{grid-template-columns:minmax(0,1fr) auto}.budget-entry-amounts{grid-column:1/-1;grid-row:2;grid-template-columns:repeat(2,minmax(0,1fr))}.budget-entry-arrow{grid-column:2;grid-row:1}.budget-panel-head h2{font-size:21px}}

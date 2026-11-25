@@ -199,6 +199,11 @@ async function initVenueDatabase(root,force=false){
  }
 }
 // Reuse exactly the same venue records, date statuses, rating and price scenario as the comparison.
+export async function loadVenueBudgetOptions(root,guests){
+ await initVenueDatabase(root,true);
+ if(!venueDb.ready||venueDb.error)throw Error(venueDb.error||'Площадки недоступны');
+ return PUBLIC_VENUES.map(get).filter(v=>!v.archived).map(v=>({id:v.id,name:v.name,estimate:estimateVenue(v,guests)}));
+}
 export async function loadVenueDashboard(root){
  await initVenueDatabase(root,true);
  if(!venueDb.ready||venueDb.error)throw Error(venueDb.error||'Площадки недоступны');

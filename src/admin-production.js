@@ -47,7 +47,7 @@ export function productionCost(d,decor=false,guests=0){
 export async function renderProduction(host,call,section){
  const decor=section==='decor',collection=decor?'decor_items':'vendors';
  const [records,venues,vendors,overview]=await Promise.all([call('admin/records?collection='+collection),call('admin/records?collection=venues'),decor?call('admin/records?collection=vendors'):Promise.resolve({items:[]}),call('admin/overview')]);
- let items=records.items||[],view='cards',filter='all',category='',search='',archive=false,venueFilter=decodeURIComponent(location.hash.split('/')[3]||'');
+ let items=records.items||[],view='cards',filter='all',category='',search='',archive=false,venueFilter=location.hash.split('/')[3]==='item'?'':decodeURIComponent(location.hash.split('/')[3]||'');
  const places=venues.items||[],suppliers=vendors.items||[],guests=Number(overview.guests?.total)||0;
  const details=r=>safeJson(r.details_json),tags=r=>String(r.category||'').split(',').map(x=>x.trim()).filter(Boolean);
  const venueName=id=>places.find(v=>v.id===id)?.name||'Площадка не выбрана';
@@ -153,4 +153,6 @@ export async function renderProduction(host,call,section){
   }body.append(grid)
  }
  draw();
+ const direct=location.hash.match(/^#\/admin\/(?:vendors|decor)\/item\/([^/]+)$/);
+ if(direct){const r=items.find(x=>String(x.id)===decodeURIComponent(direct[1]));if(r)edit(r)}
 }
