@@ -159,7 +159,7 @@ async function overview(host){
   loading=true;
   try{
    const results=await Promise.allSettled([call('admin/overview'),call('admin/records?collection=tasks'),call('admin/records?collection=schedule_items'),loadVenueDashboard(host),call('admin/gallery')]);
-   if(!host.isConnected)return;
+   if(!host.isConnected||mutation)return;
    const keys=['overview','tasks','schedule','venues','gallery'];
    let failed=false;results.forEach((r,i)=>{if(r.status==='fulfilled')snapshot[keys[i]]=r.value;else failed=true});
    if(failed&&!overviewOffline)showAdminToast('Часть данных недоступна. Сохранены последние загруженные значения.',{kind:'error'});
@@ -297,7 +297,7 @@ export async function activateAdminData(root,section){
  const supported=['overview','budget','tasks','schedule','menu','settings'];
  if(!supported.includes(section))return;
  const host=$('section','ad-live-panel');host.setAttribute('aria-label','Данные свадебной базы');
- destination.prepend(host);
+ if(section==='overview'){host.append($('p','ad-work-muted','Загрузка дашборда…'));destination.replaceChildren(host)}else destination.prepend(host);
  try{
    const session=await call('auth/session');
    state.csrf=session.csrf;state.role=session.role;
@@ -308,6 +308,6 @@ export async function activateAdminData(root,section){
    if(section!=='venues')destination.replaceChildren(host);
  }catch(err){
    // Live API is not enabled on this release. Leave the existing authenticated admin tools visible.
-   host.remove();
+   if(section==='overview'&&host.isConnected)host.replaceChildren($('p','ad-work-muted','Дашборд недоступен: '+errorText(err)));else host.remove();
  }
 }

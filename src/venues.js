@@ -529,9 +529,10 @@ export function renderVenueAdmin(){
  const allRoute=/^#\/admin\/venues\/all\/?$/.test(route);
  const ratingMethodRoute=/^#\/admin\/venues\/rating-method\/?$/.test(route);
  const activeRoute=/^#\/admin\/venues\/?$/.test(route);
+ const changedListRoute=lastVenueListRoute!==route;
  if(archiveRoute||allRoute||activeRoute||availableRoute)applyListDefaultSort(route);
- if(availableRoute)Object.assign(ui,{archiveFilter:'active',kind:'all',query:'',dateFilter:'19:available',visit:'all',budget:'all',capacity:'all'});
- else if(activeRoute&&ui.dateFilter==='19:available')ui.dateFilter='all';
+ if(availableRoute&&changedListRoute)Object.assign(ui,{archiveFilter:'active',kind:'all',query:'',dateFilter:'19:available',visit:'all',budget:'all',capacity:'all'});
+ else if(activeRoute&&changedListRoute&&ui.dateFilter==='19:available')ui.dateFilter='all';
  if(archiveRoute&&ui.archiveFilter!=='archived')
   Object.assign(ui,{archiveFilter:'archived',kind:'all',query:'',dateFilter:'all',budget:'all',visit:'all',capacity:'all'});
  else if(allRoute)ui.archiveFilter='all';

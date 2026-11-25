@@ -7,7 +7,7 @@ test('Venue lists start with descending rating on every list route',()=>{
  assert.deepEqual(VENUE_DEFAULT_SORT,{sort:'score',sortDir:'desc'});
  const source=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');
  assert.match(source,/sort:'score',sortDir:'desc'/);
- assert.match(source,/if\(archiveRoute\|\|allRoute\|\|activeRoute\)applyListDefaultSort\(route\)/);
+ assert.match(source,/if\(archiveRoute\|\|allRoute\|\|activeRoute\|\|availableRoute\)applyListDefaultSort\(route\)/);
  assert.match(source,/ui\.sort=VENUE_DEFAULT_SORT\.sort/);
  assert.match(source,/ui\.sortDir=VENUE_DEFAULT_SORT\.sortDir/);
  assert.match(source,/columnHeading\('score','Рейтинг'\)/);
