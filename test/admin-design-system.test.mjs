@@ -7,7 +7,7 @@ test('shared design does not flatten semantic module colors',()=>{
  assert.doesNotMatch(build,/unifyAdminPalette\(/);
  assert.match(css,/--pd-bg:#ffffff/);
  assert.match(css,/--wd-accent:#214d35/);
- assert.match(css,/\.ad-tl-chronology-row\{display:grid/);
+ assert.match(read('src/admin-program.css'),/var\(--activity-color/);
  assert.match(css,/\.pd-hero\{background:linear-gradient[^\n]*data:image\/webp;base64,/);
 });
 test('dashboard and login use separate high-resolution WebP artwork',()=>{

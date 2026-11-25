@@ -507,50 +507,6 @@ body.admin-body .ad-tl-weekday{font-size:16px;line-height:1.2}
 body.admin-body :is(.ad-tl-main-switch,.ad-tl-display-modes){background:var(--wd-soft);border-color:var(--wd-line);border-radius:11px}
 body.admin-body :is(.ad-tl-main-tab,.ad-tl-display-option){color:var(--wd-muted);border-radius:8px}
 body.admin-body :is(.ad-tl-main-tab.is-active,.ad-tl-display-option.is-active){background:#194b30;color:#fff}
-.ad-tl-chronology{width:100%;max-width:1060px;margin:14px auto 24px}
-.ad-tl-chronology-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px}
-.ad-tl-chronology-head h2{font:400 25px/1.2 var(--wd-heading);color:var(--wd-ink);margin:0}
-.ad-tl-day-settings{color:var(--wd-accent);font-size:16px;font-weight:600}
-.ad-tl-chronology-list{display:grid;gap:9px;position:relative}
-.ad-tl-chronology-list::before{content:"";position:absolute;left:63px;top:20px;bottom:20px;background:var(--wd-line);width:2px}
-.ad-tl-chronology-row{display:grid;grid-template-columns:70px minmax(0,1fr);gap:13px;align-items:start;position:relative}
-.ad-tl-chronology-time{display:grid;gap:2px;padding:13px 0 0;position:relative;color:var(--wd-accent);font-variant-numeric:tabular-nums}
-.ad-tl-chronology-time::after{content:"";position:absolute;width:10px;height:10px;border-radius:50%;background:var(--wd-leaf);border:2px solid var(--wd-bg);right:0;top:20px}
-.ad-tl-chronology-time strong{font-size:17px}
-.ad-tl-chronology-time small{font-size:16px;color:var(--wd-muted)}
-body.admin-body .ad-tl-chronology .ad-tl-chronology-card,body.admin-body .ad-tl-ideas-grid .ad-tl-card{display:grid;gap:5px;position:relative;min-height:0!important;height:auto!important;padding:12px 14px!important;border:1px solid var(--wd-line);border-radius:var(--wd-radius);box-shadow:var(--wd-shadow);background:color-mix(in srgb,var(--activity-color,var(--wd-soft)) 15%,var(--wd-soft));color:var(--wd-ink);touch-action:pan-y;user-select:none;-webkit-touch-callout:none}
-body.admin-body .ad-tl-chronology-card .ad-tl-card-head{margin:0;min-height:0;gap:6px}
-body.admin-body .ad-tl-chronology-card .ad-tl-clock{font-size:16px;color:var(--wd-accent)}
-body.admin-body .ad-tl-chronology-card .ad-tl-card-title,body.admin-body .ad-tl-ideas-grid .ad-tl-card-title{font:400 22px/1.25 var(--wd-heading)!important;margin:0!important;color:var(--wd-ink);overflow-wrap:anywhere}
-body.admin-body .ad-tl-chronology-card .ad-tl-card-description{font-size:16px;color:var(--wd-muted);margin:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
-body.admin-body .ad-tl-chronology-card .ad-tl-tags-inline{margin:3px 0 0;gap:4px;display:flex;flex-wrap:wrap;max-height:none}
-body.admin-body .ad-tl-chronology-card .ad-tl-length{font-size:16px;color:var(--wd-accent);background:var(--wd-surface);border-color:var(--wd-line);min-height:0;padding:3px 7px}
-body.admin-body .ad-tl-chronology-card .ad-tl-tag{font-size:16px;padding:2px 7px;color:var(--wd-ink);background:color-mix(in srgb,var(--tag-color,var(--wd-leaf)) 25%,var(--wd-surface))}
-.ad-tl-parallel-label,.ad-tl-outside-label{font-size:16px;color:var(--wd-muted)}
-.ad-tl-drop-target .ad-tl-chronology-card{outline:2px solid var(--wd-accent)}
-.ad-tl-dragging{opacity:.55}
-.ad-tl-drag-preview{position:fixed;pointer-events:none;z-index:3000;width:180px;max-width:70vw;padding:10px 12px;border-radius:10px;background:#194b30;color:#fff;box-shadow:0 6px 18px #0003;font:600 16px/1.4 var(--wd-body)}
-body.admin-body .ad-tl-touch-move,body.admin-body .ad-tl-touch-resize{display:none!important}
-body.admin-body .ad-tl-modal .ad-tl-editor-title-input{font-family:var(--wd-heading);font-size:30px;color:var(--wd-ink)}
-@media(max-width:900px){
- 
- 
- 
- body.admin-body .ad-tl-section-controls .ad-tl-day-nav{grid-template-columns:repeat(5,minmax(0,1fr))}
- body.admin-body .ad-tl-day-tab{min-height:50px;font-size:18px}
- .ad-tl-chronology{margin-top:10px}
- .ad-tl-chronology-head h2{font-size:22px}
- .ad-tl-chronology-row{grid-template-columns:62px minmax(0,1fr);gap:9px}
- .ad-tl-chronology-list::before{left:56px}
- .ad-tl-chronology-time{padding-top:12px}
- body.admin-body .ad-tl-chronology .ad-tl-chronology-card{padding:10px 11px!important}
- body.admin-body .ad-tl-chronology-card .ad-tl-card-title{font-size:20px!important}
-}
-
-/* Time and duration appear only on the time rail in compact chronology. */
-body.admin-body .ad-tl-chronology-card .ad-tl-card-head{display:none}
-body.admin-body .ad-tl-program-list .ad-tl-drop-target{outline:2px solid var(--wd-accent)}
-body.admin-body .ad-tl-program-list .ad-tl-card{touch-action:pan-y}
 
 /* Shared layout and component geometry. Preserve module-specific semantic colors. */
 body.admin-body{
@@ -571,7 +527,7 @@ body.admin-body .admin-content{
  margin:0 auto;padding:30px var(--admin-workspace-edge) 56px;
 }
 body.admin-body .admin-content > :is(.ad-live-panel,.ad-guestbook,.ad-photo-archive,.vw-page,.vdp-page,.admin-panel),
-body.admin-body .admin-content :is(.ad-premium,.ad-overview-dashboard,.ad-work-dashboard,.ad-tl-chronology,.ad-tl-settings-content,.vw-detail-single,.vw-method-page){
+body.admin-body .admin-content :is(.ad-premium,.ad-overview-dashboard,.ad-work-dashboard,.ad-tl-calendar,.ad-tl-settings-content,.vw-detail-single,.vw-method-page){
  box-sizing:border-box;width:100%;min-width:0;max-width:none;margin-inline:0;
 }
 body.admin-body .admin-content > :is(.ad-guestbook,.ad-photo-archive){padding-inline:0;padding-top:0}
@@ -590,7 +546,7 @@ body.admin-body .admin-content :is(.admin-page-heading,.pd-top) h1{color:var(--a
 body.admin-body .admin-content :is(.admin-page-heading,.pd-top) p{
  font:400 16px/1.5 var(--admin-control-font);margin:5px 0 0;
 }
-body.admin-body .admin-content :is(.pd-panel-head,.panel-header,.ad-overview-card-head,.vw-table-panel-title,.ad-photo-upload-form,.ad-tl-settings-content,.ad-tl-chronology-head,.ad-tl-section-heading,.ad-live-subsection,.vdp-photo-header,.vdp-row-between) h2{
+body.admin-body .admin-content :is(.pd-panel-head,.panel-header,.ad-overview-card-head,.vw-table-panel-title,.ad-photo-upload-form,.ad-tl-settings-content,.ad-tl-section-heading,.ad-live-subsection,.vdp-photo-header,.vdp-row-between) h2{
  font-family:var(--admin-page-title-font);font-size:var(--admin-section-title-size);font-weight:400;line-height:1.25;letter-spacing:-.025em;
 }
 body.admin-body .admin-content :is(.ad-gb-primary,.ad-gb-light,.ad-tl-button:not(.ad-tl-text-button),.ad-live-button,.ad-program-add,.ad-program-secondary,.vdp-primary-link,.vw-rating-save,[data-rating-open],.vw-archive-counter),
@@ -635,3 +591,6 @@ body.admin-body .admin-side .admin-settings-footer .side-link{flex:1 1 auto;min-
 body.admin-body .admin-side .admin-settings-footer .admin-theme-toggle{flex:0 0 40px;width:40px;height:40px;margin:0;border:0;border-radius:9px}
 @media(max-height:550px) and (min-width:901px){body.admin-body .admin-side .admin-settings-footer .admin-theme-toggle{flex-basis:32px;width:32px;height:32px}}
 @media(max-width:900px){body.admin-body .admin-side .admin-settings-footer{margin-top:auto;padding-top:12px}body.admin-body .admin-side .admin-settings-footer .admin-theme-toggle{flex-basis:44px;width:44px;height:44px}}
+
+/* Restore original primary-tag gradients and precise timeline interaction. */
+@media(max-width:900px){body.admin-body .ad-tl-calendar-card .ad-tl-touch-move{font-size:0;background:transparent;border:0;width:34px}body.admin-body .ad-tl-calendar-card .ad-tl-touch-resize{background:transparent}body.admin-body .ad-tl-calendar-card:after{background:transparent}}
