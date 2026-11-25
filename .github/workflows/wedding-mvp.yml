@@ -33,6 +33,7 @@ jobs:
           echo '3fe83bf818572ae4116d6b667ed8cc0b97255e3df1b30ce006fd3fdf1c045094  mvp-site/botanical-v5.zip' | sha256sum -c -
           unzip -oq mvp-site/botanical-v5.zip -d _mvp
           python3 mvp-site/apply-welcome-spacing.py
+          cat mvp-site/hero-polish.css >> _mvp/style.css
           test -s _mvp/index.html
           node --check _mvp/script.js
           python3 - <<'PY'
@@ -99,6 +100,14 @@ jobs:
                 const h=document.querySelector('.hero').getBoundingClientRect(),w=document.querySelector('.welcome').getBoundingClientRect(),pr=document.querySelector('.program').getBoundingClientRect(),b=document.querySelector('.welcome-berry'),f=b.closest('.photo-shell');
                 return {before:w.top-h.bottom,after:pr.top-w.bottom,branches:document.querySelectorAll('.welcome > .ornament').length,berryAttached:!!f?.querySelector('.frame-city'),berryOffset:f?Math.abs(b.getBoundingClientRect().bottom-f.getBoundingClientRect().bottom):999};
               });
+              const heroPolish=await p.evaluate(()=>{
+                const hero=document.querySelector('.hero'),leaf=hero.querySelector('.hero-top-left'),lower=hero.querySelector('.hero-leaves'),wave=hero.querySelector('.hero-wave');
+                return {ratio:leaf.getBoundingClientRect().width/hero.getBoundingClientRect().width,fade:getComputedStyle(hero,'::after').display,lowerZ:Number(getComputedStyle(lower).zIndex),waveZ:Number(getComputedStyle(wave).zIndex)};
+              });
+              console.log('HERO_POLISH',JSON.stringify(heroPolish));
+              assert.ok(heroPolish.ratio>=(name==='mobile'?.42:.27));
+              assert.equal(heroPolish.fade,'none');
+              assert.ok(heroPolish.lowerZ>heroPolish.waveZ);
               console.log('WELCOME_SPACING',JSON.stringify(spacing));
               assert.ok(spacing.before>=30 && spacing.after>=35);
               assert.equal(spacing.branches,2);
