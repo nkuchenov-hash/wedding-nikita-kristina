@@ -8,7 +8,7 @@ test('shared design does not flatten semantic module colors',()=>{
  assert.match(css,/--pd-bg:#ffffff/);
  assert.match(css,/--wd-accent:#214d35/);
  assert.match(css,/\.ad-tl-chronology-row\{display:grid/);
- assert.match(css,/\.pd-hero\{background:linear-gradient[^\\n]*data:image\/webp;base64,/);
+ assert.match(css,/\.pd-hero\{background:linear-gradient[^\n]*data:image\/webp;base64,/);
 });
 test('hero and login use identical high-resolution WebP artwork',()=>{
  const css=read('src/admin-heading.css'),gateway=read('tools/admin-gateway.php');
