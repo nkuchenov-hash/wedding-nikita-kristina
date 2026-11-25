@@ -104,7 +104,18 @@ CREATE TABLE IF NOT EXISTS vendors (
   contact TEXT NOT NULL DEFAULT '', website TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'candidate', estimate_rub INTEGER,
   contract_ref TEXT NOT NULL DEFAULT '', notes TEXT NOT NULL DEFAULT '',
+  details_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS decor_items (
+  id TEXT PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'candidate', estimate_rub INTEGER,
+  notes TEXT NOT NULL DEFAULT '', details_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS production_images (
+  id TEXT PRIMARY KEY, item_id TEXT NOT NULL REFERENCES decor_items(id) ON DELETE CASCADE,
+  mime TEXT NOT NULL, data TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE TABLE IF NOT EXISTS budget_lines (
   id TEXT PRIMARY KEY, category TEXT NOT NULL, description TEXT NOT NULL,

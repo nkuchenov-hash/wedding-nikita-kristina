@@ -1,3 +1,4 @@
+import {renderProduction} from './admin-production.js';
 import {showAdminToast} from './admin-toast.js';
 import {weddingDays,adminModules} from './data.js';
 const adminProgramDays=[...weddingDays,
@@ -93,6 +94,8 @@ async function overview(host){
   if(a.entity_type==='venue_date_status')return 'venues/'+id;
   if(a.entity_type==='venues')return 'venues';
   if(a.entity_type==='event_setting')return 'settings';
+  if(a.entity_type==='vendors')return 'vendors';
+  if(a.entity_type==='decor_items')return 'decor';
   if(a.entity_type==='budget_lines')return 'budget';
   if(['menu','menu_options'].includes(a.entity_type))return 'menu';
   if(['gallery_photo','photo','photos'].includes(a.entity_type))return 'photos';
@@ -304,6 +307,7 @@ async function collection(host,type){
 }
 
 async function renderSection(host,section){
+ if(section==='vendors'||section==='decor'){await renderProduction(host,call,section);return}
  if(section==='overview'){await overview(host);return}
  if(section==='menu'){await collection(host,'menu_options');return}
  if(section==='schedule'){await renderWeddingProgram(host,call,adminProgramDays,PUBLIC_VENUES);return}
@@ -332,7 +336,7 @@ export async function activateAdminData(root,section){
  const destination=root.querySelector('.admin-content');if(!destination)return;
  // Venue comparison has its own approved detailed table in venues.js.
  // Never inject a generic database table above it.
- const supported=['overview','budget','tasks','schedule','menu','settings'];
+ const supported=['overview','budget','tasks','schedule','menu','settings','vendors','decor'];
  if(!supported.includes(section))return;
  const host=$('section','ad-live-panel');host.setAttribute('aria-label','Данные свадебной базы');
  if(section==='overview'){host.append($('p','ad-work-muted','Загрузка дашборда…'));destination.replaceChildren(host)}else destination.prepend(host);
@@ -346,6 +350,6 @@ export async function activateAdminData(root,section){
    if(section!=='venues')destination.replaceChildren(host);
  }catch(err){
    // Live API is not enabled on this release. Leave the existing authenticated admin tools visible.
-   if(section==='overview'&&host.isConnected)host.replaceChildren($('p','ad-work-muted','Дашборд недоступен: '+errorText(err)));else host.remove();
+   if(['overview','vendors','decor'].includes(section)&&host.isConnected)host.replaceChildren($('p','ad-work-muted','Раздел недоступен: '+errorText(err)));else host.remove();
  }
 }

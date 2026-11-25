@@ -86,6 +86,9 @@ if(!in_array('tags_json',array_column($scheduleColumns,'name'),true))
     $database->exec("ALTER TABLE schedule_items ADD COLUMN tags_json TEXT NOT NULL DEFAULT '[]'");
 $database->exec("CREATE INDEX IF NOT EXISTS idx_schedule_stage_day ON schedule_items(stage,activity_date,start_at,sort_order)");
 
+$vendorColumns=$database->query('PRAGMA table_info(vendors)')->fetchAll(PDO::FETCH_ASSOC);
+if(!in_array('details_json',array_column($vendorColumns,'name'),true))
+    $database->exec("ALTER TABLE vendors ADD COLUMN details_json TEXT NOT NULL DEFAULT '{}'");
 $tables=(int)$database->query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")->fetchColumn();
 chmod($root.'/wedding.sqlite3',0600);
 foreach(['-wal','-shm'] as $suffix)if(is_file($root.'/wedding.sqlite3'.$suffix))

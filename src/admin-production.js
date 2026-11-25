@@ -1,0 +1,77 @@
+import {showAdminToast} from './admin-toast.js';
+export const vendorTypes=['Ведущий','Диджей','Музыкальный коллектив','Артисты','Фотограф','Видеограф','Декоратор','Флорист','Кондитер','Стилист / визажист','Звук и свет','Координатор','Транспорт','Кейтеринг','Полиграфия','Аренда оборудования'];
+const zones=['Гостевые столы','Рассадка','Стол молодожёнов','Входная зона','Фотозона','Интерактивные зоны','Церемония','Другое'];
+const specs={'Ведущий':['Часы работы','Подготовка сценария','Языки'],'Диджей':['Часы работы','Оборудование','Музыкальная программа'],'Музыкальный коллектив':['Состав','Жанр','Количество сетов','Длительность сета','Технический райдер'],'Фотограф':['Часы съёмки','Количество фото','Срок готовности'],'Видеограф':['Количество операторов','Длительность фильма','Срок готовности'],'Декоратор':['Монтаж','Демонтаж','Материалы'],'Кондитер':['Вес','Цена за кг','Доставка']};
+const statuses={candidate:'Кандидат / идея',research:'Кандидат',negotiating:'На согласовании',selected:'Выбран / утверждён',ordered:'Заказан',ready:'Готов',archived:'Архив'};
+const costFields=['fee','travel','hotel','food','equipment','extras'];
+const costLabels=['Гонорар','Проезд','Проживание','Питание','Оборудование','Дополнительные расходы'];
+const el=(tag,cls='',text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e};
+const btn=(text,fn,cls='ad-live-button')=>{const b=el('button',cls,text);b.type='button';b.onclick=fn;return b};
+const safeJson=x=>{try{return JSON.parse(x)||{}}catch{return {}}};
+const money=x=>x==null?'Уточняется':Number(x).toLocaleString('ru-RU')+' ₽';
+const amount=x=>x===''||x==null?null:Math.max(0,Math.round(Number(x)||0));
+export function productionCost(d,decor=false,guests=0){
+ const known=decor?[d.unitPrice==null?null:d.unitPrice*(d.unit==='guest'?guests:d.unit==='fixed'?1:Number(d.quantity||0)),d.install,d.delivery]:costFields.map(k=>d[k]);
+ const sum=known.reduce((s,v)=>s+(Number(v)||0),0);
+ return {sum,unknown:known.some(v=>v==null)};
+}
+export async function renderProduction(host,call,section){
+ const decor=section==='decor',collection=decor?'decor_items':'vendors';
+ const [records,venues,vendors,overview,schedule]=await Promise.all([call('admin/records?collection='+collection),call('admin/records?collection=venues'),decor?call('admin/records?collection=vendors'):Promise.resolve({items:[]}),call('admin/overview'),call('admin/records?collection=schedule_items')]);
+ let items=records.items||[],view='cards',filter='all',category='',search='',archive=false;
+ const places=venues.items||[],suppliers=vendors.items||[],events=schedule.items||[],guests=Number(overview.guests?.total)||0;
+ const details=r=>safeJson(r.details_json),tags=r=>String(r.category||'').split(',').map(x=>x.trim()).filter(Boolean);
+ const venueName=id=>places.find(v=>v.id===id)?.name||'Площадка не выбрана';
+ const root=el('div','production-page');host.replaceChildren(root);
+ const header=el('header','admin-page-heading production-heading');header.append(el('h1','',decor?'Декор':'Подрядчики'));
+ const actions=el('div','production-actions');header.append(actions);root.append(header);
+ const toolbar=el('div','production-toolbar'),body=el('div','production-body');root.append(toolbar,body);
+ const err=e=>showAdminToast(e.message||'Не удалось сохранить',{kind:'error'});
+ async function save(r,fields){await call('admin/records',{method:r.id?'PATCH':'POST',body:{collection,...(r.id?{id:r.id}:{}),fields}});items=(await call('admin/records?collection='+collection)).items||[];draw();showAdminToast('Изменения сохранены.')}
+ function openDrawer(title){const d=el('dialog','production-drawer');const head=el('header','production-drawer-head');head.append(el('h2','',title),btn('Закрыть',()=>d.close()));d.append(head);root.append(d);d.addEventListener('close',()=>d.remove());d.showModal();return d}
+ function select(values,current){const e=el('select');for(const [v,t] of values){const o=el('option','',t);o.value=v;e.append(o)}e.value=current??'';return e}
+ function edit(r={}){
+  const d=details(r),drawer=openDrawer(r.id?r.name:'Новая позиция'),form=el('form','production-form');drawer.append(form);
+  const inputs={};
+  function group(title){const g=el('fieldset');g.append(el('legend','',title));form.append(g);return g}
+  function field(g,key,label,value='',type='text',options){const l=el('label','production-field');l.append(el('span','',label));let e;if(options)e=select(options,value);else{e=el(type==='textarea'?'textarea':'input');if(type!=='textarea')e.type=type;if(type==='number'){e.min='0';e.step='1'}e.value=value??''}l.append(e);g.append(l);inputs[key]=e;return e}
+  const base=group('Основное');field(base,'name','Название',r.name).required=true;field(base,'category','Категории через запятую',r.category||'');const suggested=el('div','production-tags');for(const t of decor?zones:vendorTypes)suggested.append(btn(t,()=>{const ts=inputs.category.value.split(',').map(s=>s.trim()).filter(Boolean);inputs.category.value=ts.includes(t)?ts.filter(x=>x!==t).join(', '):[...ts,t].join(', ');showSpecs()}));base.append(suggested);
+  field(base,'status','Статус',r.status||'candidate','text',Object.entries(statuses));
+  if(!decor){field(base,'contact','Контакты',r.contact);field(base,'website','Сайт / портфолио',r.website);field(base,'city','Город отправления',d.city);field(base,'contract_ref','Договор / предложение',r.contract_ref)}
+  const logistics=group('Площадка и программа');field(logistics,'venue','Основная площадка',d.venue||'','text',[['','Не выбрана'],...places.map(v=>[v.id,v.name])]);field(logistics,'event','Связанная активность',d.event||'','text',[['','Не выбрана'],...events.map(v=>[v.id,v.title+' · '+(v.activity_date||'')])]);field(logistics,'date','Дата',d.date,'date');field(logistics,'time','Время / продолжительность',d.time);
+  const links=el('div','production-links');logistics.append(links);const venueRows=[];
+  function addVenue(v={}){const row=el('div','production-link-row'),place=select([['','Выберите площадку'],...places.map(x=>[x.id,x.name])],v.id||''),mode=select([['unknown','Уточняется'],['external','Отдельный подрядчик'],['included','Включено площадкой'],['restricted','Есть ограничения'],['unavailable','Недоступно']],v.mode||'unknown'),extra=el('input'),note=el('textarea');extra.type='number';extra.min='0';extra.placeholder='Доплата, ₽';extra.value=v.extra??'';note.placeholder='Условия, монтаж, ограничения';note.value=v.note||'';const entry={row,place,mode,extra,note};venueRows.push(entry);row.append(place,mode,extra,note,btn('Удалить',()=>{venueRows.splice(venueRows.indexOf(entry),1);row.remove()}));links.append(row)}
+  for(const v of d.venues||[])addVenue(v);logistics.append(btn('Добавить условия площадки',()=>addVenue()));
+  const costs=group('Стоимость и оплата');
+  if(decor){field(costs,'unit','Единица расчёта',d.unit||'guest','text',[['guest','На гостя'],['table','На стол'],['piece','За штуку'],['zone','За зону'],['fixed','За проект']]);field(costs,'quantity','Количество (кроме гостей и проекта)',d.quantity,'number');field(costs,'unitPrice','Цена за единицу, ₽',d.unitPrice,'number');field(costs,'install','Монтаж, ₽',d.install,'number');field(costs,'delivery','Доставка, ₽',d.delivery,'number');field(base,'vendor','Подрядчик',d.vendor||'','text',[['','Не выбран'],...suppliers.filter(x=>x.status!=='archived').map(v=>[v.id,v.name])]);field(costs,'included','Уже входит в стоимость подрядчика',d.included?'yes':'no','text',[['no','Нет'],['yes','Да']]);}
+  else for(const [i,k] of costFields.entries())field(costs,k,costLabels[i],d[k]??(k==='fee'?r.estimate_rub:null),'number');
+  field(costs,'paid','Оплачено, ₽',d.paid,'number');field(costs,'agreed','Сумма согласована',d.agreed?'yes':'no','text',[['no','Нет'],['yes','Да']]);field(costs,'due','Срок оплаты',d.due,'date');
+  const specGroup=group('Характеристики'),specInputs={};
+  function showSpecs(){const old={...(d.specs||{}),...Object.fromEntries(Object.entries(specInputs).map(([k,e])=>[k,e.value]))};for(const k of Object.keys(specInputs))delete specInputs[k];specGroup.replaceChildren(el('legend','','Характеристики'));for(const k of new Set(inputs.category.value.split(',').flatMap(t=>specs[t.trim()]||[]))){specInputs[k]=field(specGroup,'spec:'+k,k,old[k]);}if(!Object.keys(specInputs).length)specGroup.append(el('p','','Дополнительные параметры можно указать ниже.'))}
+  inputs.category.addEventListener('change',showSpecs);showSpecs();
+  const notes=group('Материалы и договорённости');field(notes,'notes','Примечания',r.notes,'textarea');field(notes,'custom','Дополнительные параметры (по строкам: название: значение)',d.custom,'textarea');field(notes,'reference','Ссылка на материалы / референс',d.reference);field(notes,'owner','Ответственный',d.owner);field(notes,'deadline','Срок подготовки',d.deadline,'date');
+  const footer=el('div','production-footer');const submit=el('button','ad-live-button','Сохранить');submit.type='submit';footer.append(submit);form.append(footer);
+  form.onsubmit=async e=>{e.preventDefault();submit.disabled=true;try{const value=k=>inputs[k]?.value??'',next={...d,city:value('city'),venue:value('venue'),event:value('event'),date:value('date'),time:value('time'),paid:amount(value('paid')),agreed:value('agreed')==='yes',due:value('due'),custom:value('custom'),reference:value('reference'),owner:value('owner'),deadline:value('deadline'),specs:Object.fromEntries(Object.entries(specInputs).map(([k,e])=>[k,e.value])),venues:venueRows.filter(x=>x.place.value).map(x=>({id:x.place.value,mode:x.mode.value,extra:amount(x.extra.value),note:x.note.value}))};
+   if(decor)Object.assign(next,{unit:value('unit'),quantity:amount(value('quantity')),unitPrice:amount(value('unitPrice')),install:amount(value('install')),delivery:amount(value('delivery')),vendor:value('vendor'),included:value('included')==='yes'});
+   else for(const k of costFields)next[k]=amount(value(k));
+   const result=productionCost(next,decor,guests),selected=next.venues.find(v=>v.id===next.venue);let estimate=(decor&&next.included)||selected?.mode==='included'?0:result.sum+(selected?.extra||0);
+   await save(r,{name:value('name').trim(),category:[...new Set(value('category').split(',').map(x=>x.trim()).filter(Boolean))].join(', '),status:value('status'),notes:value('notes'),estimate_rub:estimate,details_json:JSON.stringify(next),...(!decor?{contact:value('contact'),website:value('website'),contract_ref:value('contract_ref')}:{})});drawer.close();
+  }catch(e){err(e)}finally{submit.disabled=false}};
+ }
+ function archiveItem(r){save(r,{status:r.status==='archived'?'candidate':'archived'}).catch(err)}
+ async function refs(r){const drawer=openDrawer('Референсы · '+r.name);const container=el('div','production-ref-grid');drawer.append(container);const upload=el('input');upload.type='file';upload.accept='image/jpeg,image/png,image/webp';drawer.append(upload);async function refresh(){const data=await call('admin/production-images?item='+encodeURIComponent(r.id));container.replaceChildren();for(const x of data.items){const card=el('article','production-card'),im=el('img');im.src='data:'+x.mime+';base64,'+x.data;im.alt=r.name;card.append(im,btn('Удалить',async()=>{try{await call('admin/production-images',{method:'DELETE',body:{id:x.id}});await refresh()}catch(e){err(e)}}));container.append(card)}}upload.onchange=async()=>{try{const file=upload.files[0];if(!file)return;if(file.size>1900000)throw Error('Максимальный размер изображения 1,9 МБ');const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(file)});await call('admin/production-images',{method:'POST',body:{item:r.id,data}});await refresh();upload.value=''}catch(e){err(e)}};try{await refresh()}catch(e){err(e)}}
+ function draw(){actions.replaceChildren(btn(archive?'Активные':'Архив',()=>{archive=!archive;draw()}),btn('Добавить',()=>edit()));toolbar.replaceChildren();
+  for(const [v,t] of [['cards','Карточки'],['table','Таблица'],[decor?'refs':'compare',decor?'Референсы':'Сравнение'],...(decor?[['budget','Смета']]:[])]){const b=btn(t,()=>{view=v;draw()});b.setAttribute('aria-pressed',String(view===v));toolbar.append(b)}
+  const cats=select([['','Все категории'],...[...new Set(items.flatMap(tags))].map(t=>[t,t])],category);cats.onchange=()=>{category=cats.value;draw()};toolbar.append(cats);
+  const stat=select([['all','Все статусы'],...Object.entries(statuses).filter(([k])=>k!=='archived')],filter);stat.onchange=()=>{filter=stat.value;draw()};toolbar.append(stat);
+  const q=el('input');q.placeholder='Поиск';q.value=search;q.oninput=()=>{search=q.value;renderBody()};toolbar.append(q);renderBody();
+ }
+ function renderBody(){body.replaceChildren();const list=items.filter(r=>(r.status==='archived')===archive&&(!category||tags(r).includes(category))&&(filter==='all'||r.status===filter)&&String(r.name+' '+r.category+' '+r.notes).toLowerCase().includes(search.toLowerCase())).sort((a,b)=>Number(b.status==='selected')-Number(a.status==='selected')||a.name.localeCompare(b.name,'ru'));
+  if(view==='compare'&&!category){body.append(el('p','','Выберите категорию для сравнения исполнителей.'));return}
+  if(!list.length){body.append(el('p','','Записей пока нет.'));return}
+  const displayCost=r=>{const d=details(r),c=productionCost(d,decor,guests),v=(d.venues||[]).find(x=>x.id===d.venue);return ((decor&&d.included)||v?.mode==='included')?'Включено':money(c.sum+(v?.extra||0))+(c.unknown?' + уточняется':'')};
+  if(['table','compare','budget'].includes(view)){const wrap=el('div','ad-live-table-scroll'),table=el('table','ad-live-table'),head=el('thead'),hr=el('tr'),tbody=el('tbody');const keys=view==='compare'?[...new Set(list.flatMap(r=>Object.keys(details(r).specs||{})))]:[];for(const h of ['Название','Категории','Статус','Площадка','Стоимость','Оплачено',...keys,''])hr.append(el('th','',h));head.append(hr);for(const r of list){const d=details(r),tr=el('tr');for(const v of [r.name,r.category,statuses[r.status]||r.status,venueName(d.venue),displayCost(r),money(d.paid),...keys.map(k=>d.specs?.[k]||'—')])tr.append(el('td','',v));const a=el('td');a.append(btn('Открыть',()=>edit(r)));tr.append(a);tbody.append(tr)}table.append(head,tbody);wrap.append(table);body.append(wrap);return}
+  const grid=el('div','production-grid');for(const r of list){const d=details(r),card=el('article','production-card');card.append(el('h2','',r.name),el('p','production-category',r.category||'Без категории'),el('p','',statuses[r.status]||r.status));if(d.city)card.append(el('p','','Город: '+d.city));card.append(el('strong','production-price',displayCost(r)),el('p','',venueName(d.venue)));if(d.reference&&/^https?:\/\//i.test(d.reference)){const a=el('a','','Материалы');a.href=d.reference;a.target='_blank';a.rel='noopener noreferrer';card.append(a)}if(r.notes)card.append(el('p','',r.notes));const row=el('div','production-actions');row.append(btn('Открыть',()=>edit(r)));if(decor)row.append(btn('Референсы',()=>refs(r)));if(r.status!=='selected'&&!archive)row.append(btn('Выбрать',()=>save(r,{status:'selected'}).catch(err)));row.append(btn(archive?'Восстановить':'В архив',()=>archiveItem(r)));card.append(row);grid.append(card)}body.append(grid)
+ }
+ draw();
+}

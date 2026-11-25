@@ -129,7 +129,8 @@ function confirmedGuestDirectory(PDO $db): array {
 function adminCollections(): array {
     return [
       'venues'=>['name','area','address','website','capacity_min','capacity_max','quoted_total_rub','quote_guests','desired_date_status','contact_name','contact_email','contact_phone','quote_source','pros','cons','notes','details_json','photo_refs_json'],
-      'vendors'=>['category','name','contact','website','status','estimate_rub','contract_ref','notes'],
+      'vendors'=>['category','name','contact','website','status','estimate_rub','contract_ref','notes','details_json'],
+      'decor_items'=>['category','name','status','estimate_rub','notes','details_json'],
       'budget_lines'=>['category','description','planned_rub','committed_rub','paid_rub','due_at','vendor_id','notes'],
       'tasks'=>['title','description','status','priority','owner','due_at'],
       'schedule_items'=>['title','start_at','end_at','place','notes','is_public','sort_order','venue_id','is_confirmed','stage','activity_type','duration_min','gap_before_min','activity_date','tags_json'],
@@ -394,7 +395,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
           LEFT JOIN schedule_items s ON a.entity_type='schedule_items' AND s.id=a.entity_id
           LEFT JOIN guests g ON a.entity_type IN ('guest','guest_profile','rsvp','profile') AND g.id=a.entity_id
           LEFT JOIN venues v ON a.entity_type='venues' AND v.id=a.entity_id
-          WHERE a.action!='login' AND a.entity_type IN ('tasks','schedule_items','guest','guest_profile','rsvp','profile','venues','venue_date_status','event_setting','budget_lines','menu_options','menu','gallery_photo','photo','guest_relationship','companion','invitation')
+          WHERE a.action!='login' AND a.entity_type IN ('tasks','schedule_items','guest','guest_profile','rsvp','profile','venues','venue_date_status','event_setting','budget_lines','vendors','decor_items','menu_options','menu','gallery_photo','photo','guest_relationship','companion','invitation')
           ORDER BY a.id DESC LIMIT 50");
         json(['ok'=>true,'dashboard_activity'=>$dashboardActivity,'guests'=>$guest,'rsvp'=>$rsvps,'photos_pending'=>(int)$pendingPhotos['n'],
           'stories_pending'=>(int)$pendingStories['n'],'budget'=>$budget,'tasks'=>$tasks,
@@ -749,6 +750,28 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         json(['ok'=>true,'day'=>$day,'count'=>count($updates)]);
     }
 
+    if ($route==='admin/production-images' && $method==='GET') {
+        $item=(string)($_GET['item']??'');
+        json(['ok'=>true,'items'=>all($db,'SELECT id,mime,data FROM production_images WHERE item_id=? ORDER BY created_at',[$item])]);
+    }
+    if ($route==='admin/production-images' && $method==='POST') {
+        $d=payload(2800000);$item=strval($d,'item',40,true);
+        if(!one($db,'SELECT id FROM decor_items WHERE id=?',[$item]))fail(404,'not_found','Позиция не найдена');
+        $data=$d['data']??'';
+        if(!is_string($data)||strlen($data)>2700000)fail(422,'image','Изображение слишком большое');
+        $raw=base64_decode($data,true);
+        $info=$raw===false?false:@getimagesizefromstring($raw);
+        if(!$info||!in_array($info['mime'],['image/jpeg','image/png','image/webp'],true)||$info[0]*$info[1]>24000000)
+            fail(422,'image','Допустимы JPEG, PNG и WebP');
+        $id=uuid();
+        statement($db,'INSERT INTO production_images(id,item_id,mime,data) VALUES(?,?,?,?)',[$id,$item,$info['mime'],$data]);
+        json(['ok'=>true,'id'=>$id],201);
+    }
+    if ($route==='admin/production-images' && $method==='DELETE') {
+        $d=payload(4096);$id=strval($d,'id',40,true);
+        statement($db,'DELETE FROM production_images WHERE id=?',[$id]);
+        json(['ok'=>true]);
+    }
     if ($route==='admin/records' && $method==='GET') {
         $collection=(string)($_GET['collection']??'');
         if (!isset(adminCollections()[$collection]))fail(404,'collection','Коллекция не найдена');
@@ -771,6 +794,14 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
                 if(!is_string($value))fail(422,'field','Ожидается JSON-строка');
                 try {json_decode($value,true,32,JSON_THROW_ON_ERROR);}
                 catch(Throwable $e){fail(422,'field','Некорректный JSON');}
+            }
+            if(in_array($collection,['vendors','decor_items'],true)){
+                if($field==='status'&&!in_array($value,['candidate','research','negotiating','selected','ordered','ready','archived'],true))
+                    fail(422,'field','Неизвестный статус');
+                if($field==='estimate_rub'&&$value!==null&&(!is_int($value)||$value<0))
+                    fail(422,'field','Некорректная стоимость');
+                if($field==='name'&&(!is_string($value)||trim($value)===''))
+                    fail(422,'field','Укажите название');
             }
             if($collection==='schedule_items'){
                 if($field==='activity_date' &&
@@ -804,6 +835,9 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         }
         if(!$set)fail(422,'fields','Нет изменений');
         $id=$method==='PATCH'?strval($d,'id',40,true):uuid();
+        $production=in_array($collection,['vendors','decor_items'],true);
+        if($production)$db->beginTransaction();
+        try{
         if($method==='POST'){
             $keys=implode(',',array_merge(['id'],$set));
             $holders=implode(',',array_fill(0,count($set)+1,'?'));
@@ -813,7 +847,22 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
             $sql=implode(',',array_map(fn($key)=>"$key=?",$set));
             statement($db,"UPDATE $collection SET $sql WHERE id=?",array_merge($values,[$id]));
         }
+        if($production){
+            $record=one($db,"SELECT * FROM $collection WHERE id=?",[$id]);
+            $details=json_decode($record['details_json']??'{}',true);
+            $active=in_array($record['status'],['selected','ordered','ready'],true);
+            $budgetId='prod-'.$id;
+            $paid=max(0,(int)($details['paid']??0));
+            $amount=max(0,(int)($record['estimate_rub']??0));
+            if($active||$paid>0){
+                statement($db,'INSERT INTO budget_lines(id,category,description,planned_rub,committed_rub,paid_rub,vendor_id,notes) VALUES(?,?,?,?,?,?,?,?)
+                  ON CONFLICT(id) DO UPDATE SET category=excluded.category,description=excluded.description,planned_rub=excluded.planned_rub,committed_rub=excluded.committed_rub,paid_rub=excluded.paid_rub,notes=excluded.notes',
+                  [$budgetId,$collection==='vendors'?'Подрядчики':'Декор',$record['name'],$active?$amount:$paid,$active&&($details['agreed']??false)?$amount:$paid,$paid,$collection==='vendors'?$id:null,'Автоматически из карточки; неизвестные расходы не включены']);
+            }else statement($db,'DELETE FROM budget_lines WHERE id=?',[$budgetId]);
+        }
         audit($db,'admin',$actor,$method==='POST'?'create':'update',$collection,$id,['fields'=>$set]);
+        if($production)$db->commit();
+        }catch(Throwable $e){if($production&&$db->inTransaction())$db->rollBack();throw $e;}
         json(['ok'=>true,'id'=>$id],$method==='POST'?201:200);
     }
     if ($route==='admin/review' && $method==='POST') {
