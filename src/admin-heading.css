@@ -754,3 +754,11 @@ body.admin-body .vw-page.vw-control-board .vw-table-settings .vw-rating-rule sel
  body.admin-body .vw-page.vw-control-board .vw-layout-clipped .vw-date-edit select{min-height:28px;padding-block:3px}
 }
 @media(max-width:900px){body.admin-body .vw-page.vw-control-board .vw-table-sortable colgroup{display:none}body.admin-body .vw-page.vw-control-board .vw-col-resize{display:none}body.admin-body .vw-page.vw-control-board .vw-table-sortable tbody td.vw-archive-cell{order:99;grid-column:1/-1;text-align:right;padding-top:8px}}
+
+/* Table settings use the same toolbar icon as the guest register. */
+body.admin-body .vw-control-board .vw-control-facts{align-items:center}
+body.admin-body .vw-control-board .vw-control-facts>.ad-gb-column-prefs{margin:0;flex:0 0 auto;align-self:center}
+body.admin-body .vw-control-board .ad-gb-settings-icon{color:var(--wd-accent)}
+body.admin-body .vw-control-board .ad-gb-settings-icon svg{flex:none}
+body.admin-body .vw-control-board .ad-gb-settings-icon .ad-gb-settings-label{padding:0;border:0;background:transparent;color:inherit;font-weight:500}
+@media(max-width:900px){body.admin-body .vw-control-board .ad-gb-column-prefs>.ad-gb-settings-icon{display:flex;gap:8px;width:auto;min-height:44px;padding:7px 10px;border:1px solid var(--wd-line)!important}}

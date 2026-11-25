@@ -271,15 +271,15 @@ body.ad-gb-lock{overflow:hidden}
 }
 .ad-gb-search-field .ad-gb-search-input:focus{border-color:#55906b;box-shadow:0 0 0 3px #d9ebdd}
 .ad-guestbook .ad-gb-column-prefs{flex:0 0 auto;align-self:center;margin-left:0;z-index:25}
-.ad-guestbook .ad-gb-settings-icon{
+:is(.ad-guestbook,.vw-control-board) .ad-gb-settings-icon{
  appearance:none;display:inline-flex;align-items:center;justify-content:center;
  flex:0 0 42px;width:42px;height:42px;min-height:42px;margin:0;padding:9px;
  border:0!important;box-shadow:none!important;background:transparent!important;
  color:#30674a;border-radius:9px;cursor:pointer
 }
-.ad-guestbook .ad-gb-settings-icon:hover{color:#155437;outline:0!important}
-.ad-guestbook .ad-gb-settings-icon:focus-visible{outline:2px solid #7fa78b!important;outline-offset:1px}
-.ad-guestbook .ad-gb-settings-icon[aria-expanded="true"]{color:#145638}
+:is(.ad-guestbook,.vw-control-board) .ad-gb-settings-icon:hover{color:#155437;outline:0!important}
+:is(.ad-guestbook,.vw-control-board) .ad-gb-settings-icon:focus-visible{outline:2px solid #7fa78b!important;outline-offset:1px}
+:is(.ad-guestbook,.vw-control-board) .ad-gb-settings-icon[aria-expanded="true"]{color:#145638}
 .ad-gb-menu-filters{display:grid;gap:12px;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid #dce8df}
 .ad-gb-menu-filter-row{display:grid;gap:5px;font-size:16px;font-weight:600;color:#567460}
 .ad-gb-menu-filter-row .ad-gb-select{display:block;width:100%;min-height:37px;padding:7px 9px;font-size:16px;border-radius:7px;background:#fff}
@@ -301,7 +301,7 @@ body.ad-gb-lock{overflow:hidden}
  .ad-guestbook .ad-gb-top h1{font-size:clamp(23px,6vw,31px)}
  .ad-guestbook .ad-gb-top-actions{gap:2px}
  .ad-guestbook .ad-gb-top-actions .ad-gb-primary{min-height:38px;padding:8px 10px;font-size:16px}
- .ad-guestbook .ad-gb-settings-icon{width:36px;height:38px;min-height:38px;flex-basis:36px;padding:7px}
+ :is(.ad-guestbook,.vw-control-board) .ad-gb-settings-icon{width:36px;height:38px;min-height:38px;flex-basis:36px;padding:7px}
  .ad-gb-search-wrap.ad-gb-search-open .ad-gb-search-field{
    position:absolute;top:calc(100% + 8px);right:0;max-width:none;z-index:15
  }

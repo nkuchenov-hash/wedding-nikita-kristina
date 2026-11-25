@@ -14,3 +14,5 @@ test('venue comparison contains no selection or archive actions; decisions live 
 
 import {normalizeVenueTableLayout} from '../src/venues.js';
 test('Venue table layout uses bounded column widths and valid row heights',()=>{assert.deepEqual(normalizeVenueTableLayout({row_height:128,truncate:false,widths:{name:20,date:3000,score:180,invalid:33}}),{row_height:128,truncate:false,widths:{name:260,date:1000,score:180}});assert.equal(normalizeVenueTableLayout(null).row_height,192)});
+
+test('Venue table settings reuse the guest toolbar icon instead of a filled rating button',()=>{const s=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');const g=readFileSync(new URL('../src/admin-guests.js',import.meta.url),'utf8');const css=readFileSync(new URL('../src/admin-guests.css',import.meta.url),'utf8');assert.match(s,/class="ad-gb-settings-icon" data-table-settings/);assert.doesNotMatch(s,/class="vw-rating-trigger" data-table-settings/);const icon=g.match(/columnsButton\.innerHTML='([^']+)'/)[1];assert.ok(s.includes(icon));assert.ok(css.includes(':is(.ad-guestbook,.vw-control-board) .ad-gb-settings-icon'));assert.match(s,/id="venue-table-settings"/)});
