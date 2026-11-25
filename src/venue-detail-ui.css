@@ -508,3 +508,6 @@
 /* Three wedding dates on a narrow rating tile remain readable without wraps. */
 .vdp-rating-inputs .vdp-dates{grid-template-columns:minmax(0,1fr)}
 .vdp-rating-inputs .vdp-date>span{white-space:normal;overflow-wrap:normal;word-break:normal}
+
+/* Venue decisions are separate from comparison and navigation. */
+.vdp-venue-decision{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;margin:14px 0 18px}.vdp-venue-decision:empty{display:none}.vdp-approve-venue{cursor:pointer;white-space:normal;text-align:center}.vdp-venue-approved{color:var(--wd-accent);font-weight:600;font-size:17px}.vdp-archive-footer{display:flex;justify-content:flex-end;padding:16px 25px 22px;border-top:1px solid var(--vdp-border)}.vdp-archive-footer .vdp-archive-btn{font-weight:500}.vw-selected-venue-label{font-weight:600;color:var(--wd-accent)}

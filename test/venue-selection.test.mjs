@@ -8,3 +8,6 @@ test('selection archives alternatives without mutating original archive state',(
  assert.equal(source[1].archived,false);
  assert.deepEqual(source.map(v=>applyVenueSelection(v,'c')).filter(v=>!v.archived).map(v=>v.id),['c']);
 });
+
+import {readFileSync} from 'node:fs';
+test('venue comparison contains no selection or archive actions; decisions live on venue detail',()=>{const s=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');const d=readFileSync(new URL('../src/venue-detail-ui.js',import.meta.url),'utf8');const row=s.slice(s.indexOf('return \'<tr class="vw-row'),s.indexOf('// Venue detail rendering is centralized'));assert.doesNotMatch(row,/data-venue-select|data-venue-unselect|data-venue-archive/);assert.match(d,/Утвердить местом торжества/);assert.match(d,/vdp-archive-footer/);assert.match(d,/data-venue-archive/);assert.ok(d.indexOf('vdp-archive-footer')>d.indexOf('vdp-foot'))});
