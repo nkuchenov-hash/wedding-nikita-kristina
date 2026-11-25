@@ -247,7 +247,9 @@ function showForm(host,config,submit,defaults=null,actionLabel='Сохранит
 async function collection(host,type){
  const data=await call('admin/records?collection='+encodeURIComponent(type));
  const heading=({venues:'Сравнение площадок',budget_lines:'Бюджет',tasks:'Задачи',menu_options:'Меню',schedule_items:'Программа'})[type]||type;
- title(host,heading);
+ const root=host;root.classList.add('ad-collection-page');
+ const header=$('header','admin-page-heading');header.append($('h1','',heading));root.append(header);
+ host=$('div','ad-collection-content');root.append(host);
  const keys=fields[type]||[];
  const items=data.items||[];
  if(type==='budget_lines'){
@@ -267,8 +269,8 @@ async function collection(host,type){
  }
  let editor=null;
  async function redraw(){
-   host.replaceChildren();
-   await collection(host,type);
+   root.replaceChildren();
+   await collection(root,type);
  }
  function edit(item){
    if(editor)editor.remove();
