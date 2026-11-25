@@ -146,3 +146,111 @@ for i,m in reversed(list(enumerate(cards))):
 p.write_text(html[:start.end()]+section+html[end:])
 script=Path('_mvp/script.js')
 script.write_text(script.read_text()+'\n'+Path('mvp-site/welcome-v11/interaction.js').read_text())
+
+
+# Welcome photo cards: authentic high-resolution photographs, stored locally at build
+# time. Only the two img sources and their attribution are changed.
+from urllib.request import Request, urlopen
+from urllib.parse import quote
+from time import sleep
+from html import escape
+photos = {
+    'estate': {
+        'url': 'https://upload.wikimedia.org/wikipedia/commons/8/8c/' + quote('Дом_усадебный_Андрианово2.jpg'),
+        'page': 'https://commons.wikimedia.org/wiki/File:' + quote('Дом_усадебный_Андрианово2.jpg'),
+        'credit': 'Yulia Pv', 'license': 'CC BY-SA 4.0',
+        'license_url': 'https://creativecommons.org/licenses/by-sa/4.0/',
+        'alt': 'Усадьба Марьино в Андрианово',
+        'position': '77% 45%',
+        'min_size': (2992, 2000),
+    },
+    'city': {
+        'url': 'https://upload.wikimedia.org/wikipedia/commons/5/53/Saint_Isaacs_cathedral_from_Moyca_river.jpg',
+        'page': 'https://commons.wikimedia.org/wiki/File:Saint_Isaacs_cathedral_from_Moyca_river.jpg',
+        'credit': 'Wolfgang Moroder', 'license': 'CC BY-SA 3.0',
+        'license_url': 'https://creativecommons.org/licenses/by-sa/3.0/',
+        'alt': 'Исаакиевский собор и набережные реки Мойки',
+        'position': '50% 50%',
+        'min_size': (7360, 4912),
+    }
+}
+# Read JPEG dimensions without introducing an image-processing dependency.
+def jpeg_dimensions(data):
+    if data[:2] != b'\xff\xd8':
+        raise ValueError('Invalid JPEG')
+    offset = 2
+    while offset < len(data):
+        if data[offset] != 255:
+            raise ValueError('Invalid JPEG marker')
+        while data[offset] == 255:
+            offset += 1
+        marker = data[offset]
+        offset += 1
+        if marker in (0xd8, 0xd9):
+            continue
+        size = int.from_bytes(data[offset:offset+2], 'big')
+        if marker in (0xc0, 0xc1, 0xc2, 0xc3):
+            return (int.from_bytes(data[offset+5:offset+7], 'big'), int.from_bytes(data[offset+3:offset+5], 'big'))
+        if marker == 0xda or size < 2:
+            break
+        offset += size
+    raise ValueError('Missing JPEG size')
+
+html = p.read_text()
+for kind, photo in photos.items():
+    name = 'welcome-photo-' + kind + '-hd.jpg'
+    for attempt in range(3):
+        try:
+            req = Request(photo['url'], headers={'User-Agent': 'WeddingMVP/1.0 (https://nikitakristina.ru; local image publication)'})
+            with urlopen(req, timeout=45) as response:
+                data = response.read(24 * 1024 * 1024)
+            w, h = jpeg_dimensions(data)
+            assert w >= photo['min_size'][0] and h >= photo['min_size'][1], (kind, w, h)
+            assert data[-2:] == b'\xff\xd9', 'Truncated JPEG'
+            break
+        except Exception:
+            if attempt == 2:
+                raise
+            sleep(3 * (attempt + 1))
+    target = Path('_mvp/assets') / name
+    target.write_bytes(data)
+    # Prefer a compact local copy, using ImageMagick on the Ubuntu runner if present.
+    import shutil, subprocess
+    convert = shutil.which('magick') or shutil.which('convert')
+    if convert:
+        resized = target.with_name('tmp-' + name)
+        subprocess.run([convert, str(target), '-auto-orient', '-resize', '2400x2400>', '-strip', '-quality', '90', str(resized)], check=True)
+        rw, rh = jpeg_dimensions(resized.read_bytes())
+        assert min(rw, rh) >= 1400, (kind, rw, rh)
+        resized.replace(target)
+    w, h = jpeg_dimensions(target.read_bytes())
+    print('WELCOME_HD_PHOTO', kind, w, h, target.stat().st_size)
+    pattern = r'(<figure class="photo-frame frame-' + kind + r'">.*?)(<img\b[^>]*>)(.*?</figure>)'
+    def replace_photo(match):
+        img = match.group(2)
+        img, n = re.subn(r'\bsrc="[^"]*"', 'src="assets/' + name + '"', img, count=1)
+        assert n == 1
+        img = re.sub(r'\s(?:srcset|sizes|alt|style|width|height)="[^"]*"', '', img)
+        attrs = {
+            'alt': photo['alt'], 'style': 'object-position:'+photo['position']+';',
+            'data-photo-credit': photo['credit'], 'data-photo-source': photo['page'],
+            'data-photo-license': photo['license'], 'data-photo-license-url': photo['license_url'],
+        }
+        img = img.rstrip('>').rstrip('/') + ''.join(' '+k+'="'+escape(v,quote=True)+'"' for k,v in attrs.items()) + '>'
+        return match.group(1)+img+match.group(3)
+    html, n = re.subn(pattern, replace_photo, html, count=1, flags=re.S)
+    assert n == 1, kind
+p.write_text(html)
+# Credits remain in the existing click-to-open photo viewer, not on the invitation.
+js = script.read_text()
+anchor = 'figure.append(image,caption);'
+assert js.count(anchor) == 1
+js = js.replace(anchor, """if(source.dataset.photoCredit){
+   const credit=document.createElement('small'), author=document.createElement('a'), license=document.createElement('a');
+   author.href=source.dataset.photoSource;author.textContent=source.dataset.photoCredit;author.target='_blank';author.rel='noopener noreferrer';
+   license.href=source.dataset.photoLicenseUrl;license.textContent=source.dataset.photoLicense;license.target='_blank';license.rel='noopener noreferrer';
+   credit.style.cssText='display:block;margin-top:5px;font-size:12px';
+   credit.append('Фото: ',author,' · ',license,' · кадрирование/масштабирование');caption.append(credit);
+  }
+  """+anchor)
+script.write_text(js)
