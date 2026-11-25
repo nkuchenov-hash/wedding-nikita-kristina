@@ -34,6 +34,7 @@ jobs:
           unzip -oq mvp-site/botanical-v5.zip -d _mvp
           python3 mvp-site/apply-welcome-spacing.py
           cat mvp-site/hero-polish.css >> _mvp/style.css
+          cat mvp-site/welcome-editorial.css >> _mvp/style.css
           test -s _mvp/index.html
           node --check _mvp/script.js
           python3 - <<'PY'
@@ -113,6 +114,14 @@ jobs:
               assert.equal(spacing.branches,2);
               assert.equal(spacing.berryAttached,true);
               assert.ok(spacing.berryOffset<30);
+              const editorial=await p.evaluate(()=>{
+                const left=document.querySelector('.welcome .photo-shell:has(.frame-estate)'),right=document.querySelector('.welcome .photo-shell:has(.frame-city)'),copy=document.querySelector('.welcome-text'),lr=left.getBoundingClientRect(),rr=right.getBoundingClientRect(),cr=copy.getBoundingClientRect();
+                return {leftRatio:lr.height/lr.width,rightRatio:rr.height/rr.width,leftRotate:getComputedStyle(left).rotate,rightRotate:getComputedStyle(right).rotate,noTextOverlap:innerWidth<=700?cr.bottom<=Math.min(lr.top,rr.top)+2:lr.right<cr.left&&rr.left>cr.right};
+              });
+              console.log('WELCOME_EDITORIAL',JSON.stringify(editorial));
+              assert.ok(editorial.leftRatio>1.06&&editorial.rightRatio<.99);
+              assert.ok(editorial.leftRotate!=='none'&&editorial.rightRotate!=='none');
+              assert.ok(editorial.noTextOverlap);
               await p.evaluate(()=>Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,3000))]));
               await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/'+name+'.png',fullPage:true});
               assert.equal(await p.evaluate(()=>document.querySelectorAll('.day-shell').length),3);

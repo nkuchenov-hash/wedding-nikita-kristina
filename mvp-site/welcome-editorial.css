@@ -1,0 +1,41 @@
+/* Welcome editorial composition: asymmetrical photographic prints and quiet typography. */
+.welcome{background:radial-gradient(ellipse at 49% 48%,rgba(255,253,246,.64),transparent 63%)}
+.welcome .photo-shell{filter:drop-shadow(0 3px 3px #51442d15) drop-shadow(0 9px 13px #51442d15);transform-origin:center;overflow:visible}
+.welcome .photo-frame{background:#fffaf0!important}
+.welcome .photo-frame img{object-fit:cover}
+.welcome .welcome-text p{color:#454336;text-wrap:pretty}
+.welcome .welcome-text h2{font-weight:400;letter-spacing:-.042em}
+.welcome .divider img{opacity:.83}
+.welcome .photo-shell:has(.frame-city) .welcome-berry{left:-8%!important;bottom:-2%!important;width:31%!important;transform:rotate(6deg)!important}
+@media(min-width:701px){
+ .welcome{height:35.8cqw!important}
+ .welcome .welcome-text{top:4.1cqw;left:33.5cqw;width:33cqw}
+ .welcome .welcome-text h2{font-size:5.25cqw;line-height:1.06}
+ .welcome .welcome-text p{font-size:1.61cqw;line-height:1.5}
+ .welcome .divider{margin:1.15cqw auto 1.45cqw}
+ .welcome .divider img{width:12.5cqw;height:1.7cqw}
+ .welcome .photo-shell:has(.frame-estate){left:6.1cqw;top:2.6cqw;width:24.3cqw;height:28.2cqw;rotate:-2.4deg}
+ .welcome .photo-shell:has(.frame-city){left:70.1cqw;top:9.2cqw;width:25.1cqw;height:23.1cqw;rotate:2.1deg}
+ .welcome .photo-frame{padding:.45cqw!important}
+ .welcome .welcome-birch-left{left:-1.2cqw!important;top:1.5cqw!important;width:9.6cqw!important;opacity:.78!important}
+ .welcome .welcome-birch-right{right:-.5cqw!important;top:5.3cqw!important;width:11cqw!important;opacity:.78!important}
+}
+@media(max-width:700px){
+ .welcome{padding-inline:7%!important}
+ .welcome .welcome-grid{gap:20px 15px}
+ .welcome .welcome-text h2{font-size:clamp(37px,10.5vw,51px);line-height:1.1}
+ .welcome .welcome-text p{font-size:16px;line-height:1.55;max-width:34ch;margin-inline:auto}
+ .welcome .divider{margin:9px auto 15px}
+ .welcome .photo-shell:has(.frame-estate){aspect-ratio:.87;rotate:-2deg}
+ .welcome .photo-shell:has(.frame-city){aspect-ratio:1.06;rotate:2deg;align-self:end;margin-bottom:0}
+ .welcome .photo-frame{padding:4px!important}
+ .welcome .welcome-birch-left{top:auto!important;bottom:19%!important;width:15%!important;left:-1%!important}
+ .welcome .welcome-birch-right{top:auto!important;bottom:27%!important;width:16%!important;right:-1%!important}
+ .welcome .photo-shell:has(.frame-city) .welcome-berry{left:-8%!important;bottom:-2%!important;width:31%!important}
+}
+@media not (pointer:coarse){
+ .welcome .photo-shell:hover{transform:translateY(-4px);filter:drop-shadow(0 5px 5px #51442d1a) drop-shadow(0 13px 16px #51442d20)}
+ .welcome .photo-shell:hover .photo-frame img{transform:scale(1.025)}
+ .welcome .photo-shell:hover .welcome-berry{transform:rotate(6deg)!important}
+}
+@media(prefers-reduced-motion:reduce){.welcome .photo-shell:hover,.welcome .photo-shell:hover .photo-frame img{transform:none!important}}
