@@ -86,7 +86,7 @@ jobs:
           for url in "https://nikitakristina.ru/preview/" "https://nkuchenov-hash.github.io/wedding-nikita-kristina/preview/"; do
             success=0
             for try in 1 2 3 4 5 6; do
-              if curl -fsSL --max-time 15 "$url?revision=${GITHUB_SHA:0:12}" | grep -q 'src/guest-online-entry.js'; then
+              if curl -fsSL --max-time 15 "${url}version.json?revision=${GITHUB_SHA:0:12}" | grep -Fq "\"revision\":\"${GITHUB_SHA:0:12}\""; then
                 success=1;break
               fi
               sleep 5

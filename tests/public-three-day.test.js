@@ -58,3 +58,14 @@ test('the invitation discloses tentative arrangements and avoids unconfirmed RSV
  assert.match(info,/ПЛОЩАДКА И ВРЕМЯ УТОЧНЯЮТСЯ/);
  assert.match(guest,/предварительный просмотр: ответ не сохранён и не отправлен/);
 });
+
+test('birch accents preserve the restored wedding composition',()=>{
+ const html=renderGuest('/');
+ assert.match(html,/wref-hero-copy/);
+ assert.match(html,/wref-polaroid--estate/);
+ assert.match(html,/wref-bridge-line/);
+ assert.match(html,/wref-hero-skyline/);
+ assert.match(referenceCss,/BIRCH_ACCENT_20261125/);
+ assert.match(referenceCss,/--wref-birch-photo:url\('data:image\/webp;base64,/);
+ assert.doesNotMatch(html,/wg-hero-content/);
+});
