@@ -392,18 +392,19 @@ body.ad-gb-lock{overflow:hidden}
 .ad-gb-main-profile .ad-gb-edit-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:15px}
 .ad-gb-main-profile .ad-gb-edit-field{font-size:16px;font-weight:550;color:#57745f}
 .ad-gb-main-profile textarea{
- display:block;width:100%;min-height:132px;padding:14px 15px;
+ display:block;width:100%;min-height:45px;padding:14px 15px;
  resize:vertical;white-space:pre-wrap;line-height:1.6;
  font-size:16px;box-sizing:border-box;background:#fff;
  border:1px solid #c7dacb;border-radius:10px;
 }
-.ad-gb-main-profile .ad-gb-edit-field:first-child textarea{min-height:190px}
+@supports (field-sizing:content){
+ .ad-gb-main-profile textarea[name="about"]{field-sizing:content;height:auto;min-height:45px;resize:none;overflow:hidden}
+}
 .ad-gb-main-profile textarea:focus{outline:2px solid #c1dfc6;outline-offset:1px;border-color:#4b8f67}
 .ad-gb-plain-cell:has(.ad-gb-text-preview){max-width:350px}
 .ad-gb-plain-cell .ad-gb-text-preview{max-width:350px;line-height:1.55;overflow-wrap:anywhere;text-align:left}
 @media(max-width:720px){
  .ad-gb-main-profile h4{font-size:17px}
- .ad-gb-main-profile .ad-gb-edit-field:first-child textarea{min-height:160px}
 }
 
 /* Live Excel export is a settings action, not another duplicate guest-table toolbar. */
