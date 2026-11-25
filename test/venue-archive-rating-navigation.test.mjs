@@ -3,10 +3,15 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {RATING_CRITERIA,RATING_MAX,OBJECTIVE_CRITERIA,DEFAULT_RATING_RULES,validateRatingRules,migrateRatingRules,scoreVenue} from '../src/venue-evaluation.js';
 
-test('Archive and global rating editor are adjacent actions on the main venues page',()=>{
+test('Archive stays available in the list selector and global rating remains accessible',()=>{
  const source=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');
  assert.match(source,/data-open-archive href="#\/admin\/venues\/archive"/);
- assert.match(source,/в архиве<\/a><button type="button" class="vw-rating-trigger" data-rating-open/);
+ assert.match(source,/class="vw-list-select" data-ui="archiveFilter"/);
+ assert.match(source,/\['archived','Архив'\]/);
+ assert.match(source,/class="vw-rating-trigger" data-rating-open/);
+ assert.doesNotMatch(source,/осмотрено<\/span>/);
+ assert.doesNotMatch(source,/со свободной датой<\/span>/);
+ assert.doesNotMatch(source,/Управление площадками/);
  assert.match(source,/class="vw-rating-drawer"/);
  assert.match(source,/role="dialog" aria-modal="true"/);
  assert.match(source,/data-rating-form/);
@@ -142,4 +147,12 @@ test('Entrance uses identical transparent evidence rules and Vesennyi has zero p
  const unknown=scoreVenue({...sample(),ratingFacts:{...sample().ratingFacts,entrance:'unknown'}},80,{value:650000,isQuote:true,partial:false});
  assert.equal(row(unknown,'entrance').value,null);
  assert.equal(unknown.provisional,true);
+});
+
+test('Venue list toolbar keeps count and controls compact without nested control borders',()=>{
+ const css=readFileSync(new URL('../src/admin-heading.css',import.meta.url),'utf8');
+ assert.match(css,/\.vw-table-panel-title>\.vw-list-count\{/);
+ assert.match(css,/\.vw-table-tools>\.vw-guest-control\{[^}]*border:0/s);
+ assert.match(css,/\.vw-table-tools>input\[type=search\]\{[^}]*flex:1 1 190px/s);
+ assert.match(css,/\.vw-table-tools>\[data-clear-filters\]\{[^}]*white-space:nowrap/s);
 });
