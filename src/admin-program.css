@@ -142,7 +142,7 @@
 .ad-tl-placement-toggle:has(input:focus-visible) .ad-tl-switch-track{outline:2px solid #367b51;outline-offset:3px}
 .ad-tl-switch-state{color:#355d42}
 
-/* Hold-to-drag events. The lower 16px is a plain, unmarked resize edge. */
+/* Drag on movement; the narrow lower edge resizes. */
 .ad-tl-calendar-card{touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
 .ad-tl-calendar-card.ad-tl-grabbing,.ad-tl-calendar-card.ad-tl-grabbing *{cursor:grabbing!important}
 .ad-tl-calendar-card.ad-tl-resizing,.ad-tl-calendar-card.ad-tl-resizing *{cursor:ns-resize!important}
@@ -398,8 +398,7 @@
 }
 
 /* All assigned tags stay visible, including on short timeline entries.
-   For tiny time slots, preserve the time position and let the compact
-   content extend below its duration-sized footprint rather than hiding tags. */
+   Keep the time footprint fixed so adjacent cards cannot touch. */
 .ad-tl-calendar-card .ad-tl-tags-inline{
   display:flex!important;
   flex-wrap:wrap;
@@ -411,8 +410,8 @@
   margin-top:5px;
 }
 .ad-tl-calendar-card.ad-tl-has-short-tags{
-  min-height:max-content!important;
-  overflow:visible!important;
+  min-height:0!important;
+  overflow:hidden!important;
 }
 .ad-tl-calendar-card.ad-tl-short-event .ad-tl-tags-inline,
 .ad-tl-calendar-card.ad-tl-micro-event .ad-tl-tags-inline{
@@ -528,3 +527,27 @@
 /* Five planning dates; keep 16px labels and allow mobile wrapping. */
 .ad-tl-section-controls .ad-tl-day-nav{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media(max-width:900px){.ad-tl-section-controls{flex-wrap:wrap}.ad-tl-section-controls .ad-tl-day-nav,.ad-tl-section-controls .ad-tl-main-switch{flex:1 1 100%}}
+
+/* Schedule cards: distinct metadata and headings, without changing tag colors. */
+body.admin-body .ad-tl-card .ad-tl-clock{
+  font-size:16px;font-weight:500;color:#536e60;line-height:1.2;
+}
+html[data-admin-theme="dark"] body.admin-body .ad-tl-card .ad-tl-clock{color:#b6c9bc}
+body.admin-body .ad-tl-card .ad-tl-card-title{font-weight:750!important}
+body.admin-body .ad-tl-calendar-card .ad-tl-card-title{font-size:20px!important;line-height:1.2!important;margin:0!important}
+body.admin-body .ad-tl-calendar-card .ad-tl-card-head{min-height:24px}
+body.admin-body .ad-tl-calendar-card{cursor:grab}
+body.admin-body .ad-tl-calendar-card.ad-tl-short-event{padding-block:5px 6px!important;gap:2px}
+body.admin-body .ad-tl-calendar-card.ad-tl-short-event .ad-tl-card-head{min-height:20px}
+body.admin-body .ad-tl-calendar-card.ad-tl-short-event .ad-tl-card-title{font-size:18px!important;flex:0 0 auto;-webkit-line-clamp:1}
+body.admin-body .ad-tl-calendar-card.ad-tl-short-event .ad-tl-tags-inline{margin-top:0;flex-wrap:nowrap;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none}
+body.admin-body .ad-tl-calendar-card.ad-tl-short-event .ad-tl-tag{padding:1px 6px;white-space:nowrap;flex-shrink:0}
+body.admin-body .ad-tl-calendar-card.ad-tl-micro-event{padding-block:1px!important;gap:4px;flex-direction:row;align-items:center}
+body.admin-body .ad-tl-calendar-card.ad-tl-micro-event .ad-tl-card-title{font-size:16px!important;flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;order:0}
+body.admin-body .ad-tl-calendar-card.ad-tl-micro-event .ad-tl-card-head{min-height:0;order:2}
+body.admin-body .ad-tl-calendar-card.ad-tl-micro-event .ad-tl-tags-inline{order:1;min-width:0;flex:0 1 auto;flex-wrap:nowrap;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none;margin:0}
+body.admin-body .ad-tl-calendar-card.ad-tl-micro-event .ad-tl-tag{padding:1px 5px;white-space:nowrap;flex-shrink:0}
+@media(max-width:900px){
+ body.admin-body .ad-tl-calendar-card .ad-tl-card-title{font-size:18px!important}
+ body.admin-body .ad-tl-calendar-card.ad-tl-micro-event .ad-tl-card-title{font-size:16px!important}
+}
