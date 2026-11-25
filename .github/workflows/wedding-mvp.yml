@@ -52,10 +52,15 @@ jobs:
           html=p.read_text()
           # Compact only the five desktop navigation items, without changing mobile or artwork.
           import html as html_lib
-          names={'Главная','Программа','Локации','Детали','Ответить'}
+          names=['Главная','Программа','Локации','Детали','Ответить']
+          pattern=re.compile(r'<(a|button)\b([^>]*)>(.*?)</\1>',re.S|re.I)
+          matches=list(pattern.finditer(html))
+          labels=[html_lib.unescape(re.sub(r'<[^>]*>','',m.group(3))).strip() for m in matches]
+          start=next(i for i in range(len(labels)-4) if labels[i:i+5]==names)
+          menu_offsets={m.start() for m in matches[start:start+5]}
           def compact_link(m):
               label=html_lib.unescape(re.sub(r'<[^>]*>','',m.group(3))).strip()
-              if label not in names:
+              if m.start() not in menu_offsets:
                   return m.group(0)
               attrs=m.group(2)
               if re.search(r"\bclass\s*=\s*[\"']",attrs):
@@ -65,7 +70,7 @@ jobs:
               return '<'+m.group(1)+attrs+'>'+m.group(3)+'</'+m.group(1)+'>'
           # Match the actual menu labels rather than assuming a class name in the archived package.
           html,count=re.subn(r'<(a|button)\b([^>]*)>(.*?)</\1>',compact_link,html,flags=re.S|re.I)
-          assert html.count('mvp-compact-nav-link')>=5, 'Navigation items not found'
+          assert html.count('mvp-compact-nav-link')==5, 'Navigation items not found'
           with css.open('a') as f:
               f.write('\n/* Compact desktop navigation; mobile untouched. */\n@media(min-width:701px){\n.mvp-compact-nav-link{font-size:clamp(16px,1.9vw,28px)!important;line-height:1.2!important;padding-block:6px!important;}\n:where(nav,header,[role="navigation"],.nav,.menu,.top-nav):has(> .mvp-compact-nav-link ~ .mvp-compact-nav-link){height:auto!important;min-height:0!important;padding-block:clamp(12px,1.4vw,21px)!important;}\n}\n')
           assert html.count('data-photo-slot=')==6
@@ -114,7 +119,7 @@ jobs:
               if(name!=='mobile'){
                 const nav=await p.$eval('.mvp-compact-nav-link',els=>els.filter(e=>e.getClientRects().length).map(e=>({label:e.textContent.trim(),size:parseFloat(getComputedStyle(e).fontSize)})));
                 console.log('COMPACT_NAV',JSON.stringify(nav));
-                assert.ok(nav.length>=5 && nav.every(e=>e.size<=28));
+                assert.ok(nav.length===5 && nav.every(e=>e.size<=28));
               }
               assert.equal(await p.evaluate(sel=>document.querySelectorAll(sel).length,'.day'),3);
               assert.equal(await p.evaluate(sel=>document.querySelectorAll(sel).length,'img[data-photo-slot]'),6);
