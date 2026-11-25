@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+test('production uses shared heading, shell and buttons',()=>{const s=read('src/admin-production.js');assert.match(s,/admin-page-heading production-heading/);assert.match(s,/production-shell/);assert.match(s,/ad-tl-main-switch/);assert.match(s,/ad-tl-button ad-tl-primary/)});
+test('shared select controls reserve space for centered chevron',()=>{const css=read('src/admin-heading.css');assert.match(css,/padding-right:38px/);assert.match(css,/background-position:right 12px center/);assert.match(css,/appearance:none/)});
+test('private seed is invoked only after established planning seed order',()=>{const s=read('.github/workflows/backend.yml');assert.match(s,/php bin\/seed-planning\.php\s+php bin\/import-kristina-ideas-20261120\.php\s+php bin\/import-production\.php/)});
