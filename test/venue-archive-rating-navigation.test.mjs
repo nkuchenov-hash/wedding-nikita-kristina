@@ -156,3 +156,9 @@ test('Venue list toolbar keeps count and controls compact without nested control
  assert.match(css,/\.vw-table-tools>input\[type=search\]\{[^}]*flex:1 1 190px/s);
  assert.match(css,/\.vw-table-tools>\[data-clear-filters\]\{[^}]*white-space:nowrap/s);
 });
+
+test('Venue heading has no decorative date commentary or rating eyebrow',()=>{
+ const source=readFileSync(new URL('../src/venues.js',import.meta.url),'utf8');
+ assert.doesNotMatch(source,/19 июня — приоритет · 18 и 20 июня — альтернативы/);
+ assert.doesNotMatch(source,/ОДИНАКОВЫЕ ПРАВИЛА ДЛЯ ВСЕХ/);
+});

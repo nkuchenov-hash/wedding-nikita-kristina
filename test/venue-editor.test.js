@@ -27,7 +27,7 @@ test('overview displays data directly as editable values, without an edit-only p
   'date:18','date:19','date:20']){
   assert.ok(html.includes('data-venue-inline="'+key+'"'),key+' not clickable');
  }
- assert.match(html,/Нажмите на значение, чтобы изменить его/);
+ assert.doesNotMatch(html,/Нажмите на значение, чтобы изменить его/);
  assert.doesNotMatch(html,/Редактировать данные и смету/);
  assert.doesNotMatch(html,/Изменить даты →/);
  assert.doesNotMatch(html,/data-venue-edit=/);
@@ -129,4 +129,9 @@ test('Overview shows a shared read-only total, with tariff inputs exclusively in
  assert.match(budget,/data-venue-inline="cost:menu"/);
  assert.match(overview,/700 000|700 000|700 000/);
  assert.match(budget,/700 000|700 000|700 000/);
+});
+
+test('Venue overview avoids decorative editorial labels',()=>{
+ const html=renderVenueNewPage(venue,context('overview'));
+ for(const copy of ['КРАТКО О ПЛОЩАДКЕ','Параметры для выбора','Город предпочтительнее','Единый итог для всех площадок'])assert.ok(!html.includes(copy));
 });
