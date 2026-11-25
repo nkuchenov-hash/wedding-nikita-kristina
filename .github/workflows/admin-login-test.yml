@@ -1,5 +1,8 @@
 name: Verify real wedding admin login
 on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/admin-login-test.yml']
   workflow_run:
     workflows: ['Install private wedding database backend', 'Publish admin-only wedding site']
     types: [completed]
@@ -11,6 +14,8 @@ jobs:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
+      - name: Install browser probe dependency
+        run: npm install --prefix /tmp/wedding-browser --no-save --package-lock=false playwright-core
       - name: Run full HTTPS login with disposable test account
         timeout-minutes: 3
         shell: bash
@@ -78,6 +83,32 @@ jobs:
           test "$asset_code" = 200
           grep -Fq 'activateAdminData' /tmp/admin-app.js
           echo 'ADMIN_END_TO_END_LOGIN_PASSED'
+          # Exercise the real authenticated JS module graph in a browser, not just HTTP status.
+          export WEDDING_COOKIE_JAR="$jar"
+          node <<'BROWSER'
+          const fs=require('node:fs');
+          const {chromium}=require('/tmp/wedding-browser/node_modules/playwright-core');
+          (async()=>{
+            const cookies=fs.readFileSync(process.env.WEDDING_COOKIE_JAR,'utf8').split(/\r?\n/).filter(l=>l.includes('\t')&&(!l.startsWith('#')||l.startsWith('#HttpOnly_'))).map(l=>{const [domain,flag,path,secure,expires,name,value]=l.replace(/^#HttpOnly_/,'').split('\t');return {name,value,domain,path,secure:secure==='TRUE',httpOnly:l.startsWith('#HttpOnly_'),expires:Number(expires)||-1}});
+            const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/usr/bin/google-chrome',headless:true,args:['--no-sandbox']});
+            const errors=[];
+            try{
+              const context=await browser.newContext();await context.addCookies(cookies);const page=await context.newPage();
+              page.on('pageerror',e=>errors.push(e.name+': '+String(e.message).split('\n')[0].slice(0,200)));page.on('response',r=>{const u=new URL(r.url());if(u.hostname==='nikitakristina.ru'&&u.searchParams.has('asset')&&r.status()>=400)errors.push('ASSET_HTTP_'+r.status()+' '+u.searchParams.get('asset'))});
+              await page.goto('https://nikitakristina.ru/admin/#/admin/overview',{waitUntil:'domcontentloaded',timeout:30000});
+              await page.locator('.admin-layout').waitFor({state:'visible',timeout:20000});
+              await page.locator('.ad-premium').waitFor({state:'visible',timeout:20000});
+              for(const section of ['vendors','decor','budget']){
+                await page.evaluate(s=>{location.hash='#/admin/'+s},section);
+                await page.locator('[data-admin-section="'+section+'"] .admin-content').waitFor({state:'visible',timeout:10000});
+                if(section!=='budget')await page.locator('.production-page').waitFor({state:'visible',timeout:20000});
+              }
+              if(errors.length)throw new Error(errors.join('; '));
+              console.log('LIVE_ADMIN_BROWSER_RENDER_OK');
+            }catch(e){console.error('LIVE_ADMIN_BROWSER_RENDER_FAILED',errors?.join('; ')||e.name);process.exitCode=1}
+            finally{await browser.close()}
+          })().catch(e=>{console.error('BROWSER_PROBE_FAILED',e.name);process.exitCode=1});
+          BROWSER
           if grep -Fq 'id="admin-menu-toggle"' /tmp/admin-app.js; then
             curl --fail --silent --show-error --max-time 15 -b "$jar" 'https://nikitakristina.ru/admin/index.php?asset=src/admin-heading.css' -o /tmp/admin-responsive.css
             grep -Fq 'data-mobile-nav-open' /tmp/admin-responsive.css

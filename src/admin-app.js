@@ -319,7 +319,7 @@ async function checkRelease(){
  if(!loadedRevision||refreshChecking||document.visibilityState!=='visible')return;
  refreshChecking=true;
  try{
-   const response=await fetch('/build-info.json?_='+Date.now(),{cache:'no-store',credentials:'same-origin'});
+   const response=await fetch('/admin/index.php?asset=revision.json&_='+Date.now(),{cache:'no-store',credentials:'same-origin'});
    if(!response.ok)return;
    const info=await response.json();
    latestRevision=String(info?.revision||'');

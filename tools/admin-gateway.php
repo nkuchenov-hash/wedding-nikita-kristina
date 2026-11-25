@@ -173,6 +173,7 @@ if(isset($_GET['media'])){
         if(!is_file($path)||!is_readable($path)){
             http_response_code(404);exit;
         }
+        session_write_close();
         header('Content-Type: image/jpeg');
         header('Content-Length: '.filesize($path));
         header('Cache-Control: private, no-store');
@@ -239,6 +240,7 @@ if (isset($_GET['api'])) {
 }
 $types = [
     'index.html' => 'text/html; charset=UTF-8',
+    'revision.json' => 'application/json; charset=UTF-8',
     'src/admin-app.js' => 'text/javascript; charset=UTF-8',
     'src/admin-toast.js' => 'text/javascript; charset=UTF-8',
     'src/admin-data-ui.js' => 'text/javascript; charset=UTF-8',
@@ -282,5 +284,7 @@ if (!is_file($path) || !is_readable($path)) {
     header('Content-Type: text/plain; charset=UTF-8', true);
     exit('Admin bundle unavailable');
 }
+// Do not hold the PHP session lock while streaming parallel JS/CSS requests.
+session_write_close();
 header('Content-Type: '.$types[$asset], true);
 readfile($path);
