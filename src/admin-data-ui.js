@@ -104,7 +104,7 @@ async function overview(host){
  function historyRows(parent,limit){
   const history=snapshot.overview?.dashboard_activity;
   if(!Array.isArray(history)){parent.append(note('Журнал изменений недоступен.'));return}
-  const names={tasks:'Задачи',schedule_items:'Программа',guest:'Гости',guest_profile:'Профиль гостя',profile:'Профиль гостя',rsvp:'Ответ гостя',venues:'Площадки',venue_date_status:'Доступность площадки',event_setting:'Настройки',budget_lines:'Бюджет',menu_options:'Меню',menu:'Меню',gallery_photo:'Галерея',photo:'Фотографии',guest_relationship:'Связи гостей',companion:'Сопровождение',invitation:'Приглашения'};
+  const names={tasks:'Задачи',schedule_items:'Программа',guest:'Гости',guest_profile:'Профиль гостя',profile:'Профиль гостя',rsvp:'Ответ гостя',venues:'Площадки',venue_date_status:'Доступность площадки',event_setting:'Настройки',budget_lines:'Бюджет',vendors:'Подрядчики',decor_items:'Декор',menu_options:'Меню',menu:'Меню',gallery_photo:'Галерея',photo:'Фотографии',guest_relationship:'Связи гостей',companion:'Сопровождение',invitation:'Приглашения'};
   const verbs={create:'Добавлено',update:'Изменено',delete:'Удалено',edit_slot:'Изменено время',arrange:'Перестроено расписание',upload:'Загружено',submit:'Получен ответ',clear:'Очищено',mark_sent:'Отправлено',mark_not_sent:'Отменена отправка',issue:'Создано приглашение',choose:'Выбрано'};
   const icons={tasks:'task',schedule_items:'calendar',venues:'house',venue_date_status:'house',budget_lines:'money',gallery_photo:'photo',photo:'photo'};
   for(const a of history.slice(0,limit)){
@@ -288,7 +288,7 @@ async function collection(host,type){
  }
  const records=items.map(item=>{
    const row=keys.map(([k])=>item[k]??'—');
-   const action=button('Изменить',()=>edit(item));
+   const action=type==='budget_lines'&&String(item.id).startsWith('prod-')?button('Открыть карточку',()=>{location.hash='#/admin/'+(item.vendor_id?'vendors':'decor')}):button('Изменить',()=>edit(item));
    row.push(action);
    return row;
  });

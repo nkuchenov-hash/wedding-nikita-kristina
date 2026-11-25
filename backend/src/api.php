@@ -126,6 +126,42 @@ function confirmedGuestDirectory(PDO $db): array {
           ORDER BY g.display_name LIMIT 1000");
 }
 
+// Generated budget rows are a projection of production records, never an independent estimate.
+function syncProductionBudget(PDO $db,string $collection,array $record,?int $guestCount=null): void {
+    $id=$record['id'];$d=json_decode($record['details_json']??'{}',true);
+    if(!is_array($d))$d=[];
+    $active=in_array($record['status'],['selected','ordered','ready'],true);
+    $paid=max(0,(int)($d['paid']??0));$amount=0;
+    if($collection==='decor_items'){
+        $count=($d['unit']??'')==='guest'?($guestCount??(int)guestLifecycleCounts($db)['total']):
+            (($d['unit']??'')==='fixed'?1:max(0,(int)($d['quantity']??0)));
+        $amount=max(0,(int)($d['unitPrice']??0))*$count+max(0,(int)($d['install']??0))+max(0,(int)($d['delivery']??0));
+    }else{
+        $hasBreakdown=false;
+        foreach(['fee','travel','hotel','food','equipment','extras'] as $k){if(array_key_exists($k,$d))$hasBreakdown=true;$amount+=max(0,(int)($d[$k]??0));}
+        if(!$hasBreakdown)$amount=max(0,(int)($record['estimate_rub']??0));
+    }
+    $included=$collection==='decor_items'&&!empty($d['included']);
+    foreach(($d['venues']??[]) as $v){
+        if(!is_array($v)||empty($d['venue'])||($v['id']??'')!==$d['venue'])continue;
+        if(($v['mode']??'')==='included')$included=true;
+        else $amount+=max(0,(int)($v['extra']??0));
+        break;
+    }
+    if($included)$amount=0;
+    $amount=max($amount,$paid);
+    $budgetId='prod-'.$id;
+    if(($active&&(!$included||$paid>0))||$paid>0){
+        statement($db,'INSERT INTO budget_lines(id,category,description,planned_rub,committed_rub,paid_rub,vendor_id,notes) VALUES(?,?,?,?,?,?,?,?)
+          ON CONFLICT(id) DO UPDATE SET category=excluded.category,description=excluded.description,planned_rub=excluded.planned_rub,committed_rub=excluded.committed_rub,paid_rub=excluded.paid_rub,notes=excluded.notes',
+          [$budgetId,$collection==='vendors'?'Подрядчики':'Декор',$record['name'],$active?$amount:$paid,$active&&!empty($d['agreed'])?$amount:$paid,$paid,$collection==='vendors'?$id:null,'Автоматически из карточки; неизвестные расходы не включены']);
+    }else statement($db,'DELETE FROM budget_lines WHERE id=?',[$budgetId]);
+}
+function refreshProductionBudget(PDO $db): void {
+    $count=(int)guestLifecycleCounts($db)['total'];
+    foreach(['vendors','decor_items'] as $c)
+        foreach(all($db,"SELECT * FROM $c") as $r)syncProductionBudget($db,$c,$r,$count);
+}
 function adminCollections(): array {
     return [
       'venues'=>['name','area','address','website','capacity_min','capacity_max','quoted_total_rub','quote_guests','desired_date_status','contact_name','contact_email','contact_phone','quote_source','pros','cons','notes','details_json','photo_refs_json'],
@@ -377,6 +413,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $rsvps=all($db,'SELECT attendance,COUNT(*) AS total FROM rsvps GROUP BY attendance');
         $pendingPhotos=one($db,"SELECT COUNT(*) AS n FROM photos WHERE status='pending'");
         $pendingStories=one($db,"SELECT COUNT(*) AS n FROM stories WHERE status='pending'");
+        refreshProductionBudget($db);
         $budget=one($db,'SELECT COALESCE(SUM(planned_rub),0) planned,COALESCE(SUM(committed_rub),0) committed,COALESCE(SUM(paid_rub),0) paid FROM budget_lines');
         $tasks=one($db,"SELECT COUNT(*) total,SUM(CASE WHEN status!='done' THEN 1 ELSE 0 END) open FROM tasks");
         $activity=all($db,"SELECT a.action,a.entity_type,a.actor_type,a.created_at,
@@ -775,6 +812,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
     if ($route==='admin/records' && $method==='GET') {
         $collection=(string)($_GET['collection']??'');
         if (!isset(adminCollections()[$collection]))fail(404,'collection','Коллекция не найдена');
+        if($collection==='budget_lines')refreshProductionBudget($db);
         json(['ok'=>true,'collection'=>$collection,'items'=>all($db,'SELECT * FROM '.$collection.' ORDER BY created_at DESC LIMIT 1000')]);
     }
     if ($route==='admin/records' && in_array($method,['POST','PATCH'],true)) {
@@ -835,6 +873,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         }
         if(!$set)fail(422,'fields','Нет изменений');
         $id=$method==='PATCH'?strval($d,'id',40,true):uuid();
+        if($collection==='budget_lines'&&str_starts_with($id,'prod-'))fail(422,'field','Измените расходы в карточке подрядчика или декора');
         $production=in_array($collection,['vendors','decor_items'],true);
         if($production)$db->beginTransaction();
         try{
@@ -847,19 +886,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
             $sql=implode(',',array_map(fn($key)=>"$key=?",$set));
             statement($db,"UPDATE $collection SET $sql WHERE id=?",array_merge($values,[$id]));
         }
-        if($production){
-            $record=one($db,"SELECT * FROM $collection WHERE id=?",[$id]);
-            $details=json_decode($record['details_json']??'{}',true);
-            $active=in_array($record['status'],['selected','ordered','ready'],true);
-            $budgetId='prod-'.$id;
-            $paid=max(0,(int)($details['paid']??0));
-            $amount=max(0,(int)($record['estimate_rub']??0));
-            if($active||$paid>0){
-                statement($db,'INSERT INTO budget_lines(id,category,description,planned_rub,committed_rub,paid_rub,vendor_id,notes) VALUES(?,?,?,?,?,?,?,?)
-                  ON CONFLICT(id) DO UPDATE SET category=excluded.category,description=excluded.description,planned_rub=excluded.planned_rub,committed_rub=excluded.committed_rub,paid_rub=excluded.paid_rub,notes=excluded.notes',
-                  [$budgetId,$collection==='vendors'?'Подрядчики':'Декор',$record['name'],$active?$amount:$paid,$active&&($details['agreed']??false)?$amount:$paid,$paid,$collection==='vendors'?$id:null,'Автоматически из карточки; неизвестные расходы не включены']);
-            }else statement($db,'DELETE FROM budget_lines WHERE id=?',[$budgetId]);
-        }
+        if($production)syncProductionBudget($db,$collection,one($db,"SELECT * FROM $collection WHERE id=?",[$id]));
         audit($db,'admin',$actor,$method==='POST'?'create':'update',$collection,$id,['fields'=>$set]);
         if($production)$db->commit();
         }catch(Throwable $e){if($production&&$db->inTransaction())$db->rollBack();throw $e;}

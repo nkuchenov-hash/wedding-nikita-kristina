@@ -11,14 +11,14 @@ const safeJson=x=>{try{return JSON.parse(x)||{}}catch{return {}}};
 const money=x=>x==null?'Уточняется':Number(x).toLocaleString('ru-RU')+' ₽';
 const amount=x=>x===''||x==null?null:Math.max(0,Math.round(Number(x)||0));
 export function productionCost(d,decor=false,guests=0){
- const known=decor?[d.unitPrice==null?null:d.unitPrice*(d.unit==='guest'?guests:d.unit==='fixed'?1:Number(d.quantity||0)),d.install,d.delivery]:costFields.map(k=>d[k]);
+ const known=decor?[d.unitPrice==null||(!['guest','fixed'].includes(d.unit)&&d.quantity==null)?null:d.unitPrice*(d.unit==='guest'?guests:d.unit==='fixed'?1:Number(d.quantity||0)),d.install,d.delivery]:costFields.map(k=>d[k]);
  const sum=known.reduce((s,v)=>s+(Number(v)||0),0);
  return {sum,unknown:known.some(v=>v==null)};
 }
 export async function renderProduction(host,call,section){
  const decor=section==='decor',collection=decor?'decor_items':'vendors';
  const [records,venues,vendors,overview,schedule]=await Promise.all([call('admin/records?collection='+collection),call('admin/records?collection=venues'),decor?call('admin/records?collection=vendors'):Promise.resolve({items:[]}),call('admin/overview'),call('admin/records?collection=schedule_items')]);
- let items=records.items||[],view='cards',filter='all',category='',search='',archive=false;
+ let items=records.items||[],view='cards',filter='all',category='',search='',archive=false,venueFilter=decodeURIComponent(location.hash.split('/')[3]||'');
  const places=venues.items||[],suppliers=vendors.items||[],events=schedule.items||[],guests=Number(overview.guests?.total)||0;
  const details=r=>safeJson(r.details_json),tags=r=>String(r.category||'').split(',').map(x=>x.trim()).filter(Boolean);
  const venueName=id=>places.find(v=>v.id===id)?.name||'Площадка не выбрана';
@@ -31,7 +31,7 @@ export async function renderProduction(host,call,section){
  function openDrawer(title){const d=el('dialog','production-drawer');const head=el('header','production-drawer-head');head.append(el('h2','',title),btn('Закрыть',()=>d.close()));d.append(head);root.append(d);d.addEventListener('close',()=>d.remove());d.showModal();return d}
  function select(values,current){const e=el('select');for(const [v,t] of values){const o=el('option','',t);o.value=v;e.append(o)}e.value=current??'';return e}
  function edit(r={}){
-  const d=details(r),drawer=openDrawer(r.id?r.name:'Новая позиция'),form=el('form','production-form');drawer.append(form);
+  const d=details(r);if(!r.id&&venueFilter)d.venue=venueFilter;const drawer=openDrawer(r.id?r.name:'Новая позиция'),form=el('form','production-form');drawer.append(form);
   const inputs={};
   function group(title){const g=el('fieldset');g.append(el('legend','',title));form.append(g);return g}
   function field(g,key,label,value='',type='text',options){const l=el('label','production-field');l.append(el('span','',label));let e;if(options)e=select(options,value);else{e=el(type==='textarea'?'textarea':'input');if(type!=='textarea')e.type=type;if(type==='number'){e.min='0';e.step='1'}e.value=value??''}l.append(e);g.append(l);inputs[key]=e;return e}
@@ -63,15 +63,17 @@ export async function renderProduction(host,call,section){
  function draw(){actions.replaceChildren(btn(archive?'Активные':'Архив',()=>{archive=!archive;draw()}),btn('Добавить',()=>edit()));toolbar.replaceChildren();
   for(const [v,t] of [['cards','Карточки'],['table','Таблица'],[decor?'refs':'compare',decor?'Референсы':'Сравнение'],...(decor?[['budget','Смета']]:[])]){const b=btn(t,()=>{view=v;draw()});b.setAttribute('aria-pressed',String(view===v));toolbar.append(b)}
   const cats=select([['','Все категории'],...[...new Set(items.flatMap(tags))].map(t=>[t,t])],category);cats.onchange=()=>{category=cats.value;draw()};toolbar.append(cats);
+  const vf=select([['','Все площадки'],...places.map(v=>[v.id,v.name])],venueFilter);vf.onchange=()=>{venueFilter=vf.value;draw()};toolbar.append(vf);
   const stat=select([['all','Все статусы'],...Object.entries(statuses).filter(([k])=>k!=='archived')],filter);stat.onchange=()=>{filter=stat.value;draw()};toolbar.append(stat);
   const q=el('input');q.placeholder='Поиск';q.value=search;q.oninput=()=>{search=q.value;renderBody()};toolbar.append(q);renderBody();
  }
- function renderBody(){body.replaceChildren();const list=items.filter(r=>(r.status==='archived')===archive&&(!category||tags(r).includes(category))&&(filter==='all'||r.status===filter)&&String(r.name+' '+r.category+' '+r.notes).toLowerCase().includes(search.toLowerCase())).sort((a,b)=>Number(b.status==='selected')-Number(a.status==='selected')||a.name.localeCompare(b.name,'ru'));
+ function renderBody(){body.replaceChildren();const list=items.filter(r=>(r.status==='archived')===archive&&(!category||tags(r).includes(category))&&(!venueFilter||details(r).venue===venueFilter||(details(r).venues||[]).some(v=>v.id===venueFilter))&&(filter==='all'||r.status===filter)&&String(r.name+' '+r.category+' '+r.notes).toLowerCase().includes(search.toLowerCase())).sort((a,b)=>Number(b.status==='selected')-Number(a.status==='selected')||a.name.localeCompare(b.name,'ru'));
   if(view==='compare'&&!category){body.append(el('p','','Выберите категорию для сравнения исполнителей.'));return}
   if(!list.length){body.append(el('p','','Записей пока нет.'));return}
   const displayCost=r=>{const d=details(r),c=productionCost(d,decor,guests),v=(d.venues||[]).find(x=>x.id===d.venue);return ((decor&&d.included)||v?.mode==='included')?'Включено':money(c.sum+(v?.extra||0))+(c.unknown?' + уточняется':'')};
   if(['table','compare','budget'].includes(view)){const wrap=el('div','ad-live-table-scroll'),table=el('table','ad-live-table'),head=el('thead'),hr=el('tr'),tbody=el('tbody');const keys=view==='compare'?[...new Set(list.flatMap(r=>Object.keys(details(r).specs||{})))]:[];for(const h of ['Название','Категории','Статус','Площадка','Стоимость','Оплачено',...keys,''])hr.append(el('th','',h));head.append(hr);for(const r of list){const d=details(r),tr=el('tr');for(const v of [r.name,r.category,statuses[r.status]||r.status,venueName(d.venue),displayCost(r),money(d.paid),...keys.map(k=>d.specs?.[k]||'—')])tr.append(el('td','',v));const a=el('td');a.append(btn('Открыть',()=>edit(r)));tr.append(a);tbody.append(tr)}table.append(head,tbody);wrap.append(table);body.append(wrap);return}
-  const grid=el('div','production-grid');for(const r of list){const d=details(r),card=el('article','production-card');card.append(el('h2','',r.name),el('p','production-category',r.category||'Без категории'),el('p','',statuses[r.status]||r.status));if(d.city)card.append(el('p','','Город: '+d.city));card.append(el('strong','production-price',displayCost(r)),el('p','',venueName(d.venue)));if(d.reference&&/^https?:\/\//i.test(d.reference)){const a=el('a','','Материалы');a.href=d.reference;a.target='_blank';a.rel='noopener noreferrer';card.append(a)}if(r.notes)card.append(el('p','',r.notes));const row=el('div','production-actions');row.append(btn('Открыть',()=>edit(r)));if(decor)row.append(btn('Референсы',()=>refs(r)));if(r.status!=='selected'&&!archive)row.append(btn('Выбрать',()=>save(r,{status:'selected'}).catch(err)));row.append(btn(archive?'Восстановить':'В архив',()=>archiveItem(r)));card.append(row);grid.append(card)}body.append(grid)
+  if(view==='refs'){const grid=el('div','production-ref-grid');body.append(grid);for(const r of list){const card=el('article','production-card');card.append(el('h2','',r.name),btn('Добавить / редактировать',()=>refs(r)));grid.append(card);call('admin/production-images?item='+encodeURIComponent(r.id)).then(data=>{for(const x of data.items){const im=el('img');im.src='data:'+x.mime+';base64,'+x.data;im.alt=r.name;card.append(im)}}).catch(err)}return}
+  const grid=el('div','production-grid');for(const r of list){const d=details(r),card=el('article','production-card');card.append(el('h2','',r.name),el('p','production-category',r.category||'Без категории'),el('p','',statuses[r.status]||r.status));if(d.city)card.append(el('p','','Город: '+d.city));card.append(el('strong','production-price',displayCost(r)),el('p','',venueName(d.venue)));if(d.venue){const a=el('a','','Карточка площадки');a.href='#/admin/venues/'+encodeURIComponent(d.venue);card.append(a)}if(d.reference&&/^https?:\/\//i.test(d.reference)){const a=el('a','','Материалы');a.href=d.reference;a.target='_blank';a.rel='noopener noreferrer';card.append(a)}if(r.notes)card.append(el('p','',r.notes));const row=el('div','production-actions');row.append(btn('Открыть',()=>edit(r)));if(decor)row.append(btn('Референсы',()=>refs(r)));if(r.status!=='selected'&&!archive)row.append(btn('Выбрать',()=>save(r,{status:'selected'}).catch(err)));row.append(btn(archive?'Восстановить':'В архив',()=>archiveItem(r)));card.append(row);grid.append(card)}body.append(grid)
  }
  draw();
 }

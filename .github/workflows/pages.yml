@@ -37,6 +37,7 @@ jobs:
           for asset in src/admin-app.js src/admin-data-ui.js src/admin-production.js src/admin-settings.js src/admin-program.js src/admin-photos.js src/admin-guests.js src/venues.js src/venue-detail-ui.js src/venue-files-ui.js src/venue-evaluation.js src/venues-pricing.js; do
             node --check "$asset"
           done
+          node --test test/production.test.mjs
           npm run check
           node --check src/admin-app.js
           node --check src/admin-data-ui.js
