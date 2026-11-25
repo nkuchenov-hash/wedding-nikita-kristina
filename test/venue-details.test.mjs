@@ -26,7 +26,8 @@ test('All 25 venues have the same 13 price rows, even when price is unknown',()=
  for(const id of allIds){
   const html=renderVenueNewPage(venue(id),context('budget'));
   for(const [,name] of VENUE_COST_LABELS)assert.ok(html.includes(name),id+' missing '+name);
-  assert.match(html,/Неизвестные суммы указаны отдельно/);
+  assert.match(html,/Неизвестные расходы не учтены\./);
+  assert.match(html,/Неизвестные расходы в итог не включены\./);
  }
 });
 test('Photo archive contains 479 indexed photographs, including 103 new originals from four site visits',()=>{
