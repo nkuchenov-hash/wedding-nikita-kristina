@@ -90,9 +90,13 @@ jobs:
               await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/'+name+'.png',fullPage:true});
               assert.equal(await p.evaluate(()=>document.querySelectorAll('.day-shell').length),3);
               if(name==='desktop'){
-                await p.hover('.day-shell');
-                await new Promise(r=>setTimeout(r,800));
-                const motion=await p.$eval('.day-shell',e=>({lift:new DOMMatrix(getComputedStyle(e).transform).m42,zoom:new DOMMatrix(getComputedStyle(e.querySelector('.day-photo img')).transform).a,shadow:getComputedStyle(e).filter}));
+                await p.evaluate(()=>{document.documentElement.style.scrollBehavior='auto';document.querySelector('.day-shell').scrollIntoView({behavior:'instant',block:'center'});});
+                await new Promise(r=>setTimeout(r,250));
+                const box=await (await p.$('.day-shell')).boundingBox();
+                await p.mouse.move(box.x+box.width/2,box.y+box.height/2);
+                await new Promise(r=>setTimeout(r,900));
+                const motion=await p.$eval('.day-shell',e=>({lift:new DOMMatrix(getComputedStyle(e).transform).m42,zoom:new DOMMatrix(getComputedStyle(e.querySelector('.day-photo img')).transform).a,shadow:getComputedStyle(e).filter,hover:e.matches(':hover'),media:matchMedia('(hover:hover) and (pointer:fine)').matches}));
+                console.log('CARD_HOVER',JSON.stringify(motion));
                 assert.ok(motion.lift < -3 && motion.zoom > 1.01 && motion.shadow.includes('drop-shadow'));
                 await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/hover.png'});
                 await p.mouse.move(0,0);
