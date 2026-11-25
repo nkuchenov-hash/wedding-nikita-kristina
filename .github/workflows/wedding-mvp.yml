@@ -122,7 +122,8 @@ jobs:
               assert.ok(editorial.leftRatio>1.06&&editorial.rightRatio<.99);
               assert.ok(editorial.leftRotate!=='none'&&editorial.rightRotate!=='none');
               assert.ok(editorial.noTextOverlap && editorial.photoOverlap);
-              assert.equal(editorial.botanicals,4);
+              assert.equal(editorial.botanicals,3);
+              assert.equal(await p.$eval('.welcome .welcome-botanical',imgs=>imgs.every(i=>new URL(i.src).pathname.endsWith('.png'))),true);
               await p.evaluate(()=>Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,3000))]));
               await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/'+name+'.png',fullPage:true});
               assert.equal(await p.evaluate(()=>document.querySelectorAll('.day-shell').length),3);
@@ -196,9 +197,5 @@ jobs:
           for asset in couple birch-right birch-top-left hero-lower-left welcome-left welcome-right welcome-small-left program-right flowers-left flowers-right sprig ladybird strawberry bridge skyline forest; do
             curl -fsSL --retry 3 --max-time 20 "$BASE/assets/$asset.png?v=${GITHUB_SHA:0:12}" -o /tmp/mvp-live.png
             cmp /tmp/mvp-live.png "_mvp/assets/$asset.png"
-          done
-          for asset in cascade-hydrangea cascade-blossom cascade-strawberry; do
-            curl -fsSL --retry 3 --max-time 20 "$BASE/assets/$asset.svg?v=${GITHUB_SHA:0:12}" -o /tmp/mvp-live.svg
-            cmp /tmp/mvp-live.svg "_mvp/assets/$asset.svg"
           done
           echo ONLINE_MVP_VERIFIED

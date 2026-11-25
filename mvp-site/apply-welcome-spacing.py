@@ -110,12 +110,14 @@ asset.write_bytes(encoded)
 copyfile(asset,qa/'refined-skyline.png')
 print('ORIGINAL_ART_RESAMPLED',w,h,'->',W,H,'bytes',len(raw),'->',len(encoded))
 
+# Reuse the original painted, transparent PNG artwork. No synthetic SVG plants.
 import re
-for name in ('cascade-hydrangea','cascade-blossom','cascade-strawberry'):
-    copyfile(Path('mvp-site')/(name+'.svg'),Path('_mvp/assets')/(name+'.svg'))
 html=p.read_text()
 start=re.search(r'<section\b[^>]*class="[^"]*\bwelcome\b[^"]*"[^>]*>',html)
 assert start, 'Welcome section not found'
 end=html.index('</section>',start.end())
-art='<img class="welcome-botanical cascade-blossom" src="assets/cascade-blossom.svg" alt="" aria-hidden="true"><img class="welcome-botanical cascade-blossom cascade-blossom-upper" src="assets/cascade-blossom.svg" alt="" aria-hidden="true"><img class="welcome-botanical cascade-hydrangea" src="assets/cascade-hydrangea.svg" alt="" aria-hidden="true"><img class="welcome-botanical cascade-strawberry" src="assets/cascade-strawberry.svg" alt="" aria-hidden="true">'
+assets=[('cascade-blossom','welcome-small-left'),('cascade-blossom cascade-blossom-upper','flowers-right'),('cascade-hydrangea','flowers-left')]
+for cls,name in assets:
+    assert Path('_mvp/assets',name+'.png').is_file()
+art=''.join(f'<img class="welcome-botanical {cls}" src="assets/{name}.png" alt="" aria-hidden="true">' for cls,name in assets)
 p.write_text(html[:end]+art+html[end:])

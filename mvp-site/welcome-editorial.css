@@ -77,3 +77,19 @@
  .welcome .cascade-strawberry{left:59%;top:51vw;width:20%;rotate:15deg}
  .welcome .photo-shell:has(.frame-city) .welcome-berry{width:24%!important;left:-8%!important;bottom:-2%!important}
 }
+
+/* Painted raster ornaments only. Keep the flowers asymmetrical and the original strawberry accent. */
+.welcome .welcome-botanical{filter:none;object-fit:contain}
+.welcome .cascade-hydrangea{z-index:5}
+@media(min-width:701px){
+ .welcome .cascade-blossom{left:3.6cqw;top:18.2cqw;width:12.5cqw;rotate:-9deg}
+ .welcome .cascade-blossom-upper{left:34.5cqw;top:4.5cqw;width:16cqw;rotate:12deg}
+ .welcome .cascade-hydrangea{left:19cqw;top:27.5cqw;width:17.5cqw;rotate:0deg}
+ .welcome .photo-shell:has(.frame-city) .welcome-berry{left:5%!important;bottom:-3%!important;width:29%!important}
+}
+@media(max-width:700px){
+ .welcome .cascade-blossom{left:1%;top:28vw;width:20%;rotate:-9deg}
+ .welcome .cascade-blossom-upper{left:54%;top:6vw;width:24%;rotate:12deg}
+ .welcome .cascade-hydrangea{left:25%;top:47vw;width:30%;rotate:0deg}
+ .welcome .photo-shell:has(.frame-city) .welcome-berry{left:5%!important;bottom:-3%!important;width:29%!important}
+}
