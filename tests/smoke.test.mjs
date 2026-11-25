@@ -117,7 +117,7 @@ test('protected guest roster edits any core field inline and separates relations
  assert.match(ui,/admin\/guest\/fields/);
  assert.match(ui,/ad-gb-panel/);
  assert.match(ui,/admin\/guest\/rsvp/);
- assert.match(ui,/Семья и сопровождающие/);
+ assert.match(ui,/Связи с гостями/);
  assert.match(ui,/ad-gb-relations/);
  const schema=await read('../backend/schema.sql');
  assert.match(schema,/relation_to_couple TEXT/);
