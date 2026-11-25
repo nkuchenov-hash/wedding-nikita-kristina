@@ -175,15 +175,15 @@ export async function activateGuestDirectory(root){
  const columnPrefs=mk('div','ad-gb-column-prefs');
  const columnsButton=mk('button','ad-gb-settings-icon');columnsButton.type='button';
  columnsButton.title='Настройки списка гостей';columnsButton.setAttribute('aria-label','Настройки списка гостей');
- columnsButton.setAttribute('aria-expanded','false');columnsButton.setAttribute('aria-haspopup','true');
+ columnsButton.setAttribute('aria-expanded','false');columnsButton.setAttribute('aria-haspopup','dialog');
  columnsButton.innerHTML='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.3" fill="white"/><circle cx="16" cy="17" r="2.3" fill="white"/></svg>';
- const columnsMenu=mk('div','ad-gb-columns-menu');columnsMenu.hidden=true;
- columnsMenu.id='guest-list-settings';columnsMenu.setAttribute('role','region');columnsMenu.setAttribute('aria-label','Фильтры и настройки гостей');
+ const columnsMenu=mk('dialog','ad-gb-columns-menu ad-gb-settings-drawer');columnsMenu.hidden=true;
+ columnsMenu.id='guest-list-settings';columnsMenu.setAttribute('aria-labelledby','guest-list-settings-title');
  columnsButton.setAttribute('aria-controls',columnsMenu.id);
  columnsButton.append(mk('span','ad-gb-settings-label','Фильтры'));
  let settingsTab='filters';
- columnPrefs.append(columnsButton,columnsMenu);
- actions.append(searchWrap,columnPrefs,add);head.append(heading,actions);page.append(head);
+ columnPrefs.append(columnsButton);
+ actions.append(searchWrap,columnPrefs,add);head.append(heading,actions);page.append(head,columnsMenu);
  const metrics=mk('div','ad-gb-metrics');page.append(metrics);
  const filterBar=mk('div','ad-gb-visible-filters');
  const childrenToggle=select([['yes','Учитывать'],['no','Исключить']],'yes');childrenToggle.className='ad-gb-select';childrenToggle.disabled=true;
@@ -275,7 +275,9 @@ export async function activateGuestDirectory(root){
      s(x).localeCompare(s(y),'ru',{numeric:true,sensitivity:'base'});
    return (descending?-result:result)||display(a).localeCompare(display(b),'ru')||s(a.id).localeCompare(s(b.id));
  }
- function closeColumns({focus=false}={}){columnsMenu.hidden=true;columnPrefs.classList.remove('ad-gb-settings-open');columnsButton.setAttribute('aria-expanded','false');if(focus)columnsButton.focus()}
+ function closeColumns({focus=false}={}){if(columnsMenu.open)columnsMenu.close();columnsMenu.hidden=true;columnPrefs.classList.remove('ad-gb-settings-open');columnsButton.setAttribute('aria-expanded','false');if(focus&&columnsButton.isConnected)columnsButton.focus()}
+ columnsMenu.addEventListener('cancel',ev=>{ev.preventDefault();closeColumns({focus:true})});
+ columnsMenu.addEventListener('click',ev=>{if(ev.target!==columnsMenu)return;const r=columnsMenu.getBoundingClientRect();if(ev.clientX<r.left||ev.clientX>r.right||ev.clientY<r.top||ev.clientY>r.bottom)closeColumns({focus:true})});
  function setSearchOpen(open){
    searchField.hidden=!open;
    searchToggle.setAttribute('aria-expanded',String(open));
@@ -310,17 +312,22 @@ export async function activateGuestDirectory(root){
    }catch(error){notice(error.message,true);renderColumnMenu()}
    finally{savingColumns=false}
  }
- function renderColumnMenu(){
+ function renderColumnMenu({resetScroll=false}={}){
+   const oldScroll=columnsMenu.querySelector('.ad-gb-settings-body')?.scrollTop||0;
    columnsMenu.replaceChildren();
    const menuHead=mk('div','ad-gb-settings-head');
-   const menuTitle=mk('strong','','Настройки списка');
+   const menuTitle=mk('strong','','Настройки списка');menuTitle.id='guest-list-settings-title';
    const menuClose=mk('button','ad-gb-settings-close','×');menuClose.type='button';menuClose.setAttribute('aria-label','Закрыть настройки');menuClose.addEventListener('click',()=>closeColumns({focus:true}));
    menuHead.append(menuTitle,menuClose);columnsMenu.append(menuHead);
    const tabs=mk('div','ad-gb-settings-tabs');
    for(const [id,label] of [['filters','Фильтры'],['table','Таблица']]){
-     const tab=mk('button','ad-gb-settings-tab'+(settingsTab===id?' is-active':''),label);tab.type='button';tab.setAttribute('aria-pressed',String(settingsTab===id));tab.addEventListener('click',()=>{settingsTab=id;renderColumnMenu()});tabs.append(tab);
+     const tab=mk('button','ad-gb-settings-tab'+(settingsTab===id?' is-active':''),label);tab.type='button';tab.setAttribute('aria-pressed',String(settingsTab===id));tab.addEventListener('click',()=>{settingsTab=id;renderColumnMenu({resetScroll:true});columnsMenu.querySelector('.ad-gb-settings-tab.is-active')?.focus()});tabs.append(tab);
    }
    columnsMenu.append(tabs);
+   const content=mk('div','ad-gb-settings-body');
+   const actions=mk('div','ad-gb-settings-actions');
+   const done=mk('button','ad-gb-primary ad-gb-settings-done','Готово');done.type='button';done.addEventListener('click',()=>closeColumns({focus:true}));actions.append(done);
+   columnsMenu.append(content,actions);
    const filters=mk('div','ad-gb-menu-filters');
    if(settingsTab==='filters'){
    filters.append(filterBar);
@@ -329,12 +336,11 @@ export async function activateGuestDirectory(root){
      const row=mk('label','ad-gb-menu-filter-row');
      row.append(mk('span','',label),control);filters.append(row);
    };
-   filterField('Сортировка',sort);
+   filterField('Поле',sort);
    const directionRow=mk('div','ad-gb-menu-sort-direction');
    directionRow.append(mk('span','','Направление'),direction);
    filters.append(directionRow);
-   columnsMenu.append(filters);
-   const done=mk('button','ad-gb-primary ad-gb-settings-done','Готово');done.type='button';done.addEventListener('click',()=>closeColumns({focus:true}));columnsMenu.append(done);return;
+   content.append(filters);content.scrollTop=resetScroll?0:oldScroll;return;
    }
    const appearance=mk('div','ad-gb-menu-layout');
    appearance.append(mk('strong','ad-gb-columns-heading','Размер ячеек'));
@@ -353,8 +359,8 @@ export async function activateGuestDirectory(root){
    wrapLabel.append(wrapCheck,mk('span','','Обрезать текст до высоты строки'));
    appearance.append(wrapLabel,mk('p','ad-gb-columns-hint',
       'Потяните правую границу заголовка, чтобы изменить ширину столбца. Наведите на обрезанный текст для полного просмотра.'));
-   columnsMenu.append(appearance);
-   columnsMenu.append(mk('strong','ad-gb-columns-heading','Отображаемые столбцы'),
+   content.append(appearance);
+   content.append(mk('strong','ad-gb-columns-heading','Отображаемые столбцы'),
      mk('p','ad-gb-columns-hint','Выберите поля и порядок. Изменения сохраняются в настройках.'));
    for(const [key,label] of GUEST_TABLE_FIELDS){
      const checked=visibleColumns.includes(key),row=mk('div','ad-gb-columns-option');
@@ -376,17 +382,16 @@ export async function activateGuestDirectory(root){
        }
        row.append(move);
      }
-     columnsMenu.append(row);
+     content.append(row);
    }
    const foot=mk('div','ad-gb-columns-footer'),reset=mk('button','ad-gb-columns-reset','По умолчанию');
    reset.type='button';reset.addEventListener('click',()=>applyColumns(DEFAULT_GUEST_TABLE_COLUMNS));
    const more=mk('a','ad-gb-columns-settings-link','Все настройки');more.href='#/admin/settings';
-   more.addEventListener('click',()=>closeColumns());foot.append(reset,more);columnsMenu.append(foot);
-   const done=mk('button','ad-gb-primary ad-gb-settings-done','Готово');done.type='button';done.addEventListener('click',()=>closeColumns({focus:true}));columnsMenu.append(done);
+   more.addEventListener('click',()=>closeColumns());foot.append(reset,more);content.append(foot);content.scrollTop=resetScroll?0:oldScroll;
  }
  columnsButton.addEventListener('click',()=>{
    const open=columnsMenu.hidden;
-   if(open){if(!searchField.hidden)setSearchOpen(false);renderColumnMenu();columnsMenu.hidden=false;columnPrefs.classList.add('ad-gb-settings-open')}else closeColumns();
+   if(open){if(!searchField.hidden)setSearchOpen(false);renderColumnMenu({resetScroll:true});columnsMenu.hidden=false;columnsMenu.showModal();columnPrefs.classList.add('ad-gb-settings-open')}else closeColumns();
    columnsButton.setAttribute('aria-expanded',String(open));
  });
  function metric(label,value){const card=mk('div','ad-gb-metric');card.append(mk('strong','',value),mk('span','',label));metrics.append(card)}
@@ -1007,11 +1012,9 @@ export async function activateGuestDirectory(root){
  const onKey=ev=>{
    if(ev.key!=='Escape')return;
    if(!overlay.hidden&&!editing){closeWithCheck();return}
-   if(!columnsMenu.hidden){closeColumns();columnsButton.focus();return}
+   if(columnsMenu.open)return;
    if(!searchField.hidden){setSearchOpen(false);searchToggle.focus()}
  };
- const onOutsideColumns=ev=>{if(!columnsMenu.hidden&&!columnPrefs.contains(ev.target))closeColumns()};
- document.addEventListener('pointerdown',onOutsideColumns);
  document.addEventListener('keydown',onKey);
  try{
    const session=await request('auth/session');csrf=session.csrf;
@@ -1050,7 +1053,7 @@ export async function activateGuestDirectory(root){
    window.removeEventListener('focus',onFocus);
    document.removeEventListener('visibilitychange',onVisible);
    document.removeEventListener('keydown',onKey);
-   document.removeEventListener('pointerdown',onOutsideColumns);
+   closeColumns();
    hideClippedTooltip();tooltip.remove();
    if(page.isConnected)closeGuest();
    cleanupPreviousGuestView=null;
