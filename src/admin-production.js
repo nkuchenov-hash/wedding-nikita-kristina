@@ -46,8 +46,9 @@ export function productionCost(d,decor=false,guests=0){
  return {sum,unknown:known.some(v=>v==null)};
 }
 export function productionEstimateFields(record,updates,decor,guests){
- const d={...safeJson(record.details_json),...updates};
+ const d=safeJson(record.details_json);
  if(!decor&&!costFields.some(k=>Object.hasOwn(d,k)))d.fee=record.estimate_rub??null;
+ Object.assign(d,updates);
  const result=productionCost(d,decor,guests),selected=(d.venues||[]).find(v=>v.id===d.venue);
  return {details_json:JSON.stringify(d),estimate_rub:(decor&&d.included)||selected?.mode==='included'?0:result.sum+(selected?.extra||0)};
 }
@@ -145,7 +146,7 @@ export async function renderProduction(host,call,section){
  function renderBody(){body.replaceChildren();const list=items.filter(r=>(r.status==='archived')===archive&&(!category||tags(r).includes(category))&&(!venueFilter||details(r).venue===venueFilter||(details(r).venues||[]).some(v=>v.id===venueFilter))&&(filter==='all'||r.status===filter)&&String(r.name+' '+r.category+' '+r.notes).toLowerCase().includes(search.toLowerCase())).sort((a,b)=>Number(b.status==='selected')-Number(a.status==='selected')||a.name.localeCompare(b.name,'ru'));
   if(view==='compare'&&!category){body.append(el('p','','Выберите категорию для сравнения исполнителей.'));return}
   if(!list.length){const empty=el('div','production-empty');empty.append(el('h2','',items.length?'Ничего не найдено':decor?'Добавьте первую идею оформления':'Добавьте первого подрядчика'));empty.append(btn(items.length?'Сбросить фильтры':'Добавить',()=>{if(items.length){category='';filter='all';search='';draw()}else edit()}));body.append(empty);return}
-  const displayCost=r=>{const d=details(r),c=productionCost(d,decor,guests),v=(d.venues||[]).find(x=>x.id===d.venue);return ((decor&&d.included)||v?.mode==='included')?'Включено':(c.unknown&&c.sum+(v?.extra||0)===0?'Уточняется':money(c.sum+(v?.extra||0))+(c.unknown?' + уточняется':''))};
+  const displayCost=r=>{const d=details(r);if(!decor&&!costFields.some(k=>Object.hasOwn(d,k)))d.fee=r.estimate_rub??null;const c=productionCost(d,decor,guests),v=(d.venues||[]).find(x=>x.id===d.venue);return ((decor&&d.included)||v?.mode==='included')?'Включено':(c.unknown&&c.sum+(v?.extra||0)===0?'Уточняется':money(c.sum+(v?.extra||0))+(c.unknown?' + уточняется':''))};
   if(['table','compare','budget'].includes(view)){
    const wrap=el('div','ad-live-table-scroll production-table-wrap'),table=el('table','ad-live-table production-table'),head=el('thead'),hr=el('tr'),tbody=el('tbody');
    const keys=view==='compare'?[...new Set([...(specs[category]||[]),...list.flatMap(r=>Object.keys(details(r).specs||{}))])]:[];
