@@ -855,7 +855,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
                 catch(Throwable $e){fail(422,'field','Некорректный JSON');}
             }
             if(in_array($collection,['vendors','decor_items'],true)){
-                if($field==='status'&&!in_array($value,['candidate','research','negotiating','selected','ordered','ready','archived'],true))
+                if($field==='status'&&!in_array($value,$collection==='vendors'?['candidate','negotiating','selected','archived']:['candidate','negotiating','selected','ordered','ready','archived'],true))
                     fail(422,'field','Неизвестный статус');
                 if($field==='estimate_rub'&&$value!==null&&(!is_int($value)||$value<0))
                     fail(422,'field','Некорректная стоимость');

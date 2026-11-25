@@ -20,7 +20,9 @@ export const vendorIconPaths={
 };
 const zones=['Гостевые столы','Рассадка','Стол молодожёнов','Входная зона','Фотозона','Интерактивные зоны','Церемония','Другое'];
 const specs={'Ведущий':['Часы работы','Подготовка сценария','Языки'],'Диджей':['Часы работы','Оборудование','Музыкальная программа'],'Музыкальный коллектив':['Состав','Жанр','Количество сетов','Длительность сета','Технический райдер'],'Фотограф':['Часы съёмки','Количество фото','Срок готовности'],'Видеограф':['Количество операторов','Длительность фильма','Срок готовности'],'Декоратор':['Монтаж','Демонтаж','Материалы'],'Кондитер':['Вес','Цена за кг','Доставка']};
-const statuses={candidate:'Кандидат',research:'Кандидат',negotiating:'На согласовании',selected:'Выбран',ordered:'Заказан',ready:'Готов',archived:'Архив'};
+export const vendorStatuses={candidate:'Кандидат',negotiating:'На согласовании',selected:'Выбран',archived:'Архив'};
+export const decorStatuses={candidate:'Идея',negotiating:'На согласовании',selected:'Утверждено',ordered:'Заказано',ready:'Готово',archived:'Архив'};
+export function normalizeProductionStatus(status,decor=false){if(status==='research')return 'candidate';if(!decor&&['ordered','ready'].includes(status))return 'selected';return Object.hasOwn(decor?decorStatuses:vendorStatuses,status)?status:'candidate'}
 export function statusTone(status){return ({selected:'green',ready:'green',candidate:'gray',research:'gray',negotiating:'amber',ordered:'blue',archived:'gray'})[status]||'gray'}
 const costFields=['fee','travel','hotel','food','equipment','extras'];
 const costLabels=['Гонорар','Проезд','Проживание','Питание','Оборудование','Дополнительные расходы'];
@@ -53,9 +55,10 @@ export function productionEstimateFields(record,updates,decor,guests){
  return {details_json:JSON.stringify(d),estimate_rub:(decor&&d.included)||selected?.mode==='included'?0:result.sum+(selected?.extra||0)};
 }
 export async function renderProduction(host,call,section){
- const decor=section==='decor',collection=decor?'decor_items':'vendors';
+ const decor=section==='decor',collection=decor?'decor_items':'vendors',statuses=decor?decorStatuses:vendorStatuses;
+ const normalizedRecords=rows=>(rows||[]).map(r=>({...r,status:normalizeProductionStatus(r.status,decor)}));
  const [records,venues,vendors,overview]=await Promise.all([call('admin/records?collection='+collection),call('admin/records?collection=venues'),decor?call('admin/records?collection=vendors'):Promise.resolve({items:[]}),call('admin/overview')]);
- let items=records.items||[],view='cards',filter='all',category='',search='',archive=false,venueFilter=location.hash.split('/')[3]==='item'?'':decodeURIComponent(location.hash.split('/')[3]||'');
+ let items=normalizedRecords(records.items),view='cards',filter='all',category='',search='',archive=false,venueFilter=location.hash.split('/')[3]==='item'?'':decodeURIComponent(location.hash.split('/')[3]||'');
  const places=venues.items||[],suppliers=vendors.items||[],guests=Number(overview.guests?.total)||0;
  const details=r=>safeJson(r.details_json),tags=r=>String(r.category||'').split(',').map(x=>x.trim()).filter(Boolean);
  const venueName=id=>places.find(v=>v.id===id)?.name||'Площадка не выбрана';
@@ -77,11 +80,11 @@ export async function renderProduction(host,call,section){
    form.onsubmit=async e=>{e.preventDefault();if(inlineSaving||!field.reportValidity())return;let fields;try{fields=commit(field.value)}catch(e){err(e);return}if(await inlineSave(r,fields,ok))return;field.focus()};
   },'production-inline-value');trigger.append(el('span','',display));trigger.setAttribute('aria-label','Изменить '+label+': '+display);cell.append(trigger);return cell
  }
- function statusControl(r){const s=select(Object.entries(statuses).filter(([k])=>k!=='research'||r.status==='research'),r.status||'candidate');s.className='production-status production-status-select';s.dataset.tone=statusTone(r.status);s.setAttribute('aria-label','Статус: '+r.name);s.onchange=async()=>{if(!await inlineSave(r,{status:s.value},s))s.value=r.status};return s}
+ function statusControl(r){const s=select(Object.entries(statuses),r.status||'candidate');s.className='production-status production-status-select';s.dataset.tone=statusTone(r.status);s.setAttribute('aria-label','Статус: '+r.name);s.onchange=async()=>{if(!await inlineSave(r,{status:s.value},s))s.value=r.status};return s}
  function categoryCell(r){const cell=el('td'),trigger=btn('',()=>{if(inlineSaving)return;const chosen=new Set(tags(r)),form=el('form','production-inline-categories'),options=el('div','production-inline-category-options');for(const type of new Set([...(decor?zones:vendorTypes),...items.flatMap(tags)])){const l=el('label'),check=el('input');check.type='checkbox';check.checked=chosen.has(type);check.onchange=()=>check.checked?chosen.add(type):chosen.delete(type);l.append(check,el('span','',type));options.append(l)}const actions=el('div','production-inline-category-actions'),ok=btn('Сохранить',()=>form.requestSubmit(),'ad-tl-button ad-tl-primary'),cancel=btn('Отмена',()=>{cell.replaceChildren(trigger);trigger.focus()});actions.append(ok,cancel);form.append(options,actions);form.onsubmit=async e=>{e.preventDefault();await inlineSave(r,{category:[...chosen].join(', ')},ok)};form.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();cell.replaceChildren(trigger);trigger.focus()}};cell.replaceChildren(form);options.querySelector('input')?.focus()},'production-inline-value production-inline-tags');trigger.append(tags(r).length?typeTags(tags(r),decor,false):el('span','','Добавить'));trigger.setAttribute('aria-label','Изменить категории: '+r.name);cell.append(trigger);return cell}
  function detailCell(r,key,label,value,display,numeric=true){return editCell(el('td'),r,label,value,display,raw=>productionEstimateFields(r,{[key]:numeric?amount(raw):raw.trim()},decor,guests),numeric)}
 
- async function save(r,fields){await call('admin/records',{method:r.id?'PATCH':'POST',body:{collection,...(r.id?{id:r.id}:{}),fields}});items=(await call('admin/records?collection='+collection)).items||[];draw();showAdminToast('Изменения сохранены.')}
+ async function save(r,fields){await call('admin/records',{method:r.id?'PATCH':'POST',body:{collection,...(r.id?{id:r.id}:{}),fields}});items=normalizedRecords((await call('admin/records?collection='+collection)).items);draw();showAdminToast('Изменения сохранены.')}
  function openDrawer(title){const d=el('dialog','production-drawer');const head=el('header','production-drawer-head');head.append(el('h2','',title),btn('Закрыть',()=>d.close()));d.append(head);root.append(d);d.addEventListener('close',()=>d.remove());d.showModal();return d}
  function select(values,current){const e=el('select');for(const [v,t] of values){const o=el('option','',t);o.value=v;e.append(o)}e.value=current??'';return e}
  function edit(r={}){
@@ -128,9 +131,9 @@ export async function renderProduction(host,call,section){
   const drawer=openDrawer('Импорт подрядчиков и декора'),form=el('form','production-form'),file=el('input');file.type='file';file.accept='.json,application/json';file.required=true;
   form.append(el('p','','Файл содержит записи подрядчиков, декора и изображения. Существующие записи с такими названиями не перезаписываются.'),file);const submit=el('button','ad-live-button','Импортировать');submit.type='submit';form.append(submit);drawer.append(form);
   form.onsubmit=async e=>{e.preventDefault();submit.disabled=true;try{const source=JSON.parse(await file.files[0].text());if(source.format!=='wedding-production-v1'||!Array.isArray(source.records)||source.records.length>100)throw Error('Неверный формат файла');
-   let added=0;for(const c of ['vendors','decor_items']){const existing=(await call('admin/records?collection='+c)).items||[];for(const record of source.records.filter(x=>x.collection===c)){const fields=record.fields;if(!fields||typeof fields.name!=='string')throw Error('Отсутствует название');let found=existing.find(x=>x.name.trim().toLowerCase()===fields.name.trim().toLowerCase());if(!found){const result=await call('admin/records',{method:'POST',body:{collection:c,fields}});found={id:result.id,name:fields.name};existing.push(found);added++}
+   let added=0;for(const c of ['vendors','decor_items']){const existing=(await call('admin/records?collection='+c)).items||[];for(const record of source.records.filter(x=>x.collection===c)){const fields=record.fields?{...record.fields}:null;if(fields&&Object.hasOwn(fields,'status'))fields.status=normalizeProductionStatus(fields.status,c==='decor_items');if(!fields||typeof fields.name!=='string')throw Error('Отсутствует название');let found=existing.find(x=>x.name.trim().toLowerCase()===fields.name.trim().toLowerCase());if(!found){const result=await call('admin/records',{method:'POST',body:{collection:c,fields}});found={id:result.id,name:fields.name};existing.push(found);added++}
    if(c==='decor_items'&&Array.isArray(record.images)&&record.images.length){const old=(await call('admin/production-images?item='+encodeURIComponent(found.id))).items||[];for(const data of record.images)if(typeof data==='string'&&!old.some(x=>x.data===data)){await call('admin/production-images',{method:'POST',body:{item:found.id,data}});old.push({data})}}}}
-   items=(await call('admin/records?collection='+collection)).items||[];drawer.close();draw();showAdminToast('Добавлено записей: '+added);
+   items=normalizedRecords((await call('admin/records?collection='+collection)).items);drawer.close();draw();showAdminToast('Добавлено записей: '+added);
   }catch(e){err(e)}finally{submit.disabled=false}};
  }
  function draw(){actions.replaceChildren(btn(archive?'Активные':'Архив',()=>{archive=!archive;filter='all';draw()}),btn('Импорт',importPrivate),btn('Добавить',()=>edit(),'ad-tl-button ad-tl-primary'));toolbar.replaceChildren();
@@ -174,7 +177,7 @@ export async function renderProduction(host,call,section){
    const row=el('div','production-actions production-card-actions');row.append(btn('Открыть',()=>edit(r),'ad-tl-button ad-tl-primary'));
    if(venueFilter)row.append(btn('Условия',()=>editVenues(r)));
    if(decor){row.append(btn('Референсы',()=>refs(r)));call('admin/production-images?item='+encodeURIComponent(r.id)).then(data=>{if(data.items?.length&&card.isConnected){const im=el('img','production-cover');im.src='data:'+data.items[0].mime+';base64,'+data.items[0].data;im.alt=r.name;card.prepend(im)}}).catch(()=>{})}
-   if(r.status!=='selected'&&!archive)row.append(btn('Выбрать',()=>save(r,{status:'selected'}).catch(err)));
+   if(['candidate','negotiating'].includes(r.status)&&!archive)row.append(btn(decor?'Утвердить':'Выбрать',()=>save(r,{status:'selected'}).catch(err)));
    const archiveButton=btn('',()=>archiveItem(r),'ad-tl-button production-archive-action');archiveButton.title=archive?'Восстановить':'В архив';archiveButton.setAttribute('aria-label',archiveButton.title);
    const archiveIcon=document.createElementNS('http://www.w3.org/2000/svg','svg');for(const [k,v] of Object.entries({viewBox:'0 0 24 24',fill:'none',stroke:'currentColor','stroke-width':'1.7','stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true'}))archiveIcon.setAttribute(k,v);archiveIcon.innerHTML=archive?'<path d="M4 12a8 8 0 1 1 3 6M4 5v7h7"/>':'<rect x="3" y="3" width="18" height="4" rx="1"/><path d="M5 7v14h14V7m-10 5h6"/>';archiveButton.append(archiveIcon);top.append(archiveButton);card.append(row);grid.append(card)
   }body.append(grid)
