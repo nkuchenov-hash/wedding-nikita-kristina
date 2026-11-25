@@ -78,43 +78,36 @@ function refRule(){return '<div class="wref-rule" aria-hidden="true"><i></i><spa
 function refDay(date,title,caption,photoName,where,klass,ico){
  return '<article class="wref-day '+klass+'"><div class="wref-day-image">'+img(photoName,'','Иллюстрация: '+title)+'<div class="wref-day-shade"></div></div><div class="wref-day-content"><span class="wref-day-date">'+date+'</span><h3>'+title+'</h3><p>'+caption+'</p><small>'+ic(ico)+' '+where+'</small></div></article>';
 }
-function footer(){return '<footer class="r-footer"><div class="wref-footer-monogram" aria-label="Никита и Кристина">Н<em>&</em>К</div><span>Марьино × Санкт-Петербург · 17–19 июня 2027 · предварительно</span><small class="r-photo-credit">Фото пары и декора — временные иллюстративные материалы. На фото не Никита и Кристина. Вид Дворцового моста: <a href="https://commons.wikimedia.org/wiki/File:Saint_Petersburg_Palace_Bridge,_St._Petersburg_(37931957696).jpg" target="_blank" rel="noopener noreferrer">Michael Kuhn / Wikimedia Commons</a>, CC BY 2.0. Дневной вид на Мойку и Исаакиевский собор: <a href="https://commons.wikimedia.org/wiki/File:Saint_Isaacs_cathedral_from_Moyca_river.jpg" target="_blank" rel="noopener noreferrer">Wolfgang Moroder / Wikimedia Commons, CC BY-SA 3.0</a>. Фотографии Марьино требуют согласования прав.</small></footer>'}
+function footer(){return '<footer class="r-footer"><div class="wref-footer-monogram" aria-label="Никита и Кристина">Н<em>&</em>К</div><span>Марьино × Санкт-Петербург · 17–19 июня 2027 · предварительно</span><small class="r-photo-credit">Вид Дворцового моста: <a href="https://commons.wikimedia.org/wiki/File:Saint_Petersburg_Palace_Bridge,_St._Petersburg_(37931957696).jpg" target="_blank" rel="noopener noreferrer">Michael Kuhn / Wikimedia Commons</a>, CC BY 2.0. Дневной вид на Мойку и Исаакиевский собор: <a href="https://commons.wikimedia.org/wiki/File:Saint_Isaacs_cathedral_from_Moyca_river.jpg" target="_blank" rel="noopener noreferrer">Wolfgang Moroder / Wikimedia Commons, CC BY-SA 3.0</a>. Фотографии Марьино требуют согласования прав.</small></footer>'}
 function shell(path,body,cls=''){return '<div class="r-app wref-app '+cls+'">'+referenceHeader(path)+'<div class="r-site">'+body+footer()+'</div>'+bottom(path)+'</div>'}
 const spbBridgeMotif='<img class="spb-drawbridge spb-drawbridge--approved" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAocAAABvAQMAAACkUvhnAAAABlBMVEUAAABkfGVU63keAAAAAnRSTlMA/1uRIrUAAAsVSURBVHja1ZpvTBvnGcDf16/x0cZwbpoGMgi2qolomrSxpAtUJZzbTqomreLb1C2tINs0Ei2UZt0GTSF3hKpo2iSq7UPZupVOqjZpUqWsXdOoXeIjTKXV6Ij6YSFlii+hDesHx0dpsAnne/a8752N8f8Jf9krIdvc+cf7Pv+f5yCk0kX1im5rJpWvyoj+/4GoVXSXr+pET9VPTf4/iI3VJXYS8lR1iV2EGNUkBkgLkapKbCT1RNWrSWxGC4eq6lpGC7erRmQmEvGmZLWIDEATWmmrFpEC6ETCDfbi++qcWgGL1FiEhAmRoDrEeZv4T4n7gpCsBjEIQPwq3qcRlUtg+0QZVSMrGtE0AlxL5Ve4EiKSRlFJqUoEScsR0Xx0GU97Gt8l7GoQufkE4SL6jASo9ioQUXpGEK4Ti+uoEl3T3gqIMhKTaJkJsypEFQwJiSYSKzKe8sQgGAyJBieSbROZzc0HiQbarQL29oncbCiYFAzXw7dNVMFUDSVJBBE/bJ8IYlkiyaBhVpS8WKm7GI82DMUXROKgpmBAK+/YrFRi90m4rRbCdEwL6I1J0NTy25RKycbPUDPDhFoMQ5ntSmBbxEYpoiGRBTWdWD7CNFaBAbFSxIBP1bhDU0NHL2TTOoWV8qVmqRzX0YteYlHAN1hLMTNJQS+rGnamxMWvaXjIIQm0+hBWASxlEzDD29L1KWoRuoARHP/u3TqzI5qaLBsHPJdKXBymSSJdUkBHtxmCaZjSlOfKVgKeF0pcXH/RJLKhwgwazRBcgwk9OF3WE32l7rAfMbDmUW1Z7yIpMGEePw2VLbuSJVMMT5aqoWK1l4KkOo/uM1yO+IXflUqDhhsl6WdkBCxlViNIL7N2v1zCn9JR3JJtcj+AZNQivizxt8WvedOlj6XY5C5eUFTSHu7eWf4esFTbKfu8FdQ4O98uTfNyBVloPQySoXxir1PlsKxqR4HSlWYtTwecOAZmW34L20F63WY54+9HH9bK1q7BlCAOdZDduZfqneauMUthoSPlq2GZB9ppGE4iINfAhLJYKOsKJzKtIqJiZewpi8g3x47i8YsQaZEylxODVuZyxook0A2uO3szgOz7JkaL0QyNFi7uMSXqhYlR7lf07eimM+97AvfoErUiRNUhylae7ZMaJ4kvHl/YQpSmnb+HRKmAydZAAqsJXZ2w8kcrX14T9Vr/H/s3iSNoAg6R92qyUUiMy7gRQ5mws4zGXYdjCa6ErsutGV20IrHp++JjLaacujOFiLMpJAaziJk9tsfi/OXg4V+RbGKgT5x1R1HiOAaJwsSv/mOAvzT1L25aDwqg4XvClRqQW/dKIVVLyDLkccgndn90lb/UnX0088VWTrwuiGyysBxVm3eaBitEjL54QXx+6YsZlbZ+CYnLunB6lHeTlT8jU5O8lDFoASKNnP+byFYfvB7O9pm7hRwPHxnXSC9SW3KJBu+v9ezWdZM4IDKZ9MPF3k3r1cg9PwiTp+gvHrymtYU9RIrkZkRhpbooynOsh6nfFaYtne3PqFQPaaQd92gxD/u73jHzIZFzCzpT2D4GvXzi7lOXRXZmv77vo8xoL6R1tPWdo/apXcPex+fGPpT9up4b+R0iUfOI/uGIINIrH/0nfe35fVPwcWfnAXvOnPN56seXnn7/0nHHx9Oy0jCIeTgxmPndnWli6s/COGjs0+NuTEcizJrS4PAuf/g5SfPOrujP6FuJYvpYz4lSHrEZ4o65rd06qzkyp5qid1sPr4IxSZ9nz5G+dUKuo4MrRt7cLDuO3unGn69vDDhW89lJx2mmjUPacEMQNIBrZpdv6ZctiuUnbXvC5N6cku1UOtxtErkF3Z+IOkJ/dqCHm6KX7klovbR53+gniZUFdWL5asuUfUAjnnDvUS3XgnISlvPzo7Woc2P/m3F8MxRgQcwStA5D+4kVW52KR7EgOaF7ySPnMKtuKVVvbCW2uD+rNyMO8StXL1wiGoRDcvCyaCnqYB0gCnBeseC9NeJtprUkqRWfDKeJCTjvRpOTl49SXvUrt1L8e4MboleJw1RiHT5NUML27LPRUTqLDZ6biN4pUULjV1zPbOg//Co3rsBnmUTiLAViGzF4R+dH9ilmd+HhjaQ1UV31Sf9k3e+cdGPoW6+t8OTFLhI+YutIRVyiCp/gTtXeV3kWbhugJFyoa6udb2JmrP5R8EUfcFW2Y/HNRV6wSFw8+2vfg5x1/PyO8YN9KI+uAg0Uyq/npf3t6y/3NHx76mduENhxLPqkk4fhIgnVOZgemB0KXhICSNlHYgexA/YG5GTeMwrljranFHUFIt2R319IuMS6WPTs5oAI1wI/fIiEhA0zmIf1OJaLAT/xPt2aU7EY7UvEUgZuj8CNQz8/GLOcqrdmDd5BDwh5N83C2w6ufkyqSfiygcQ+6bSxNdgc2Lui6LvgjT7sZO1zTSNxVAfDQsW3duw7AYf4Y6foPLN3XMxebN72R5Ydae6BZdu8d9MLcRPhxGjc//nlB1R7QzWa9/cvJgmdTZnEs9r/xAvcDQl52n1SEsCPRPyE2E8fC7UZqhKHaPx9RzNusL3Loh8TWDgPytTCqrIM1jOL5uD8cktj17ODYhMxJD4kiF4kekLUIVJRZfrrhRRs4QKSIJ7GN0e/tfEBxpV3d0a5ry2+ZZLuEZhLzIz4eVHoLB2JNVy+XC+txI/EPTO6jDGZ0TCX6DKqMh0pJubmlt7zUTTa1MzoZOdqxPBjLXhtjr7OeRv2574ax/9gkhPRQQRR455yCGA2lFZcuy2qT+3YRO2cB4uMKPHgMZOH3how8PDKsr3nhiBy1JiKhijOJ+To7JETG4lXWVrt9u7ldmafSqelWrwzyZjwryQa9LX7VkCNw191Gbjj2fbGmNjijb+MOyPVYSFHQQx7D6BKvOG7cXcrXU5pyUmoKybBzHQYkvv+ANNdyI7BxxoS8SCem5Gx6Gt2Cvic5FbUMUfiEGuJ90Df9IMa2cvzSb3belqihl6U+PbGk/gHZrBfhE9hge8RLc8auDV2O3YhdVNMXtZNcXqdinYHibi7hsRPajQ3AGTKfJt5sPKWrMeQeF3FLnlhRddlS+Nf12EMYq1/su0pYdSmsKpMaxQo8LRu1w6842EPH1Ypkx4ec69SmEKSZGCdjmYmj9ndYNXbv8He70FeU6vpIVFtBqJtNhKMtDXheVZ9qhj63X7kyhuuCeo1EuoB/i3ro5TvzVsrifBoBLxQZuDGnkxS2wMJHkDZiRfPZbrRoEmwaSYwqqAq4PNaFAdKxQgQnniKDFdN2XKiiS3BmiDS0cn0uMAPzsSjbZSfUV67Q1Aw3KAougsgPfxBEhRYVjoo3nTHxpF7MBzReZCFPjhRyb4/7rwUepI74lwyMhZQZil2mcePPPCbni2Ddep8NfkN0p42k4ongM6OphJZIgfSkI484pjvoqolKD7ACppFxhiezUGOu1LOy+wS12CJCXE+UdJN0pM9K76EnjYIrzjpEnPP4yX79i1TZm+m+Ade/UrC51c0n5yanR5XwkRSy49SacboczrRlnC6MZJnLdmZ+/XyqEh1XnLK+O4OPfdpZvZwKmeOIsF0uq3e+g8KjfIV3ZRLqjqXqLjDmOFMXeR3IoyEfS7QbA+hWkXE9Jo18kdJouAOJjoChJ4uNNNU/+VMI4o+kc0MmB/KGocENdIYLKQQK+uBRcHpdn+RvxQs/8yw2Pwm451bx8FML/YPGD4C01CCmPs/KIH8frnYHoubak6p7gjK6XwC+VOxDLGog/a4mwyRSle9OyQl/wWAfyiZw6UMQgAAAABJRU5ErkJggg==" alt="" aria-hidden="true" loading="eager" decoding="async">';
 const spbMotif='<img class="spb-skyline spb-skyline--approved" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAVQAAABkAQMAAADjUVrvAAAABlBMVEUAAADYx46oRjLpAAAAAnRSTlMA/1uRIrUAAAUMSURBVHja7ZdBaBxVGMff29nuhDTmRYV21DSzSpRgA65eDJhm9qSBhoK34iWBgFQUGvGyoZJ57Zaag3Q9ScSDOXqMPWhFMWMiKZjoBg9aCZKJOayCuFMFM+tu3ud7b2Y2szOTOmKRHnyHgX3z2/e+73vf+3/fIPT/uEtHJmEufwibS5gr3AE2+x+ypX/AbtwBNvcv2dZdwLJD2N74lALpWXLSSs32v2+nZk9hJzX7Ej6bmn0eD6VmN9FwanYpO5jMdsdm8CJ6OzX7KDqWmn348ftSswAsLaswxUzN/nABUrP7zUNYPc46FyaT2YdojN2cPcTeJ+MswCE2PB1jVc7SRNaITROqlK1UvmGkFUa7pzKJ60atRTq3IZk9QaMs2fgK7EySup6KsxNfrFuZJHWNsfToxMR6MZOkQFFWtSRLaIICmZHw9NqS1bzpPzvefT3VyQ6UJGsU45UOfxspfCNDHutJz0wH+91SJzs0LNlzm97PYtjtZyMF6hxnX1kvjt+Ml1sFZjrZ8eGjz0GzeHYzQWubbow1y2CNJ7H2QpQlLiJW4rq3IutO/qSvwqo96cuqHWSfYD+OsGaL6e7oHHjTuIN9IGLDjG5xTHc8Caa3Z49vU4aIPeCxKMzO3gx1MgrFbK9FoA6uIc+MtjM1xqqMvFEeYbhhz70rc7fN0gg7gvoNgBsM2fxikbK4zAGrhli5B8OudgPgMwJVys2wLMkSWV0l25SsKh7V37We1bKTI/Oz1XpVsXi20i5PFIhIZ2VLBvKIxvk3r5aMJjjC6ZL6pWLxvKEETbtt9kEZyCP8YuVIDcBkJlQBmvzeb/O/QcM5o/MD0V4U7AuaYO+pQQ3YQCBncrijnN2ZL2FwStpj4s2ZealLCoxd13r8oPujj5cvxKzsnAHX9gTby5sbzHqR0o/EDrir4xQXebTUPwhZ+gg5XBRbYluGDFesg3AhfGtEzKhvVAsRjo2oS6d58uX60CDGKMqijAauDisMnbiaQ+bGtdNY6oFg5bn0HbBeuFD3/Y7e8wSuuU/5mjGIcBaVs86YNjNFfb6LF/K8Yv5273Krp2ysFtCAF4E8Z4vTC+6KZk1fKr0qvPZz5zx88KmbVeaUQp53U5k+zHfkLN95BdFHUFHe9zVkocuiljoLWlYp+p1Xoc2iS+0EQ2vHt3keNZSXITR+DLGBrZ7CLUN87F8MWB6HfKSK8GPgZ2UdlDWg+DKKsHnU5R+9yCd/DyqKys80YIvhhlyw/M7A1iK4pp9ayyBVn9ubHw9/bHBW53cKM8JUhqEl6YtgCyGNr6uAlIo5BEh3RXEldSgHOlQ8yEzBmrsV4dROxfXOR3eZ7gwkfTpgxW2cFHmOTC9BuKfv2awWXOtw2LBhtcTPUYWhMV8Gdvcqr83S6AcVwM6+VRXG2foVEtS81jPlT8z6L2tyrbaQbLs7t6gitrZGiR6w+jsUruR+/VAinkaKsEIDYBn8c2BI0cUy6veWfOcgEypu6FL/7XBu+0VohHodo+VE+yAZe6Yz6QmpAJyveO2OESryhHt6DLyFppTrnm/CdAyUOFlusRPqFGTPtEUDg3h+6g3hZoVP9SBgTiDqrwtl5fcIsNzSAFuvQRAV/qiHfSMic1SoF0RfIfKsLqTds5/b8k2Y9c6kRlUn3McxO+jb9DDLM9wlAGWZmV7TwtdzFSZT4PNlFmJHOCsc7BIwRup+C/VR9BZnTX6mu9yGvwD48KWzhBX7ywAAAABJRU5ErkJggg==" alt="" aria-hidden="true" loading="eager" decoding="async">';
 function home(){
  return shell('/',
- '<section class="r-hero r-hero--editorial r-hero--board wref-hero" aria-labelledby="wref-main-title">'+
- img('boardPortrait','r-cover-photo wref-cover','Временная иллюстративная свадебная фотография',true)+
- '<div class="wref-hero-shade"></div>'+
- '<div class="wref-hero-decor wref-hero-decor--a">'+refLeaf()+'</div>'+
- '<div class="wref-hero-decor wref-hero-decor--b">'+refLeaf()+'</div>'+
- '<div class="wref-hero-copy"><span class="wref-hero-eyebrow">ПРИГЛАШАЕМ НА НАШУ СВАДЬБУ</span>'+
- '<h1 id="wref-main-title">Никита <em>&</em><br>Кристина</h1>'+refRule()+
- '<p>17 — 19 июня 2027</p><small>МАРЬИНО · САНКТ-ПЕТЕРБУРГ</small>'+
- '<div class="wref-hero-skyline">'+spbMotif+'</div></div>'+
- '<button type="button" class="r-scroll-indicator wref-hero-down" data-scroll-welcome aria-label="Перейти к приглашению">'+ic('arrow')+'</button>'+
+ '<section class="r-hero r-hero--editorial r-hero--board wref-hero wg-hero" aria-labelledby="wref-main-title">'+
+ '<div class="wg-hero-content"><span class="wg-hero-kicker">Приглашаем на свадьбу</span>'+
+ '<h1 id="wref-main-title">Никита <span>и</span><br>Кристина</h1>'+
+ '<p class="wg-hero-date">17 — 19 июня 2027</p><p class="wg-hero-place">МАРЬИНО · САНКТ-ПЕТЕРБУРГ</p>'+
+ '<div class="wg-hero-actions"><a href="#/" data-go-rsvp>Ответить на приглашение</a><a href="#/schedule">Программа</a></div></div>'+
+ '<figure class="wg-couple-photo" hidden><img alt="Никита и Кристина" decoding="async"><figcaption>Никита и Кристина</figcaption></figure>'+
  '</section>'+
  '<section class="r-invitation w-invite wref-invitation" id="welcome" aria-labelledby="w-invite-title">'+
- refLeaf('wref-invite-leaf wref-invite-leaf--l')+refLeaf('wref-invite-leaf wref-invite-leaf--r')+
  '<div class="wref-welcome"><figure class="wref-polaroid wref-polaroid--estate">'+img('estate','','Историческая усадьба Марьино')+'<figcaption>Марьино</figcaption></figure>'+
- '<div class="wref-welcome-message"><span class="wref-overline">С ЛЮБОВЬЮ ПРИГЛАШАЕМ</span><h2 id="w-invite-title">Дорогие друзья!</h2><p>Мы будем счастливы разделить с вами важные для нас дни: официальную регистрацию в усадьбе Марьино, свободный день в Петербурге и большой свадебный праздник 19 июня.</p>'+refRule()+'</div>'+
+ '<div class="wref-welcome-message"><h2 id="w-invite-title">Дорогие друзья!</h2><p>Мы будем счастливы разделить с вами важные для нас дни: официальную регистрацию в усадьбе Марьино, свободный день в Петербурге и большой свадебный праздник 19 июня.</p>'+ '</div>'+
  '<figure class="wref-polaroid wref-polaroid--city">'+img('cityPhoto','','Иллюстративный вид на мост')+'<figcaption>Санкт-Петербург</figcaption></figure></div>'+
- '<div class="wref-program-preview" id="program-preview"><div class="wref-section-head"><span>17 — 19 ИЮНЯ 2027</span><h2>Программа наших дней</h2>'+refRule()+'</div>'+
+ '<div class="wref-program-preview" id="program-preview"><div class="wref-section-head"><h2>Программа наших дней</h2>'+'</div>'+
  '<div class="wref-days">'+
  refDay('17 июня','Официальная<br>регистрация','Начало в 14:00 — предварительно','estate','Усадьба Марьино','wref-day--garden','rings')+
  refDay('18 июня','Свободный день<br>в Петербурге','Прогулки, музеи и любимые места','cityPhoto','Санкт-Петербург','wref-day--city','pin')+
  refDay('19 июня','Торжественная часть<br>и свадебный банкет','Время и площадка уточняются','boardTable','Санкт-Петербург','wref-day--party','glass')+
  '</div><a class="wref-text-link" href="#/schedule">Подробнее о программе <span aria-hidden="true">→</span></a></div>'+
- '<div class="wref-bridge-line">'+spbBridgeMotif+'</div>'+
- '<div class="wref-venues-preview"><div class="wref-section-head"><span>ДВА МЕСТА НАШЕЙ ИСТОРИИ</span><h2>Наши локации</h2>'+refRule()+'</div>'+
+ '<div class="wref-venues-preview"><div class="wref-section-head"><h2>Наши локации</h2>'+'</div>'+
  '<div class="wref-venue-grid">'+
  '<article class="wref-venue-card"><div class="wref-venue-picture">'+img('estate','','Усадьба Марьино')+'</div><div class="wref-venue-copy"><span>17 ИЮНЯ</span><h3>Усадьба<br>Марьино</h3><p>Историческая усадьба в окружении парка. Здесь планируется официальная регистрация.</p><a href="#/info">Подробнее <span aria-hidden="true">→</span></a></div></article>'+
  '<article class="wref-venue-card"><div class="wref-venue-picture wref-venue-picture--city">'+img('cityPhoto','','Иллюстративный петербургский мост')+'</div><div class="wref-venue-copy"><span>18–19 ИЮНЯ</span><h3>Санкт-<br>Петербург</h3><p>Город белых ночей и набережных. Место торжественной части пока выбираем.</p><a href="#/info">Подробнее <span aria-hidden="true">→</span></a></div></article>'+
  '</div></div>'+
  '</section>'+
  '<section class="w-rsvp wref-rsvp" id="rsvp" aria-labelledby="w-rsvp-title">'+
- refLeaf('wref-rsvp-leaf wref-rsvp-leaf--l')+refLeaf('wref-rsvp-leaf wref-rsvp-leaf--r')+
  '<div class="wref-rsvp-intro"><h2 id="w-rsvp-title">Будете <em>с нами?</em></h2><p>Пожалуйста, сообщите, сможете ли вы разделить с нами этот праздник.</p></div>'+
  '<form data-rsvp class="w-rsvp__form wref-rsvp-form"><label class="wref-rsvp-name">Ваше имя<input name="name" type="text" maxlength="100" autocomplete="name" placeholder="Как к вам обращаться" required></label>'+
  '<fieldset class="wref-rsvp-options"><legend>Ваш ответ</legend><label><input type="radio" name="yesno" value="yes" checked><span>Да, буду</span></label><label><input type="radio" name="yesno" value="no"><span>К сожалению, не смогу</span></label></fieldset>'+
@@ -127,7 +120,7 @@ function home(){
  '<article><span class="wref-guide-icon">'+ic('info')+'</span><h3>Полезная информация</h3><p>Места, маршруты и детали поездки по мере подтверждения программы.</p><a href="#/info">Подробнее →</a></article>'+
  '</section>'+
  '<section class="wref-gallery-preview"><div><span>НАШИ ВОСПОМИНАНИЯ</span><h2>Галерея</h2><p>Делимся атмосферой нашей истории.</p><a href="#/gallery">Смотреть фото →</a></div>'+
- '<div class="wref-gallery-photos"><figure>'+img('boardGallery1','','Галерея, фото 1')+'</figure><figure>'+img('boardGallery3','','Галерея, фото 2')+'</figure><figure>'+img('boardGallery4','','Галерея, фото 3')+'</figure></div>'+
+ '<div class="wref-gallery-photos"><figure>'+img('venueHero','','Усадьба Марьино')+'</figure><figure>'+img('cityPhoto','','Санкт-Петербург')+'</figure></div>'+
  '</section>',
  'r-home');
 }
@@ -136,7 +129,6 @@ function schedule(){
  '<section class="r-photo-head r-schedule-head r-cinematic-photo">'+img('boardTable','','Иллюстративная фотография праздничного ужина',true)+'</section>'+
  '<section class="r-curve-content r-program spb-program">'+
  heading('17 — 19 ИЮНЯ 2027','Три дня.<br><em>Одна история.</em>','Планируем провести регистрацию в усадьбе Марьино, а большое торжество — в Санкт-Петербурге.')+
- '<div class="spb-program__skyline">'+spbMotif+'</div>'+
  '<p class="spb-program__notice">Это предварительная программа. Точное время, состав участников и адрес торжества 19 июня появятся после подтверждения.</p>'+
  '<div class="spb-days" aria-label="Предварительная программа по дням">'+
  '<article class="spb-day spb-day--garden"><div class="spb-day__date"><b>17</b><span>ИЮНЯ<br>ЧЕТВЕРГ</span></div><div class="spb-day__body"><span class="spb-day__kicker">ДЕНЬ ПЕРВЫЙ · МАРЬИНО</span><h2>Официальная регистрация</h2><p>Торжественная регистрация в усадьбе Марьино, среди старинной архитектуры и летнего парка.</p><small>14:00 — предварительно; детали и состав гостей уточняются</small></div></article>'+
@@ -155,16 +147,15 @@ function guests(){
 }
 function profile(){return shell('/guests','<section class="r-profile-page">'+heading('КАРТОЧКА ГОСТЯ','Наш гость','Это пример будущей страницы, без персональных данных.')+'<div class="r-guest-avatar">'+ic('heart')+'</div><p>Город · Знакомство с парой · Воспоминания · Личные фотографии</p><a href="#/guests" class="r-pill">← Все гости</a></section>','r-profile')}
 const photos=[
- ['boardGallery1','Мы','couple'],['boardGallery2','Усадьба','estate'],['boardGallery3','Цветы','inspo'],
- ['boardGallery4','Праздник','inspo'],['boardGallery5','Свадебный образ','couple'],['boardGallery6','Парк','estate']
+ ['venueHero','Усадьба Марьино','estate'],['gardenRef','Парк Марьино','estate'],['cityPhoto','Санкт-Петербург','city']
 ];
 function gallery(){
  return shell('/gallery',
  '<section class="r-gallery-page"><div class="r-gallery-leaf" aria-hidden="true"><img src="./public/production/gallery-leaves.png" alt=""></div>'+
  heading('НАШИ ФОТОГРАФИИ','История<br>в кадрах')+
- '<div class="r-photo-filters" role="group" aria-label="Фильтр фотогалереи"><button class="active" aria-pressed="true" data-filter="all">Все</button><button aria-pressed="false" data-filter="couple">Мы</button><button aria-pressed="false" data-filter="estate">Усадьба</button><button aria-pressed="false" data-filter="inspo">Вдохновение</button></div>'+
+ '<div class="r-photo-filters" role="group" aria-label="Фильтр фотогалереи"><button class="active" aria-pressed="true" data-filter="all">Все</button><button aria-pressed="false" data-filter="couple">Мы</button><button aria-pressed="false" data-filter="estate">Усадьба</button><button aria-pressed="false" data-filter="city">Петербург</button></div>'+
  '<div class="r-masonry">'+photos.map(([key,title,cat])=>'<figure class="r-gallery-tile" data-category="'+cat+'"><button class="r-photo-open" type="button" aria-label="Открыть изображение: '+title+'">'+img(key,'',title)+'<span class="r-image-caption">'+title+'</span></button></figure>').join('')+'</div>'+
- '<p class="r-draft-note">Это временные иллюстративные кадры. Общие фотографии гостей появятся после подключения защищённого хранилища.</p>'+
+ '<p class="r-draft-note">Фотографии пары и гостей появятся после добавления и согласования.</p>'+
  '<dialog class="r-lightbox" aria-label="Просмотр фотографии"><button type="button" class="r-lightbox-close" aria-label="Закрыть фотографию">×</button><img alt=""><p></p></dialog></section>',
  'r-gallery-page-outer');
 }
@@ -251,6 +242,30 @@ export function renderGuest(path){
  return shell('/','<section class="r-profile-page"><h1>Страница не найдена</h1><a href="#/">На главную</a></section>');
 }
 export function activateGuest(root){
+ const couple=root.querySelector('.wg-couple-photo');
+ const gallery=root.querySelector('.r-masonry');
+ if(couple||gallery){
+   // Only the deployment's explicitly guest-approved couple photo is eligible.
+   const src='./public/production/couple-approved.jpg';
+   const probe=new Image();
+   probe.onload=()=>{
+     if(!root.isConnected||!probe.naturalWidth)return;
+     if(couple&&root.contains(couple)){
+       const portrait=couple.querySelector('img');portrait.src=src;couple.hidden=false;
+       root.querySelector('.wg-hero')?.classList.add('wg-has-couple');
+     }
+     if(gallery&&root.contains(gallery)){
+       const tile=document.createElement('figure');tile.className='r-gallery-tile';tile.dataset.category='couple';
+       const button=document.createElement('button');button.type='button';button.className='r-photo-open';button.setAttribute('aria-label','Открыть совместную фотографию');
+       const photo=document.createElement('img');photo.src=src;photo.alt='Никита и Кристина';
+       const cap=document.createElement('span');cap.className='r-image-caption';cap.textContent='Никита и Кристина';button.append(photo,cap);tile.append(button);
+       tile.hidden=!['all','couple'].includes(root.querySelector('[data-filter].active')?.dataset.filter||'all');
+       button.addEventListener('click',()=>{const dialog=root.querySelector('.r-lightbox');if(!dialog)return;dialog.querySelector('img').src=src;dialog.querySelector('img').alt=photo.alt;dialog.querySelector('p').textContent=cap.textContent;dialog.showModal()});
+       gallery.prepend(tile);
+     }
+   };
+   probe.src=src+'?v='+encodeURIComponent(document.querySelector('script[src*="guest-online-entry.js"]')?.getAttribute('src')?.split('?v=')[1]||'local');
+ }
  const menu=root.querySelector('[data-site-menu-toggle]');
  const nav=root.querySelector('#wref-mobile-menu');
  menu?.addEventListener('click',()=>{const open=menu.getAttribute('aria-expanded')!=='true';menu.setAttribute('aria-expanded',String(open));menu.setAttribute('aria-label',open?'Закрыть меню':'Открыть меню');if(nav)nav.hidden=!open;});

@@ -74,6 +74,10 @@ jobs:
           remote_sha=$(ssh $SSH_OPTS "$USERNAME@$HOST" "sha256sum '$DESTINATION/preview/index.html'" | awk '{print $1}')
           test "$local_sha" = "$remote_sha"
           echo "WEDDING_DOMAIN_PREVIEW_DEPLOYED"
+          # Export at most one organizer-designated guest photo, never a draft.
+          # The source is already a metadata-stripped JPEG from the photo archive.
+          # Keep the image on the wedding host only, not in CI artifacts or Pages.
+          ssh $SSH_OPTS "$USERNAME@$HOST" "php -r '\$root=\"/var/www/u3728035/data/wedding-private\"; \$out=\"$DESTINATION/preview/public/production/couple-approved.jpg\"; \$db=new PDO(\"sqlite:\".\$root.\"/wedding.sqlite3\"); \$file=\$db->query(\"SELECT filename FROM gallery_assets WHERE category=\\\"couple\\\" AND is_public=1 ORDER BY created_at DESC LIMIT 1\")->fetchColumn(); if(\$file && preg_match(\"/^[a-f0-9-]+\\\\.jpg$/i\",\$file) && is_file(\$root.\"/gallery-media/\".\$file)){if(!copy(\$root.\"/gallery-media/\".\$file,\$out))exit(1);chmod(\$out,0644);echo \"COUPLE_PHOTO_APPROVED_PRESENT\\n\";}else{if(is_file(\$out))unlink(\$out);echo \"COUPLE_PHOTO_NOT_APPROVED_OR_MISSING\\n\";}'"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -86,7 +90,7 @@ jobs:
           for url in "https://nikitakristina.ru/preview/" "https://nkuchenov-hash.github.io/wedding-nikita-kristina/preview/"; do
             success=0
             for try in 1 2 3 4 5 6; do
-              if curl -fsSL --max-time 15 "$url?revision=${GITHUB_SHA:0:12}" | grep -q 'src/guest-online-entry.js'; then
+              if curl -fsSL --max-time 15 "$url/version.json?revision=${GITHUB_SHA:0:12}" | grep -Fq "\"revision\":\"${GITHUB_SHA:0:12}\""; then
                 success=1;break
               fi
               sleep 5

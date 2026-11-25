@@ -23,6 +23,9 @@ test('approved botanical layout has hero, invitation and RSVP in original sectio
  assert.match(html,/wref-rsvp-disclaimer/);
  assert.match(html,/не отправляются и не сохраняются/);
  assert.match(html,/data-site-menu-toggle/);
+ assert.match(html,/wg-hero/);
+ assert.doesNotMatch(html,/portrait-clean\.webp|portrait-extended-background\.webp/);
+ assert.match(html,/wg-couple-photo/);
 });
 
 test('programme dates match tentative schedule without inventing a venue',()=>{
@@ -57,4 +60,11 @@ test('the invitation discloses tentative arrangements and avoids unconfirmed RSV
  assert.match(home,/Время и площадка уточняются/);
  assert.match(info,/ПЛОЩАДКА И ВРЕМЯ УТОЧНЯЮТСЯ/);
  assert.match(guest,/предварительный просмотр: ответ не сохранён и не отправлен/);
+});
+
+test('guest site shares the new administrator visual language and never displays placeholder couples',()=>{
+ assert.match(referenceCss,/Guest design aligned to the current admin overview/);
+ assert.match(referenceCss,/--wg-bg:#fff/);
+ assert.match(renderGuest('/'),/class="wg-couple-photo" hidden/);
+ assert.doesNotMatch(renderGuest('/gallery'),/board\/07-gallery\/gallery-clean/);
 });
