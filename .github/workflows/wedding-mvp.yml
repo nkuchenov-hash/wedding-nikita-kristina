@@ -32,6 +32,7 @@ jobs:
           unzip -oq mvp-site/botanical-v4.zip -d _mvp
           echo '3fe83bf818572ae4116d6b667ed8cc0b97255e3df1b30ce006fd3fdf1c045094  mvp-site/botanical-v5.zip' | sha256sum -c -
           unzip -oq mvp-site/botanical-v5.zip -d _mvp
+          python3 mvp-site/apply-welcome-spacing.py
           test -s _mvp/index.html
           node --check _mvp/script.js
           python3 - <<'PY'
@@ -94,7 +95,15 @@ jobs:
               assert.equal(await p.evaluate(sel=>document.querySelectorAll(sel).length,'img[data-photo-slot]'),6);
               assert.equal(await p.evaluate(sel=>document.querySelectorAll(sel).length,'.day-copy h3'),3);
               assert.equal(await p.evaluate(()=>document.querySelectorAll('.hero > img.hero-couple,.hero > img.hero-bg,.hero > img.hero-skyline').length),3);
-              if(name==='reference-scale')assert.ok(Math.abs(await p.evaluate(()=>document.querySelector('.page').getBoundingClientRect().height)-1672)<2);
+              const spacing=await p.evaluate(()=>{
+                const h=document.querySelector('.hero').getBoundingClientRect(),w=document.querySelector('.welcome').getBoundingClientRect(),pr=document.querySelector('.program').getBoundingClientRect(),b=document.querySelector('.welcome-berry'),f=b.closest('.photo-shell');
+                return {before:w.top-h.bottom,after:pr.top-w.bottom,branches:document.querySelectorAll('.welcome > .ornament').length,berryAttached:!!f?.querySelector('.frame-city'),berryOffset:f?Math.abs(b.getBoundingClientRect().bottom-f.getBoundingClientRect().bottom):999};
+              });
+              console.log('WELCOME_SPACING',JSON.stringify(spacing));
+              assert.ok(spacing.before>=30 && spacing.after>=35);
+              assert.equal(spacing.branches,2);
+              assert.equal(spacing.berryAttached,true);
+              assert.ok(spacing.berryOffset<30);
               await p.evaluate(()=>Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,3000))]));
               await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/'+name+'.png',fullPage:true});
               assert.equal(await p.evaluate(()=>document.querySelectorAll('.day-shell').length),3);

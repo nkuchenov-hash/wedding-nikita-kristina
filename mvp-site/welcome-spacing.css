@@ -1,0 +1,15 @@
+/* Welcome: isolated ornament composition and intentional breathing room. */
+.welcome-small-left{display:none!important}
+.welcome .welcome-birch-left,.welcome .welcome-birch-right{height:auto!important;max-width:none;pointer-events:none;z-index:3;transform:none!important}
+.welcome .photo-shell:has(.frame-city) .welcome-berry{position:absolute!important;right:auto!important;top:auto!important;left:-15%!important;bottom:-3%!important;width:35%!important;height:auto!important;max-width:none!important;z-index:4;transform:rotate(-8deg)!important;pointer-events:none}
+@media(min-width:701px){
+ .welcome{margin-top:4.2cqw!important;margin-bottom:4.8cqw!important}
+ .welcome .welcome-birch-left{width:10.5cqw!important;left:-1.1cqw!important;top:1.8cqw!important;opacity:.84!important}
+ .welcome .welcome-birch-right{width:13.5cqw!important;right:-1cqw!important;top:-.8cqw!important;opacity:.84!important}
+}
+@media(max-width:700px){
+ .welcome{margin-top:32px!important;margin-bottom:40px!important;padding-top:12px!important}
+ .welcome .welcome-birch-left{width:17%!important;left:-2%!important;top:4px!important;opacity:.65!important}
+ .welcome .welcome-birch-right{width:18%!important;right:-2%!important;top:0!important;opacity:.65!important}
+ .welcome .photo-shell:has(.frame-city) .welcome-berry{width:35%!important;left:-17%!important;bottom:-5%!important}
+}
