@@ -26,6 +26,6 @@ test('premium dashboard uses real tasks and excludes cancelled work from progres
  assert.match(source,/call\('admin\/guests\/revision'\)/);
  assert.match(source,/dashboard_activity/);
  assert.match(source,/call\('admin\/settings'\)/);
- assert.match(css,/\.pd-hero\{background:linear-gradient[^\n]*data:image\/jpeg;base64,/);
+ assert.match(css,/\.pd-hero\{background:linear-gradient[^\n]*data:image\/webp;base64,/);
  assert.doesNotMatch(source,/wedding-demo-done|Демонстрационная запись/);
 });
