@@ -23,6 +23,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   deploy:
+    if: github.event_name != 'push' || github.event.head_commit.message != 'Publish isolated wedding MVP with transparent artwork'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -169,7 +170,7 @@ jobs:
             _admin-private/ "$USERNAME@$HOST:/var/www/u3728035/data/wedding-private/admin-release/"
           # Site originally contained only index.html and files deployed from this workflow.
           # Remove the guest bundle while preserving Let's Encrypt challenges and backup.
-          rsync --archive --verbose --delete --exclude='/.well-known/' --no-perms --omit-dir-times --timeout=120 \
+          rsync --archive --verbose --delete --exclude='/.well-known/' --exclude='/mvp/' --no-perms --omit-dir-times --timeout=120 \
             --rsh "ssh $SSH_OPTS" \
             _site/ "$USERNAME@$HOST:$DESTINATION/"
           local_sha=$(sha256sum _site/index.html | awk '{print $1}')

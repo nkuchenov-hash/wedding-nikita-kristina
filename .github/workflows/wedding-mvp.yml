@@ -1,0 +1,124 @@
+name: Publish isolated wedding MVP
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mvp-site/**'
+      - '.github/workflows/wedding-mvp.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: wedding-mvp-only
+  cancel-in-progress: true
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and unpack the exact approved HTML package
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '4f4b27a2471eeae7d7c3c0f146ca741aedb303900705107c2d497e111ba33d30  mvp-site/site.zip' | sha256sum -c -
+          mkdir -p _mvp
+          unzip -q mvp-site/site.zip -d _mvp
+          test -s _mvp/index.html
+          node --check _mvp/script.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct
+          for name in ['hero-leaf-right','ladybird','welcome-berry','hero-city','bridge','hero-transition','welcome-leaves-left','welcome-leaves-right','rsvp-flowers-left','rsvp-flowers-right']:
+              b=Path('_mvp/assets/'+name+'.png').read_bytes()
+              assert b[:8]==b'\x89PNG\r\n\x1a\n'
+              assert b[25] in (4,6) or b'tRNS' in b, name+' must have alpha transparency'
+          print('ALPHA_ASSETS_OK')
+          PY
+          printf '{"revision":"%s","mode":"separate-mvp"}\n' "${GITHUB_SHA:0:12}" > _mvp/version.json
+      - name: Browser test desktop and mobile before deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/wedding-mvp-qa
+          cd /tmp/wedding-mvp-qa
+          npm install --no-save --no-package-lock puppeteer-core@24
+          python3 -m http.server 4178 --bind 127.0.0.1 --directory "$GITHUB_WORKSPACE/_mvp" >/tmp/mvp-http.log 2>&1 &
+          SERVER=$!
+          trap 'kill "$SERVER" || true' EXIT
+          cat > check.mjs <<'JS'
+          import puppeteer from 'puppeteer-core';
+          import assert from 'node:assert/strict';
+          import {existsSync,mkdirSync} from 'node:fs';
+          const chrome=['/usr/bin/google-chrome','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
+          assert.ok(chrome,'Chrome not available');
+          const b=await puppeteer.launch({executablePath:chrome,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+          mkdirSync(process.env.GITHUB_WORKSPACE+'/_mvp-qa',{recursive:true});
+          try {
+            for(const [name,width,height] of [['desktop',1280,900],['mobile',390,844]]){
+              const p=await b.newPage();
+              await p.setViewport({width,height,deviceScaleFactor:1});
+              await p.goto('http://127.0.0.1:4178/',{waitUntil:'networkidle0'});
+              const report=await p.evaluate(async()=>{
+                await Promise.all([...document.images].map(i=>i.decode().catch(()=>{})));
+                return {bad:[...document.images].filter(i=>!i.naturalWidth).map(i=>i.src),overflow:document.documentElement.scrollWidth>innerWidth};
+              });
+              assert.deepEqual(report.bad,[]);
+              assert.equal(report.overflow,false);
+              await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/'+name+'.png',fullPage:true});
+              await p.click('.hero-cta');
+              assert.equal(await p.$eval('dialog',d=>d.open),true);
+              await p.close();
+              console.log('BROWSER_TEST_OK',name);
+            }
+          }finally{await b.close()}
+          JS
+          node check.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wedding-mvp-rendered-screens
+          path: _mvp-qa
+      - name: Deploy only /mvp and verify existing pages are untouched
+        shell: bash
+        env:
+          HOST: ${{ secrets.WEDDING_SFTP_HOST }}
+          USERNAME: ${{ secrets.WEDDING_SFTP_USER }}
+          SSH_KEY: ${{ secrets.WEDDING_SFTP_SSH_KEY }}
+          HOST_KEYS: ${{ secrets.WEDDING_SFTP_KNOWN_HOSTS }}
+          DESTINATION: ${{ secrets.WEDDING_SFTP_PATH }}
+          PORT: ${{ secrets.WEDDING_SFTP_PORT }}
+        run: |
+          set -euo pipefail
+          test -n "$HOST" && test -n "$USERNAME" && test -n "$SSH_KEY" && test -n "$HOST_KEYS" && test -n "$DESTINATION"
+          [[ "$DESTINATION" == /var/www/* ]]
+          [[ "$DESTINATION" != "/" ]]
+          [[ -n "$PORT" ]] || PORT=22
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/wedding_deploy_key"
+          printf '%s\n' "$HOST_KEYS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/wedding_deploy_key" "$HOME/.ssh/known_hosts"
+          SSH_OPTS="-4 -i $HOME/.ssh/wedding_deploy_key -p $PORT -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15"
+          before=$(ssh $SSH_OPTS "$USERNAME@$HOST" "sha256sum '$DESTINATION/index.html' '$DESTINATION/preview/index.html' '$DESTINATION/admin/index.php'")
+          ssh $SSH_OPTS "$USERNAME@$HOST" "mkdir -p '$DESTINATION/mvp'"
+          rsync --archive --delete --no-perms --omit-dir-times --timeout=120 --rsh "ssh $SSH_OPTS" _mvp/ "$USERNAME@$HOST:$DESTINATION/mvp/"
+          after=$(ssh $SSH_OPTS "$USERNAME@$HOST" "sha256sum '$DESTINATION/index.html' '$DESTINATION/preview/index.html' '$DESTINATION/admin/index.php'")
+          test "$before" = "$after"
+          echo CURRENT_SITE_UNCHANGED
+          local_sha=$(sha256sum _mvp/index.html | awk '{print $1}')
+          remote_sha=$(ssh $SSH_OPTS "$USERNAME@$HOST" "sha256sum '$DESTINATION/mvp/index.html'" | awk '{print $1}')
+          test "$local_sha" = "$remote_sha"
+          echo MVP_UPLOADED
+      - name: Verify exact online version and PNGs
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=https://nikitakristina.ru/mvp
+          curl -fsSL --retry 3 --max-time 20 "$BASE/version.json?v=${GITHUB_SHA:0:12}" | grep -Fq "\"revision\":\"${GITHUB_SHA:0:12}\""
+          curl -fsSL --retry 3 --max-time 20 "$BASE/index.html?v=${GITHUB_SHA:0:12}" -o /tmp/mvp-live.html
+          cmp /tmp/mvp-live.html _mvp/index.html
+          for asset in hero-leaf-right ladybird welcome-berry bridge hero-city hero-transition; do
+            curl -fsSL --retry 3 --max-time 20 "$BASE/assets/$asset.png?v=${GITHUB_SHA:0:12}" -o /tmp/mvp-live.png
+            cmp /tmp/mvp-live.png "_mvp/assets/$asset.png"
+          done
+          echo ONLINE_MVP_VERIFIED
