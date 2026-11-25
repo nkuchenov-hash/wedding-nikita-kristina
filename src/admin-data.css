@@ -256,11 +256,11 @@ body.admin-body .admin-content .budget-secondary{background:var(--wd-surface);bo
 .production-status[data-tone="amber"]{--status-color:#b0802d}
 .production-status[data-tone="blue"]{--status-color:#457da8}
 .production-status[data-tone]{display:inline-flex;align-items:center;max-width:100%;background:color-mix(in srgb,var(--status-color) 16%,var(--wd-surface));color:color-mix(in srgb,var(--status-color) 72%,var(--wd-ink));border:0;border-radius:7px;font-weight:600;line-height:1.35}
-body.admin-body .admin-content .production-page .production-table select.production-status-select{width:auto;max-width:100%;min-height:34px;padding:6px 36px 6px 10px;border:0;cursor:pointer;font-size:16px;font-weight:600;background-color:color-mix(in srgb,var(--status-color) 16%,var(--wd-surface));color:color-mix(in srgb,var(--status-color) 72%,var(--wd-ink))}
+
 .production-table .production-inline-value{display:block;max-width:100%;width:100%;text-align:left;padding:6px 7px;margin:-6px -7px;border:1px solid transparent;border-radius:7px;background:none;color:inherit;font:inherit;cursor:text;overflow-wrap:anywhere}
 .production-table .production-inline-value:hover,.production-table .production-inline-value:focus-visible{background:var(--wd-soft);border-color:var(--wd-line);outline:none}
 .production-name-cell .production-inline-value{font-weight:600}
-.production-table .production-inline-tags{cursor:pointer}.production-table .production-inline-tags .production-type-tag{padding:3px 7px;border-radius:6px;background:var(--wd-soft)}
+.production-table .production-inline-tags{cursor:pointer}.production-table .production-inline-tags .production-type-tag{padding:0;border-radius:0;background:transparent}.production-table .production-inline-tags .production-type-tag:not(:last-child)::after{content:', ';white-space:pre}
 .production-inline-form{display:flex;align-items:center;gap:4px;min-width:0}
 .production-inline-form .production-inline-input{flex:1 1 65px;min-width:45px!important;width:100%;padding:6px 8px!important;min-height:34px!important}
 .production-inline-confirm,.production-inline-cancel{border:0;background:var(--wd-soft);color:var(--wd-ink);border-radius:6px;width:30px;min-width:30px;height:34px;cursor:pointer;font-size:18px}.production-inline-confirm{color:var(--wd-accent)}

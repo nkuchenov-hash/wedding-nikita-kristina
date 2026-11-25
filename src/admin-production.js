@@ -80,7 +80,28 @@ export async function renderProduction(host,call,section){
    form.onsubmit=async e=>{e.preventDefault();if(inlineSaving||!field.reportValidity())return;let fields;try{fields=commit(field.value)}catch(e){err(e);return}if(await inlineSave(r,fields,ok))return;field.focus()};
   },'production-inline-value');trigger.append(el('span','',display));trigger.setAttribute('aria-label','Изменить '+label+': '+display);cell.append(trigger);return cell
  }
- function statusControl(r){const s=select(Object.entries(statuses),r.status||'candidate');s.className='production-status production-status-select';s.dataset.tone=statusTone(r.status);s.setAttribute('aria-label','Статус: '+r.name);s.onchange=async()=>{if(!await inlineSave(r,{status:s.value},s))s.value=r.status};return s}
+ function statusControl(r){
+  const wrap=el('div','production-status-control'),trigger=btn(statuses[r.status]||r.status,open,'production-status production-status-chip');
+  trigger.dataset.tone=statusTone(r.status);trigger.setAttribute('aria-label','Изменить статус: '+r.name+' — '+(statuses[r.status]||r.status));trigger.setAttribute('aria-haspopup','menu');trigger.setAttribute('aria-expanded','false');
+  wrap.append(trigger);
+  let menu=null;
+  function close(){if(!menu)return;const old=menu;menu=null;try{old.hidePopover()}catch{}old.remove();trigger.setAttribute('aria-expanded','false')}
+  function open(){
+   if(inlineSaving)return;if(menu){close();return}
+   const popup=el('div','admin-select-popup production-status-menu');menu=popup;popup.setAttribute('popover','auto');popup.setAttribute('role','menu');popup.setAttribute('aria-label','Статус подрядчика');wrap.append(popup);
+   for(const [key,label] of Object.entries(statuses)){
+    const option=btn('',async()=>{if(key===r.status){close();trigger.focus();return}close();await inlineSave(r,{status:key},trigger)},'admin-select-option'+(key===r.status?' is-selected':''));
+    option.setAttribute('role','menuitemradio');option.setAttribute('aria-checked',String(key===r.status));const chip=el('span','production-status',label);chip.dataset.tone=statusTone(key);option.append(chip,el('span','admin-select-check','✓'));popup.append(option)
+   }
+   popup.addEventListener('toggle',e=>{if(e.newState==='closed'&&menu===popup){close();trigger.focus({preventScroll:true})}});
+   popup.onkeydown=e=>{const options=[...popup.querySelectorAll('button')],i=options.indexOf(document.activeElement);if(['ArrowDown','ArrowUp','Home','End'].includes(e.key)){e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?options.length-1:(i+(e.key==='ArrowDown'?1:-1)+options.length)%options.length;options[next]?.focus()}};
+   const rect=trigger.getBoundingClientRect();popup.style.width='220px';popup.style.maxWidth='calc(100vw - 16px)';popup.style.left=Math.max(8,Math.min(rect.left,window.innerWidth-228))+'px';popup.style.top=(rect.bottom+6)+'px';popup.style.maxHeight='min(320px,calc(100vh - 16px))';
+   try{popup.showPopover()}catch(e){close();err(e);return}
+   const h=popup.getBoundingClientRect().height;if(rect.bottom+6+h>window.innerHeight)popup.style.top=Math.max(8,rect.top-h-6)+'px';
+   trigger.setAttribute('aria-expanded','true');popup.querySelector('.is-selected')?.focus({preventScroll:true});
+  }
+  return wrap
+ }
  function categoryCell(r){const cell=el('td'),trigger=btn('',()=>{if(inlineSaving)return;const chosen=new Set(tags(r)),form=el('form','production-inline-categories'),options=el('div','production-inline-category-options');for(const type of new Set([...(decor?zones:vendorTypes),...items.flatMap(tags)])){const l=el('label'),check=el('input');check.type='checkbox';check.checked=chosen.has(type);check.onchange=()=>check.checked?chosen.add(type):chosen.delete(type);l.append(check,el('span','',type));options.append(l)}const actions=el('div','production-inline-category-actions'),ok=btn('Сохранить',()=>form.requestSubmit(),'ad-tl-button ad-tl-primary'),cancel=btn('Отмена',()=>{cell.replaceChildren(trigger);trigger.focus()});actions.append(ok,cancel);form.append(options,actions);form.onsubmit=async e=>{e.preventDefault();await inlineSave(r,{category:[...chosen].join(', ')},ok)};form.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();cell.replaceChildren(trigger);trigger.focus()}};cell.replaceChildren(form);options.querySelector('input')?.focus()},'production-inline-value production-inline-tags');trigger.append(tags(r).length?typeTags(tags(r),decor,false):el('span','','Добавить'));trigger.setAttribute('aria-label','Изменить категории: '+r.name);cell.append(trigger);return cell}
  function detailCell(r,key,label,value,display,numeric=true){return editCell(el('td'),r,label,value,display,raw=>productionEstimateFields(r,{[key]:numeric?amount(raw):raw.trim()},decor,guests),numeric)}
 
@@ -168,7 +189,7 @@ export async function renderProduction(host,call,section){
    const d=details(r),types=tags(r),card=el('article','production-card'+(decor?'':' production-vendor-card'));
    const top=el('div','production-card-top'),identity=el('div','production-card-identity');
    if(!decor)top.append(typeTile(types));
-   const status=el('span','production-status',statuses[r.status]||r.status);status.dataset.tone=statusTone(r.status);top.append(status);
+   top.append(statusControl(r));
    identity.append(el('h2','',r.name),typeTags(types,decor,false));card.append(top,identity);
    const facts=el('dl','production-facts');const fact=(label,value)=>{const row=el('div');row.append(el('dt','',label),el('dd','',value));facts.append(row)};
    if(!decor){fact('Гонорар',money(d.fee));fact('Проезд',money(d.travel));fact('Город отправления',d.city||'—')}else{fact('Количество',d.unit==='guest'?guests+' гостей':String(d.quantity??'—'));fact('Цена за единицу',money(d.unitPrice))}
