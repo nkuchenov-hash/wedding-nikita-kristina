@@ -79,6 +79,7 @@ const imageRelevance=x=>{
    -(/детал|аквариум|светильник|поручень|табличка|сервировка/.test(name)?70:0);
 };
 const coverEligible=p=>{
+ if(p.excludeCover)return false;
  if(!['Залы','Фасад и вход','Террасы и виды','Территория'].includes(p.section))return false;
  const name=String(p.name||'').toLowerCase();
  return !/детал|крупн[оы]|светильник|люстра и пол|потолок и люстр|поручень|табличк|сервировк|настил|ограждени|двер|переход|столик|зона у штор|с человеком|оборудован|сануз|туалет/.test(name);

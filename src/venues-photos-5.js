@@ -9,15 +9,20 @@ export const VENUE_PHOTOS_5 = {
     },
     {
       "id": "1sndZnYJL8VUeyImICNO8IS3P2D_fQ6z5",
-      "name": "IMG_20261121_144609_668.jpg",
-      "section": "Фото с осмотра",
-      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk"
+      "name": "Парадная лестница — общий вид",
+      "section": "Входы и переходы",
+      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk",
+      "originalName": "IMG_20261121_144609_668.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1dDstR66MjRbaPs2oBwaX7zBXiUR3Bm9x",
-      "name": "IMG_20261121_144611_191.jpg",
-      "section": "Фото с осмотра",
-      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk"
+      "name": "Парадная лестница — фото с человеком",
+      "section": "Входы и переходы",
+      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk",
+      "originalName": "IMG_20261121_144611_191.jpg",
+      "reviewedCategory": true,
+      "excludeCover": true
     },
     {
       "id": "1QPqPfBQzKAzry_CBXeCBs0P-Bo2O3hVI",
@@ -27,39 +32,51 @@ export const VENUE_PHOTOS_5 = {
     },
     {
       "id": "1Yg2g7F3ktw8bwLx_TH3ROQwMNAHg7zMn",
-      "name": "IMG_20261121_150319_840.jpg",
-      "section": "Фото с осмотра",
-      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk"
+      "name": "Лестница на верхний этаж",
+      "section": "Входы и переходы",
+      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk",
+      "originalName": "IMG_20261121_150319_840.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1cGDhKddgJ-AMSsxIiyqSasiKopZJ07WT",
-      "name": "IMG_20261121_150418_370.jpg",
-      "section": "Фото с осмотра",
-      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk"
+      "name": "Светлый салон — общий горизонтальный вид",
+      "section": "Залы",
+      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk",
+      "originalName": "IMG_20261121_150418_370.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1UBcG-q3vwGh9LBRX1wCPKFvSW55_MR_s",
-      "name": "IMG_20261121_150420_487.jpg",
-      "section": "Фото с осмотра",
-      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk"
+      "name": "Светлый салон — вертикальный вид",
+      "section": "Залы",
+      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk",
+      "originalName": "IMG_20261121_150420_487.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1htofWgoUaIfLXiY4HN3GJOIR4oTkdOyk",
-      "name": "IMG_20261121_150546_298.jpg",
-      "section": "Фото с осмотра",
-      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk"
+      "name": "Фойе — диван и арка",
+      "section": "Лаунж и фотозоны",
+      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk",
+      "originalName": "IMG_20261121_150546_298.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1HdPQPoACZOXWNsdR5giryegmwoVhepAX",
-      "name": "IMG_20261121_150547_790.jpg",
-      "section": "Фото с осмотра",
-      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk"
+      "name": "Фойе — общий вид",
+      "section": "Лаунж и фотозоны",
+      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk",
+      "originalName": "IMG_20261121_150547_790.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "19PGELjI9DAPc0Y0srAlpuwiWJ5rroAeF",
-      "name": "IMG_20261121_150555_662.jpg",
-      "section": "Фото с осмотра",
-      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk"
+      "name": "Парадный зал — общий вид",
+      "section": "Залы",
+      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk",
+      "originalName": "IMG_20261121_150555_662.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1wUoS4p2AEThmm1C7Droo6pu6o31RSdMm",
@@ -69,9 +86,11 @@ export const VENUE_PHOTOS_5 = {
     },
     {
       "id": "1wgdR1oDAOyKebSfHbZDnxBCxFJUwb_gm",
-      "name": "IMG_20261121_150729_058.jpg",
-      "section": "Фото с осмотра",
-      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk"
+      "name": "Парадный зал — окна и люстра",
+      "section": "Залы",
+      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk",
+      "originalName": "IMG_20261121_150729_058.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1JcFVZofLcI-oCsOm1zTfHDDKJDE4YF5r",
@@ -81,33 +100,44 @@ export const VENUE_PHOTOS_5 = {
     },
     {
       "id": "16qwp3uaIzHF33xGq_REnDGVr2AXGg4Sz",
-      "name": "IMG_20261121_150756_399.jpg",
-      "section": "Фото с осмотра",
-      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk"
+      "name": "Зелёный зал — общий вид",
+      "section": "Залы",
+      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk",
+      "originalName": "IMG_20261121_150756_399.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1beQZPMWJy4vco87CSVj3hpo5JlE6G1pZ",
-      "name": "IMG_20261121_151809_378.jpg",
-      "section": "Фото с осмотра",
-      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk"
+      "name": "Гостиная — диван и окно",
+      "section": "Лаунж и фотозоны",
+      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk",
+      "originalName": "IMG_20261121_151809_378.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "15DP2CAg9YJMkYH4_bIjPrJ5xG0lgscRQ",
-      "name": "IMG_20261121_151818_317.jpg",
-      "section": "Фото с осмотра",
-      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk"
+      "name": "Гостиная — диван и люстра",
+      "section": "Лаунж и фотозоны",
+      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk",
+      "originalName": "IMG_20261121_151818_317.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1lgkjs8ZKKazGkNVn8cv9c-L_A-8lh1z1",
-      "name": "IMG_20261121_152839_022.jpg",
-      "section": "Фото с осмотра",
-      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk"
+      "name": "Санузел — общий вид",
+      "section": "Санузлы",
+      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk",
+      "originalName": "IMG_20261121_152839_022.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1KHhTUbNBLxyffTeRw7oMQLfPvg8v65yb",
-      "name": "IMG_20261121_152931_259.jpg",
-      "section": "Фото с осмотра",
-      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk"
+      "name": "Парадный зал — с гостями",
+      "section": "Залы",
+      "folder": "1mEpewQ3G9V4R93nN7mfZKF-t66nY99Zk",
+      "originalName": "IMG_20261121_152931_259.jpg",
+      "reviewedCategory": true,
+      "excludeCover": true
     }
   ],
   "glukhovsky": [
@@ -489,51 +519,67 @@ export const VENUE_PHOTOS_5 = {
     },
     {
       "id": "1TK4br2QgZxu_wFL6jKWZxxj7Yppgovma",
-      "name": "IMG_20261121_155326_036.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Крытая терраса — общий вид",
+      "section": "Террасы и виды",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_155326_036.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1qwmvbbIfIc8NSB-EQxlAjfS1-X1pqdx6",
-      "name": "IMG_20261121_155334_251.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Крытая терраса — горизонтальная панорама",
+      "section": "Террасы и виды",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_155334_251.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1fGn4mJxx2kv64uSvNgfTM6jmqM1bUMng",
-      "name": "IMG_20261121_155345_179.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Палуба — вид вдоль борта",
+      "section": "Террасы и виды",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_155345_179.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1vIZTlA4QO5oMXgK2sPOlolpiYLqfMmX7",
-      "name": "IMG_20261121_155432_200.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Банкетный зал — столы у окон",
+      "section": "Залы",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_155432_200.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1hsdYmKJXQwlLpme_KxYn7tgaDfvr9gu4",
-      "name": "IMG_20261121_155433_220.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Банкетный зал — пространство для рассадки",
+      "section": "Залы",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_155433_220.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "17JcZ2vBUxtPJZ_hbX7dEchuT6Rf9A8gm",
-      "name": "IMG_20261121_155434_604.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Банкетный зал — зона у стены",
+      "section": "Залы",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_155434_604.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1bef-aPDLXIPeQrMNpXSbU4a4ME3msK7m",
-      "name": "IMG_20261121_155437_656.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Банкетный зал — общий горизонтальный вид",
+      "section": "Залы",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_155437_656.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1m3ONH3Ha7-AK9jRXpniKVws8Mv0606QD",
-      "name": "IMG_20261121_155620_737.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Декоративная стена",
+      "section": "Детали интерьера",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_155620_737.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1WkCi6FZXNNhAr-WKHhAptvfK0FWRNvxL",
@@ -543,51 +589,70 @@ export const VENUE_PHOTOS_5 = {
     },
     {
       "id": "1jrBLAt0fh_fWE32si2J6dQ59k0q5u4pk",
-      "name": "IMG_20261121_155630_862.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Вид на воду — смазанный кадр",
+      "section": "Террасы и виды",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_155630_862.jpg",
+      "reviewedCategory": true,
+      "excludeCover": true
     },
     {
       "id": "1i3BUmIV2hoEzu25sOY1VXhxDDIECZrp6",
-      "name": "IMG_20261121_155633_505.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Банкетный зал — столы и панорамные окна",
+      "section": "Залы",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_155633_505.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1SnBjXzJOGGzH1JdGMRKl8D0154oX2uI6",
-      "name": "IMG_20261121_155646_319.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Банкетный зал — общая панорама",
+      "section": "Залы",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_155646_319.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1lw2WZE61W997Nq4FYu63Q0oboF338kr0",
-      "name": "IMG_20261121_155746_281.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Случайный смазанный кадр",
+      "section": "Детали интерьера",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_155746_281.jpg",
+      "reviewedCategory": true,
+      "excludeCover": true
     },
     {
       "id": "1Q7KmbtGNuDrLvjb5WiILnt9IAifjKzPm",
-      "name": "IMG_20261121_155822_685.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Выход на палубу",
+      "section": "Террасы и виды",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_155822_685.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "19lbHaeggAZgnLApEn4wdANEdPpusg-Zl",
-      "name": "IMG_20261121_155827_759.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Дополнительный зал — смазанный кадр",
+      "section": "Залы",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_155827_759.jpg",
+      "reviewedCategory": true,
+      "excludeCover": true
     },
     {
       "id": "188NnEdwjLQP1Nr4C6HlJ9Izc0zo-Iwhd",
-      "name": "IMG_20261121_160022_948.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Дополнительный зал — длинный стол",
+      "section": "Залы",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_160022_948.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1l87DV2ic1q5mL-jZ-959NY3mE0Ocn2-w",
-      "name": "IMG_20261121_160031_358.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Дополнительный зал — стол и свет",
+      "section": "Залы",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_160031_358.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1uYYIQZ8o8H8T6RVzx6k3GC_J8A2RVY0x",
@@ -597,33 +662,43 @@ export const VENUE_PHOTOS_5 = {
     },
     {
       "id": "1SfH0v_qTFizqXQlu1kuX5vYZ7QdHBcD5",
-      "name": "IMG_20261121_160249_826.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Балкон — вид на воду",
+      "section": "Террасы и виды",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_160249_826.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1PACBnQ8XKUgnbS6q3sfnaUh0yl7VtqBy",
-      "name": "IMG_20261121_160321_039.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Балкон — панорама набережной",
+      "section": "Террасы и виды",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_160321_039.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1vQsvYMH17vl26eGecqlo62qOOX9pcIKC",
-      "name": "IMG_20261121_160331_561.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Сервировка — деталь",
+      "section": "Детали интерьера",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_160331_561.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1ugzT6dKDWHwgMM6aTFgPIe-iM7-foTml",
-      "name": "IMG_20261121_160740_504.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Панорамный лаунж — общий вид",
+      "section": "Лаунж и фотозоны",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_160740_504.jpg",
+      "reviewedCategory": true
     },
     {
       "id": "1xqPWwXX2uIhsX06gA7gKT0IzhqoOOpWT",
-      "name": "IMG_20261121_160743_979.jpg",
-      "section": "Фото с осмотра",
-      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv"
+      "name": "Панорамный лаунж — второй общий вид",
+      "section": "Лаунж и фотозоны",
+      "folder": "18zuNaQUDoYuStDnGf_TAAazDN7Ztc4sv",
+      "originalName": "IMG_20261121_160743_979.jpg",
+      "reviewedCategory": true
     }
   ]
 };
