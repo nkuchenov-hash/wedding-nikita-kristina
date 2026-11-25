@@ -10,12 +10,13 @@ test('shared design does not flatten semantic module colors',()=>{
  assert.match(css,/\.ad-tl-chronology-row\{display:grid/);
  assert.match(css,/\.pd-hero\{background:linear-gradient[^\n]*data:image\/webp;base64,/);
 });
-test('hero and login use identical high-resolution WebP artwork',()=>{
+test('dashboard and login use separate high-resolution WebP artwork',()=>{
  const css=read('src/admin-heading.css'),gateway=read('tools/admin-gateway.php');
  const get=s=>s.match(/data:image\/webp;base64,([A-Za-z0-9+/=]+)/)?.[1];
- const art=get(css);assert.ok(art);assert.equal(get(gateway),art);
- const bytes=Buffer.from(art,'base64');assert.equal(bytes.toString('ascii',0,4),'RIFF');assert.equal(bytes.toString('ascii',8,12),'WEBP');assert.ok(bytes.length>80000);
- const tag=bytes.toString('ascii',12,16);assert.equal(tag,'VP8 ');
- assert.ok((bytes.readUInt16LE(26)&0x3fff)>=1600);
- assert.ok((bytes.readUInt16LE(28)&0x3fff)>=900);
+ const hero=get(css),login=get(gateway);assert.ok(hero&&login);assert.notEqual(hero,login);
+ for(const [art,w,h] of [[hero,1600,900],[login,900,1600]]){
+  const bytes=Buffer.from(art,'base64');assert.equal(bytes.toString('ascii',0,4),'RIFF');assert.equal(bytes.toString('ascii',8,12),'WEBP');
+  assert.ok(bytes.length>65000);assert.equal(bytes.toString('ascii',12,16),'VP8 ');
+  assert.ok((bytes.readUInt16LE(26)&0x3fff)>=w);assert.ok((bytes.readUInt16LE(28)&0x3fff)>=h);
+ }
 });
