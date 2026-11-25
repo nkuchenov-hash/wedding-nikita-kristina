@@ -21,21 +21,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo '97e2e1f3f164fbb4b701ef98551925eeb1d2f3e18f23ad808f7d54ef3a4554bc  mvp-site/site.zip' | sha256sum -c -
+          echo '122a50eaaad8597e9e0c51a7fcdcd54ab5a21d05e71ca022a29d29992224a8a1  mvp-site/site.zip' | sha256sum -c -
           mkdir -p _mvp
           unzip -q mvp-site/site.zip -d _mvp
-          cp public/production/invitation-flowers-left.png _mvp/assets/flowers-left.png
-          cp public/production/invitation-flowers-right.png _mvp/assets/flowers-right.png
-          cp public/production/invitation-leaves-top.png _mvp/assets/leaves.png
-          cp public/board/02-invitation/estate-sunny-clean.webp _mvp/assets/maryino.webp
-          cp public/board/03-program/banquet-clean.webp _mvp/assets/banquet.webp
-          cp public/reference/venue-left-hi.jpg _mvp/assets/maryino-garden.jpg
           test -s _mvp/index.html
           node --check _mvp/script.js
           python3 - <<'PY'
           from pathlib import Path
           import re, os
-          for name in ['couple','birch-right','ladybird','strawberry','skyline','bridge','flowers-left','flowers-right','leaves','sprig']:
+          for name in ['couple','birch-right','ladybird','strawberry','skyline','bridge','flowers-left','flowers-right','birch-top-left','hero-lower-left','welcome-left','welcome-right','welcome-small-left','program-right','sprig']:
               b=Path('_mvp/assets/'+name+'.png').read_bytes()
               assert b[:8]==b'\x89PNG\r\n\x1a\n'
               assert b[25] in (4,6) or b'tRNS' in b, name+' must have alpha transparency'
@@ -71,10 +65,10 @@ jobs:
           const b=await puppeteer.launch({executablePath:chrome,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
           mkdirSync(process.env.GITHUB_WORKSPACE+'/_mvp-qa',{recursive:true});
           try {
-            for(const [name,width,height] of [['desktop',1280,900],['mobile',390,844]]){
+            for(const [name,width,height] of [['reference-scale',941,900],['desktop',1600,950],['mobile',390,844]]){
               const p=await b.newPage();
               await p.setViewport({width,height,deviceScaleFactor:1});
-              await p.goto('http://127.0.0.1:4178/',{waitUntil:'networkidle0'});
+              await p.goto('http://127.0.0.1:4178/',{waitUntil:'domcontentloaded',timeout:30000});
               const report=await p.evaluate(async()=>{
                 await Promise.all([...document.images].map(i=>i.decode().catch(()=>{})));
                 return {bad:[...document.images].filter(i=>!i.naturalWidth).map(i=>i.src),overflow:document.documentElement.scrollWidth>innerWidth};
@@ -85,10 +79,12 @@ jobs:
               assert.equal(await p.evaluate(sel=>document.querySelectorAll(sel).length,'img[data-photo-slot]'),6);
               assert.equal(await p.evaluate(sel=>document.querySelectorAll(sel).length,'.day-copy h3'),3);
               assert.equal(await p.evaluate(()=>document.querySelectorAll('.hero > img.hero-couple,.hero > img.hero-bg,.hero > img.hero-skyline').length),3);
+              if(name==='reference-scale')assert.ok(Math.abs(await p.evaluate(()=>document.querySelector('.page').getBoundingClientRect().height)-1672)<2);
+              await p.evaluate(()=>Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,3000))]));
               await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/'+name+'.png',fullPage:true});
-              await p.click('.hero-cta');
+              await p.$eval('.hero-cta',b=>b.click());
               assert.equal(await p.$eval('dialog',d=>d.open),true);
-              await p.click('.close');
+              await p.$eval('.close',b=>b.click());
               await p.evaluate(()=>weddingMvp.replacePhoto('day-17',document.querySelector('[data-photo-slot=day-19]').src));
               assert.equal(await p.$eval('[data-photo-slot=day-17]',i=>i.src),await p.$eval('[data-photo-slot=day-19]',i=>i.src));
               assert.equal(await p.$eval('.day h3',e=>e.textContent),'17 июня');
