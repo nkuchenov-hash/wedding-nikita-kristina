@@ -89,10 +89,11 @@ jobs:
           fi
           if grep -Fq 'wedding-admin-theme' /tmp/admin-app.js; then
             ! grep -Fq 'id="login-theme"' /tmp/login-page.html
-            grep -Fq 'name="color-scheme" content="only light"' /tmp/login-page.html
+            grep -Fq 'name="color-scheme" content="light dark"' /tmp/login-page.html
             grep -Fq 'class="login-art-top"' /tmp/login-page.html
             grep -Fq 'class="login-art-bottom"' /tmp/login-page.html
-            ! grep -Fq 'data-login-night' /tmp/login-page.html
+            grep -Fq 'data-login-night' /tmp/login-page.html
+          grep -Fq 'id="login-auto-theme"' /tmp/login-page.html
             grep -Fq 'id="admin-theme-toggle"' /tmp/admin-app.js
             grep -Fq 'wedding-admin-theme' /tmp/admin-page.html
             for css in styles.css admin-heading.css admin-guests.css admin-program.css admin-data.css admin-photos.css venues.css venue-detail-ui.css venue-files-ui.css; do

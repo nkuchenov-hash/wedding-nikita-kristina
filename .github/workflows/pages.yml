@@ -93,10 +93,11 @@ jobs:
           grep -Fq 'Сайт готовится' _site/index.html
           grep -Fq 'password_verify' _site/admin/index.php
           ! grep -Fq 'id="login-theme"' _site/admin/index.php
-          grep -Fq 'name="color-scheme" content="only light"' _site/admin/index.php
+          grep -Fq 'name="color-scheme" content="light dark"' _site/admin/index.php
           grep -Fq 'class="login-art-top"' _site/admin/index.php
           grep -Fq 'class="login-art-bottom"' _site/admin/index.php
-          ! grep -Fq 'data-login-night' _site/admin/index.php
+          grep -Fq 'data-login-night' _site/admin/index.php
+          grep -Fq 'id="login-auto-theme"' _site/admin/index.php
           grep -Fq 'wedding-admin-theme' _admin-private/index.html
           grep -Fq 'html[data-admin-theme="dark"]' _admin-private/src/admin-heading.css
       - name: Stage guest browser preview at /preview with no private admin sources
