@@ -201,7 +201,7 @@ body.ad-gb-lock{overflow:hidden}
  display:flex;align-items:flex-start;justify-content:space-between;gap:18px;
  flex:0 0 auto;position:relative;z-index:2;box-sizing:border-box;
  background:#fbfdfb;border-bottom:1px solid #dce8dd;
- padding:22px clamp(18px,3vw,35px) 19px;
+ padding:12px clamp(18px,3vw,35px);
 }
 .ad-gb-panel-identity{flex:1;display:flex;flex-direction:column;align-items:flex-start;min-width:0;gap:5px}
 .ad-gb-title-input{
@@ -246,7 +246,7 @@ body.ad-gb-lock{overflow:hidden}
 }
 .ad-gb-group-row:hover{background:#e9f2eb}
 @media(max-width:720px){
- .ad-gb-panel-header{padding:16px 16px 13px;gap:6px}
+ .ad-gb-panel-header{padding:10px 16px;gap:6px}
  .ad-gb-title-input{font-size:29px}
  .ad-gb-details{padding:18px 15px 34px;scrollbar-gutter:auto}
  .ad-gb-panel-header .ad-gb-close{padding:8px}

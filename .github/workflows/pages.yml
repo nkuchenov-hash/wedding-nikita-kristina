@@ -102,6 +102,8 @@ jobs:
           grep -Fq 'id="login-auto-theme"' _site/admin/index.php
           grep -Fq 'wedding-admin-theme' _admin-private/index.html
           grep -Fq 'html[data-admin-theme="dark"]' _admin-private/src/admin-heading.css
+      - name: Verify shared guest and vendor heading in Chromium
+        run: node tools/check-shared-heading.mjs
       - name: Stage guest browser preview at /preview with no private admin sources
         shell: bash
         run: |

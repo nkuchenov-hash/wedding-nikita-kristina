@@ -642,11 +642,11 @@ body.admin-body .vw-page.vw-control-board .vw-table-tools>[data-clear-filters]{
 
 /* Shared input geometry for administrative forms, including production drawers. */
 body.admin-body .admin-content .production-shell{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important}
-body.admin-body .admin-content :is(.production-page,.production-drawer) :is(input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea){box-sizing:border-box;min-height:44px;width:100%;border:1px solid var(--wd-line);background-color:var(--wd-surface);color:var(--wd-ink);border-radius:9px;font:400 16px/1.45 var(--wd-body);padding:10px 13px;outline:none}
+body.admin-body .admin-content :is(.production-page,.production-drawer) :is(input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea):not(.ad-gb-title-input):not(.ad-gb-subtitle-input){box-sizing:border-box;min-height:44px;width:100%;border:1px solid var(--wd-line);background-color:var(--wd-surface);color:var(--wd-ink);border-radius:9px;font:400 16px/1.45 var(--wd-body);padding:10px 13px;outline:none}
 body.admin-body .admin-content .production-page .production-filters :is(input,select){width:100%;max-width:100%;min-width:0;min-height:44px;margin:0}
 body.admin-body .admin-content select:not([multiple]):not([size]){appearance:none;-webkit-appearance:none;padding-right:38px!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2353695a' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 12px center!important;background-size:18px 18px!important}
 html[data-admin-theme="dark"] body.admin-body .admin-content select:not([multiple]):not([size]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23b7c7ba' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")!important}
-body.admin-body .admin-content :is(.production-page,.production-drawer) :is(input,select,textarea):focus-visible{border-color:var(--wd-accent);outline:2px solid var(--wd-accent);outline-offset:1px}
+body.admin-body .admin-content :is(.production-page,.production-drawer) :is(input,select,textarea):not(.ad-gb-title-input):not(.ad-gb-subtitle-input):focus-visible{border-color:var(--wd-accent);outline:2px solid var(--wd-accent);outline-offset:1px}
 
 /* Keep the production toolbar independent of the full-width drawer controls. */
 body.admin-body .admin-content .production-page .production-heading{margin:0;align-items:center}
@@ -784,8 +784,6 @@ body.admin-body .admin-content .production-page .production-table .production-in
 body.admin-body .admin-content dialog.production-editor-dialog.ad-gb-panel{position:fixed;inset:0 0 0 auto;margin:0;width:min(860px,100vw);max-width:100vw;height:100dvh;max-height:100dvh;padding:0;border:0;background:var(--wd-surface);color:var(--wd-ink)}
 body.admin-body .admin-content dialog.production-editor-dialog::backdrop{background:#0006}
 body.admin-body .admin-content .production-editor-dialog :is(.ad-gb-panel-header,.ad-gb-panel-footer){background:var(--wd-surface);border-color:var(--wd-line)}
-body.admin-body .admin-content .production-editor-dialog .ad-gb-title-input{font:400 clamp(28px,3.5vw,43px)/1.17 var(--wd-heading);background:transparent;border-color:transparent;padding:4px 6px;color:var(--wd-ink);min-height:44px}
-body.admin-body .admin-content .production-editor-dialog .ad-gb-title-input:focus{border-color:var(--wd-accent);background:var(--wd-surface)}
 body.admin-body .admin-content .production-editor-dialog :is(.ad-gb-field-group h4,.ad-gb-edit-field,.ad-gb-close){color:var(--wd-ink)}
 body.admin-body .admin-content .production-editor-dialog .ad-gb-field-group{border-color:var(--wd-line)}
 body.admin-body .admin-content .production-editor-dialog .ad-gb-field-group[hidden]{display:none!important}
@@ -799,3 +797,9 @@ body.admin-body .admin-content .production-editor-dialog .production-add-type{mi
 body.admin-body .admin-content .production-editor-dialog .production-type-picker:empty{display:none}
 body.admin-body .admin-content .production-editor-dialog .production-type-picker{max-width:380px}
 body.admin-body .admin-content .production-editor-dialog .ad-gb-footer-cancel{color:var(--wd-ink);background:var(--wd-surface);border-color:var(--wd-line)}
+
+/* One editable name style for every record panel. No module-specific form chrome. */
+body.admin-body .admin-content .ad-gb-panel .ad-gb-title-input{appearance:none;box-sizing:border-box;display:block;width:100%;min-width:0;min-height:44px;padding:2px 5px;margin:0 0 0 -5px;border:1px solid transparent;border-radius:7px;background:transparent;box-shadow:none;font:400 clamp(30px,3.5vw,43px)/1.17 var(--wd-heading);color:var(--wd-ink);outline:0;text-overflow:ellipsis}
+body.admin-body .admin-content .ad-gb-panel .ad-gb-title-input:is(:hover,:focus){border-color:var(--wd-line);background:var(--wd-surface)}
+body.admin-body .admin-content .ad-gb-panel .ad-gb-title-input:focus-visible{border-color:var(--wd-accent);outline:1px solid var(--wd-accent);outline-offset:1px;text-overflow:clip}
+@media(max-width:900px){body.admin-body .admin-content .ad-gb-panel .ad-gb-title-input{font-size:30px;margin:0;padding:2px 0}}
