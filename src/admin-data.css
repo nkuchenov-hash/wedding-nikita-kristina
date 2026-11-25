@@ -164,20 +164,29 @@
  .ad-overview-task small{grid-column:2}
 }
 
-/* Contractors and decor share the administrative design system. */
-.production-page{width:100%;min-width:0;font-size:17px}
-.production-heading,.production-toolbar,.production-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.production-heading{justify-content:space-between}.production-toolbar{margin:12px 0 18px}
-.production-toolbar input,.production-toolbar select,.production-form input,.production-form select,.production-form textarea{font:inherit;color:inherit;background:transparent;border:1px solid currentColor;border-color:var(--ad-border,#9a9a9a);border-radius:8px;padding:9px;min-width:0}
-.production-toolbar button[aria-pressed=true]{outline:2px solid currentColor;outline-offset:1px}
-.production-grid,.production-ref-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
-.production-card{padding:18px;border:1px solid var(--ad-border,#9996);border-radius:12px;min-width:0;overflow-wrap:anywhere}
-.production-card h2{font-size:20px;margin:0 0 6px}.production-card p{margin:8px 0}.production-category{opacity:.72}.production-price{font-size:19px}
-.production-card img{width:100%;height:auto;max-height:260px;object-fit:contain}
-.production-drawer{position:fixed;inset:0 0 0 auto;margin:0;width:min(760px,100vw);max-width:100vw;height:100dvh;max-height:100dvh;box-sizing:border-box;border:0;border-left:1px solid #8886;background:Canvas;color:CanvasText;padding:22px;overflow:auto;box-shadow:-12px 0 40px #0003}
-.production-drawer::backdrop{background:#0006}.production-drawer-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.production-drawer-head h2{font-size:24px;margin:0}
-.production-form fieldset{border:1px solid #8885;border-radius:10px;padding:12px;margin:18px 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.production-form legend{font-size:18px;font-weight:600}.production-field{display:flex;flex-direction:column;gap:5px;min-width:0}.production-field textarea{min-height:76px;resize:vertical}
-.production-tags,.production-links{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}.production-link-row{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px;border:1px solid #8885;border-radius:8px}
-.production-footer{position:sticky;bottom:0;background:Canvas;padding:12px 0;display:flex;justify-content:flex-end}.production-ref-grid{margin:14px 0}
-@media(max-width:600px){.production-form fieldset{grid-template-columns:1fr}.production-drawer{padding:14px}.production-link-row{grid-template-columns:1fr}}
+
+/* Production screens: shared heading, button components and wedding tokens. */
+.production-page{width:100%;min-width:0;font:inherit;color:var(--wd-ink);display:grid;gap:20px}
+.production-heading,.production-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.production-heading{justify-content:space-between;gap:18px;margin:0}
+.production-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.production-metric{display:grid;gap:8px;border:1px solid var(--wd-line);border-radius:var(--wd-radius);background:var(--wd-surface);padding:16px 20px}
+.production-metric span{color:var(--wd-muted)}.production-metric strong{font-size:30px;line-height:1.2;font-weight:600}
+.production-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.production-tabs{display:flex;gap:3px;padding:4px;flex-wrap:wrap;border:1px solid var(--wd-line);border-radius:11px}
+.production-tabs button{background:transparent;border:0;color:var(--wd-muted);padding:10px 14px;min-height:42px;font:600 16px/1.3 var(--wd-body);cursor:pointer;border-radius:8px}
+.production-filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.production-filters select{max-width:250px}.production-filters input{width:200px}
+.production-grid,.production-ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:16px}
+.production-card{display:flex;flex-direction:column;gap:14px;padding:20px;border:1px solid var(--wd-line);border-radius:var(--wd-radius);background:var(--wd-surface);box-shadow:var(--wd-shadow);min-width:0;overflow-wrap:anywhere}
+.production-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}.production-card-top>div{min-width:0;flex:1}
+.production-card h2{font:600 23px/1.25 var(--wd-body);margin:0;color:var(--wd-ink)}.production-card p{margin:0;line-height:1.5}.production-category{color:var(--wd-muted);margin-bottom:6px!important}.production-status{font-size:16px;color:var(--wd-muted);padding:5px 9px;background:var(--wd-soft);border-radius:7px}.production-status.is-selected{color:var(--wd-accent);font-weight:600}
+.production-facts{display:grid;gap:9px;margin:0;padding:14px 0;border-block:1px solid var(--wd-line)}.production-facts>div,.production-cost{display:flex;justify-content:space-between;gap:12px;align-items:baseline}.production-facts dt,.production-cost span{color:var(--wd-muted)}.production-facts dd{margin:0;text-align:right;font-weight:500}.production-price{font-size:22px;text-align:right}.production-note{color:var(--wd-muted)}.production-card-actions{margin-top:auto;padding-top:12px;border-top:1px solid var(--wd-line)}
+.production-card img{width:100%;height:auto;max-height:320px;object-fit:contain;border-radius:9px}.production-card img.production-cover{aspect-ratio:16/9;object-fit:cover}
+.production-empty{padding:40px;background:var(--wd-surface);border:1px solid var(--wd-line);border-radius:var(--wd-radius);text-align:center}.production-empty h2{font-size:22px;margin:0 0 16px}
+.production-drawer{position:fixed;inset:0 0 0 auto;margin:0;width:min(760px,100vw);max-width:100vw;height:100dvh;max-height:100dvh;box-sizing:border-box;border:0;border-left:1px solid var(--wd-line);background:var(--wd-surface);color:var(--wd-ink);padding:26px;overflow:auto;box-shadow:-12px 0 40px #0003}
+.production-drawer::backdrop{background:#0006}.production-drawer-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--wd-line)}.production-drawer-head h2{font:400 30px/1.2 var(--wd-heading);margin:0}
+.production-form fieldset{border:0;border-bottom:1px solid var(--wd-line);padding:0 0 22px;margin:22px 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;min-width:0}
+.production-form legend{font-size:21px;font-weight:600;margin-bottom:16px}.production-field{display:flex;flex-direction:column;gap:7px;min-width:0}.production-field>span{font-size:16px;font-weight:600;color:var(--wd-muted)}.production-field textarea{min-height:88px;resize:vertical}.production-field:has(textarea){grid-column:1/-1}
+.production-tags,.production-links{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}.production-tags button{font-weight:500}.production-link-row{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px;border:1px solid var(--wd-line);border-radius:10px}
+.production-footer{position:sticky;bottom:-26px;background:var(--wd-surface);padding:16px 0;display:flex;justify-content:flex-end;border-top:1px solid var(--wd-line)}.production-ref-grid{margin:14px 0}
+@media(max-width:600px){.production-metrics{gap:8px}.production-metric{padding:12px}.production-metric strong{font-size:24px}.production-form fieldset{grid-template-columns:1fr}.production-drawer{padding:16px}.production-link-row{grid-template-columns:1fr}.production-filters>*{flex:1 1 140px;max-width:100%!important}.production-footer{bottom:-16px}}
