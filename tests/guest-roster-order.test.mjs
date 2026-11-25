@@ -140,7 +140,7 @@ test('guest identity and biography precede collapsed organizer invitation fields
  const main=js.slice(start,bio);
  for(const field of ['relation_to_couple','community','birth_city','birth_country','city','country'])
    assert.match(main,new RegExp("'"+field+"'"));
- for(const field of ['planning_status','age_group','plus_one_allowed','decision','side'])
+ for(const field of ['planning_status','age_group','decision','side'])
    assert.doesNotMatch(main,new RegExp("'"+field+"'"));
  assert.match(js,/adminDetails.append\(mk\('summary','','Организация приглашения'\)\)/);
 });
@@ -149,7 +149,7 @@ test('guest identity and biography precede collapsed organizer invitation fields
 test('guest identity is free of organizer-only fields, which appear at the end of the card',async()=>{
  const ui=await readFile(new URL('../src/admin-guests.js',import.meta.url),'utf8');
  const first=ui.slice(ui.indexOf("const basics=group('О человеке'"),ui.indexOf("basics.classList.add"));
- for(const field of ['planning_status','age_group','plus_one_allowed','decision','side']){
+ for(const field of ['planning_status','age_group','decision','side']){
    assert.doesNotMatch(first,new RegExp("\\['"+field+"'"));
  }
  for(const field of ['relation_to_couple','community','birth_city','birth_country','city','country']){
@@ -159,8 +159,20 @@ test('guest identity is free of organizer-only fields, which appear at the end o
  const english=ui.indexOf("const englishDetails=");
  const organizer=ui.indexOf("const adminDetails=");
  const registration=ui.indexOf("const registration=section('Регистрация на свадьбу')");
- assert.ok(biography>0&&english>biography&&organizer>english&&registration>organizer);
- const planning=ui.slice(organizer,registration);
- for(const field of ['planning_status','age_group','plus_one_allowed','decision','side'])
+ assert.ok(registration>0&&registration<biography&&english>biography&&organizer>english);
+ const planning=ui.slice(organizer,ui.indexOf('profile.append(form)',organizer));
+ for(const field of ['planning_status','age_group','decision','side'])
    assert.match(planning,new RegExp("\\['"+field+"'"));
+});
+
+test('guest card starts with registration, language belongs to identity, and disclosures use a chevron',async()=>{
+ const ui=await readFile(new URL('../src/admin-guests.js',import.meta.url),'utf8');
+ const css=await readFile(new URL('../src/admin-guests.css',import.meta.url),'utf8');
+ const basics=ui.slice(ui.indexOf("const basics=group('О человеке'"),ui.indexOf('basics.classList.add'));
+ assert.match(basics,/'language','Язык общения'/);
+ assert.ok(ui.indexOf("const registration=section('Регистрация на свадьбу')")<ui.indexOf("const basics=group('О человеке'"));
+ assert.doesNotMatch(ui,/plus_one_allowed|Можно прийти с \+1|seatingDetails/);
+ assert.match(ui,/group\('Рассадка',/);
+ assert.match(css,/\.ad-gb-panel \.ad-gb-main-profile\{border-bottom:0/);
+ assert.match(css,/transform:rotate\(225deg\)/);
 });

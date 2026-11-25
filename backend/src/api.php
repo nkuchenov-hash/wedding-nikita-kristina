@@ -508,7 +508,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         statement($db,'INSERT INTO guests(id,first_name,last_name,display_name,side,relationship,city,email,phone,plus_one_allowed,children_count,planning_status,age_group) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
           [$id,$first,$last,$name,$side,strval($d,'relationship',255),strval($d,'city',255),
            strval($d,'email',320),strval($d,'phone',64),
-           boolval($d,'plus_one_allowed')?1:0,intvalField($d,'children_count',0,15),$planning,$age]);
+           1,intvalField($d,'children_count',0,15),$planning,$age]);
         audit($db,'admin',$actor,'create','guest',$id);
         json(['ok'=>true,'id'=>$id],201);
     }
@@ -541,7 +541,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
             fail(404,'guest','Гость не найден');
         $profileFields=['name_en','relation_to_couple','seating_group','decision','base_count'];
         $guestFields=['first_name','last_name','display_name','side','relationship','city','country','origin_place','origin_country','birth_city','birth_country',
-            'email','phone','language','about','about_en','community','private_notes','plus_one_allowed','children_count','planning_status','age_group'];
+            'email','phone','language','about','about_en','community','private_notes','children_count','planning_status','age_group'];
         $setGuest=[];$argsGuest=[];$setProfile=[];$argsProfile=[];
         foreach($values as $key=>$value){
             if(!is_string($key)||!in_array($key,array_merge($guestFields,$profileFields),true))
@@ -557,8 +557,6 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
                 fail(422,'field','Некорректная сторона');
             if($key==='children_count' && (!preg_match('/^\d{1,2}$/',(string)$value)||
                 (int)$value>15))fail(422,'field','Допустимо от 0 до 15 детей');
-            if($key==='plus_one_allowed' && !in_array((string)$value,['0','1'],true))
-                fail(422,'field','Некорректное разрешение на сопровождающего');
             if($key==='email' && $value!=='' && !filter_var($value,FILTER_VALIDATE_EMAIL))
                 fail(422,'email','Некорректный email');
             if($key==='language' && !in_array($value,['ru','en','de','other'],true))
@@ -571,7 +569,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
             elseif($key==='phone')$max=64;
             elseif($key==='seating_group')$max=160;
             if(mb_strlen((string)$value)>$max)fail(422,'field','Слишком длинное значение');
-            if(in_array($key,['plus_one_allowed','children_count'],true))$value=(int)$value;
+            if($key==='children_count')$value=(int)$value;
             if(in_array($key,$guestFields,true)){
                 $setGuest[]=$key.'=?';$argsGuest[]=$value;
             }else{
@@ -613,7 +611,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
             audit($db,'admin',$actor,'clear','rsvp',$id,['manual'=>true]);
             json(['ok'=>true,'attendance'=>null]);
         }
-        $adults=intvalField($d,'adults',0,1+(int)$g['plus_one_allowed'],1);
+        $adults=intvalField($d,'adults',0,2,1);
         $previous=one($db,'SELECT children,transport_needed,arrival_notes FROM rsvps WHERE guest_id=?',[$id])?:[];
         $children=intvalField($d,'children',0,childrenEnabled($db)?16:0,0);
         // When children are disabled, exclude them from live counts but retain saved historical RSVP details.
@@ -640,11 +638,11 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
     if ($route==='admin/guest/update' && $method==='POST') {
         $d=payload(8192);$id=strval($d,'id',40,true);
         if (!one($db,'SELECT id FROM guests WHERE id=?',[$id])) fail(404,'not_found','Гость не найден');
-        $fields=['first_name','last_name','display_name','side','relationship','city','email','phone','language','about','plus_one_allowed','children_count','invited','status'];
+        $fields=['first_name','last_name','display_name','side','relationship','city','email','phone','language','about','children_count','invited','status'];
         $set=[];$values=[];
         foreach($fields as $key){
             if(!array_key_exists($key,$d))continue;
-            if(in_array($key,['plus_one_allowed','invited'],true)) $v=boolval($d,$key)?1:0;
+            if($key==='invited') $v=boolval($d,$key)?1:0;
             elseif($key==='children_count')$v=intvalField($d,$key,0,15);
             elseif($key==='side')$v=choice($d,$key,['bride','groom','both','other'],'other');
             elseif($key==='status')$v=choice($d,$key,['draft','invited','registered','archived'],'draft');
@@ -938,7 +936,7 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
     $isAdmin=isset($_SESSION['admin_id']);
     if ($route==='guest/me' && $method==='GET') {
         if($isAdmin)fail(403,'role','Только для гостей');
-        $guest=one($db,'SELECT g.id,g.first_name,g.last_name,g.display_name,g.city,g.side,g.about,g.email,g.phone,g.profile_visible,g.consent_at,g.plus_one_allowed,g.children_count,p.profile_completed_at
+        $guest=one($db,'SELECT g.id,g.first_name,g.last_name,g.display_name,g.city,g.side,g.about,g.email,g.phone,g.profile_visible,g.consent_at,1 AS plus_one_allowed,g.children_count,p.profile_completed_at
           FROM guests g LEFT JOIN guest_progress p ON p.guest_id=g.id WHERE g.id=?',[$actor]);
         $rsvp=one($db,'SELECT * FROM rsvps WHERE guest_id=?',[$actor]);
         $choices=all($db,'SELECT category,option_id FROM menu_choices WHERE guest_id=?',[$actor]);
@@ -965,7 +963,7 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
         if(!is_array($items)||!array_is_list($items)||count($items)>16)
             fail(422,'companions','Некорректный список сопровождающих');
         $g=one($db,'SELECT plus_one_allowed,children_count FROM guests WHERE id=?',[$actor]);
-        $maxAdults=(int)$g['plus_one_allowed'];$maxChildren=childrenEnabled($db)?16:0;
+        $maxAdults=1;$maxChildren=childrenEnabled($db)?16:0;
         $adultCount=0;$childCount=0;$valid=[];
         foreach($items as $item){
             if(!is_array($item))fail(422,'companion','Неверная запись');
@@ -1032,7 +1030,7 @@ function guestRoute(PDO $db,string $actor,string $route,string $method): never {
         if($att==='yes'&&!one($db,"SELECT guest_id FROM guest_progress WHERE guest_id=? AND profile_completed_at IS NOT NULL",[$actor]))
             fail(422,'complete_profile','Сначала сохраните карточку гостя');
         $guest=one($db,'SELECT plus_one_allowed,children_count FROM guests WHERE id=?',[$actor]);
-        $maxAdults=1+(int)$guest['plus_one_allowed'];
+        $maxAdults=2;
         $adults=intvalField($d,'adults',0,$maxAdults,1);
         $children=intvalField($d,'children',0,childrenEnabled($db)?16:0,0);
         if(!childrenEnabled($db)){

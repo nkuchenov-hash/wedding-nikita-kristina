@@ -652,3 +652,34 @@ body.admin-body .ad-guestbook dialog.ad-gb-settings-drawer[hidden]{display:none!
 }
 @media(max-width:360px){.ad-gb-settings-drawer.ad-gb-columns-menu .ad-gb-visible-filters{grid-template-columns:minmax(0,1fr)}}
 @media(prefers-reduced-motion:reduce){body.admin-body .ad-guestbook dialog.ad-gb-settings-drawer[open]{animation:none}}
+
+/* Guest card: one section divider and a shared text-only disclosure pattern. */
+.ad-gb-panel .ad-gb-main-details{padding-bottom:0}
+.ad-gb-panel .ad-gb-main-profile{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.ad-gb-panel .ad-gb-main-profile .ad-gb-edit-field{font-weight:400}
+.ad-gb-panel .ad-gb-registration{margin-top:0}
+.ad-gb-panel .ad-gb-registration:first-child{border-top:0;padding-top:0}
+.ad-gb-panel .ad-gb-unified-form{gap:20px}
+.ad-gb-panel :is(.ad-gb-legacy-details,.ad-gb-secondary-section){
+ border:0;border-top:1px solid var(--wd-line,#dce6dc);border-radius:0;background:transparent;
+ padding:0;margin:0;box-shadow:none
+}
+.ad-gb-panel :is(.ad-gb-legacy-details,.ad-gb-secondary-section)>summary{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;
+ min-height:48px;box-sizing:border-box;padding:14px 0;margin:0;
+ list-style:none;cursor:pointer;font-size:16px;font-weight:500;color:var(--wd-ink,#203b2c);
+ background:transparent;border:0;border-radius:0
+}
+.ad-gb-panel :is(.ad-gb-legacy-details,.ad-gb-secondary-section)>summary::-webkit-details-marker{display:none}
+.ad-gb-panel :is(.ad-gb-legacy-details,.ad-gb-secondary-section)>summary::marker{content:''}
+.ad-gb-panel :is(.ad-gb-legacy-details,.ad-gb-secondary-section)>summary::after{
+ content:'';display:block;flex:0 0 9px;width:9px;height:9px;box-sizing:border-box;
+ border-right:1.7px solid currentColor;border-bottom:1.7px solid currentColor;
+ transform:rotate(45deg);margin:0 4px 4px 0;transition:transform .15s ease
+}
+.ad-gb-panel :is(.ad-gb-legacy-details,.ad-gb-secondary-section)[open]>summary::after{content:'';transform:rotate(225deg);margin-bottom:-4px}
+.ad-gb-panel :is(.ad-gb-legacy-details,.ad-gb-secondary-section)[open]{padding-bottom:14px}
+.ad-gb-panel .ad-gb-legacy-details[open] .ad-gb-edit-grid{margin-top:4px}
+.ad-gb-panel .ad-gb-unified-form>.ad-gb-legacy-details+.ad-gb-legacy-details{margin-top:-20px}
+.ad-gb-panel .ad-gb-section:has(>.ad-gb-unified-form){padding-bottom:0}
+@media(prefers-reduced-motion:reduce){.ad-gb-panel :is(.ad-gb-legacy-details,.ad-gb-secondary-section)>summary::after{transition:none}}

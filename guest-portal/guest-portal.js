@@ -89,7 +89,7 @@ function rsvpPanel(info){
  const select=el('select');
  for(const [v,t]of [['yes','Да, буду'],['maybe','Пока не знаю'],['no','Не смогу']]){const o=el('option','',t);o.value=v;select.append(o)}
  select.value=info.rsvp?.attendance||'maybe';
- const adults=input(info.rsvp?.adults??1,'number');adults.min='0';adults.max=String(1+Number(guest.plus_one_allowed));adults.required=true;
+ const adults=input(info.rsvp?.adults??1,'number');adults.min='0';adults.max='2';adults.required=true;
  const kids=input(info.rsvp?.children??0,'number');kids.min='0';kids.max=String(guest.children_count);kids.required=true;
  const dietary=el('textarea');dietary.rows=3;dietary.value=info.rsvp?.dietary_notes||'';dietary.maxLength=1000;
  const notes=el('textarea');notes.rows=3;notes.value=info.rsvp?.other_notes||'';notes.maxLength=1200;

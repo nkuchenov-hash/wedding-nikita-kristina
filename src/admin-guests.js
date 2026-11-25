@@ -270,7 +270,7 @@ export async function activateGuestDirectory(root){
    const x=sortingValue(a,key),y=sortingValue(b,key),empty=v=>v===null||v===undefined||s(v)==='';
    if(empty(x)&&!empty(y))return 1;
    if(empty(y)&&!empty(x))return -1;
-   const numeric=['adults','children','children_count','plus_one_allowed'].includes(key);
+   const numeric=['adults','children','children_count'].includes(key);
    const result=numeric?(Number(x||0)-Number(y||0)):
      s(x).localeCompare(s(y),'ru',{numeric:true,sensitivity:'base'});
    return (descending?-result:result)||display(a).localeCompare(display(b),'ru')||s(a.id).localeCompare(s(b.id));
@@ -403,7 +403,7 @@ export async function activateGuestDirectory(root){
  async function saveAnswer(p,val){
    if(val===''&&p.attendance&&!confirm('Очистить ранее сохранённый ответ?'))return;
    const attending=val==='yes'||val==='maybe';
-   const adults=attending?Math.max(1,Math.min(Number(p.adults)||1,1+Number(p.plus_one_allowed||0))):0;
+   const adults=attending?Math.max(1,Math.min(Number(p.adults)||1,2)):0;
    const children=attending&&childrenEnabled?Math.max(0,Math.min(16,Number(p.children)||0)):0;
    const result=await request('admin/guest/rsvp',{method:'PATCH',csrf,body:{
      id:p.id,attendance:val,adults,children,
@@ -545,7 +545,7 @@ export async function activateGuestDirectory(root){
    const body=mk('tbody');
    const editable=new Set(['first_name','last_name','name_en','planning_status','age_group',
      'side','relation_to_couple','relationship','community','seating_group','decision',
-     'attendance','plus_one_allowed','city','country','origin_place','origin_country','birth_city','birth_country','phone','email','language']);
+     'attendance','city','country','origin_place','origin_country','birth_city','birth_country','phone','email','language']);
    function tableCell(p,key){
      if(key==='display_name'){
        const td=mk('td','ad-gb-name');
@@ -564,7 +564,6 @@ export async function activateGuestDirectory(root){
        const choices=key==='planning_status'?PLANNING:
          key==='age_group'?AGE:key==='side'?SIDES.filter(([v])=>v!=='all'):
          key==='attendance'?ANSWERS:key==='language'?LANGUAGES:
-         key==='plus_one_allowed'?[['0','Нет'],['1','Да']]:
          key==='decision'?[...new Set([s(p.decision),...DECISIONS])].filter(Boolean).map(v=>[v,v]):null;
        const td=editCell(p,key,'Не указано',choices);
        if(key==='planning_status'&&isReserve(p))td.classList.add('ad-gb-reserve-cell');
@@ -707,6 +706,21 @@ export async function activateGuestDirectory(root){
        });
      }
      titleArea.replaceChildren(titleInput,titleEn,nameStatus);
+     const registration=section('Регистрация на свадьбу');
+     registration.classList.add('ad-gb-registration');
+     const registrationGrid=mk('div','ad-gb-registration-grid');
+     function statusItem(label,value){
+       const item=mk('div','ad-gb-registration-item');
+       item.append(mk('span','',label),mk('strong','',value));registrationGrid.append(item);
+     }
+     const sentAt=s(g.invitation_sent_at);
+     const openedAt=s(g.first_opened_at);
+     const answered=s(g.attendance);
+     statusItem('Приглашение',sentAt?'Отправлено':'Не отправлено');
+     statusItem('Гостевая анкета',g.profile_completed_at?'Заполнена':openedAt?'Открыта, не заполнена':'Не открыта');
+     const answerName=ANSWERS.find(([id])=>id===answered)?.[1];
+     statusItem('Ответ',answerName||'Нет ответа');
+     registration.append(registrationGrid);
      const profile=mk('section','ad-gb-section');detail.append(profile);
      const form=mk('form','ad-gb-unified-form'),controls={},initial={};
      // Imported sheets repeat the social-circle label in the bio fields.
@@ -721,7 +735,7 @@ export async function activateGuestDirectory(root){
      }
      function group(title,items,container=form){
        const wrapper=mk('div','ad-gb-field-group');
-       wrapper.append(mk('h4','',title));
+       if(title)wrapper.append(mk('h4','',title));
        const body=mk('div','ad-gb-edit-grid');
        for(const [key,label,type,opts]of items){
          const value=displayedFieldValue(key);
@@ -738,7 +752,8 @@ export async function activateGuestDirectory(root){
        ['birth_city','Город рождения','text'],
        ['birth_country','Страна рождения','text'],
        ['city','Город проживания','text'],
-       ['country','Страна проживания','text']
+       ['country','Страна проживания','text'],
+       ['language','Язык общения','select',LANGUAGES]
      ]);
      basics.classList.add('ad-gb-main-details');
      const bio=group('Профиль гостя',[
@@ -746,37 +761,32 @@ export async function activateGuestDirectory(root){
      ]);
      bio.classList.add('ad-gb-main-profile');
      group('Контакты',[
-       ['phone','Телефон','tel'],['email','Email','email'],
-       ['language','Язык общения','select',LANGUAGES]
+       ['phone','Телефон','tel'],['email','Email','email']
      ]);
      // Seating is a future planning decision, not a duplicate social circle.
      // Preserve values imported from spreadsheets, but don't present them
      // alongside the social circle as two equivalent identity fields.
-     const seatingDetails=mk('details','ad-gb-legacy-details ad-gb-seating-details');
-     seatingDetails.append(mk('summary','','Рассадка за столами'));
-     form.append(seatingDetails);
-     const seatingGroup=group('План рассадки',[
+     group('Рассадка',[
        ['seating_group','С кем посадить / компания для стола','text']
-     ],seatingDetails);
+     ]);
      const notesDetails=mk('details','ad-gb-legacy-details ad-gb-bio-details');
      notesDetails.append(mk('summary','','Дополнительные заметки организаторов'));
      form.append(notesDetails);
-     group('Заметки',[['private_notes','Что важно учесть на свадьбе','textarea']],notesDetails);
+     group('',[['private_notes','Что важно учесть на свадьбе','textarea']],notesDetails);
      const englishDetails=mk('details','ad-gb-legacy-details ad-gb-english-details');
      englishDetails.append(mk('summary','','Профиль на английском'));
      form.append(englishDetails);
-     group('Английская версия',[
+     group('',[
        ['about_en','Полный профиль EN','textarea']
      ],englishDetails);
      // Organizational attributes are preserved but deliberately separated from biography.
      const adminDetails=mk('details','ad-gb-legacy-details ad-gb-organizer-details');
      adminDetails.append(mk('summary','','Организация приглашения'));
      form.append(adminDetails);
-     group('Планирование и приглашение',[
+     group('',[
        ['side','Сторона','select',SIDES.filter(([v])=>v!=='all')],
        ['planning_status','Состав гостей','select',PLANNING],
        ['age_group','Возрастная категория','select',AGE],
-       ['plus_one_allowed','Можно прийти с +1','select',[['0','Нет'],['1','Да']]],
        ['decision','Решение о приглашении','select',decisionOptions]
      ],adminDetails);
 
@@ -922,21 +932,6 @@ export async function activateGuestDirectory(root){
          panelBusy=false;footerSave.disabled=footerCancel.disabled=footerDelete.disabled=false;
        }
      };
-     const registration=section('Регистрация на свадьбу');
-     registration.classList.add('ad-gb-registration');
-     const registrationGrid=mk('div','ad-gb-registration-grid');
-     function statusItem(label,value){
-       const item=mk('div','ad-gb-registration-item');
-       item.append(mk('span','',label),mk('strong','',value));registrationGrid.append(item);
-     }
-     const sentAt=s(g.invitation_sent_at);
-     const openedAt=s(g.first_opened_at);
-     const answered=s(g.attendance);
-     statusItem('Приглашение',sentAt?'Отправлено':'Не отправлено');
-     statusItem('Гостевая анкета',g.profile_completed_at?'Заполнена':openedAt?'Открыта, не заполнена':'Не открыта');
-     const answerName=ANSWERS.find(([id])=>id===answered)?.[1];
-     statusItem('Ответ',answerName||'Нет ответа');
-     registration.append(registrationGrid);
      // Guest-site submissions populate the statuses above automatically.
      showGuestFooter({showDelete:g.status!=='archived'});
 
