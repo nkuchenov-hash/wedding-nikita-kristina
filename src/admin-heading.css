@@ -762,3 +762,10 @@ body.admin-body .vw-control-board .ad-gb-settings-icon{color:var(--wd-accent)}
 body.admin-body .vw-control-board .ad-gb-settings-icon svg{flex:none}
 body.admin-body .vw-control-board .ad-gb-settings-icon .ad-gb-settings-label{padding:0;border:0;background:transparent;color:inherit;font-weight:500}
 @media(max-width:900px){body.admin-body .vw-control-board .ad-gb-column-prefs>.ad-gb-settings-icon{display:flex;gap:8px;width:auto;min-height:44px;padding:7px 10px;border:1px solid var(--wd-line)!important}}
+
+/* Table settings: visibility toggles, not numeric width inputs. Keep DOM column indices for responsive layouts. */
+body.admin-body .vw-page.vw-control-board .vw-table-sortable :is(col,th,td)[hidden]{display:none!important}
+body.admin-body .vw-table-settings .vw-visible-columns{display:grid;gap:0;margin:0 0 12px}
+body.admin-body .vw-table-settings .vw-visible-column{display:flex;align-items:center;gap:12px;min-height:44px;padding:8px 0;border-bottom:1px solid var(--wd-line);font-size:16px;color:var(--wd-ink);cursor:pointer}
+body.admin-body .vw-table-settings .vw-visible-column input[type=checkbox]{width:18px;height:18px;margin:0;flex:none;accent-color:var(--wd-accent)}
+body.admin-body .vw-table-settings .vw-visible-column:has(input:disabled){cursor:default;color:var(--wd-muted)}

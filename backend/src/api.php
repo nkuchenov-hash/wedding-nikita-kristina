@@ -248,11 +248,17 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
                 fail(422,'field','Неверная настройка рабочих смет');
         } elseif($key==='venue_table_layout'){
             $min=['name'=>260,'date'=>195,'visit'=>120,'price'=>160,'capacity'=>125,'score'=>120,'archive'=>120];
-            if(!is_array($value)||array_is_list($value)||array_diff(array_keys($value),['row_height','truncate','widths'])||
+            if(!is_array($value)||array_is_list($value)||array_diff(array_keys($value),['row_height','truncate','widths','visible'])||
                 !isset($value['row_height'],$value['truncate'],$value['widths'])||
                 !in_array($value['row_height'],[96,128,160,192,0],true)||!is_bool($value['truncate'])||!is_array($value['widths'])||count($value['widths'])>count($min))
                 fail(422,'field','Некорректные параметры таблицы площадок');
             foreach($value['widths'] as $column=>$width)if(!isset($min[$column])||!is_int($width)||$width<$min[$column]||$width>1000)fail(422,'field','Недопустимая ширина столбца');
+            if(array_key_exists('visible',$value)){
+                $visible=$value['visible'];
+                if(!is_array($visible)||!array_is_list($visible)||!in_array('name',$visible,true)||count($visible)>count($min))fail(422,'field','Некорректный список столбцов');
+                foreach($visible as $column)if(!is_string($column)||!isset($min[$column]))fail(422,'field','Неизвестный столбец');
+                if(count(array_unique($visible))!==count($visible))fail(422,'field','Повторяющиеся столбцы');
+            }
         } elseif($key==='guest_table_layout'){
             $allowedHeights=[56,72,96,128,0];
             $allowedFields=['display_name','side','community','relation_to_couple','about',
