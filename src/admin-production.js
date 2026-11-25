@@ -21,6 +21,7 @@ export const vendorIconPaths={
 const zones=['Гостевые столы','Рассадка','Стол молодожёнов','Входная зона','Фотозона','Интерактивные зоны','Церемония','Другое'];
 const specs={'Ведущий':['Часы работы','Подготовка сценария','Языки'],'Диджей':['Часы работы','Оборудование','Музыкальная программа'],'Музыкальный коллектив':['Состав','Жанр','Количество сетов','Длительность сета','Технический райдер'],'Фотограф':['Часы съёмки','Количество фото','Срок готовности'],'Видеограф':['Количество операторов','Длительность фильма','Срок готовности'],'Декоратор':['Монтаж','Демонтаж','Материалы'],'Кондитер':['Вес','Цена за кг','Доставка']};
 const statuses={candidate:'Кандидат',research:'Кандидат',negotiating:'На согласовании',selected:'Выбран',ordered:'Заказан',ready:'Готов',archived:'Архив'};
+export function statusTone(status){return ({selected:'green',ready:'green',candidate:'gray',research:'gray',negotiating:'amber',ordered:'blue',archived:'gray'})[status]||'gray'}
 const costFields=['fee','travel','hotel','food','equipment','extras'];
 const costLabels=['Гонорар','Проезд','Проживание','Питание','Оборудование','Дополнительные расходы'];
 const el=(tag,cls='',text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e};
@@ -35,7 +36,7 @@ function vendorIcon(type){
 }
 const vendorTones=['sage','blue','violet','rose','amber','blue','rose','sage','amber','rose','violet','sage','blue','amber','violet','slate'];
 function typeTile(types){const type=types[0]||'Подрядчик',tile=el('span','production-type-tile');tile.dataset.tone=vendorTones[vendorTypes.indexOf(type)]||'slate';tile.title=type;tile.append(vendorIcon(type));return tile}
-function typeTags(types,decor){const row=el('div','production-type-tags');for(const type of types){const tag=el('span','production-type-tag');if(!decor)tag.append(vendorIcon(type));tag.append(el('span','',type));row.append(tag)}return row}
+function typeTags(types,decor,withIcons=true){const row=el('div','production-type-tags');for(const type of types){const tag=el('span','production-type-tag');if(!decor&&withIcons)tag.append(vendorIcon(type));tag.append(el('span','',type));row.append(tag)}return row}
 const safeJson=x=>{try{return JSON.parse(x)||{}}catch{return {}}};
 const money=x=>x==null?'Уточняется':Number(x).toLocaleString('ru-RU')+' ₽';
 const amount=x=>x===''||x==null?null:Math.max(0,Math.round(Number(x)||0));
@@ -43,6 +44,12 @@ export function productionCost(d,decor=false,guests=0){
  const known=decor?[d.unitPrice==null||(!['guest','fixed'].includes(d.unit)&&d.quantity==null)?null:d.unitPrice*(d.unit==='guest'?guests:d.unit==='fixed'?1:Number(d.quantity||0)),d.install,d.delivery]:costFields.map(k=>d[k]);
  const sum=known.reduce((s,v)=>s+(Number(v)||0),0);
  return {sum,unknown:known.some(v=>v==null)};
+}
+export function productionEstimateFields(record,updates,decor,guests){
+ const d={...safeJson(record.details_json),...updates};
+ if(!decor&&!costFields.some(k=>Object.hasOwn(d,k)))d.fee=record.estimate_rub??null;
+ const result=productionCost(d,decor,guests),selected=(d.venues||[]).find(v=>v.id===d.venue);
+ return {details_json:JSON.stringify(d),estimate_rub:(decor&&d.included)||selected?.mode==='included'?0:result.sum+(selected?.extra||0)};
 }
 export async function renderProduction(host,call,section){
  const decor=section==='decor',collection=decor?'decor_items':'vendors';
@@ -56,6 +63,23 @@ export async function renderProduction(host,call,section){
  const actions=el('div','production-actions');header.append(actions);root.append(header);
  const toolbar=el('div','production-toolbar'),body=el('div','production-body');root.append(toolbar,body);
  const err=e=>showAdminToast(e.message||'Не удалось сохранить',{kind:'error'});
+ let inlineSaving=false;
+ async function inlineSave(r,fields,control){
+  if(inlineSaving)return false;inlineSaving=true;if(control)control.disabled=true;
+  try{await save(r,fields);return true}catch(e){err(e);return false}finally{inlineSaving=false;if(control?.isConnected)control.disabled=false}
+ }
+ function editCell(cell,r,label,current,display,commit,numeric=false){
+  const trigger=btn('',()=>{if(inlineSaving)return;const field=el('input','production-inline-input');field.type=numeric?'number':'text';if(numeric){field.min='0';field.step='1';field.inputMode='numeric'}field.value=current??'';field.setAttribute('aria-label',label);
+   const form=el('form','production-inline-form'),ok=btn('✓',()=>form.requestSubmit(),'production-inline-confirm'),cancel=btn('×',()=>{cell.replaceChildren(trigger);trigger.focus()},'production-inline-cancel');ok.setAttribute('aria-label','Сохранить');cancel.setAttribute('aria-label','Отмена');
+   form.append(field,ok,cancel);cell.replaceChildren(form);field.focus();field.select();
+   form.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();cell.replaceChildren(trigger);trigger.focus()}};
+   form.onsubmit=async e=>{e.preventDefault();if(inlineSaving||!field.reportValidity())return;let fields;try{fields=commit(field.value)}catch(e){err(e);return}if(await inlineSave(r,fields,ok))return;field.focus()};
+  },'production-inline-value');trigger.append(el('span','',display));trigger.setAttribute('aria-label','Изменить '+label+': '+display);cell.append(trigger);return cell
+ }
+ function statusControl(r){const s=select(Object.entries(statuses).filter(([k])=>k!=='research'||r.status==='research'),r.status||'candidate');s.className='production-status production-status-select';s.dataset.tone=statusTone(r.status);s.setAttribute('aria-label','Статус: '+r.name);s.onchange=async()=>{if(!await inlineSave(r,{status:s.value},s))s.value=r.status};return s}
+ function categoryCell(r){const cell=el('td'),trigger=btn('',()=>{if(inlineSaving)return;const chosen=new Set(tags(r)),form=el('form','production-inline-categories'),options=el('div','production-inline-category-options');for(const type of new Set([...(decor?zones:vendorTypes),...items.flatMap(tags)])){const l=el('label'),check=el('input');check.type='checkbox';check.checked=chosen.has(type);check.onchange=()=>check.checked?chosen.add(type):chosen.delete(type);l.append(check,el('span','',type));options.append(l)}const actions=el('div','production-inline-category-actions'),ok=btn('Сохранить',()=>form.requestSubmit(),'ad-tl-button ad-tl-primary'),cancel=btn('Отмена',()=>{cell.replaceChildren(trigger);trigger.focus()});actions.append(ok,cancel);form.append(options,actions);form.onsubmit=async e=>{e.preventDefault();await inlineSave(r,{category:[...chosen].join(', ')},ok)};form.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();cell.replaceChildren(trigger);trigger.focus()}};cell.replaceChildren(form);options.querySelector('input')?.focus()},'production-inline-value production-inline-tags');trigger.append(tags(r).length?typeTags(tags(r),decor,false):el('span','','Добавить'));trigger.setAttribute('aria-label','Изменить категории: '+r.name);cell.append(trigger);return cell}
+ function detailCell(r,key,label,value,display,numeric=true){return editCell(el('td'),r,label,value,display,raw=>productionEstimateFields(r,{[key]:numeric?amount(raw):raw.trim()},decor,guests),numeric)}
+
  async function save(r,fields){await call('admin/records',{method:r.id?'PATCH':'POST',body:{collection,...(r.id?{id:r.id}:{}),fields}});items=(await call('admin/records?collection='+collection)).items||[];draw();showAdminToast('Изменения сохранены.')}
  function openDrawer(title){const d=el('dialog','production-drawer');const head=el('header','production-drawer-head');head.append(el('h2','',title),btn('Закрыть',()=>d.close()));d.append(head);root.append(d);d.addEventListener('close',()=>d.remove());d.showModal();return d}
  function select(values,current){const e=el('select');for(const [v,t] of values){const o=el('option','',t);o.value=v;e.append(o)}e.value=current??'';return e}
@@ -127,9 +151,11 @@ export async function renderProduction(host,call,section){
    const keys=view==='compare'?[...new Set([...(specs[category]||[]),...list.flatMap(r=>Object.keys(details(r).specs||{}))])]:[];
    for(const h of [...(!decor?['Тип']:[]),'Название','Категории','Статус',...(!decor?['Гонорар','Проезд']:[]),'Стоимость','Оплачено',...keys,''])hr.append(el('th','',h));head.append(hr);
    for(const r of list){const d=details(r),tr=el('tr');if(!decor){const iconCell=el('td','production-icon-cell');iconCell.append(typeTile(tags(r)));tr.append(iconCell)}
-    const nameCell=el('td','production-name-cell');nameCell.append(btn(r.name,()=>edit(r),'production-name-link'));tr.append(nameCell);
-    const typeCell=el('td');typeCell.append(typeTags(tags(r),decor));tr.append(typeCell);
-    for(const v of [statuses[r.status]||r.status,...(!decor?[money(d.fee),money(d.travel)]:[]),displayCost(r),money(d.paid),...keys.map(k=>d.specs?.[k]||'—')])tr.append(el('td','',v));
+    const nameCell=editCell(el('td','production-name-cell'),r,'название',r.name,r.name,raw=>{const name=raw.trim();if(!name)throw Error('Укажите название');return {name}});tr.append(nameCell,categoryCell(r));
+    const statusCell=el('td');statusCell.append(statusControl(r));tr.append(statusCell);
+    if(!decor){const fee=Object.hasOwn(d,'fee')?d.fee:(!costFields.some(k=>Object.hasOwn(d,k))?r.estimate_rub:null);tr.append(detailCell(r,'fee','гонорар',fee,money(fee)),detailCell(r,'travel','проезд',d.travel,money(d.travel)))}
+    const totalCell=el('td','production-calculated-cell',displayCost(r));totalCell.title='Рассчитывается автоматически по статьям расходов';tr.append(totalCell,detailCell(r,'paid','оплачено',d.paid,money(d.paid)));
+    for(const k of keys)tr.append(editCell(el('td'),r,k,d.specs?.[k],d.specs?.[k]||'—',raw=>productionEstimateFields(r,{specs:{...(d.specs||{}),[k]:raw.trim()}},decor,guests)));
     const a=el('td'),row=el('div','production-table-actions');row.append(btn('Открыть',()=>edit(r)));if(venueFilter)row.append(btn('Условия',()=>editVenues(r)));a.append(row);tr.append(a);tbody.append(tr)}
    table.append(head,tbody);wrap.append(table);body.append(wrap);return
   }
@@ -138,8 +164,8 @@ export async function renderProduction(host,call,section){
    const d=details(r),types=tags(r),card=el('article','production-card'+(decor?'':' production-vendor-card'));
    const top=el('div','production-card-top'),identity=el('div','production-card-identity');
    if(!decor)top.append(typeTile(types));
-   const status=el('span','production-status'+(['selected','ordered','ready'].includes(r.status)?' is-selected':''),statuses[r.status]||r.status);top.append(status);
-   identity.append(el('h2','',r.name),typeTags(types,decor));card.append(top,identity);
+   const status=el('span','production-status',statuses[r.status]||r.status);status.dataset.tone=statusTone(r.status);top.append(status);
+   identity.append(el('h2','',r.name),typeTags(types,decor,false));card.append(top,identity);
    const facts=el('dl','production-facts');const fact=(label,value)=>{const row=el('div');row.append(el('dt','',label),el('dd','',value));facts.append(row)};
    if(!decor){fact('Гонорар',money(d.fee));fact('Проезд',money(d.travel));fact('Город отправления',d.city||'—')}else{fact('Количество',d.unit==='guest'?guests+' гостей':String(d.quantity??'—'));fact('Цена за единицу',money(d.unitPrice))}
    card.append(facts);const cost=el('div','production-cost');cost.append(el('span','','Общая стоимость'),el('strong','production-price',displayCost(r)));card.append(cost);
