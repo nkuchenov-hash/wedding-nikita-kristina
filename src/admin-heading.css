@@ -779,3 +779,23 @@ body.admin-body .production-status-menu .admin-select-option{justify-content:spa
 body.admin-body .production-status-menu .admin-select-option:hover,body.admin-body .production-status-menu .admin-select-option:focus-visible{background:var(--wd-soft);outline:none}
 body.admin-body .admin-content .production-page .production-table .production-inline-tags .production-type-tag{background:transparent!important;border:0;padding:0;color:var(--wd-muted)}
 body.admin-body .admin-content .production-page .production-table .production-inline-tags .production-type-tags{gap:4px}
+
+/* Production editor adopts the guest detail panel, scroll body and footer. */
+body.admin-body .admin-content dialog.production-editor-dialog.ad-gb-panel{position:fixed;inset:0 0 0 auto;margin:0;width:min(860px,100vw);max-width:100vw;height:100dvh;max-height:100dvh;padding:0;border:0;background:var(--wd-surface);color:var(--wd-ink)}
+body.admin-body .admin-content dialog.production-editor-dialog::backdrop{background:#0006}
+body.admin-body .admin-content .production-editor-dialog :is(.ad-gb-panel-header,.ad-gb-panel-footer){background:var(--wd-surface);border-color:var(--wd-line)}
+body.admin-body .admin-content .production-editor-dialog .ad-gb-title-input{font:400 clamp(28px,3.5vw,43px)/1.17 var(--wd-heading);background:transparent;border-color:transparent;padding:4px 6px;color:var(--wd-ink);min-height:44px}
+body.admin-body .admin-content .production-editor-dialog .ad-gb-title-input:focus{border-color:var(--wd-accent);background:var(--wd-surface)}
+body.admin-body .admin-content .production-editor-dialog :is(.ad-gb-field-group h4,.ad-gb-edit-field,.ad-gb-close){color:var(--wd-ink)}
+body.admin-body .admin-content .production-editor-dialog .ad-gb-field-group{border-color:var(--wd-line)}
+body.admin-body .admin-content .production-editor-dialog .ad-gb-field-group[hidden]{display:none!important}
+body.admin-body .admin-content .production-editor-dialog .ad-gb-footer-controls{justify-content:flex-end}
+body.admin-body .admin-content .production-editor-dialog .ad-gb-details{padding-bottom:26px}
+body.admin-body .admin-content .production-editor-dialog .production-selected-types{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+body.admin-body .admin-content .production-editor-dialog .production-selected-type{display:inline-flex;align-items:center;gap:7px;padding:5px 7px 5px 10px;min-height:34px;border-radius:8px;background:var(--wd-soft);color:var(--wd-ink)}
+body.admin-body .admin-content .production-editor-dialog .production-remove-type{border:0;background:transparent;color:var(--wd-muted);font-size:20px;line-height:1;width:25px;height:25px;padding:0;border-radius:5px;cursor:pointer}
+body.admin-body .admin-content .production-editor-dialog .production-remove-type:hover{background:var(--wd-line)}
+body.admin-body .admin-content .production-editor-dialog .production-add-type{min-height:36px;font-weight:500;padding:6px 10px}
+body.admin-body .admin-content .production-editor-dialog .production-type-picker:empty{display:none}
+body.admin-body .admin-content .production-editor-dialog .production-type-picker{max-width:380px}
+body.admin-body .admin-content .production-editor-dialog .ad-gb-footer-cancel{color:var(--wd-ink);background:var(--wd-surface);border-color:var(--wd-line)}

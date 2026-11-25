@@ -80,7 +80,7 @@ export async function renderProduction(host,call,section){
    form.onsubmit=async e=>{e.preventDefault();if(inlineSaving||!field.reportValidity())return;let fields;try{fields=commit(field.value)}catch(e){err(e);return}if(await inlineSave(r,fields,ok))return;field.focus()};
   },'production-inline-value');trigger.append(el('span','',display));trigger.setAttribute('aria-label','Изменить '+label+': '+display);cell.append(trigger);return cell
  }
- function statusControl(r){
+ function statusControl(r,onChange=null){
   const wrap=el('div','production-status-control'),trigger=btn(statuses[r.status]||r.status,open,'production-status production-status-chip');
   trigger.dataset.tone=statusTone(r.status);trigger.setAttribute('aria-label','Изменить статус: '+r.name+' — '+(statuses[r.status]||r.status));trigger.setAttribute('aria-haspopup','menu');trigger.setAttribute('aria-expanded','false');
   wrap.append(trigger);
@@ -88,9 +88,9 @@ export async function renderProduction(host,call,section){
   function close(){if(!menu)return;const old=menu;menu=null;try{old.hidePopover()}catch{}old.remove();trigger.setAttribute('aria-expanded','false')}
   function open(){
    if(inlineSaving)return;if(menu){close();return}
-   const popup=el('div','admin-select-popup production-status-menu');menu=popup;popup.setAttribute('popover','auto');popup.setAttribute('role','menu');popup.setAttribute('aria-label','Статус подрядчика');wrap.append(popup);
+   const popup=el('div','admin-select-popup production-status-menu');menu=popup;popup.setAttribute('popover','auto');popup.setAttribute('role','menu');popup.setAttribute('aria-label',decor?'Статус декора':'Статус подрядчика');wrap.append(popup);
    for(const [key,label] of Object.entries(statuses)){
-    const option=btn('',async()=>{if(key===r.status){close();trigger.focus();return}close();await inlineSave(r,{status:key},trigger)},'admin-select-option'+(key===r.status?' is-selected':''));
+    const option=btn('',async()=>{if(key===r.status){close();trigger.focus();return}close();if(onChange)onChange(key);else await inlineSave(r,{status:key},trigger)},'admin-select-option'+(key===r.status?' is-selected':''));
     option.setAttribute('role','menuitemradio');option.setAttribute('aria-checked',String(key===r.status));const chip=el('span','production-status',label);chip.dataset.tone=statusTone(key);option.append(chip,el('span','admin-select-check','✓'));popup.append(option)
    }
    popup.addEventListener('toggle',e=>{if(e.newState==='closed'&&menu===popup){close();trigger.focus({preventScroll:true})}});
@@ -109,27 +109,42 @@ export async function renderProduction(host,call,section){
  function openDrawer(title){const d=el('dialog','production-drawer');const head=el('header','production-drawer-head');head.append(el('h2','',title),btn('Закрыть',()=>d.close()));d.append(head);root.append(d);d.addEventListener('close',()=>d.remove());d.showModal();return d}
  function select(values,current){const e=el('select');for(const [v,t] of values){const o=el('option','',t);o.value=v;e.append(o)}e.value=current??'';return e}
  function edit(r={}){
-  const d=details(r);if(!r.id&&venueFilter)d.venue=venueFilter;const drawer=openDrawer(r.id?r.name:'Новая позиция'),form=el('form','production-form');drawer.append(form);
-  const inputs={};
-  function group(title){const g=el('fieldset');g.append(el('legend','',title));form.append(g);return g}
-  function field(g,key,label,value='',type='text',options){const l=el('label','production-field');l.append(el('span','',label));let e;if(options)e=select(options,value);else{e=el(type==='textarea'?'textarea':'input');if(type!=='textarea')e.type=type;if(type==='number'){e.min='0';e.step='1'}e.value=value??''}l.append(e);g.append(l);inputs[key]=e;return e}
-  const base=group('Основное');field(base,'name','Название',r.name).required=true;const categoryBox=el('div','production-category-editor');categoryBox.append(el('span','production-field-label',decor?'Категории':'Типы подрядчика'));const categoryInput=el('input');categoryInput.type='hidden';categoryInput.value=r.category||'';inputs.category=categoryInput;categoryBox.append(categoryInput);const suggested=el('div','production-tags');categoryBox.append(suggested);base.append(categoryBox);
+  const d=details(r);if(!r.id&&venueFilter)d.venue=venueFilter;
+  const drawer=el('dialog','ad-gb-panel production-editor-dialog'),head=el('header','ad-gb-panel-header'),identity=el('div','ad-gb-panel-identity'),close=btn('×',()=>drawer.close(),'ad-gb-close');
+  close.title='Закрыть карточку';close.setAttribute('aria-label','Закрыть карточку');
+  const form=el('form','ad-gb-unified-form'),scroll=el('div','ad-gb-details'),inputs={};
+  form.id='production-edit-form';const name=el('input','ad-gb-title-input');name.value=r.name||'';name.placeholder=decor?'Название элемента декора':'Имя или название подрядчика';name.required=true;name.setAttribute('aria-label','Название');name.setAttribute('form',form.id);inputs.name=name;identity.append(name);head.append(identity,close);scroll.append(form);drawer.append(head,scroll);root.append(drawer);drawer.addEventListener('close',()=>drawer.remove());
+  function group(title){const g=el('div','ad-gb-field-group'),body=el('div','ad-gb-edit-grid');g.append(el('h4','',title),body);form.append(g);return body}
+  function field(g,key,label,value='',type='text',options){const l=el('label','ad-gb-edit-field');l.append(el('span','',label));let e;if(options)e=select(options,value);else{e=el(type==='textarea'?'textarea':'input');if(type!=='textarea')e.type=type;if(type==='number'){e.min='0';e.step='1'}e.value=value??''}l.append(e);g.append(l);inputs[key]=e;return e}
+  const base=group('Основное'),categoryBox=el('div','production-category-editor ad-gb-edit-field');categoryBox.append(el('span','',decor?'Категории':'Типы подрядчика'));
+  const categoryInput=el('input');categoryInput.type='hidden';categoryInput.value=r.category||'';inputs.category=categoryInput;categoryBox.append(categoryInput);
+  const selectedList=el('div','production-selected-types'),picker=el('div','production-type-picker');categoryBox.append(selectedList,picker);base.append(categoryBox);
   const chosenTypes=()=>categoryInput.value.split(',').map(s=>s.trim()).filter(Boolean);
   const availableTypes=new Set([...(decor?zones:vendorTypes),...items.flatMap(tags),...chosenTypes()]);
-  function drawTypes(){suggested.replaceChildren();for(const t of availableTypes){const selected=chosenTypes().includes(t),b=btn('',()=>{const ts=chosenTypes();categoryInput.value=(selected?ts.filter(x=>x!==t):[...ts,t]).join(', ');drawTypes();showSpecs()},'production-type-choice');b.setAttribute('aria-pressed',String(selected));if(!decor)b.append(vendorIcon(t));b.append(el('span','',t));suggested.append(b)}}
-  const customRow=el('div','production-custom-tag'),custom=el('input');custom.placeholder='Новый тег';custom.setAttribute('aria-label','Новый тег');const addTag=()=>{const t=custom.value.trim();if(!t||t.includes(','))return;availableTypes.add(t);if(!chosenTypes().includes(t))categoryInput.value=[...chosenTypes(),t].join(', ');custom.value='';drawTypes();showSpecs()};custom.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addTag()}});customRow.append(custom,btn('Добавить тег',addTag));categoryBox.append(customRow);drawTypes();
-  field(base,'status','Статус',r.status||'candidate','text',Object.entries(statuses));
-  if(!decor){field(base,'contact','Контакты',r.contact);field(base,'website','Сайт / портфолио',r.website);field(base,'city','Город отправления',d.city);field(base,'contract_ref','Договор / предложение',r.contract_ref)}
+  let pickerOpen=false;
+  function updateTypes(next){categoryInput.value=[...new Set(next)].join(', ');pickerOpen=false;drawTypes();showSpecs()}
+  function drawTypes(){
+   selectedList.replaceChildren();picker.replaceChildren();
+   for(const t of chosenTypes()){const item=el('span','production-selected-type');if(!decor)item.append(vendorIcon(t));item.append(el('span','',t));const remove=btn('×',()=>updateTypes(chosenTypes().filter(x=>x!==t)),'production-remove-type');remove.setAttribute('aria-label','Убрать тип '+t);item.append(remove);selectedList.append(item)}
+   const add=btn(pickerOpen?'Отмена':'+ Добавить тип',()=>{pickerOpen=!pickerOpen;drawTypes();if(pickerOpen)picker.querySelector('select')?.focus()},'ad-gb-light production-add-type');add.setAttribute('aria-expanded',String(pickerOpen));selectedList.append(add);
+   if(!pickerOpen)return;
+   const choice=select([['','Выберите тип'],...[...availableTypes].filter(t=>!chosenTypes().includes(t)).map(t=>[t,t]),['__custom__','Другой тип…']],'');choice.setAttribute('aria-label','Добавить тип');picker.append(choice);
+   choice.onchange=()=>{if(choice.value==='__custom__'){const custom=el('input');custom.placeholder='Название типа';custom.setAttribute('aria-label','Название нового типа');const apply=()=>{const t=custom.value.trim();if(t&&!t.includes(',')){availableTypes.add(t);updateTypes([...chosenTypes(),t])}};custom.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();apply()}});const customRow=el('div','production-custom-tag');customRow.append(custom,btn('Добавить',apply,'ad-gb-light'));picker.replaceChildren(customRow);custom.focus()}else if(choice.value)updateTypes([...chosenTypes(),choice.value])}
+  }
+  const statusInput=el('input');statusInput.type='hidden';statusInput.value=r.status||'candidate';inputs.status=statusInput;const statusBox=el('div','ad-gb-edit-field');statusBox.append(el('span','','Статус'),statusInput);base.append(statusBox);
+  function drawStatus(){statusBox.querySelector('.production-status-control')?.remove();statusBox.append(statusControl({...r,name:name.value,status:statusInput.value},key=>{statusInput.value=key;drawStatus()}))}
+  drawStatus();drawTypes();
+  if(!decor){const contacts=group('Контакты');field(contacts,'contact','Контакты',r.contact);field(contacts,'website','Сайт / портфолио',r.website);field(contacts,'city','Город отправления',d.city);field(contacts,'contract_ref','Договор / предложение',r.contract_ref)}
   const costs=group('Стоимость и оплата');
   if(decor){field(costs,'unit','Единица расчёта',d.unit||'guest','text',[['guest','На гостя'],['table','На стол'],['piece','За штуку'],['zone','За зону'],['fixed','За проект']]);field(costs,'quantity','Количество (кроме гостей и проекта)',d.quantity,'number');field(costs,'unitPrice','Цена за единицу, ₽',d.unitPrice,'number');field(costs,'install','Монтаж, ₽',d.install,'number');field(costs,'delivery','Доставка, ₽',d.delivery,'number');field(base,'vendor','Подрядчик',d.vendor||'','text',[['','Не выбран'],...suppliers.filter(x=>x.status!=='archived').map(v=>[v.id,v.name])]);field(costs,'included','Уже входит в стоимость подрядчика',d.included?'yes':'no','text',[['no','Нет'],['yes','Да']]);}
   else for(const [i,k] of costFields.entries())field(costs,k,costLabels[i],Object.hasOwn(d,k)?d[k]:(k==='fee'?r.estimate_rub:null),'number');
   field(costs,'paid','Оплачено, ₽',d.paid,'number');field(costs,'agreed','Сумма согласована',d.agreed?'yes':'no','text',[['no','Нет'],['yes','Да']]);field(costs,'due','Срок оплаты',d.due,'date');
-  const specGroup=group('Характеристики'),specInputs={};
-  function showSpecs(){const old={...(d.specs||{}),...Object.fromEntries(Object.entries(specInputs).map(([k,e])=>[k,e.value]))};for(const k of Object.keys(specInputs))delete specInputs[k];specGroup.replaceChildren(el('legend','','Характеристики'));for(const k of new Set(inputs.category.value.split(',').flatMap(t=>specs[t.trim()]||[]))){specInputs[k]=field(specGroup,'spec:'+k,k,old[k]);}if(!Object.keys(specInputs).length)specGroup.append(el('p','','Дополнительные параметры можно указать ниже.'))}
+  const specGroup=group('Характеристики'),specInputs={},specDraft={...(d.specs||{})};
+  function showSpecs(){Object.assign(specDraft,Object.fromEntries(Object.entries(specInputs).map(([k,e])=>[k,e.value])));for(const k of Object.keys(specInputs))delete specInputs[k];specGroup.replaceChildren();for(const k of new Set(inputs.category.value.split(',').flatMap(t=>specs[t.trim()]||[]))){specInputs[k]=field(specGroup,'spec:'+k,k,specDraft[k]);}specGroup.parentElement.hidden=!Object.keys(specInputs).length}
   inputs.category.addEventListener('change',showSpecs);showSpecs();
   const notes=group('Материалы и договорённости');field(notes,'notes','Примечания',r.notes,'textarea');field(notes,'custom','Дополнительные параметры (по строкам: название: значение)',d.custom,'textarea');field(notes,'reference','Ссылка на материалы / референс',d.reference);field(notes,'owner','Ответственный',d.owner);field(notes,'deadline','Срок подготовки',d.deadline,'date');
-  const footer=el('div','production-footer');const submit=el('button','ad-tl-button ad-tl-primary','Сохранить');submit.type='submit';footer.append(submit);form.append(footer);
-  form.onsubmit=async e=>{e.preventDefault();submit.disabled=true;try{const value=k=>inputs[k]?.value??'',next={...d,city:value('city'),paid:amount(value('paid')),agreed:value('agreed')==='yes',due:value('due'),custom:value('custom'),reference:value('reference'),owner:value('owner'),deadline:value('deadline'),specs:Object.fromEntries(Object.entries(specInputs).map(([k,e])=>[k,e.value]))};
+  const footer=el('div','ad-gb-panel-footer'),controls=el('div','ad-gb-footer-controls');const submit=el('button','ad-gb-primary ad-gb-footer-save','Сохранить');submit.type='submit';submit.setAttribute('form',form.id);controls.append(btn('Отмена',()=>drawer.close(),'ad-gb-footer-cancel'),submit);footer.append(controls);drawer.append(footer);drawer.showModal();
+  form.onsubmit=async e=>{e.preventDefault();submit.disabled=true;try{const value=k=>inputs[k]?.value??'',next={...d,city:value('city'),paid:amount(value('paid')),agreed:value('agreed')==='yes',due:value('due'),custom:value('custom'),reference:value('reference'),owner:value('owner'),deadline:value('deadline'),specs:{...specDraft,...Object.fromEntries(Object.entries(specInputs).map(([k,e])=>[k,e.value]))}};
    if(decor)Object.assign(next,{unit:value('unit'),quantity:amount(value('quantity')),unitPrice:amount(value('unitPrice')),install:amount(value('install')),delivery:amount(value('delivery')),vendor:value('vendor'),included:value('included')==='yes'});
    else for(const k of costFields)next[k]=amount(value(k));
    const result=productionCost(next,decor,guests),selected=(next.venues||[]).find(v=>v.id===next.venue);let estimate=(decor&&next.included)||selected?.mode==='included'?0:result.sum+(selected?.extra||0);
