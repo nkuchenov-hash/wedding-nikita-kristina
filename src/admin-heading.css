@@ -818,3 +818,22 @@ body.admin-body .ad-gb-panel .ad-gb-secondary-section>.ad-gb-light{margin-top:12
 /* Nested headings remain readable but subordinate to the section heading. */
 body.admin-body .admin-content .ad-gb-panel .ad-gb-relation-group-title{font:500 16px/1.4 var(--wd-body);color:var(--wd-muted);letter-spacing:normal;text-transform:none}
 body.admin-body .admin-content .ad-gb-panel .ad-gb-relation-group-title{margin:0 0 4px}
+
+/* Compact program toolbar: only navigation and filters, not action buttons elsewhere. */
+body.admin-body .admin-content .ad-timeline-page .ad-tl-section-controls{margin-bottom:10px;row-gap:8px}
+body.admin-body .admin-content .ad-timeline-page .ad-tl-section-controls .ad-tl-day-tab{display:flex;align-items:center;justify-content:center;gap:5px;min-height:38px;padding:6px 5px;font-size:16px;line-height:1.2}
+body.admin-body .admin-content .ad-timeline-page .ad-tl-weekday{font-size:16px;line-height:1.2;font-weight:500;color:inherit}
+body.admin-body .admin-content .ad-timeline-page .ad-tl-section-controls .ad-tl-main-switch{min-height:38px;padding:3px;box-sizing:border-box}
+body.admin-body .admin-content .ad-timeline-page .ad-tl-section-controls .ad-tl-main-tab{min-height:30px;padding:4px 8px;font-size:16px;line-height:1.2}
+body.admin-body .admin-content .ad-timeline-page .ad-tl-compact-tools{margin-bottom:10px}
+body.admin-body .admin-content .ad-timeline-page .ad-tl-compact-tools .ad-tl-filter{min-height:32px;padding:5px 10px;font-size:16px;line-height:1.2}
+body.admin-body .admin-content .ad-timeline-page .ad-tl-compact-tools .ad-tl-display-modes{padding:3px;box-sizing:border-box}
+body.admin-body .admin-content .ad-timeline-page .ad-tl-compact-tools .ad-tl-display-option{min-height:30px;padding:4px 8px;font-size:16px;line-height:1.2}
+@media(max-width:760px){
+ body.admin-body .admin-content .ad-timeline-page .ad-tl-section-controls .ad-tl-day-tab{min-height:42px;gap:4px;padding:5px 3px}
+ body.admin-body .admin-content .ad-timeline-page .ad-tl-section-controls .ad-tl-main-tab,
+ body.admin-body .admin-content .ad-timeline-page .ad-tl-compact-tools .ad-tl-display-option{min-height:38px}
+}
+@media(max-width:360px){
+ body.admin-body .admin-content .ad-timeline-page .ad-tl-section-controls .ad-tl-day-tab{flex-direction:column;gap:0}
+}
