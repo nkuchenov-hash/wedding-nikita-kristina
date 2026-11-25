@@ -189,7 +189,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         $d=payload(16384);
         $allowed=['event_date','event_time','event_venue','venue_address','rsvp_deadline',
           'dress_code','transport_info','public_notes','menu_open','directory_open',
-          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','guest_table_columns','guest_table_layout','guest_sort_mode','activity_types','activity_tags','program_day_hours','venue_rating_rules','budget_limit_rub'];
+          'photos_open','guest_rsvp_open','stories_open','date_confirmed','place_confirmed','children_enabled','guest_table_columns','guest_table_layout','guest_sort_mode','activity_types','activity_tags','program_day_hours','venue_rating_rules','budget_limit_rub','selected_venue_id'];
         $key=choice($d,'key',$allowed,'');
         if(!array_key_exists('value',$d))
             fail(422,'field','Значение настройки недопустимо');
@@ -301,6 +301,7 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
             }
         } elseif(!is_scalar($value) && $value!==null)
             fail(422,'field','Значение настройки недопустимо');
+        if($key==='selected_venue_id' && $value!==null && (!is_string($value)||!preg_match('/^[a-z0-9-]{2,36}$/',$value)||!one($db,'SELECT venue_id FROM venue_date_status WHERE venue_id=? LIMIT 1',[$value])))fail(422,'field','Неизвестная площадка');
         if($key==='budget_limit_rub' && $value!==null && (!is_int($value)||$value<0||$value>100000000))fail(422,'field','Некорректный лимит бюджета');
         if($key==='children_enabled' && !is_bool($value))fail(422,'field','Участие детей должно быть включено или выключено');
         if(is_string($value)&&mb_strlen($value)>5000)fail(422,'field','Слишком длинное значение');

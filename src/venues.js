@@ -82,6 +82,11 @@ function read(){
 }
 let state=read();
 let ratingRules=DEFAULT_RATING_RULES;
+let selectedVenueId=null,venueSelectionSaving=false;
+export function applyVenueSelection(venue,selectedId){
+ if(!selectedId)return {...venue,selected:false};
+ return {...venue,selected:venue.id===selectedId,archived:venue.id!==selectedId,archiveReason:venue.id!==selectedId?(venue.archived?venue.archiveReason:'Другая площадка выбрана'):''};
+}
 const effectiveRatingRules=()=>validateRatingRules(ui.ratingDraft)||ratingRules;
 let ui={mobileFilters:false,archiveFilter:'active',kind:'all',query:'',sort:'score',sortDir:'desc',expanded:null,detailTab:'overview',dateFilter:'all',budget:'all',visit:'all',capacity:'all',photoSection:'all',photoView:'gallery',photoSort:'original',photoIndex:0,photoLightbox:false,ratingDrawer:false,ratingDraft:null,ratingDirty:false};
 const h=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -91,10 +96,10 @@ const get=(base)=>{
  const d=VENUE_RECORDS[base.id]||{},edit=state.venues[base.id]||{};
  const dates=venueDb.dates.get(base.id)||{};
  const dateAvailability=Object.fromEntries(['18','19','20'].map(day=>[day,dates[day]||'unknown']));
- return {...base,...d,...edit,cost:{...(base.publiclyAdvertised||{}),...(base.cost||{}),...(d.cost||{}),...(edit.cost||{})},
+ return applyVenueSelection({...base,...d,...edit,cost:{...(base.publiclyAdvertised||{}),...(base.cost||{}),...(d.cost||{}),...(edit.cost||{})},
   ratings:{...(edit.ratings||{})},ratingFacts:{...(d.ratingFacts||{}),...(edit.ratingFacts||{})},extras:{...(edit.extras||{})},
   quotes:edit.quotes??d.quotes??[],gallery:d.gallery||[],
-  dateAvailability,availability:dateAvailability['19']};
+  dateAvailability,availability:dateAvailability['19']},selectedVenueId);
 };
 const dayStatus=(v,day)=>v.dateAvailability?.[String(day)]||'unknown';
 const dayText=(v,day)=>({available:'Свободно',unavailable:'Занято',pending:'Уточняется',unknown:'Нет подтверждения'}[dayStatus(v,day)]||'Нет подтверждения');
@@ -179,12 +184,14 @@ async function initVenueDatabase(root,force=false){
   }
   // Revalidate silently: other-device edits redraw only when data has changed.
   const serverRules=migrateRatingRules(settingsResponse.settings?.venue_rating_rules)||DEFAULT_RATING_RULES;
-  changed=JSON.stringify(ratingRules)!==JSON.stringify(serverRules)||
+  const serverSelection=PUBLIC_VENUES.some(v=>v.id===settingsResponse.settings?.selected_venue_id)?settingsResponse.settings.selected_venue_id:null;
+  changed=selectedVenueId!==serverSelection||JSON.stringify(ratingRules)!==JSON.stringify(serverRules)||
     JSON.stringify(state.venues)!==JSON.stringify(incoming)||
     JSON.stringify([...venueDb.dates].sort())!==JSON.stringify([...dates].sort());
   // Only server responses populate venue state. Browser caches guestCount only.
   state.venues=incoming;
   ratingRules=serverRules;
+  if(selectedVenueId!==serverSelection){selectedVenueId=serverSelection;if(ui.archiveFilter==='active')Object.assign(ui,{kind:'all',query:'',dateFilter:'all',visit:'all',budget:'all',capacity:'all'});}
   if(!ui.ratingDirty)ui.ratingDraft=null;
   venueDb.rows=rows;
   venueDb.dates=dates;
@@ -410,7 +417,7 @@ function row(v){
  const type=cost.value===null?'Нет достаточных тарифов':cost.kind==='planning'?'Рабочая смета':complete?'Полученное КП':cost.kind==='minimum'?'Минимум по тарифам':cost.kind==='estimate'?'Оценка по предложению':'Предварительная оценка';
  const missing=cost.missing?.length?'Нет: '+cost.missing.join(', '):'';
  const hint=cost.kind==='planning'?'Выбранный сценарий с отмеченными допущениями, не КП':[known,missing].filter(Boolean).join(' · ')||((cost.quoteDate&&complete)?'На '+cost.quoteDate.slice(8,10)+'.06':'');
- return '<tr class="vw-row'+(v.archived?' is-archived':'')+'" data-id="'+h(v.id)+'"><td><div class="vw-venue-cell"><span class="vw-venue-media"><button type="button" class="vw-image-open" data-detail="'+h(v.id)+'" aria-label="Открыть площадку '+h(v.name)+'">'+image+'</button></span><div class="vw-venue-label"><button class="vw-name" data-detail="'+h(v.id)+'" type="button">'+h(v.name)+'</button><small>'+h(v.area)+' · '+(v.region==='country'?'За городом':'Город')+'</small>'+(v.archived?'<a class="vw-archive-reason" data-open-archive href="#/admin/venues/archive" title="'+h(v.archiveReason||'')+'">В архиве</a>':'')+'<button type="button" class="vw-archive-action" data-venue-archive="'+h(v.id)+'" aria-label="'+(v.archived?'Вернуть из архива: ':'Убрать в архив: ')+h(v.name)+'">'+(v.archived?'Вернуть':'В архив')+'</button></div></div></td>'+
+ return '<tr class="vw-row'+(v.archived?' is-archived':'')+'" data-id="'+h(v.id)+'"><td><div class="vw-venue-cell"><span class="vw-venue-media"><button type="button" class="vw-image-open" data-detail="'+h(v.id)+'" aria-label="Открыть площадку '+h(v.name)+'">'+image+'</button></span><div class="vw-venue-label"><button class="vw-name" data-detail="'+h(v.id)+'" type="button">'+h(v.name)+'</button><small>'+h(v.area)+' · '+(v.region==='country'?'За городом':'Город')+'</small>'+(v.archived?'<a class="vw-archive-reason" data-open-archive href="#/admin/venues/archive" title="'+h(v.archiveReason||'')+'">В архиве</a>':'')+'<div class="vw-selection-actions">'+(v.selected?'<button type="button" class="vw-archive-action" data-venue-unselect>Отменить выбор</button>':(!v.archived||selectedVenueId?'<button type="button" class="vw-select-action" data-venue-select="'+h(v.id)+'">'+(selectedVenueId?'Выбрать вместо текущей':'Выбрать')+'</button>':''))+(!selectedVenueId?'<button type="button" class="vw-archive-action" data-venue-archive="'+h(v.id)+'" aria-label="'+(v.archived?'Вернуть из архива: ':'Убрать в архив: ')+h(v.name)+'">'+(v.archived?'Вернуть':'В архив')+'</button>':'')+'</div></div></div></td>'+
  '<td>'+tableDateControls(v)+'</td>'+
  '<td><span class="vw-state '+(v.visited?'vw-seen':'')+'">'+(v.visited?'● Были лично':'○ Не подтверждено')+'</span></td>'+
  '<td class="vw-money'+(complete?' vw-complete':' vw-incomplete')+'" title="'+h(cost.note||'')+'"><strong>'+h(amount)+'</strong><small>'+h(type)+(cost.value!==null?' · '+state.guestCount+' гостей':'')+'</small>'+(hint?'<small class="vw-cost-gap">'+h(hint)+'</small>':'')+offer+'</td>'+
@@ -547,14 +554,14 @@ export function renderVenueAdmin(){
  const all=PUBLIC_VENUES.map(get);
  const archivedCount=all.filter(v=>v.archived).length;
  const activeCount=all.length-archivedCount;
- const list=visibleVenues(all);
+ const list=selectedVenueId&&ui.archiveFilter==='active'?all.filter(v=>v.selected):visibleVenues(all);
  const detailVenue=all.find(v=>v.id===ui.expanded);
  if(match&&detailVenue){
-   return '<div class="vw-page" data-venues-page>'+renderVenueNewPage(detailVenue,{guests:state.guestCount,ui,estimate,extraTotal,budgetSummary,dayStatus,dayText,weighted})+ratingDrawer()+'</div>';
+   return '<div class="vw-page" data-venues-page>'+renderVenueNewPage(detailVenue,{guests:state.guestCount,ui,estimate,extraTotal,budgetSummary,dayStatus,dayText,weighted,selectedVenueId})+ratingDrawer()+'</div>';
   }
  if(ratingMethodRoute)return ratingMethodPage();
  return '<div class="vw-page vw-control-board" data-venues-page>'+
-  '<div class="vw-control-head admin-page-heading"><div><h1>Площадки</h1></div><div class="vw-control-facts"><button type="button" class="vw-rating-trigger" data-rating-open>Настроить рейтинг</button></div></div>'+
+  '<div class="vw-control-head admin-page-heading"><div><h1>Площадки</h1></div><div class="vw-control-facts">'+(selectedVenueId?'<button type="button" class="vw-archive-action" data-venue-unselect>Отменить выбор</button>':'')+'<button type="button" class="vw-rating-trigger" data-rating-open>Настроить рейтинг</button></div></div>'+
   '<div class="vw-panel vw-table-panel"><div class="vw-panel-title vw-table-panel-title"><div class="vw-list-count" aria-label="Количество площадок"><span><b data-venues-visible>'+list.length+'</b> из '+(ui.archiveFilter==='active'?activeCount:ui.archiveFilter==='archived'?archivedCount:all.length)+'</span></div><div class="vw-table-tools"><select class="vw-list-select" data-ui="archiveFilter" aria-label="Показывать площадки">'+[['active','Активные'],['archived','Архив'],['all','Все']].map(([id,label])=>'<option value="'+id+'" '+(ui.archiveFilter===id?'selected':'')+'>'+label+'</option>').join('')+'</select><label class="vw-compact-control vw-guest-control">Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+state.guestCount+'" aria-label="Число гостей для пересчёта смет"></label><input type="search" data-ui="query" value="'+h(ui.query)+'" placeholder="Найти площадку" aria-label="Поиск площадки (Enter)"><button type="button" data-clear-filters>Сбросить</button></div></div>'+
   '<div class="vw-scroll" role="region" tabindex="0" aria-label="Список площадок"><input class="vw-mobile-filter-toggle" type="checkbox" id="vw-mobile-filters"'+(ui.mobileFilters?' checked':'')+'><label class="vw-mobile-filter-label" for="vw-mobile-filters">Фильтры и сортировка</label><table class="vw-table vw-table-sortable"><thead><tr>'+
   columnHeading('name','Площадка','<div class="vw-head-filter-row">'+headerSelect('kind','Расположение',[['all','Все районы'],['city','Город'],['country','За городом']])+'</div>')+
@@ -609,7 +616,7 @@ export function activateVenueAdmin(root){
  const refresh=()=>{
   if(document.visibilityState!=='visible'||!root.querySelector('[data-venues-page]')||!venueDb.ready||Date.now()-lastInteraction<1800)return;
   // Never replace an inline editor or an unfinished save from another refresh.
-  if(ui.ratingDrawer||root.querySelector('.vdp-inline-form,.vdp-inline-quote-form,.vdp-inline-quote-editor'))return;
+  if(venueSelectionSaving||ui.ratingDrawer||root.querySelector('.vdp-inline-form,.vdp-inline-quote-form,.vdp-inline-quote-editor'))return;
   const active=document.activeElement;
   if(active&&root.contains(active)&&active.matches('input,select,textarea,[contenteditable]'))return;
   initVenueDatabase(root,true);
@@ -629,7 +636,7 @@ export function activateVenueAdmin(root){
  redraw(root);
  initVenueDatabase(root);
  root.addEventListener('click',event=>{
-  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-venue-inline],[data-inline-quote],[data-add-inline-quote],[data-cancel-inline],[data-remove-venue-quote],[data-venue-retry],[data-venue-archive],[data-open-archive],[data-rating-open],[data-rating-close],[data-rating-backdrop],[data-rating-defaults]');if(!target)return;
+  const target=event.target.closest('[data-detail],[data-close],[data-ui-toggle],[data-detail-tab],[data-sort-col],[data-clear-filters],[data-photo-section],[data-photo-view],[data-photo-open],[data-photo-step],[data-photo-close],[data-venue-inline],[data-inline-quote],[data-add-inline-quote],[data-cancel-inline],[data-remove-venue-quote],[data-venue-retry],[data-venue-archive],[data-venue-select],[data-venue-unselect],[data-open-archive],[data-rating-open],[data-rating-close],[data-rating-backdrop],[data-rating-defaults]');if(!target)return;
   const venueBase=PUBLIC_VENUES.find(x=>x.id===ui.expanded);
   const showError=message=>showAdminToast(message,{kind:'error'});
   if(target.hasAttribute('data-rating-open')){
@@ -648,7 +655,21 @@ export function activateVenueAdmin(root){
   }
   else if(target.hasAttribute('data-venue-retry')){initVenueDatabase(root,true);}
   else if(target.hasAttribute('data-cancel-inline')){redraw(root);}
+   else if(target.hasAttribute('data-venue-select')||target.hasAttribute('data-venue-unselect')){
+    if(!venueDb.ready||venueSelectionSaving)return;
+    const next=target.hasAttribute('data-venue-unselect')?null:target.dataset.venueSelect;
+    const base=PUBLIC_VENUES.find(v=>v.id===next);
+    if(next&&!base)return;
+    if(next&&!window.confirm('Выбрать «'+get(base).name+'»? Остальные площадки будут в архиве. Выбор можно отменить.'))return;
+    venueSelectionSaving=true;target.disabled=true;
+    venueApi('admin/settings',{method:'POST',body:{key:'selected_venue_id',value:next}}).then(()=>{
+     selectedVenueId=next;Object.assign(ui,{archiveFilter:'active',kind:'all',query:'',dateFilter:'all',visit:'all',budget:'all',capacity:'all'});
+     if(location.hash!=='#/admin/venues')location.hash='#/admin/venues';else redraw(root);
+     showAdminToast(next?'Площадка выбрана. Остальные в архиве.':'Выбор отменён. Прежний список восстановлен.');
+    }).catch(error=>showError(error.message)).finally(()=>{venueSelectionSaving=false;target.disabled=false});
+   }
    else if(target.hasAttribute('data-venue-archive')){
+    if(selectedVenueId){showError('Сначала отмените выбор площадки.');return;}
     const id=target.dataset.venueArchive,base=PUBLIC_VENUES.find(x=>x.id===id);
     if(!venueDb.ready||!base){showError('Общая база недоступна — действие не сохранено.');return;}
     const venue=get(base),archived=!venue.archived;
