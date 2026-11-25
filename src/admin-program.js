@@ -1,4 +1,5 @@
 import {showAdminToast} from './admin-toast.js';
+export const shortWeekday=day=>({понедельник:'пн',вторник:'вт',среда:'ср',четверг:'чт',пятница:'пт',суббота:'сб',воскресенье:'вс'})[String(day||'').trim().toLowerCase()]||String(day||'');
 // Wedding admin: day-first program and idea pool; same authenticated SQLite source.
 const $=(tag,className='',value)=>{
  const node=document.createElement(tag);
@@ -413,7 +414,7 @@ export async function renderWeddingProgram(host,api,days){
      const b=makeButton(d.date.slice(-2),()=>{
        day=d.date;filter='all';notification='';render();
      },'ad-tl-day-tab'+(day===d.date?' is-active':''));
-     b.setAttribute('aria-label',d.label);b.append($('small','ad-tl-weekday',d.weekday.slice(0,2).toLowerCase()));
+     b.setAttribute('aria-label',d.label);b.append($('small','ad-tl-weekday',shortWeekday(d.weekday)));
      b.setAttribute('aria-pressed',String(day===d.date));
      daysBar.append(b);
    }
