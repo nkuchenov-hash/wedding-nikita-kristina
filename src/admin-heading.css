@@ -655,3 +655,36 @@ body.admin-body .admin-content :is(.production-page,.production-drawer) :is(inpu
 body.admin-body .admin-content .production-page .production-heading{margin:0;align-items:center}
 body.admin-body .admin-content .production-page .production-tabs{width:max-content;max-width:100%;flex:none}
 body.admin-body .admin-content .production-page .production-tabs .ad-tl-main-tab{min-height:36px;white-space:nowrap;flex:0 0 auto}
+
+/* Grouped organizer navigation. Group captions are intentionally small;
+   all interactive labels retain the readable admin type scale. */
+body.admin-body .admin-side{--side-inset:12px;--side-icon-size:20px}
+body.admin-body .admin-side nav[aria-label="Разделы админки"]{gap:0;min-width:0}
+body.admin-body .admin-side .side-group{display:flex;flex-direction:column;gap:2px;min-width:0;flex:0 0 auto}
+body.admin-body .admin-side .side-group+.side-group{position:relative;margin-top:14px;padding-top:14px}
+body.admin-body .admin-side .side-group+.side-group::before{content:"";position:absolute;top:0;left:var(--side-inset);right:var(--side-inset);height:1px;background:currentColor;opacity:.19}
+body.admin-body .admin-side .side-group-title{font-size:11px;font-weight:300;line-height:16px;letter-spacing:.8px;text-transform:uppercase;color:inherit;opacity:.78;padding:0 var(--side-inset) 4px;margin:0;white-space:nowrap}
+body.admin-body .admin-side nav[aria-label="Разделы админки"] .side-link,body.admin-body .admin-side .admin-settings-footer .side-link{box-sizing:border-box;display:flex;align-items:center;justify-content:flex-start;gap:12px;padding:0 var(--side-inset);min-height:44px;max-height:none;flex:0 0 auto;font-size:17px;line-height:1.4;white-space:nowrap}
+body.admin-body .admin-side .side-icon,body.admin-body .admin-side nav[aria-label="Разделы админки"] .side-icon{display:grid;place-items:center;flex:0 0 var(--side-icon-size);width:var(--side-icon-size);height:var(--side-icon-size);line-height:1}
+body.admin-body .admin-side .side-icon svg{display:block;width:100%;height:100%}
+body.admin-body .admin-side .side-label{min-width:0}
+body.admin-body .admin-side .side-link.selected{font-weight:500}
+body.admin-body .admin-side .side-link:focus-visible{outline:2px solid currentColor;outline-offset:-2px}
+body.admin-body .admin-side .admin-settings-footer .side-link{flex:1 1 auto;min-width:0}
+@media(min-width:901px){
+ body.admin-body .admin-layout{grid-template-columns:250px minmax(0,1fr)}
+ body.admin-body .admin-side nav[aria-label="Разделы админки"]{flex:1 1 auto;min-height:0}
+}
+@media(min-width:901px) and (max-height:740px){
+ body.admin-body .admin-side .side-group{gap:0}
+ body.admin-body .admin-side .side-group+.side-group{margin-top:6px;padding-top:6px}
+ body.admin-body .admin-side .side-group-title{padding-bottom:2px}
+ body.admin-body .admin-side nav[aria-label="Разделы админки"] .side-link{min-height:clamp(32px,calc((100dvh - 200px) / 10),44px)}
+}
+@media(min-width:901px) and (max-height:560px){
+ body.admin-body .admin-side nav[aria-label="Разделы админки"]{overflow-y:auto!important;overflow-x:hidden!important;scrollbar-width:thin}
+}
+@media(max-width:900px){
+ body.admin-body .admin-side nav[aria-label="Разделы админки"] .side-link{min-height:48px}
+ body.admin-body .admin-side .side-group+.side-group{margin-top:12px;padding-top:12px}
+}

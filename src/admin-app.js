@@ -69,14 +69,35 @@ document.addEventListener('keydown',event=>{
    event.preventDefault();setMobileNav(false);
  }
 });
+// Shared, non-collapsible navigation groups. Route IDs remain unchanged.
+const sidebarGroups=[
+ {title:'УПРАВЛЕНИЕ',ids:['overview','budget','tasks']},
+ {title:'ОРГАНИЗАЦИЯ',ids:['venues','vendors','decor','menu','schedule']},
+ {title:'ГОСТИ И МАТЕРИАЛЫ',ids:['guests','photos']}
+];
+const sidebarIcons={
+ overview:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+ budget:'<path d="M20 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V6"/><path d="M22 12h-5a2 2 0 0 0 0 4h5"/><path d="M17 14h.01"/>',
+ tasks:'<path d="m3 6 2 2 4-4M11 6h10M3 12l2 2 4-4m2 2h10M3 18l2 2 4-4m2 2h10"/>',
+ venues:'<path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
+ vendors:'<path d="m2 12 4-6 5 2m11 4-4-6-5 2-4 4a2 2 0 0 0 3 2l2-2 6 5M4 13l5 5a2 2 0 0 0 3 0m-1-3 3 3a2 2 0 0 0 3 0m-2-4 3 3a2 2 0 0 0 3-2"/>',
+ decor:'<circle cx="12" cy="12" r="3"/><path d="M12 9C8 9 7 4 10 3c2-1 4 1 4 4 3-3 7-1 7 2 0 2-2 4-5 4 4 2 3 6 0 7-2 1-4-1-4-5-2 4-6 4-8 1-1-2 1-4 5-4-4-1-5-5-2-7 2-1 4 1 5 4Z"/>',
+ menu:'<path d="M3 2v7a4 4 0 0 0 8 0V2M7 2v20M21 2c-4 0-6 5-6 10h6m0-10v20"/>',
+ schedule:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/><circle cx="15" cy="15.5" r="3"/><path d="M15 14v1.5l1 1"/>',
+ guests:'<path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/><circle cx="10" cy="7" r="4"/>',
+ photos:'<rect x="5" y="5" width="16" height="16" rx="2"/><path d="M3 17H2V3a1 1 0 0 1 1-1h14v1m4 13-4-4-7 9"/><circle cx="10" cy="10" r="1.5"/>',
+ settings:'<path d="m9 3 .6 2.3 2.4 1 2.4-1L15 3l3 1.7-.7 2.3 1.3 2.1 2.4.6v3.6l-2.4.6-1.3 2.1.7 2.3-3 1.7-.6-2.3-2.4-1-2.4 1L9 20l-3-1.7.7-2.3-1.3-2.1-2.4-.6V9.7l2.4-.6L6.7 7 6 4.7 9 3Z"/><circle cx="12" cy="11.5" r="3"/>'
+};
+const sidebarIcon=id=>'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+(sidebarIcons[id]||'')+'</svg>';
 function adminSidebar(active){
  const items=adminModules.filter(m=>m.id!=='settings');
+ const byId=new Map(items.map(m=>[m.id,m]));
  const settings=adminModules.find(m=>m.id==='settings');
- const navLink=m=>`<a href="#/admin/${m.id}" class="side-link ${active===m.id?'selected':''}" ${active===m.id?'aria-current="page"':''}><span class="side-icon" aria-hidden="true">${m.icon}</span>${m.label}</a>`;
+ const navLink=m=>`<a href="#/admin/${m.id}" class="side-link ${active===m.id?'selected':''}" ${active===m.id?'aria-current="page"':''}><span class="side-icon" aria-hidden="true">${sidebarIcon(m.id)}</span><span class="side-label">${escapeHtml(m.label)}</span></a>`;
  return `<aside class="admin-side" id="admin-navigation" aria-label="Навигация">
    <div class="admin-brand-row"><a href="#/admin/overview" class="admin-brand"><span class="admin-brand-logo">НК</span><span>Wedding</span></a></div>
-   <button type="button" class="admin-menu-close" data-admin-menu-close aria-label="Закрыть меню"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg></button><div class="side-caption">УПРАВЛЕНИЕ</div>
-   <nav aria-label="Разделы админки">${items.map(navLink).join('')}</nav>
+   <button type="button" class="admin-menu-close" data-admin-menu-close aria-label="Закрыть меню"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+   <nav aria-label="Разделы админки">${sidebarGroups.map((group,i)=>`<div class="side-group" role="group" aria-labelledby="side-group-${i}"><div class="side-group-title" id="side-group-${i}">${group.title}</div>${group.ids.map(id=>byId.get(id)).filter(Boolean).map(navLink).join('')}</div>`).join('')}</nav>
    <div class="admin-settings-footer">${settings?navLink(settings):''}<button id="admin-theme-toggle" class="admin-theme-toggle" type="button" aria-label="Переключить тему"></button></div>
  </aside>`;
 }

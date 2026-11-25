@@ -186,7 +186,7 @@ async function overview(host){
   extra.replaceChildren();
   const assets=snapshot.gallery?.assets;
   const menu=snapshot.menu?.items;
-  for(const [route,label,i,sub] of [['photos','Фотографии','photo',assets?assets.length+' в галерее':''],['menu','Меню и анкеты','grid',menu?menu.length+' позиций меню':''],['settings','Настройки','grid','Дата, место и программа']]){
+  for(const [route,label,i,sub] of [['photos','Фотографии','photo',assets?assets.length+' в галерее':''],['menu','Банкетное меню','grid',menu?menu.length+' позиций меню':''],['settings','Настройки','grid','Дата, место и программа']]){
    const a=link(route,'','pd-extra'),txt=$('span');txt.append($('strong','',label));if(sub)txt.append($('small','',sub));a.append(icon(i),txt,icon('arrow'));extra.append(a);
   }
  }
@@ -249,7 +249,7 @@ function showForm(host,config,submit,defaults=null,actionLabel='Сохранит
 }
 async function collection(host,type){
  const data=await call('admin/records?collection='+encodeURIComponent(type));
- const heading=({venues:'Сравнение площадок',budget_lines:'Бюджет',tasks:'Задачи',menu_options:'Меню',schedule_items:'Программа'})[type]||type;
+ const heading=({venues:'Сравнение площадок',budget_lines:'Бюджет',tasks:'Задачи',menu_options:'Банкетное меню',schedule_items:'Программа'})[type]||type;
  const root=host;root.classList.add('ad-collection-page');
  const header=$('header','admin-page-heading');header.append($('h1','',heading));root.append(header);
  host=$('div','ad-collection-content');root.append(host);
