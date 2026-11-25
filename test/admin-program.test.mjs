@@ -217,7 +217,7 @@ test('five independent hour ranges are validated and bound to the selected calen
  assert.deepEqual(displayHoursForDay('2027-06-19',{'2027-06-19':{from:'20:00',to:'19:00'}}),DEFAULT_DAY_HOURS['2027-06-19']);
  assert.match(source,/settings\.settings\?\.program_day_hours/);
  assert.match(source,/const interval=displayHoursForDay\(day,dayHours\)/);
- assert.match(source,/visible=layout\.filter\(slot=>slot\.end>axisStart&&slot\.start<axisEnd\)/);
+ assert.match(source,/slot\.start<axisStart\|\|slot\.end>axisEnd/);
  assert.match(api,/program_day_hours/);
  assert.match(api,/to-\$from<60/);
 });
@@ -227,7 +227,7 @@ test('the program has list and timeline views, independently from day and idea t
  assert.match(source,/\['list','Список'\]/);
  assert.match(source,/if\(programDisplay==='timeline'\)host\.append\(renderTimeline\(visibleRows\)\)/);
  assert.match(source,/ad-tl-program-list/);
- assert.match(source,/view==='program'&&programDisplay==='timeline'/);
+ assert.match(source,/if\(view==='program'\)\{[\s\S]*?attachTimelineHandles\(node,item/);
  const css=readFileSync(new URL('../src/admin-program.css',import.meta.url),'utf8');
  assert.match(css,/\.ad-tl-display-modes\{/);
  assert.match(css,/\.ad-tl-program-list\{/);

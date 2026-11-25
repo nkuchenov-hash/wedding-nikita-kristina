@@ -150,7 +150,7 @@ export async function renderWeddingProgram(host,api,days){
      node.classList.remove('ad-tl-dragging');state.float?.remove();state=null;
    };
    function targetAt(y){
-     const candidates=[...host.querySelectorAll('.ad-tl-chronology-row')].filter(r=>r.dataset.activityId!==String(item.id));
+     const candidates=[...host.querySelectorAll('.ad-tl-chronology-row,.ad-tl-program-list > [data-activity-id]')].filter(r=>r.dataset.activityId!==String(item.id));
      if(!candidates.length)return null;
      return candidates.reduce((best,r)=>Math.abs(r.getBoundingClientRect().top+r.getBoundingClientRect().height/2-y)<Math.abs(best.getBoundingClientRect().top+best.getBoundingClientRect().height/2-y)?r:best,candidates[0]);
    }
@@ -256,7 +256,10 @@ export async function renderWeddingProgram(host,api,days){
      // Do not clip tag chips when the time slot is shorter than the label area.
      if(scheduledCard && duration(item)<25)node.classList.add('ad-tl-has-short-tags');
    }
-   if(view==='program')attachTimelineHandles(node,item,clockLabel,lengthLabel);
+   if(view==='program'){
+     node.dataset.activityId=String(item.id);node.dataset.start=String(mins(hm(item.start_at)));node.dataset.end=String(mins(hm(item.end_at))??(mins(hm(item.start_at))+duration(item)));
+     attachTimelineHandles(node,item,clockLabel,lengthLabel);
+   }
    return node;
  }
  function renderTimeline(items){
@@ -264,7 +267,7 @@ export async function renderWeddingProgram(host,api,days){
    const interval=displayHoursForDay(day,dayHours),axisStart=mins(interval.from),axisEnd=mins(interval.to);
    const layout=parallelEventLayout(items),byId=new Map(layout.map(s=>[String(s.id),s]));
    const head=$('div','ad-tl-chronology-head');
-   head.append($('h2','',dateName(day)));
+   head.append($('h2','',dateName(day)+', '+(days.find(d=>d.date===day)?.weekday||'').toLowerCase()));
    const settings=$('a','ad-tl-day-settings','Настройки дня');settings.href='#/admin/settings';head.append(settings);container.append(head);
    const list=$('div','ad-tl-chronology-list');container.append(list);
    if(!items.length)list.append($('p','ad-tl-empty','Для этого дня программа пока не составлена.'));

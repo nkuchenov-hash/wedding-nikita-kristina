@@ -563,3 +563,8 @@ body.admin-body .ad-tl-modal .ad-tl-editor-title-input{font-family:var(--wd-head
  body.admin-body .ad-tl-chronology .ad-tl-chronology-card{padding:10px 11px!important}
  body.admin-body .ad-tl-chronology-card .ad-tl-card-title{font-size:20px!important}
 }
+
+/* Time and duration appear only on the time rail in compact chronology. */
+body.admin-body .ad-tl-chronology-card .ad-tl-card-head{display:none}
+body.admin-body .ad-tl-program-list .ad-tl-drop-target{outline:2px solid var(--wd-accent)}
+body.admin-body .ad-tl-program-list .ad-tl-card{touch-action:pan-y}
