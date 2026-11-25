@@ -198,6 +198,15 @@ async function initVenueDatabase(root,force=false){
   if(root.querySelector('[data-venues-page]')&&(!background||changed))redraw(root);
  }
 }
+// Reuse exactly the same venue records, date statuses, rating and price scenario as the comparison.
+export async function loadVenueDashboard(root){
+ await initVenueDatabase(root,true);
+ if(!venueDb.ready||venueDb.error)throw Error(venueDb.error||'Площадки недоступны');
+ const all=PUBLIC_VENUES.map(get),active=all.filter(v=>!v.archived);
+ const leaders=active.map(v=>({id:v.id,name:v.name,score:weighted(v).value,date19:dayStatus(v,'19')}))
+  .filter(v=>v.score!==null).sort((a,b)=>compareVenueScoreValues(a.score,b.score,'desc')).slice(0,3);
+ return {active:active.length,archived:all.length-active.length,available19:active.filter(v=>dayStatus(v,'19')==='available').length,leaders};
+}
 async function commitVenueDate(id,day,status,root){
  if(!venueDb.ready)throw new Error('Общая база недоступна');
  if(!['18','19','20'].includes(day)||!['unknown','pending','available','unavailable'].includes(status))
@@ -515,16 +524,19 @@ export function renderVenueAdmin(){
  }
 
  const route=typeof location!=='undefined'?location.hash:'';
+ const availableRoute=/^#\/admin\/venues\/available\/?$/.test(route);
  const archiveRoute=/^#\/admin\/venues\/archive\/?$/.test(route);
  const allRoute=/^#\/admin\/venues\/all\/?$/.test(route);
  const ratingMethodRoute=/^#\/admin\/venues\/rating-method\/?$/.test(route);
  const activeRoute=/^#\/admin\/venues\/?$/.test(route);
- if(archiveRoute||allRoute||activeRoute)applyListDefaultSort(route);
+ if(archiveRoute||allRoute||activeRoute||availableRoute)applyListDefaultSort(route);
+ if(availableRoute)Object.assign(ui,{archiveFilter:'active',kind:'all',query:'',dateFilter:'19:available',visit:'all',budget:'all',capacity:'all'});
+ else if(activeRoute&&ui.dateFilter==='19:available')ui.dateFilter='all';
  if(archiveRoute&&ui.archiveFilter!=='archived')
   Object.assign(ui,{archiveFilter:'archived',kind:'all',query:'',dateFilter:'all',budget:'all',visit:'all',capacity:'all'});
  else if(allRoute)ui.archiveFilter='all';
  else if(activeRoute)ui.archiveFilter='active';
- const match=archiveRoute||allRoute||ratingMethodRoute?null:route.match(/^#\/admin\/venues\/([^/?]+)(?:\/([^/?]+))?/);
+ const match=archiveRoute||allRoute||ratingMethodRoute||availableRoute?null:route.match(/^#\/admin\/venues\/([^/?]+)(?:\/([^/?]+))?/);
  if(match){const next=decodeURIComponent(match[1]);if(ui.expanded!==next){ui.photoSection='all';ui.photoView='gallery';ui.photoIndex=0;ui.photoLightbox=false;}ui.expanded=next;ui.detailTab=match[2]==='edit'?'terms':(match[2]||'overview');}else{ui.expanded=null;ui.photoLightbox=false;}
  const all=PUBLIC_VENUES.map(get);
  const archivedCount=all.filter(v=>v.archived).length;

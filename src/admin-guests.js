@@ -1022,6 +1022,10 @@ export async function activateGuestDirectory(root){
      tableLayout=normalizeGuestTableLayout(saved.settings?.guest_table_layout);
      if(saved.settings?.guest_sort_mode==='connections')sort.value='__connections';
    }catch(error){notice('Настройки столбцов недоступны; выбран стандартный вид.',true)}
+   const route=location.hash.split('/');
+   if(route[3]==='base'||route[3]==='reserve')filter.value=route[3];
+   if(route[4]==='yes'||route[4]==='unanswered')rsvpFilter.value=route[4];
+   if(route[4]==='unsent')qualityFilter.value='unsent';
    await reloadData();childrenToggle.disabled=false;
  }
  catch(err){list.replaceChildren(mk('p','ad-gb-error','Не удалось открыть базу: '+err.message))}

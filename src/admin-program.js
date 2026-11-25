@@ -610,5 +610,9 @@ export async function renderWeddingProgram(host,api,days){
      finally{busy=false;save.disabled=false}
    });
  }
- await load();render();
+ await load();
+ const route=location.hash.split('/');
+ if(days.some(d=>d.date===route[3]))day=route[3];
+ if(route[4]==='ideas')view='idea';
+ render();
 }

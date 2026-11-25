@@ -6,6 +6,7 @@ test('overview has no permanent refresh indicator; mobile uses one header and co
  const data=read('admin-data-ui.js'),css=read('admin-heading.css');
  assert.doesNotMatch(data,/Обновлено |ad-overview-sync/);
  assert.match(data,/overviewOffline/);
+ assert.match(data,/loadVenueDashboard/);
  assert.match(css,/\[data-admin-section="schedule"\] \.ad-timeline-page \.ad-tl-header\{display:none\}/);
  assert.match(css,/--admin-mobile-edge:14px/);
  assert.match(css,/\.ad-tl-ideas-grid \.ad-tl-card:not\(\.ad-tl-calendar-card\)\{min-height:0/);

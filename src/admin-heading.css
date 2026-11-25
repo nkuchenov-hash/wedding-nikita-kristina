@@ -347,3 +347,40 @@ html[data-admin-theme="dark"] .admin-mobile-bar{background:#101715}
  body.admin-body .ad-tl-calendar-card.ad-tl-micro-event .ad-tl-touch-move{bottom:8px;width:28px}
  body.admin-body .ad-tl-calendar-card.ad-tl-micro-event .ad-tl-touch-resize{height:8px}
 }
+
+/* Action dashboard: one compact module per section, no duplicate counters. */
+.ad-work-dashboard{gap:12px;max-width:1440px}
+.ad-work-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.ad-work-panel{min-width:0;border:1px solid #dce8dd;border-radius:12px;background:#fff;padding:14px}
+.ad-work-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 9px}
+.ad-work-panel-head h2{font:750 20px/1.3 Manrope,system-ui,sans-serif;margin:0;color:#214b33}
+.ad-work-link{font-size:16px;color:#32694b;font-weight:650}
+.ad-work-body{display:grid;gap:0;min-width:0}
+.ad-work-data-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-height:40px;padding:8px 0;border-top:1px solid #e4ece4;font-size:16px;line-height:1.4;color:#294d38}
+.ad-work-data-row:first-child{border-top:0}
+.ad-work-data-row>span{min-width:0;overflow-wrap:anywhere}
+.ad-work-data-row strong{flex:0 0 auto;font-size:18px;color:#214b33}
+.ad-work-data-row small{display:block;font-size:16px}
+.ad-work-data-row:hover,.ad-work-task-name:hover{color:#246b43;text-decoration:underline}
+.ad-work-muted{font-size:16px;line-height:1.4;color:#64786a;margin:3px 0}
+.ad-work-subhead{font:650 16px/1.4 Manrope,system-ui,sans-serif;margin:10px 0 4px;color:#456b51}
+.ad-work-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 5px;font-size:16px}
+.ad-work-task-filter{width:auto;max-width:52%;padding:6px;border:1px solid #d5e2d7;border-radius:8px;background:#fff;color:#214b33;font-size:16px}
+.ad-work-task-row{display:flex;align-items:center;gap:9px;padding:5px 0;border-top:1px solid #e4ece4}
+.ad-work-task-done{flex:0 0 40px;width:40px;height:40px;border:1px solid #b6d0bb;border-radius:8px;background:#f1f7f0;color:#2f6846;font-size:20px;cursor:pointer}
+.ad-work-task-done:disabled{opacity:.45}
+.ad-work-task-name{flex:1;min-width:0;font-size:16px;line-height:1.4;color:#294d38;overflow-wrap:anywhere}
+.ad-work-task-name small{display:block;color:#64786a;font-size:16px}
+.ad-work-task-name .ad-work-overdue{color:#ad433f;font-weight:700}
+.ad-work-more{margin:8px 0 0;min-height:42px}
+.ad-work-day{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #e4ece4}
+.ad-work-day:first-child{border-top:0}
+.ad-work-day-count{font-size:16px;padding:5px 6px;border-radius:6px;background:#eff5ef;color:#315d40;text-align:center}
+@media(max-width:900px){
+ body.admin-body .ad-work-grid{grid-template-columns:minmax(0,1fr);gap:10px}
+ body.admin-body .ad-work-panel{padding:10px 12px;border-radius:10px}
+ body.admin-body .ad-work-panel-head h2{font-size:19px}
+ body.admin-body .ad-work-panel-head{margin-bottom:5px}
+ body.admin-body .ad-work-data-row{padding:7px 0;min-height:40px}
+ body.admin-body .ad-work-day{gap:5px}
+}

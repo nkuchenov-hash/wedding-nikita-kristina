@@ -5,8 +5,8 @@ const adminProgramDays=[...weddingDays,
  {date:'2027-06-21',label:'21 июня',weekday:'Понедельник'}];
 import {renderWeddingProgram} from './admin-program.js';
 import {renderWeddingSettings} from './admin-settings.js';
-import {PUBLIC_VENUES} from './venues.js';
-import {VENUE_RECORDS} from './venues-data.js';
+import {PUBLIC_VENUES,loadVenueDashboard} from './venues.js';
+import {assignedDay,scheduled} from './admin-program.js';
 // Wedding admin live-data layer. Never stores guest details in browser storage.
 const API='/admin/index.php?api=';
 const $=(tag,cls='',text='')=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=String(text);return el};
@@ -49,152 +49,130 @@ function table(parent,headers,rows){
  for(const row of rows){const r=$('tr');for(const value of row){const td=$('td');if(value instanceof Node)td.append(value);else td.textContent=String(value??'—');r.append(td)}tbody.append(r)}
  table.append(tbody);holder.append(table);parent.append(holder);
 }
+// Dashboard: one source of truth per section; no static figures or duplicated summaries.
+export const taskIsOpen=task=>!['done','completed','cancelled'].includes(String(task.status||'').toLowerCase());
+export function dashboardTasks(tasks,today){
+ return tasks.filter(taskIsOpen).sort((a,b)=>String(a.due_at||'9999').localeCompare(String(b.due_at||'9999'))||String(a.title).localeCompare(String(b.title),'ru'))
+  .map(task=>({...task,overdue:!!task.due_at&&String(task.due_at).slice(0,10)<today}));
+}
 async function overview(host){
- // The home screen is a balanced overview of the whole wedding, not a guest-only funnel.
  host.classList.add('ad-overview-shell');
- const page=$('div','ad-overview-dashboard');
+ const page=$('div','ad-overview-dashboard ad-work-dashboard');
  const head=$('header','ad-overview-heading admin-page-heading');
- const headingText=$('div');
- headingText.append($('span','ad-overview-kicker','ЦЕНТР ПОДГОТОВКИ СВАДЬБЫ'),
-   $('h1','','Никита и Кристина'),
-   $('p','','Общая картина подготовки · 17–19 июня 2027'));
- head.append(headingText);page.append(head);
- const plan=$('div','ad-overview-plan');
- const registry=$('div','ad-overview-plan-day');
- registry.append($('strong','','17 июня'),$('span','','Регистрация · 14:00 · Марьино'));
- const event=$('div','ad-overview-plan-day');
- event.append($('strong','','19 июня'),$('span','','Торжество · площадка выбирается'));
- plan.append(registry,event);page.append(plan);
- const stats=$('div','ad-overview-stats');page.append(stats);
- const content=$('div','ad-overview-sections');page.append(content);
- function anchor(href,label){
-   const a=$('a','ad-overview-more',label);a.href='#/admin/'+href;return a;
+ head.append($('h1','','Обзор подготовки'));page.append(head);
+ const money=n=>Math.round(Number(n)||0).toLocaleString('ru-RU')+' ₽';
+ const n=v=>Number(v)||0;
+ const link=(path,label,cls='ad-work-link')=>{const a=$('a',cls,label);a.href='#/admin/'+path;return a};
+ const dateLabel=d=>d.slice(8,10)+' июня';
+ const today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
+ const blocks=$('div','ad-work-grid');page.append(blocks);host.replaceChildren(page);
+ function panel(label,path){
+  const el=$('section','ad-work-panel');
+  const header=$('div','ad-work-panel-head');header.append($('h2','',label),link(path,'Открыть →'));
+  const body=$('div','ad-work-body');body.append($('p','ad-work-muted','Загрузка…'));el.append(header,body);blocks.append(el);return body;
  }
- function panel(title,section,label){
-   const block=$('section','ad-overview-card');
-   const cap=$('div','ad-overview-card-head');
-   cap.append($('h2','',title),anchor(section,label||'Подробнее'));
-   block.append(cap);content.append(block);return block;
+ const tasksBody=panel('Задачи','tasks');
+ const guestsBody=panel('Гости','guests');
+ const venuesBody=panel('Площадки','venues');
+ const programBody=panel('Программа','schedule');
+ const budgetBody=panel('Бюджет','budget');
+ const photosBody=panel('Галерея','photos');
+ const taskFilter=$('select','ad-work-task-filter');taskFilter.setAttribute('aria-label','Показать задачи');
+ for(const [key,label] of [['all','Открытые'],['overdue','Просроченные'],['unscheduled','Без срока']]){const o=$('option','',label);o.value=key;taskFilter.append(o)}
+ let snapshot={},loading=false,mutation=false,overviewOffline=false,expanded=false,taskMode='all';
+ const unavailable=body=>body.replaceChildren($('p','ad-work-muted','Данные временно недоступны.'));
+ const dataRow=(path,label,value)=>{const a=link(path,'','ad-work-data-row');a.append($('span','',label),$('strong','',String(value)));return a};
+ const note=text=>$('p','ad-work-muted',text);
+ function renderTasks(){
+  if(!snapshot.tasks){unavailable(tasksBody);return}
+  const all=dashboardTasks(snapshot.tasks.items||[],today());
+  const overdue=all.filter(t=>t.overdue).length;
+  const bar=$('div','ad-work-toolbar');bar.append($('strong','',all.length+' открыто'+(overdue?' · '+overdue+' просрочено':'')),taskFilter);
+  taskFilter.value=taskMode;tasksBody.replaceChildren(bar);
+  const selected=all.filter(t=>taskMode==='overdue'?t.overdue:taskMode==='unscheduled'?!t.due_at:true);
+  const rows=$('div','ad-work-task-list');
+  for(const task of (expanded?selected:selected.slice(0,4))){
+   const row=$('div','ad-work-task-row');
+   const done=$('button','ad-work-task-done','✓');done.type='button';done.setAttribute('aria-label','Завершить: '+task.title);done.disabled=mutation;
+   done.addEventListener('click',async()=>{
+    if(mutation)return;
+    mutation=true;renderTasks();
+    try{await call('admin/records',{method:'PATCH',body:{collection:'tasks',id:task.id,fields:{status:'done'}}});
+     snapshot.tasks.items=snapshot.tasks.items.map(t=>t.id===task.id?{...t,status:'done'}:t);
+     showAdminToast('Задача выполнена.');
+    }catch(error){showAdminToast(errorText(error),{kind:'error'})}
+    finally{mutation=false;renderTasks();void refresh()}
+   });
+   const a=link('tasks/'+encodeURIComponent(task.id),task.title,'ad-work-task-name');
+   if(task.due_at){const d=String(task.due_at).slice(0,10);a.append($('small',task.overdue?'ad-work-overdue':'',d.split('-').reverse().join('.')))}
+   row.append(done,a);rows.append(row);
+  }
+  if(!selected.length)rows.append(note('Нет задач по выбранному фильтру.'));
+  tasksBody.append(rows);
+  if(selected.length>4){const more=button(expanded?'Свернуть':'Показать все '+selected.length,()=>{expanded=!expanded;renderTasks()});more.classList.add('ad-work-more');tasksBody.append(more)}
  }
- function statistic(label,value,subtitle,section){
-   const a=$('a','ad-overview-stat');a.href='#/admin/'+section;
-   a.append($('span','ad-overview-stat-label',label),
-     $('strong','ad-overview-stat-value',String(value)),
-     $('small','',subtitle));
-   stats.append(a);
- }
- const tasksCard=panel('Задачи и решения','tasks','Все задачи');
- const taskList=$('div','ad-overview-task-list');tasksCard.append(taskList);
- const guestsCard=panel('Гости','guests','Управление гостями');
- const guestStats=$('div','ad-overview-guest-stats');guestsCard.append(guestStats);
- const guestHint=$('p','ad-overview-help','Отправка приглашений, анкеты и ответы отслеживаются в разделе «Гости».');
- guestsCard.append(guestHint);
- const venuesCard=panel('Площадки','venues','Сравнить');
- const venueBox=$('div','ad-overview-venue-summary');venuesCard.append(venueBox);
- const financeCard=panel('Бюджет','budget','Смотреть бюджет');
- const budgetBox=$('div','ad-overview-finance');financeCard.append(budgetBox);
- const docsCard=panel('Гостевые фотографии и материалы','photos','Открыть галерею');
- const docBox=$('div','ad-overview-docs');docsCard.append(docBox);
- const programCard=panel('Программа свадьбы','schedule','Открыть программу');
- const schedule=$('div','ad-overview-schedule');
- const line1=$('div','ad-overview-schedule-line');
- line1.append($('span','ad-overview-date','17 июня'),$('span','','Регистрация в Марьино · 14:00'));
- const line2=$('div','ad-overview-schedule-line');
- line2.append($('span','ad-overview-date','18 июня'),$('span','','Программа уточняется'));
- const line3=$('div','ad-overview-schedule-line');
- line3.append($('span','ad-overview-date','19 июня'),$('span','','Свадебное торжество · место выбирается'));
- schedule.append(line1,line2,line3);programCard.append(schedule);
- host.append(page);
- const venueCount=PUBLIC_VENUES.length;
- const visited=PUBLIC_VENUES.filter(v=>VENUE_RECORDS[v.id]?.visited===true).length;
- let photoCount=null,photoPublic=null;
- const quoted=PUBLIC_VENUES.filter(v=>(VENUE_RECORDS[v.id]?.quotes||[]).some(q=>Number(q.total)>0)).length;
- let docsCount=null;
- let openTasks=null;
- const renderTasks=()=>{
-   taskList.replaceChildren();
-   if(openTasks===null){taskList.append($('p','ad-overview-muted','Список задач загружается…'));return}
-   if(!openTasks.length){taskList.append($('p','ad-overview-muted','Открытых задач нет.'));return}
-   for(const task of openTasks.slice(0,5)){
-     const a=$('a','ad-overview-task');a.href='#/admin/tasks';
-     const bullet=$('span','ad-overview-task-dot');
-     const content=$('span','ad-overview-task-title',task.title);
-     const meta=$('small','',task.due_at?String(task.due_at).slice(0,10):'Без срока');
-     a.append(bullet,content,meta);taskList.append(a);
+ taskFilter.addEventListener('change',()=>{taskMode=taskFilter.value;expanded=false;renderTasks()});
+ function render(){
+  renderTasks();
+  const g=snapshot.overview?.guests;
+  if(g){
+   guestsBody.replaceChildren(
+    dataRow('guests/base','Основной состав',n(g.total)),
+    dataRow('guests/base/yes','Подтвердили',n(g.attending)),
+    dataRow('guests/base/unsent','Приглашения не отправлены',Math.max(0,n(g.total)-n(g.sent))),
+    dataRow('guests/base/unanswered','Нет ответа',Math.max(0,n(g.total)-n(g.responded))),
+    dataRow('guests/reserve','Резерв',n(g.reserved)));
+  }else unavailable(guestsBody);
+  const v=snapshot.venues;
+  if(v){
+   venuesBody.replaceChildren(dataRow('venues','В сравнении',v.active),dataRow('venues/available','Свободны 19 июня',v.available19),dataRow('venues/archive','В архиве',v.archived));
+   if(v.leaders.length){
+    venuesBody.append($('h3','ad-work-subhead','Лучшие по текущему рейтингу'));
+    for(const venue of v.leaders){
+     const a=link('venues/'+encodeURIComponent(venue.id),'','ad-work-data-row');
+     const left=$('span','',venue.name);
+     if(venue.date19!=='available')left.append($('small','ad-work-muted',venue.date19==='unavailable'?'19 июня занято':'19 июня не подтверждено'));
+     a.append(left,$('strong','',String(venue.score)));venuesBody.append(a);
+    }
    }
-   if(openTasks.length>5)taskList.append($('p','ad-overview-muted','Ещё '+(openTasks.length-5)+' задач в полном списке'));
- };
- const renderDocs=()=>{
-   docBox.replaceChildren();
-   const photos=$('a','ad-overview-doc-item');photos.href='#/admin/photos';
-   photos.append($('strong','',photoCount===null?'—':photoCount),$('span','','фотографий для гостей'),$('small','',photoPublic===null?'Проверка галереи':photoPublic+' подготовлено к публикации'))
-   const documents=$('a','ad-overview-doc-item');documents.href='#/admin/venues';
-   documents.append($('strong','',docsCount===null?'—':docsCount),
-     $('span','','документов и видео'),$('small','',docsCount===null?'Проверка архива':'В карточках площадок'));
-   docBox.append(photos,documents);
- };
- const renderVenues=()=>{
-   venueBox.replaceChildren();
-   const main=$('p','ad-overview-venue-line');
-   main.append($('strong','',venueCount),$('span','','площадок в сравнении'));
-   const sub=$('div','ad-overview-pills');
-   sub.append($('span','',visited+' осмотрели'),$('span','',quoted+' смет с итогом'));
-   const note=$('p','ad-overview-muted','Место торжества ещё выбирается. Предложения не означают бронирование.');
-   venueBox.append(main,sub,note);
- };
- let overviewOffline=false;
- const renderOverview=data=>{
-   overviewOffline=false;
-   const g=data.guests||{},budget=data.budget||{},tasks=data.tasks||{};
-   const number=(v)=>Number(v||0);
-   const paid=number(budget.paid),planned=number(budget.planned),committed=number(budget.committed);
-   stats.replaceChildren();
-   statistic('Гости',number(g.total),'Ответили «буду»: '+number(g.attending),'guests');
-   statistic('Площадки',venueCount,'Осмотрели: '+visited,'venues');
-   statistic('Задачи',number(tasks.open),'В работе','tasks');
-   statistic('Бюджет',planned>0?planned.toLocaleString('ru-RU')+' ₽':'Не задан',paid>0?'Оплачено: '+paid.toLocaleString('ru-RU')+' ₽':'','budget');
-   guestStats.replaceChildren();
-   for(const [value,label]of [
-     [number(g.total),'В списке'],[number(g.sent),'Пригласили'],
-     [number(g.attending),'Будут'],[number(g.undecided_invitation),'Под вопросом']
-   ]){
-     const block=$('div','ad-overview-guest-stat');
-     block.append($('strong','',value),$('span','',label));
-     guestStats.append(block);
+  }else unavailable(venuesBody);
+  if(snapshot.schedule){
+   const items=snapshot.schedule.items||[];
+   programBody.replaceChildren();
+   for(const d of adminProgramDays){
+    const day=items.filter(x=>assignedDay(x)===d.date),placed=day.filter(scheduled),ideas=day.length-placed.length;
+    const row=$('div','ad-work-day');
+    row.append(link('schedule/'+d.date,dateLabel(d.date)),link('schedule/'+d.date,placed.length+' в программе','ad-work-day-count'),link('schedule/'+d.date+'/ideas',ideas+' идей','ad-work-day-count'));programBody.append(row);
    }
-   budgetBox.replaceChildren();
-   const amount=$('div','ad-overview-budget-value',planned>0?planned.toLocaleString('ru-RU')+' ₽':'Бюджет не утверждён');
-   const note=$('p','ad-overview-muted',committed>0?'Согласовано: '+committed.toLocaleString('ru-RU')+' ₽':'Согласованные расходы ещё не внесены');
-   const paidText=$('p','ad-overview-muted',paid>0?'Оплачено: '+paid.toLocaleString('ru-RU')+' ₽':'Подтверждённых платежей в базе пока нет');
-   const important=$('p','ad-overview-budget-note','Сметы площадок — альтернативные предложения, не общая сумма расходов.');
-   budgetBox.append(amount,note,paidText,important);
-
- };
- renderVenues();renderDocs();renderTasks();
- const initial=await call('admin/overview');
- renderOverview(initial);
- const [taskResult,docResult,galleryResult]=await Promise.allSettled([
-    call('admin/records?collection=tasks'),call('admin/venue-files'),call('admin/gallery')
-  ]);
- if(taskResult.status==='fulfilled'){
-   openTasks=(taskResult.value.items||[]).filter(t=>!['done','completed','cancelled'].includes(String(t.status||'').toLowerCase()));
-   openTasks.sort((a,b)=>String(a.due_at||'9999').localeCompare(String(b.due_at||'9999')));
-   renderTasks();
- }else{taskList.replaceChildren($('p','ad-overview-muted','Список задач временно недоступен.'))}
- if(docResult.status==='fulfilled'){
-   docsCount=(docResult.value.files||[]).length;renderDocs();
+  }else unavailable(programBody);
+  const b=snapshot.overview?.budget;
+  if(b){
+   budgetBody.replaceChildren(dataRow('budget','План',n(b.planned)?money(b.planned):'Не задан'),dataRow('budget','Согласовано',money(b.committed)),dataRow('budget','Оплачено',money(b.paid)));
+   if(n(b.planned)>0)budgetBody.append(dataRow('budget','Остаток плана',money(n(b.planned)-n(b.paid))));
+  }else unavailable(budgetBody);
+  if(snapshot.gallery){const assets=snapshot.gallery.assets||[];photosBody.replaceChildren(dataRow('photos','Фотографии',assets.length),dataRow('photos','Отмечены для гостей',assets.filter(x=>Number(x.is_public)===1).length))}
+  else unavailable(photosBody);
  }
- if(galleryResult.status==='fulfilled'){
-  const assets=galleryResult.value.assets||[];
-  photoCount=assets.length;
-  photoPublic=assets.filter(photo=>Number(photo.is_public)===1).length;
-  renderDocs();
+ let fingerprint='';
+ async function refresh(){
+  if(loading||mutation||!host.isConnected)return;
+  loading=true;
+  try{
+   const results=await Promise.allSettled([call('admin/overview'),call('admin/records?collection=tasks'),call('admin/records?collection=schedule_items'),loadVenueDashboard(host),call('admin/gallery')]);
+   if(!host.isConnected)return;
+   const keys=['overview','tasks','schedule','venues','gallery'];
+   let failed=false;results.forEach((r,i)=>{if(r.status==='fulfilled')snapshot[keys[i]]=r.value;else failed=true});
+   if(failed&&!overviewOffline)showAdminToast('Часть данных недоступна. Сохранены последние загруженные значения.',{kind:'error'});
+   overviewOffline=failed;
+   const next=JSON.stringify(snapshot);if(next!==fingerprint){fingerprint=next;render()}else if(!fingerprint)render();
+  }finally{loading=false}
  }
+ await refresh();
+ if(!host.isConnected)return;
  if(overviewTimer)clearInterval(overviewTimer);
  overviewTimer=setInterval(()=>{
-   if(!host.isConnected){clearInterval(overviewTimer);overviewTimer=null;return}
-   if(document.visibilityState==='visible')call('admin/overview').then(renderOverview)
-     .catch(()=>{if(!overviewOffline){overviewOffline=true;showAdminToast('Нет связи. Показаны последние данные.',{kind:'error'})}});
+  if(!host.isConnected){clearInterval(overviewTimer);overviewTimer=null;return}
+  if(document.visibilityState==='visible')void refresh();
  },15000);
 }
 
@@ -261,7 +239,8 @@ async function collection(host,type){
    editor=$('section','ad-live-subsection');title(editor,'Редактирование записи');
    showForm(editor,keys,async fields=>{
      await call('admin/records',{method:'PATCH',body:{collection:type,id:item.id,fields}});
-     await redraw();
+     if(type==='tasks'&&location.hash.startsWith('#/admin/tasks/'))location.hash='#/admin/tasks';
+     else await redraw();
    },item,'Сохранить изменения');
    host.prepend(editor);
    editor.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -282,6 +261,8 @@ async function collection(host,type){
    await redraw();
  });
  host.append(section);
+ const requested=type==='tasks'?location.hash.match(/^#\/admin\/tasks\/([^/]+)$/)?.[1]:null;
+ if(requested){const target=items.find(item=>String(item.id)===decodeURIComponent(requested));if(target)edit(target)}
 }
 
 async function renderSection(host,section){
