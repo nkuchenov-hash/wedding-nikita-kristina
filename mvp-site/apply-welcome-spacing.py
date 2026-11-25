@@ -13,24 +13,18 @@ css=Path('_mvp/style.css')
 css.write_text(css.read_text()+'\n'+Path('mvp-site/welcome-spacing.css').read_text())
 
 # Keep the approved original artwork, not the later replacement.
-# Export the unchanged source into QA for pixel-level comparison.
-from shutil import copyfile
+from shutil import copyfile, which
 import subprocess
-import sys
-try:
-    from PIL import Image, ImageFilter
-except ImportError:
-    subprocess.run([sys.executable, '-m', 'pip', 'install', '--quiet', 'pillow'], check=True)
-    from PIL import Image, ImageFilter
 qa=Path('_mvp-qa')
 qa.mkdir(exist_ok=True)
 asset=Path('_mvp/assets/skyline.png')
 copyfile(asset,qa/'original-skyline.png')
-im=Image.open(asset).convert('RGBA')
-print('ORIGINAL_SKYLINE',im.size,im.getchannel('A').getbbox())
-# High-quality interpolation with subtle sharpening, leaving the original layout intact.
-im=im.resize((im.width*3,im.height*3),Image.Resampling.LANCZOS)
-alpha=im.getchannel('A')
-im.putalpha(alpha.filter(ImageFilter.UnsharpMask(radius=1.35,percent=65,threshold=3)))
-im.save(asset,optimize=True)
+# Lanczos interpolation and light alpha sharpening only. No redesign.
+tool=which('magick') or which('convert')
+if tool:
+    dest=asset.with_name('skyline-refined.png')
+    subprocess.run([tool,str(asset),'-filter','Lanczos','-resize','300%','-channel','A','-unsharp','0x1.1+0.45+0.01','+channel','PNG32:'+str(dest)],check=True)
+    dest.replace(asset)
+else:
+    print('ImageMagick unavailable; original artwork preserved')
 copyfile(asset,qa/'refined-skyline.png')
