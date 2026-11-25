@@ -199,3 +199,16 @@ test('Maryino cover never relies on broken third-party photographs',()=>{
  assert.equal(cover.src,undefined);
  assert.equal(getVenuePhotos(record).filter(x=>x.src).length,0);
 });
+
+test('Unknown photos are not used as covers and album categories remain contiguous',()=>{
+ const v={id:'unreviewed-test',gallery:[{id:'unknown',label:'IMG_20261121_112233.jpg'},{id:'toilet',label:'Санузел — общий вид'},{id:'hall',label:'Банкетный зал — общий вид'},{id:'detail',label:'Аквариум — деталь'}]};
+ assert.equal(getVenueCover(v)?.id,'hall');
+ assert.equal(getVenueCover({...v,gallery:v.gallery.filter(x=>x.id!=='hall')}),null);
+ for(const mode of ['original','name','reverse','section']){
+  const photos=filteredVenuePhotos(venue('alex-park'),{photoSection:'all',photoSort:mode});
+  const seen=new Set();let previous=null;
+  for(const p of photos){if(p.section!==previous){assert.ok(!seen.has(p.section),'section must be contiguous');seen.add(p.section);previous=p.section}}
+ }
+ assert.equal(getVenuePhotos(v).find(p=>p.id==='unknown').section,'Не разобрано');
+ assert.match(renderVenueNewPage(venue('alex-park'),context('photos',{photoView:'grid'})),/class="vdp-photo-group"/);
+});

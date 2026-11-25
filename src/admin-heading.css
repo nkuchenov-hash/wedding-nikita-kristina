@@ -688,3 +688,26 @@ body.admin-body .admin-side .admin-settings-footer .side-link{flex:1 1 auto;min-
  body.admin-body .admin-side nav[aria-label="Разделы админки"] .side-link{min-height:48px}
  body.admin-body .admin-side .side-group+.side-group{margin-top:12px;padding-top:12px}
 }
+
+/* Venue comparison: recognizable landscape preview, not an icon-sized crop. */
+body.admin-body .vw-page.vw-control-board{--venue-thumb-w:144px;--venue-thumb-h:96px}
+body.admin-body .vw-page.vw-control-board .vw-venue-cell{gap:14px;align-items:center}
+body.admin-body .vw-page.vw-control-board :is(.vw-venue-media,.vw-image-open){width:var(--venue-thumb-w);height:var(--venue-thumb-h);flex:0 0 var(--venue-thumb-w)}
+body.admin-body .vw-page.vw-control-board .vw-image-open>.vw-row-thumb{width:var(--venue-thumb-w);height:var(--venue-thumb-h);object-fit:cover;object-position:center}
+body.admin-body .vw-page.vw-control-board .vw-venue-label{min-width:0}
+@media(min-width:901px){
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(1){width:28%}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(2){width:20%}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(3){width:11%}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(4){width:18%}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(5){width:9%}
+ body.admin-body .vw-page.vw-control-board .vw-table-sortable th:nth-child(6){width:14%}
+}
+@media(max-width:900px){
+ body.admin-body .vw-page.vw-control-board{--venue-thumb-w:112px;--venue-thumb-h:84px}
+ body.admin-body .vw-page.vw-control-board .vw-venue-cell{gap:12px}
+}
+body.admin-body .vdp-photo-group{margin:20px 0 24px;min-width:0}
+body.admin-body .vdp-photo-group h3{font-size:18px;font-weight:500;margin:0 0 12px;display:flex;align-items:center;gap:10px}
+body.admin-body .vdp-photo-group h3 span{font-size:16px;font-weight:400;opacity:.7}
+body.admin-body .vdp-photo-group+.vdp-photo-group{padding-top:20px;border-top:1px solid var(--wd-line,currentColor)}

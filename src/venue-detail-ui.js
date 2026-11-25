@@ -21,25 +21,30 @@ const photoOriginal=p=>p?.sourceUrl?escUrl(p.sourceUrl):p?.src?escUrl(p.src):ori
 const rowGroups=[['Основные расходы',['menu','rent','deposit','service']],['Техника',['sound','light','tech']],['Еда и дополнительные услуги',['welcome','drinks','cake','corkage','staff','extension']]];
 const labelMap=Object.fromEntries(VENUE_COST_LABELS.map(([key,title,unit])=>[key,{title,unit}]));
 
-// Photo priority for BOTH the main table and every venue hero/gallery.
-// Never allow rooms with equipment, toilets, corridors or close-ups to outrank
-// a representative banquet hall, ceremonial interior or exterior facade.
-const photoPriority=x=>{
- const section=String(x.section||'').toLowerCase();
- const name=String(x.name||'').toLowerCase();
- if(/техническ|техзон|пульт|оборудован|аппаратур|коммуникаци|монтаж|вентиляци|кабель|щитова/.test(name))return 100;
- if(/сануз|туалет|унитаз|раковин|кабин|писсуар|wc/.test(name)||/сануз/.test(section))return 95;
- if(/грим|служеб|подсоб|кухн|склад|персонал|гардероб/.test(name)||/служебн|грим/.test(section))return 90;
- if(/банкетный зал.*переход/.test(name))return 60;
- if(/коридор|проход|лестниц|перехо|лифт|двер|вешалк/.test(name)||/входы и переходы/.test(section))return 80;
- if(/детал|аквариум|светильник|поручень|табличк|сервировк|крупный план|настил/.test(name))return 70;
- if(/банкет|парадн.*зал|основн.*зал|торжественн.*зал|застеклённ.*галер/.test(name)||/залы/.test(section))return 0;
- if(/фасад|здани|дворец|особняк|главный вход|архитектур/.test(name))return 1;
- if(/вид|панорам|террас|балкон|крыша|залив/.test(name)||/террас|виды/.test(section))return 2;
- if(/парк|сад|территор|двор|входная группа/.test(name)||/территор/.test(section))return 3;
- if(/лаунж|фотозон|фойе|холл|гостиная/.test(name)||/лаунж|фотозон/.test(section))return 4;
- return 5; // Generic IMG files remain visible, but are not misrepresented as banquet halls.
+// Stable categories across the entire venue archive, regardless of Drive folder names.
+const PHOTO_GROUPS=['Залы','Террасы и виды','Фасад и вход','Территория','Welcome-зона','Лаунж и фотозоны','Входы и переходы','Детали интерьера','Не разобрано','Служебные и гримёрки','Санузлы'];
+const FEATURED_SECTIONS={
+ putilov:'Залы','repino-riviera':'Фасад и вход',panorama:'Фасад и вход',harmony:'Залы'
 };
+function photoSection(v,p){
+ const name=String(p.name||'').toLowerCase(),section=p.section||'';
+ if(KNOWN_TECHNICAL.has(p.id))return p.id==='1CYyg_cZbFreCVrWC3ML8CzOqTNhSMyzo'?'Входы и переходы':'Служебные и гримёрки';
+ if(FEATURED_COVERS[v.id]===p.id&&FEATURED_SECTIONS[v.id])return FEATURED_SECTIONS[v.id];
+ if(/сануз|туалет|унитаз|раковин|писсуар|\bwc\b/.test(name)||section==='Санузлы')return 'Санузлы';
+ if(/техническ|техзон|пульт|оборудован|аппаратур|коммуникаци|монтаж|вентиляци|кабель|щитова|подсоб|служеб|грим[её]р|гардероб|кухн|склад/.test(name))return 'Служебные и гримёрки';
+ if(/детал|аквариум|поручень|табличк|крупн[оы]|скульптура льва|интерьер — (декор|статуя)|макет усадьбы|декоративн.*ваза/.test(name))return 'Детали интерьера';
+ if(/^(банкетный зал.*переход|парадные залы — дверной|коридор|т[её]мный проход|лестниц|парадная лестница|лифт|межкомнатная дверь|входная зона — лестница)/.test(name))return 'Входы и переходы';
+ if(/^(фасад|главный вход|особняк.*вход|дворец.*фасад|дворец — общий вид)/.test(name))return 'Фасад и вход';
+ if(/^(территория|парк|сад|таврический сад|пруд)/.test(name))return 'Территория';
+ if(/^(терраса|крытая терраса|открытая терраса|вечерняя терраса|балкон|вид из окна|вид на |вид с крыши|вечерний вид|застекл[её]нный столик)/.test(name))return 'Террасы и виды';
+ if(/^welcome/.test(name)||section==='Welcome-зона')return 'Welcome-зона';
+ if(/^(лаунж|фойе|фотозона|бар|кафе|зона отдыха|дополнительн.*диван|дополнительн.*кресло|гостиная|бильярдная)/.test(name))return 'Лаунж и фотозоны';
+ if(/^(банкетный зал|белый зал|парадный зал|парадные залы|парадная гостиная|зел[её]ный зал|камерный зал|светлый зал|малый зал|основной зал|мансардный зал|другой банкетный зал|дополнительный.*зал|зал для|зал —|павильон)/.test(name))return 'Залы';
+ if(section==='Лаунж и фойе')return 'Лаунж и фотозоны';
+ if(PHOTO_GROUPS.includes(section))return section;
+ return 'Не разобрано';
+}
+const photoPriority=p=>{const i=PHOTO_GROUPS.indexOf(p.section);return i<0?PHOTO_GROUPS.indexOf('Не разобрано'):i};
 // Reviewed phone-photo covers for albums where filenames are only IMG timestamps.
 const FEATURED_COVERS={
  'milyutin':'1wUoS4p2AEThmm1C7Droo6pu6o31RSdMm', // inspected ceremonial salon
@@ -70,32 +75,36 @@ const imageRelevance=x=>{
    -(/другой|дополнительный/.test(name)?15:0)
    -(/детал|аквариум|светильник|поручень|табличка|сервировка/.test(name)?70:0);
 };
+const coverEligible=p=>{
+ if(!['Залы','Фасад и вход','Террасы и виды','Территория'].includes(p.section))return false;
+ const name=String(p.name||'').toLowerCase();
+ return !/детал|крупн[оы]|светильник|люстра и пол|потолок и люстр|поручень|табличк|сервировк|настил|ограждени|двер|переход|столик|зона у штор|с человеком|оборудован|сануз|туалет/.test(name);
+};
+const groupCompare=(v,a,b)=>{
+ const featured=FEATURED_COVERS[v.id],preferred=FEATURED_SECTIONS[v.id]||null;
+ // A reviewed terrace/facade can lead its venue's album, without splitting categories.
+ const featuredGroup=preferred||(v.id==='roof18'?'Террасы и виды':null);
+ const rank=p=>p.section===featuredGroup?-1:photoPriority(p);
+ return rank(a)-rank(b)||(a.id===featured?-1:b.id===featured?1:0);
+};
 export function getVenuePhotos(v){
- const files=ALL_PHOTOS[v.id]?.length?ALL_PHOTOS[v.id]:(v.gallery||[]).map(x=>({id:x.id,name:x.label||'Фотография',section:x.label||'Общий альбом',folder:x.folder||null}));
- return [...files].sort((a,b)=>{
-  const featured=FEATURED_COVERS[v.id];
-  const apr=featured===a.id?-20:KNOWN_TECHNICAL.has(a.id)?120:photoPriority(a);
-  const bpr=featured===b.id?-20:KNOWN_TECHNICAL.has(b.id)?120:photoPriority(b);
-  return apr-bpr||imageRelevance(b)-imageRelevance(a)||a.name.localeCompare(b.name,'ru',{numeric:true});
- });
+ const files=ALL_PHOTOS[v.id]?.length?ALL_PHOTOS[v.id]:(v.gallery||[]).map(x=>({id:x.id,name:x.label||'Фотография',section:x.section||x.label||'Общий альбом',folder:x.folder||null}));
+ return [...new Map(files.map(p=>[p.id,p])).values()].map(p=>({...p,section:photoSection(v,p)})).sort((a,b)=>
+  groupCompare(v,a,b)||Number(coverEligible(b))-Number(coverEligible(a))||imageRelevance(b)-imageRelevance(a)||a.name.localeCompare(b.name,'ru',{numeric:true}));
 }
-export function getVenueCover(v){
- const files=getVenuePhotos(v);
- // The ordered collection already puts banquet halls and ceremonial exteriors first.
- return NO_COVER_UNTIL_REVIEW.has(v.id)?null:(files[0]||null);
+export function getVenueCoverCandidates(v){
+ const files=getVenuePhotos(v),featured=FEATURED_COVERS[v.id];
+ if(NO_COVER_UNTIL_REVIEW.has(v.id))return [];
+ const approved=files.find(p=>p.id===featured&&!KNOWN_TECHNICAL.has(p.id));
+ const candidates=files.filter(p=>p.id!==featured&&coverEligible(p)&&!KNOWN_TECHNICAL.has(p.id));
+ return approved?[approved,...candidates]:candidates;
 }
+export function getVenueCover(v){return getVenueCoverCandidates(v)[0]||null}
 export function filteredVenuePhotos(v,ui={}){
  const photos=getVenuePhotos(v).filter(x=>ui.photoSection==='all'||!ui.photoSection||x.section===ui.photoSection);
  const mode=ui.photoSort||'original';
- // Sorting controls may rearrange main images, but never move technical
- // rooms, toilets, corridors or equipment photos ahead of the main spaces.
- const tail=x=>photoPriority(x)>=80?1:0;
- if(mode==='name')return [...photos].sort((a,b)=>tail(a)-tail(b)||a.name.localeCompare(b.name,'ru',{numeric:true}));
- if(mode==='reverse'){
-  const indexes=new Map(photos.map((x,i)=>[x,i]));
-  return [...photos].sort((a,b)=>tail(a)-tail(b)||indexes.get(b)-indexes.get(a));
- }
- if(mode==='section')return [...photos].sort((a,b)=>tail(a)-tail(b)||photoPriority(a)-photoPriority(b)||a.name.localeCompare(b.name,'ru',{numeric:true}));
+ const indexes=new Map(photos.map((x,i)=>[x,i]));
+ if(mode==='name'||mode==='reverse'||mode==='section')return [...photos].sort((a,b)=>groupCompare(v,a,b)||(mode==='name'?a.name.localeCompare(b.name,'ru',{numeric:true}):mode==='reverse'?indexes.get(b)-indexes.get(a):indexes.get(a)-indexes.get(b)));
  return photos;
 }
 const sourceLinks=v=>{
@@ -179,9 +188,10 @@ function gallery(v,ui){
  if(!all.length)return '<div class="vdp-emptyphotos"><div class="vdp-emptyicon">▧</div><h3>Фотографии пока не загружены</h3><p>В Wedding Drive для этой площадки пока нет доступных фотографий с телефона.</p>'+(v.photos?'<a href="'+h(v.photos)+'" target="_blank" rel="noopener noreferrer">Открыть папку с фотографиями ↗</a>':'')+'</div>';
  const sections=[...new Set(all.map(x=>x.section))];
  const pills='<div class="vdp-photo-categories"><button type="button" data-photo-section="all" class="'+(ui.photoSection==='all'||!ui.photoSection?'active':'')+'">Все фото <b>'+all.length+'</b></button>'+sections.map(s=>'<button type="button" data-photo-section="'+h(s)+'" class="'+(ui.photoSection===s?'active':'')+'">'+h(s)+' <b>'+all.filter(x=>x.section===s).length+'</b></button>').join('')+'</div>';
- const buttons='<div class="vdp-photo-tools"><div class="vdp-view-switch"><button type="button" data-photo-view="grid" class="'+(ui.photoView!=='gallery'?'active':'')+'">▦ Миниатюры</button><button type="button" data-photo-view="gallery" class="'+(ui.photoView==='gallery'?'active':'')+'">▣ Галерея</button></div><label>Порядок<select data-photo-sort><option value="original" '+(ui.photoSort==='original'?'selected':'')+'>Сначала залы и виды</option><option value="name" '+(ui.photoSort==='name'?'selected':'')+'>По названию</option><option value="section" '+(ui.photoSort==='section'?'selected':'')+'>По разделам</option><option value="reverse" '+(ui.photoSort==='reverse'?'selected':'')+'>Обратный</option></select></label></div>';
+ const buttons='<div class="vdp-photo-tools"><div class="vdp-view-switch"><button type="button" data-photo-view="grid" class="'+(ui.photoView!=='gallery'?'active':'')+'">▦ Миниатюры</button><button type="button" data-photo-view="gallery" class="'+(ui.photoView==='gallery'?'active':'')+'">▣ Галерея</button></div><label>Порядок<select data-photo-sort><option value="original" '+(ui.photoSort==='original'?'selected':'')+'>По разделам и значимости</option><option value="name" '+(ui.photoSort==='name'?'selected':'')+'>По названию</option><option value="section" '+(ui.photoSort==='section'?'selected':'')+'>По разделам</option><option value="reverse" '+(ui.photoSort==='reverse'?'selected':'')+'>Обратный</option></select></label></div>';
  const galleryMode='<div class="vdp-photo-focus"><div class="vdp-photo-main"><button type="button" data-photo-step="-1" aria-label="Предыдущее фото">‹</button><button type="button" data-photo-open="'+selected+'" class="vdp-photo-main-image" title="Открыть на весь экран"><img src="'+photoUrl(items[selected]||all[0],1600)+'" alt="'+h(items[selected]?.name||'Фото')+'"></button><button type="button" data-photo-step="1" aria-label="Следующее фото">›</button></div><div class="vdp-photo-meta"><span>'+h(items[selected]?.section||'Фото')+' · '+(selected+1)+' / '+items.length+'</span><strong>'+h(items[selected]?.name||'')+'</strong></div><div class="vdp-filmstrip">'+items.map((x,i)=>photoTile(x,i,i===selected)).join('')+'</div></div>';
- const gridMode='<div class="vdp-photo-grid">'+items.map((x,i)=>photoTile(x,i,false)).join('')+'</div>';
+ const grouped=ui.photoSection==='all'||!ui.photoSection;
+ const gridMode=grouped?[...new Set(items.map(x=>x.section))].map(section=>'<section class="vdp-photo-group"><h3>'+h(section)+' <span>'+items.filter(x=>x.section===section).length+'</span></h3><div class="vdp-photo-grid">'+items.map((x,i)=>x.section===section?photoTile(x,i,false):'').join('')+'</div></section>').join(''):'<div class="vdp-photo-grid">'+items.map((x,i)=>photoTile(x,i,false)).join('')+'</div>';
  return '<div class="vdp-photos"><div class="vdp-photo-header"><div><h2>Фотографии <span>'+all.length+'</span></h2><p>Выберите комнату, переключите вид и откройте любой снимок на весь экран.</p></div>'+(v.photos?'<a href="'+h(v.photos)+'" target="_blank" rel="noopener noreferrer">Папки на Google Drive ↗</a>':'')+'</div>'+pills+buttons+(items.length?(ui.photoView==='gallery'?galleryMode:gridMode):'<p class="vdp-empty">В этом разделе снимков нет.</p>')+'</div>';
 }
 function lightbox(v,ui){
