@@ -111,18 +111,30 @@ jobs:
               assert.ok(heroPolish.lowerZ>heroPolish.waveZ);
               console.log('WELCOME_SPACING',JSON.stringify(spacing));
               assert.ok(spacing.before>=30 && spacing.after>=35);
-              assert.equal(spacing.branches,0);
+              assert.equal(spacing.branches,4);
               const editorial=await p.evaluate(()=>{
                 const left=document.querySelector('.welcome .photo-shell:has(.frame-estate)'),right=document.querySelector('.welcome .photo-shell:has(.frame-city)'),copy=document.querySelector('.welcome-text'),lr=left.getBoundingClientRect(),rr=right.getBoundingClientRect(),cr=copy.getBoundingClientRect();
-                return {leftRatio:lr.height/lr.width,rightRatio:rr.height/rr.width,leftRotate:getComputedStyle(left).rotate,rightRotate:getComputedStyle(right).rotate,noTextOverlap:innerWidth<=700?cr.top>=Math.max(lr.bottom,rr.bottom)-2:Math.max(lr.right,rr.right)<cr.left,photoOverlap:lr.right>rr.left&&lr.bottom>rr.top,botanicals:document.querySelectorAll('.welcome .welcome-botanical').length};
+                return {leftRatio:lr.height/lr.width,rightRatio:rr.height/rr.width,leftRotate:getComputedStyle(left.closest('.welcome-card')).rotate,rightRotate:getComputedStyle(right.closest('.welcome-card')).rotate,noTextOverlap:innerWidth<=700?cr.top>=Math.max(lr.bottom,rr.bottom)-2:Math.max(lr.right,rr.right)<cr.left,photoOverlap:lr.right>rr.left&&lr.bottom>rr.top,botanicals:document.querySelectorAll('.welcome .welcome-botanical').length};
               });
               console.log('WELCOME_EDITORIAL',JSON.stringify(editorial));
               assert.ok(editorial.leftRatio>1.06&&editorial.rightRatio<.99);
               assert.ok(editorial.leftRotate!=='none'&&editorial.rightRotate!=='none');
               assert.ok(editorial.noTextOverlap && editorial.photoOverlap);
-              assert.equal(editorial.botanicals,0);
+              assert.equal(editorial.botanicals,4);
+              assert.equal(await p.evaluate(()=>[...document.querySelectorAll('.welcome .welcome-botanical')].every(i=>i.naturalWidth>0&&new URL(i.src).pathname.endsWith('.png'))),true);
               await p.evaluate(()=>Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,3000))]));
               await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/'+name+'.png',fullPage:true});
+              if(name==='desktop'){
+                await p.evaluate(()=>document.querySelector('.welcome-collage').scrollIntoView({block:'center',behavior:'instant'}));
+                const card=await p.$('.welcome-card-estate');const cb=await card.boundingBox();
+                await p.mouse.move(cb.x+cb.width*.35,cb.y+cb.height*.35);
+                await new Promise(r=>setTimeout(r,800));
+                const m=await card.evaluate(e=>({hover:e.matches(':hover'),lift:new DOMMatrix(getComputedStyle(e.querySelector('.photo-shell')).transform).m42,zoom:new DOMMatrix(getComputedStyle(e.querySelector('img')).transform).a}));
+                assert.ok(m.hover&&m.lift<-3&&m.zoom>1.01,JSON.stringify(m));
+                await card.evaluate(e=>e.click());assert.equal(await p.$eval('.welcome-photo-view',e=>e.open),true);
+                await p.$eval('.welcome-photo-view button',e=>e.click());
+                await p.mouse.move(0,0);
+              }
               assert.equal(await p.evaluate(()=>document.querySelectorAll('.day-shell').length),3);
               if(name==='desktop'){
                 await p.evaluate(()=>{document.documentElement.style.scrollBehavior='auto';document.querySelector('.day-shell').scrollIntoView({behavior:'instant',block:'center'});});
@@ -195,4 +207,10 @@ jobs:
             curl -fsSL --retry 3 --max-time 20 "$BASE/assets/$asset.png?v=${GITHUB_SHA:0:12}" -o /tmp/mvp-live.png
             cmp /tmp/mvp-live.png "_mvp/assets/$asset.png"
           done
+          for asset in left-botanical upper-white-blossoms strawberry foreground-hydrangea; do
+            curl -fsSL --retry 3 --max-time 20 "$BASE/assets/welcome-v11-$asset.png?v=${GITHUB_SHA:0:12}" -o /tmp/mvp-live.png
+            cmp /tmp/mvp-live.png "_mvp/assets/welcome-v11-$asset.png"
+          done
+          curl -fsSL --retry 3 --max-time 20 "$BASE/style.css?v=${GITHUB_SHA:0:12}" -o /tmp/mvp-live.css
+          cmp /tmp/mvp-live.css _mvp/style.css
           echo ONLINE_MVP_VERIFIED

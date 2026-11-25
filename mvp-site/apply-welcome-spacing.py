@@ -121,3 +121,28 @@ section=html[start.end():end]
 section,count=re.subn(r'<img\b(?=[^>]*class="[^"]*\b(?:ornament|welcome-botanical)\b)[^>]*>', '',section)
 assert count>=3, count
 p.write_text(html[:start.end()]+section+html[end:])
+
+# Approved V11: exact raster layers, original MVP card markup and paths.
+names=('left-botanical','upper-white-blossoms','strawberry','foreground-hydrangea')
+for name in names:
+    src=Path('mvp-site/welcome-v11')/(name+'.png')
+    b=src.read_bytes()
+    assert b[:8]==b'\x89PNG\r\n\x1a\n' and b[25] in (4,6),name
+    copyfile(src,Path('_mvp/assets')/('welcome-v11-'+name+'.png'))
+html=p.read_text()
+start=re.search(r'<section\b[^>]*class="[^"]*\bwelcome\b[^"]*"[^>]*>',html)
+end=html.index('</section>',start.end())
+section=html[start.end():end]
+cards=list(re.finditer(r'<div class="photo-shell">\s*<figure class="photo-frame frame-(estate|city)">.*?</figure>\s*</div>',section,re.S))
+assert len(cards)==2, 'Original card markup not found'
+cardmap={m.group(1):m.group(0) for m in cards}
+def plant(name):
+    return '<img class="welcome-botanical plant-'+name+'" src="assets/welcome-v11-'+name+'.png" alt="" aria-hidden="true">'
+def card(name,label):
+    return '<div class="welcome-card welcome-card-'+name+'" role="button" tabindex="0" aria-label="Открыть фотографию: '+label+'">'+cardmap[name]+'</div>'
+collage='<div class="welcome-collage">'+plant('left-botanical')+plant('upper-white-blossoms')+card('estate','Марьино')+card('city','Санкт-Петербург')+'<div class="welcome-lower-group">'+plant('strawberry')+plant('foreground-hydrangea')+'</div></div>'
+for i,m in reversed(list(enumerate(cards))):
+    section=section[:m.start()]+(collage if i==0 else '')+section[m.end():]
+p.write_text(html[:start.end()]+section+html[end:])
+script=Path('_mvp/script.js')
+script.write_text(script.read_text()+'\n'+Path('mvp-site/welcome-v11/interaction.js').read_text())

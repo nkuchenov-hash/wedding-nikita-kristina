@@ -54,3 +54,41 @@
 }
 
 
+
+/* Approved V11: preserve real MVP clip paths and movement, use a stationary hit area. */
+.welcome{height:auto!important;padding:26px 2.5% 30px 1%!important;overflow:visible;isolation:isolate}
+.welcome .welcome-grid{display:grid!important;grid-template-columns:57% 43%!important;grid-template-rows:auto!important;gap:0!important;align-items:center!important;height:auto!important;padding:0!important;max-width:1600px;margin:auto}
+.welcome .welcome-collage{grid-column:1;grid-row:1;position:relative;aspect-ratio:1.25;isolation:isolate;overflow:visible;min-width:0}
+.welcome .welcome-text{grid-column:2;grid-row:1;position:relative!important;inset:auto!important;width:91%!important;max-width:580px;margin:0 auto!important;z-index:8}
+.welcome .welcome-text p{max-width:none}
+.welcome .welcome-collage .welcome-card{position:absolute;cursor:zoom-in;outline:none;isolation:isolate;transform:none;transition:none;overflow:visible}
+.welcome .welcome-card-estate{left:10%;top:11%;width:51%;aspect-ratio:.88;rotate:-4.5deg;z-index:2}
+.welcome .welcome-card-city{left:47%;top:39%;width:47%;aspect-ratio:1.14;rotate:3deg;z-index:4}
+.welcome .welcome-collage .photo-shell{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;margin:0!important;aspect-ratio:auto!important;rotate:none!important;align-self:auto!important;transform:none;pointer-events:none;overflow:visible;filter:drop-shadow(0 3px 3px #51442d15) drop-shadow(0 9px 13px #51442d15);transform-origin:center;transition:transform 360ms ease,filter 360ms ease}
+.welcome .welcome-collage .photo-frame{position:relative!important;inset:auto!important;margin:0!important;width:100%!important;height:100%!important;background:#fffaf0!important;overflow:hidden;filter:none!important;box-shadow:none;border:0;transform:none}
+.welcome .welcome-collage .photo-frame img{display:block;width:100%;height:100%;object-fit:cover;transform-origin:center;transition:transform 650ms cubic-bezier(.2,.7,.25,1),filter 400ms ease}
+.welcome .welcome-card:focus-visible{outline:2px solid #85956d;outline-offset:5px;border-radius:19px}
+.welcome .welcome-botanical{display:block;position:absolute;height:auto;max-width:none;pointer-events:none;filter:drop-shadow(0 2px 2px #51422a16) drop-shadow(2px 5px 6px #51422a23)}
+.welcome .plant-left-botanical{left:.2%;top:29%;width:14.9%;z-index:1}
+.welcome .plant-upper-white-blossoms{left:53%;top:12.5%;width:40%;z-index:1}
+.welcome .welcome-lower-group{position:absolute;inset:0;z-index:6;pointer-events:none;filter:drop-shadow(0 2px 2px #51422a16) drop-shadow(2px 6px 7px #51422a26)}
+.welcome .welcome-lower-group .welcome-botanical{filter:none}
+.welcome .plant-strawberry{left:48.774197689345314%;top:79.36585365853658%;width:23.48369704749679%}
+.welcome .plant-foreground-hydrangea{left:19.5%;top:75%;width:35.8%}
+@media not (pointer:coarse){
+ .welcome .welcome-card:hover .photo-shell{transform:translateY(-4px);filter:drop-shadow(0 5px 5px #51442d1a) drop-shadow(0 13px 16px #51442d20)}
+ .welcome .welcome-card:hover .photo-frame img{transform:scale(1.025)}
+}
+@media(max-width:700px){
+ .welcome{padding:10px 3% 24px!important}
+ .welcome .welcome-grid{grid-template-columns:1fr!important;grid-template-rows:auto auto!important}
+ .welcome .welcome-collage{grid-column:1;grid-row:1;width:100%;max-width:600px;margin:auto}
+ .welcome .welcome-text{grid-column:1;grid-row:2;width:86%!important;margin:18px auto 0!important}
+}
+@media(prefers-reduced-motion:reduce){.welcome .welcome-card .photo-shell,.welcome .welcome-card .photo-frame img{transition:none!important;transform:none!important}}
+.welcome-photo-view{max-width:min(92vw,1000px);width:auto;max-height:92vh;border:0;padding:14px;background:#fbf8ef;border-radius:16px;box-shadow:0 20px 80px #151c1b55;color:#37482b}
+.welcome-photo-view::backdrop{background:#22281dc9;backdrop-filter:blur(4px)}
+.welcome-photo-view figure{margin:0;display:grid;gap:12px}
+.welcome-photo-view img{max-width:100%;max-height:76vh;object-fit:contain;display:block;margin:auto}
+.welcome-photo-view figcaption{text-align:center;font:16px Georgia,serif}
+.welcome-photo-view button{position:absolute;right:18px;top:18px;border:0;border-radius:50%;width:38px;height:38px;cursor:pointer;font:24px/1 system-ui;background:#fffdf2e9;color:#3d5036}
