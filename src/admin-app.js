@@ -74,10 +74,10 @@ function adminSidebar(active){
  const settings=adminModules.find(m=>m.id==='settings');
  const navLink=m=>`<a href="#/admin/${m.id}" class="side-link ${active===m.id?'selected':''}" ${active===m.id?'aria-current="page"':''}><span class="side-icon" aria-hidden="true">${m.icon}</span>${m.label}</a>`;
  return `<aside class="admin-side" id="admin-navigation" aria-label="Навигация">
-   <div class="admin-brand-row"><a href="#/admin/overview" class="admin-brand"><span class="admin-brand-logo">НК</span><span>Wedding</span></a><button id="admin-theme-toggle" class="admin-theme-toggle" type="button" aria-label="Переключить тему"></button></div>
+   <div class="admin-brand-row"><a href="#/admin/overview" class="admin-brand"><span class="admin-brand-logo">НК</span><span>Wedding</span></a></div>
    <button type="button" class="admin-menu-close" data-admin-menu-close aria-label="Закрыть меню"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg></button><div class="side-caption">УПРАВЛЕНИЕ</div>
    <nav aria-label="Разделы админки">${items.map(navLink).join('')}</nav>
-   ${settings?`<div class="admin-settings-footer">${navLink(settings)}</div>`:''}
+   <div class="admin-settings-footer">${settings?navLink(settings):''}<button id="admin-theme-toggle" class="admin-theme-toggle" type="button" aria-label="Переключить тему"></button></div>
  </aside>`;
 }
 function adminOverview(){

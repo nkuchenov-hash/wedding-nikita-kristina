@@ -628,3 +628,10 @@ body.admin-body .admin-content :is(.pd-panel,.pd-tile,.ad-gb-metric,.ad-live-met
  body.admin-body .ad-timeline-page .ad-tl-section-controls .ad-tl-day-nav,
  body.admin-body .ad-timeline-page .ad-tl-section-controls .ad-tl-main-switch{flex:none;width:100%}
 }
+
+/* Theme is a utility beside Settings, not part of the brand. */
+body.admin-body .admin-side .admin-settings-footer{display:flex;align-items:center;gap:6px}
+body.admin-body .admin-side .admin-settings-footer .side-link{flex:1 1 auto;min-width:0;justify-content:flex-start}
+body.admin-body .admin-side .admin-settings-footer .admin-theme-toggle{flex:0 0 40px;width:40px;height:40px;margin:0;border:0;border-radius:9px}
+@media(max-height:550px) and (min-width:901px){body.admin-body .admin-side .admin-settings-footer .admin-theme-toggle{flex-basis:32px;width:32px;height:32px}}
+@media(max-width:900px){body.admin-body .admin-side .admin-settings-footer{margin-top:auto;padding-top:12px}body.admin-body .admin-side .admin-settings-footer .admin-theme-toggle{flex-basis:44px;width:44px;height:44px}}
