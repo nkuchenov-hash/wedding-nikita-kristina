@@ -1,0 +1,32 @@
+name: Verify deployed approved V11 (read only)
+on:
+  push:
+    branches: [preview/verify-approved-v11]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check public website and approved raster hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=https://nikitakristina.ru/mvp
+          curl -fsSL --max-time 20 "$BASE/version.json?v=$GITHUB_RUN_ID" -o /tmp/version.json
+          cat /tmp/version.json
+          curl -fsSL --max-time 20 "$BASE/index.html?v=$GITHUB_RUN_ID" -o /tmp/live.html
+          curl -fsSL --max-time 20 "$BASE/style.css?v=$GITHUB_RUN_ID" -o /tmp/live.css
+          grep -Fq 'welcome-card-estate' /tmp/live.html
+          grep -Fq 'welcome-card-city' /tmp/live.html
+          grep -Fq 'id="estate-shape"' /tmp/live.html
+          grep -Fq 'id="city-shape"' /tmp/live.html
+          grep -Fq 'welcome-card:hover .photo-shell' /tmp/live.css
+          for item in left-botanical:40d1a501e104d1cfb0f86fd069d3ac3db4d51e79 upper-white-blossoms:a9dccb59d365fc3f04ead10de7053303eb82062b strawberry:8104b7184bb82ebcb0a855a56e9dc779613e5d47 foreground-hydrangea:89a797c5203b758f34b2ded8d94b8a00ba948a67; do
+            name=${item%:*}
+            expected=${item#*:}
+            curl -fsSL --max-time 20 "$BASE/assets/welcome-v11-$name.png?v=$GITHUB_RUN_ID" -o /tmp/plant.png
+            test "$(git hash-object /tmp/plant.png)" = "$expected"
+            echo "VERIFIED $name"
+          done
+          echo V11_PUBLIC_VERIFIED
