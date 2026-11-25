@@ -7,6 +7,7 @@ const adminProgramDays=[...weddingDays,
 import {renderWeddingProgram} from './admin-program.js';
 import {renderWeddingSettings} from './admin-settings.js';
 import {PUBLIC_VENUES,loadVenueDashboard,loadVenueBudgetOptions} from './venues.js';
+import {estimateVenue} from './venue-evaluation.js';
 import {assignedDay,scheduled} from './admin-program.js';
 // Wedding admin live-data layer. Never stores guest details in browser storage.
 const API='/admin/index.php?api=';
@@ -149,7 +150,9 @@ async function overview(host){
   if(all.length>4)tasksBody.append(action(expanded?'Свернуть':'Ещё '+(all.length-4)+' задач',()=>{expanded=!expanded;renderTasks()},'pd-link'));
  }
  function render(){
-  const settings=snapshot.settings?.settings,g=snapshot.overview?.guests,v=snapshot.venues,b=snapshot.overview?.budget,taskData=snapshot.tasks?.items;
+  const settings=snapshot.settings?.settings,g=snapshot.overview?.guests,v=snapshot.venues,taskData=snapshot.tasks?.items;
+  const selected=v?.selectedVenue?{id:v.selectedVenue.id,name:v.selectedVenue.name,estimate:estimateVenue(v.selectedVenue,Math.max(1,Number(g?.total)||80))}:null;
+  const b=snapshot.budgetLines&&v?budgetTotals(venueBudgetRows(snapshot.budgetLines.items||[],selected)):snapshot.overview?.budget;
   const eventDate=settings?.event_date||weddingDays.find(d=>d.date==='2027-06-19')?.date;
   if(!chosenDay&&adminProgramDays.some(d=>d.date===eventDate))day=eventDate;
   heroContent.replaceChildren($('div','pd-eyebrow','ПОДГОТОВКА К СВАДЬБЕ'),$('h2','',fmtDate(eventDate)), $('p','',settings?settings.date_confirmed?'Дата торжества подтверждена':'Предварительная дата торжества':'Данные даты уточняются'));
@@ -197,9 +200,9 @@ async function overview(host){
    const check=await call('admin/guests/revision');
    if(!forceRefresh&&revision===Number(check.revision))return;
    forceRefresh=false;
-   const results=await Promise.allSettled([call('admin/overview'),call('admin/records?collection=tasks'),call('admin/records?collection=schedule_items'),loadVenueDashboard(host),call('admin/gallery'),call('admin/settings'),call('admin/records?collection=menu_options')]);
+   const results=await Promise.allSettled([call('admin/overview'),call('admin/records?collection=tasks'),call('admin/records?collection=schedule_items'),loadVenueDashboard(host),call('admin/gallery'),call('admin/settings'),call('admin/records?collection=menu_options'),call('admin/records?collection=budget_lines')]);
    if(!host.isConnected||mutation){forceRefresh=true;return}
-   const keys=['overview','tasks','schedule','venues','gallery','settings','menu'];let failed=false;
+   const keys=['overview','tasks','schedule','venues','gallery','settings','menu','budgetLines'];let failed=false;
    results.forEach((r,i)=>{if(r.status==='fulfilled')snapshot[keys[i]]=r.value;else failed=true});
    if(!failed)revision=Number(check.revision);else forceRefresh=true;
    if(failed&&!overviewOffline)showAdminToast('Часть данных недоступна. Сохранены последние загруженные значения.',{kind:'error'});
@@ -327,12 +330,36 @@ export function budgetRows(lines,vendors,decor,guests){
   return {...row,linked,source,details,unknown,due:linked?details.due||null:row.due_at||null};
  });
 }
+
+/* Venue estimates are a live projection, not a second manually copied amount.
+   The saved ledger retains actual payments and commitments for every venue. */
+export function venueBudgetRows(rows,selected){
+ const marker=r=>r.category==='Площадка'?String(r.notes||'').match(/^План площадки: ([a-z0-9-]+);/i)?.[1]:null;
+ let attached=false;const result=[];
+ for(const r of rows){
+  const id=marker(r);
+  if(!id){result.push(r);continue}
+  const actual=Math.max(budgetNumber(r.committed_rub),budgetNumber(r.paid_rub));
+  if(selected?.id===id&&!attached){
+   const e=selected.estimate||{};attached=true;
+   result.push({...r,description:selected.name,venueId:id,venueLinked:true,planned_rub:Math.max(actual,Math.round(e.value??e.knownSubtotal??0)),unknown:e.value==null||!!e.partial});
+  }else if(actual>0){
+   result.push({...r,venueId:id,venueLinked:true,previousVenue:true,planned_rub:actual,unknown:false});
+  }
+ }
+ if(selected&&!attached){
+  const e=selected.estimate||{};
+  result.push({id:null,category:'Площадка',description:selected.name,venueId:selected.id,venueLinked:true,planned_rub:Math.round(e.value??e.knownSubtotal??0),committed_rub:0,paid_rub:0,unknown:e.value==null||!!e.partial,notes:'План площадки: '+selected.id+';',due:null});
+ }
+ return result;
+}
+
 async function renderBudget(host){
  host.classList.add('ad-budget-shell','ad-collection-page');host.replaceChildren();
  const header=$('header','admin-page-heading budget-heading');header.append($('h1','','Бюджет'));
  const actions=$('div','budget-actions');header.append(actions);host.append(header);
  const body=$('div','budget-body');host.append(body);
- let rows=[],limit=null,guests=80,category='',status='all',search='',venueId='',venueOptions=[],loading=false;
+ let rows=[],limit=null,guests=80,category='',status='all',search='',venueId='',selectedId=null,venueOptions=[],loading=false;
  const primary=(label,fn)=>button(label,fn);
  const secondary=(label,fn)=>{const b=button(label,fn);b.classList.add('budget-secondary');return b};
  const error=e=>showAdminToast(errorText(e),{kind:'error'});
@@ -348,9 +375,13 @@ async function renderBudget(host){
  function edit(row={},prefill={}){
   const linked=row.linked,source=row.source;
   if(linked&&!source){error(new Error('Исходная карточка недоступна'));return}
-  drawer(row.id?row.description:'Новая статья расходов',d=>{
+  drawer(row.id||row.venueLinked?row.description:'Новая статья расходов',d=>{
    const form=$('form','production-form budget-form');d.append(form);
-   if(linked){
+   if(row.venueLinked){
+    const a=$('a','budget-source-link','Открыть смету площадки →');a.href='#/admin/venues/'+encodeURIComponent(row.venueId)+'/budget';a.addEventListener('click',()=>d.close());form.append(a,$('p','budget-muted',row.previousVenue?'Обязательства и оплаты по прежней площадке сохраняются.':'План автоматически рассчитывается по смете площадки: '+budgetRub(row.planned_rub)));
+    const committed=field(form,'Согласовано, ₽','committed',row.committed_rub,'number'),paid=field(form,'Оплачено всего, ₽','paid',row.paid_rub,'number'),due=field(form,'Срок оплаты','due',String(row.due||row.due_at||'').slice(0,10),'date');
+    submitForm(d,form,()=>row.id?call('admin/records',{method:'PATCH',body:{collection:'budget_lines',id:row.id,fields:{planned_rub:0,committed_rub:budgetNumber(committed.value),paid_rub:budgetNumber(paid.value),due_at:due.value||null}}}):call('admin/venue-budget',{method:'POST',body:{venue_id:row.venueId,description:row.description,committed_rub:budgetNumber(committed.value),paid_rub:budgetNumber(paid.value),due_at:due.value||null}}));
+   }else if(linked){
     const info=$('p','budget-muted',row.unknown?'Часть стоимости пока неизвестна. Уточните состав расходов в карточке.':'Изменения оплаты сохраняются в исходной карточке.');
     const a=$('a','budget-source-link','Открыть исходную карточку →');a.href='#/admin/'+source.section+'/item/'+encodeURIComponent(source.r.id);a.addEventListener('click',()=>d.close());form.append(info,a);
     const p=field(form,'Оплачено всего, ₽','paid',row.paid_rub,'number'),due=field(form,'Срок следующей оплаты','due',row.details.due,'date');
@@ -376,19 +407,16 @@ async function renderBudget(host){
   if(limit==null)cap.append($('p','budget-muted','Не задан'));else{const line=$('div','budget-limit-values');line.append($('strong','',budgetRub(limit)), $('span',totals.free<0?'budget-over':'',totals.free<0?'Превышение '+budgetRub(-totals.free):'Остаток '+budgetRub(totals.free)));const p=$('progress');p.max=Math.max(1,limit);p.value=Math.min(p.max,Math.max(0,limit-totals.free));p.setAttribute('aria-label','Использование лимита');cap.append(line,p)}
   body.append(cap);
   const scenario=$('section','budget-panel budget-scenario'),sh=$('div','budget-panel-head');sh.append($('h2','','Площадка и банкет'),$('span','budget-muted',guests+' гостей'));scenario.append(sh);
-  const selectVenue=select([['','Выберите вариант для расчёта'],...venueOptions.map(v=>[v.id,v.name])],venueId,v=>{venueId=v;draw()});scenario.append(selectVenue);
+  const selectVenue=select([['','Выберите вариант для расчёта'],...venueOptions.map(v=>[v.id,v.name])],venueId,v=>{venueId=v;draw()});selectVenue.disabled=!!selectedId;scenario.append(selectVenue);
   const selected=venueOptions.find(v=>v.id===venueId);
   if(selected){
    const e=selected.estimate,known=e.value??e.knownSubtotal??null;
    const line=$('div','budget-scenario-value');line.append($('strong','',known==null?'Сумма уточняется':(e.partial?'≈ ':'')+budgetRub(known)),$('span','budget-muted',e.note||''));scenario.append(line);
    const link=$('a','budget-source-link','Открыть смету площадки →');link.href='#/admin/venues/'+encodeURIComponent(selected.id)+'/budget';scenario.append(link);
-   const existing=rows.find(r=>!r.linked&&String(r.notes||'').startsWith('План площадки:'));
-   const anyVenue=rows.some(r=>r.category==='Площадка'&&r!==existing);
-   const changingCommittedVenue=existing&&(!String(existing.notes||'').startsWith('План площадки: '+selected.id+';'))&&(budgetNumber(existing.paid_rub)>0||budgetNumber(existing.committed_rub)>0);
-   if(e.value!=null&&!anyVenue&&!changingCommittedVenue){const apply=secondary(existing?'Обновить статью площадки':'Включить в план',()=>edit(existing?{...existing,description:selected.name,planned_rub:Math.round(e.value),notes:'План площадки: '+selected.id+'; '+guests+' гостей; '+(e.note||'') }:{},{category:'Площадка',description:selected.name,planned_rub:Math.round(e.value),notes:'План площадки: '+selected.id+'; '+guests+' гостей; '+(e.note||'')}));scenario.append(apply)}
-   else if(changingCommittedVenue)scenario.append($('p','budget-muted','По прежней площадке уже есть обязательства или платежи. Сначала урегулируйте их, не переносите автоматически на другой вариант.'));
-   else if(anyVenue)scenario.append($('p','budget-muted','Статья площадки уже существует — измените её в списке, чтобы не задвоить сумму.'));
-   scenario.append($('small','budget-muted','Расчёт не включается в общий план автоматически. Дополнительные расходы организаторов не прибавляются повторно.'));
+   if(selected.id===selectedId)scenario.append($('p','budget-muted','Выбранная площадка · смета автоматически включена в план.'));
+   else{const choose=$('a','budget-source-link','Выбрать площадку →');choose.href='#/admin/venues/'+encodeURIComponent(selected.id);scenario.append(choose,$('p','budget-muted','Предварительный расчёт не включён в план.'));}
+   if(rows.some(r=>r.category==='Площадка'&&!r.venueLinked))scenario.append($('p','budget-muted','Есть ручные статьи площадки. Проверьте, не повторяют ли они эту смету.'));
+
   }
   body.append(scenario);
   const panel=$('section','budget-panel budget-ledger'),ph=$('div','budget-panel-head');ph.append($('h2','','Статьи расходов'),$('span','budget-muted',rows.length+' записей'));panel.append(ph);
@@ -406,7 +434,7 @@ async function renderBudget(host){
     if(!group.length){section.append($('p','budget-muted','Расходы пока не добавлены'));section.append(secondary('+ Добавить',()=>edit({}, {category:c})))}
     for(const r of group){
      const entry=$('button','budget-entry');entry.type='button';entry.addEventListener('click',()=>edit(r));
-     const desc=$('div','budget-entry-name');desc.append($('strong','',r.description),$('small','budget-muted',r.linked?'Связано с карточкой':r.notes||'Ручная статья'));
+     const desc=$('div','budget-entry-name');desc.append($('strong','',r.description),$('small','budget-muted',r.venueLinked?(r.previousVenue?'Прежняя площадка · обязательства и оплаты':'Автоматически из сметы площадки'):r.linked?'Связано с карточкой':r.notes||'Ручная статья'));
      if(r.unknown)desc.append($('span','budget-unknown','Стоимость уточняется'));
      const amounts=$('div','budget-entry-amounts');
      for(const [label,val] of [['План',r.unknown&&!budgetNumber(r.planned_rub)?'—':(r.unknown?'от ':'')+budgetRub(r.planned_rub)],['Согласовано',budgetRub(r.committed_rub)],['Оплачено',budgetRub(r.paid_rub)],['К оплате',budgetRub(Math.max(0,budgetNumber(r.committed_rub)-budgetNumber(r.paid_rub)))]]){const cell=$('div');cell.append($('small','',label),$('strong','',val));amounts.append(cell)}
@@ -426,6 +454,10 @@ async function renderBudget(host){
    guests=Math.max(1,Number(overview.guests?.total)||80);limit=settings.settings?.budget_limit_rub??null;
    rows=budgetRows(lines.items||[],vendors.items||[],decor.items||[],guests);
    try{venueOptions=await loadVenueBudgetOptions(host,guests)}catch{venueOptions=[];showAdminToast('Сметы площадок недоступны.',{kind:'error'})}
+   selectedId=settings.settings?.selected_venue_id||null;
+   if(selectedId)venueId=selectedId;else if(!venueOptions.some(v=>v.id===venueId))venueId='';
+   if(selectedId&&!venueOptions.some(v=>v.id===selectedId))throw Error('Смета выбранной площадки недоступна');
+   rows=venueBudgetRows(rows,venueOptions.find(v=>v.id===selectedId)||null);
    draw();
   }finally{loading=false}
  }

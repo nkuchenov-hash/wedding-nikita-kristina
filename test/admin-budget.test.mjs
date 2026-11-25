@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {budgetTotals,budgetRows} from '../src/admin-data-ui.js';
+import {budgetTotals,budgetRows,venueBudgetRows} from '../src/admin-data-ui.js';
 test('budget distinguishes unknown supplier expenses, paid amounts and outstanding commitments',()=>{
  const rows=budgetRows([{id:'prod-a',planned_rub:0,committed_rub:0,paid_rub:0},{id:'b',planned_rub:800000,committed_rub:500000,paid_rub:100000}], [{id:'a',details_json:'{"fee":0,"travel":null}',estimate_rub:0}],[],80);
  assert.equal(rows[0].unknown,true);
@@ -9,4 +9,17 @@ test('budget distinguishes unknown supplier expenses, paid amounts and outstandi
 test('known zero is not missing when all cost fields are explicit',()=>{
  const rows=budgetRows([{id:'prod-a'}],[{id:'a',details_json:'{"fee":0,"travel":0,"hotel":0,"food":0,"equipment":0,"extras":0}'}],[],80);
  assert.equal(rows[0].unknown,false);
+});
+
+test('selected venue is projected from current quote, while cancellation preserves paid obligations',()=>{
+ const old={id:'old',category:'Площадка',description:'A',notes:'План площадки: a;',planned_rub:900000,committed_rub:300000,paid_rub:100000};
+ const selected={id:'a',name:'A',estimate:{value:700000,partial:false}};
+ assert.equal(venueBudgetRows([],selected)[0].planned_rub,700000);
+ assert.equal(venueBudgetRows([old],selected).length,1);
+ assert.equal(venueBudgetRows([old],selected)[0].planned_rub,700000);
+ assert.equal(venueBudgetRows([old],null)[0].planned_rub,300000);
+ assert.equal(venueBudgetRows([{...old,committed_rub:0,paid_rub:0}],null).length,0);
+ const switched=venueBudgetRows([old],{id:'b',name:'B',estimate:{value:800000}});
+ assert.equal(budgetTotals(switched).planned,1100000);
+ assert.equal(budgetTotals(switched).paid,100000);
 });

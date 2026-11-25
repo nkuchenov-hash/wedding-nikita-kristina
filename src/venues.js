@@ -217,7 +217,7 @@ export async function loadVenueDashboard(root){
  const all=PUBLIC_VENUES.map(get),active=all.filter(v=>!v.archived);
  const leaders=active.map(v=>({id:v.id,name:v.name,score:weighted(v).value,date19:dayStatus(v,'19')}))
   .filter(v=>v.score!==null).sort((a,b)=>compareVenueScoreValues(a.score,b.score,'desc')).slice(0,3);
- return {active:active.length,archived:all.length-active.length,available19:active.filter(v=>dayStatus(v,'19')==='available').length,leaders,venues:all.map(v=>({id:v.id,name:v.name}))};
+ return {active:active.length,archived:all.length-active.length,available19:active.filter(v=>dayStatus(v,'19')==='available').length,leaders,selectedVenue:all.find(v=>v.selected)||null,venues:all.map(v=>({id:v.id,name:v.name}))};
 }
 async function commitVenueDate(id,day,status,root){
  if(!venueDb.ready)throw new Error('Общая база недоступна');

@@ -811,6 +811,20 @@ function adminRoute(PDO $db,string $actor,string $route,string $method,array $cf
         statement($db,'DELETE FROM production_images WHERE id=?',[$id]);
         json(['ok'=>true]);
     }
+    // Stable per-venue finance record; the live quote is projected by the admin UI.
+    if($route==='admin/venue-budget' && $method==='POST'){
+        $d=payload(4096);$venue=strval($d,'venue_id',36,true);
+        if(!preg_match('/^[a-z0-9-]{2,36}$/',$venue)||!one($db,'SELECT venue_id FROM venue_date_status WHERE venue_id=? LIMIT 1',[$venue]))fail(422,'field','Неизвестная площадка');
+        $name=strval($d,'description',255,true);
+        foreach(['committed_rub','paid_rub'] as $k)if(!isset($d[$k])||!is_int($d[$k])||$d[$k]<0||$d[$k]>100000000)fail(422,'field','Некорректная сумма');
+        $due=$d['due_at']??null;if($due!==null&&(!is_string($due)||!preg_match('/^\d{4}-\d{2}-\d{2}$/',$due)))fail(422,'field','Некорректная дата');
+        $id='venue-'.md5($venue);
+        statement($db,'INSERT INTO budget_lines(id,category,description,planned_rub,committed_rub,paid_rub,due_at,notes) VALUES(?,?,?,?,?,?,?,?)
+          ON CONFLICT(id) DO UPDATE SET committed_rub=excluded.committed_rub,paid_rub=excluded.paid_rub,due_at=excluded.due_at,updated_at=datetime(\'now\')',
+          [$id,'Площадка',$name,0,$d['committed_rub'],$d['paid_rub'],$due,'План площадки: '.$venue.';']);
+        audit($db,'admin',$actor,'update','budget_lines',$id);
+        json(['ok'=>true,'id'=>$id]);
+    }
     if ($route==='admin/records' && $method==='GET') {
         $collection=(string)($_GET['collection']??'');
         if (!isset(adminCollections()[$collection]))fail(404,'collection','Коллекция не найдена');
