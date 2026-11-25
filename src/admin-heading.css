@@ -805,7 +805,7 @@ body.admin-body .admin-content .ad-gb-panel .ad-gb-title-input:focus-visible{bor
 @media(max-width:900px){body.admin-body .admin-content .ad-gb-panel .ad-gb-title-input{font-size:30px;margin:0;padding:2px 0}}
 
 /* Shared typography for all record-panel section headings, including collapsible sections. */
-body.admin-body .admin-content .ad-gb-panel :is(.ad-gb-section>h3,.ad-gb-legacy-details>summary,.ad-gb-secondary-section>summary){font:650 17px/1.4 var(--wd-body);color:var(--wd-ink);letter-spacing:normal;text-transform:none}
+body.admin-body .admin-content .ad-gb-panel :is(.ad-gb-section>h3,.ad-gb-field-group>h4,.ad-gb-legacy-details>summary,.ad-gb-secondary-section>summary){font:650 17px/1.4 var(--wd-body);color:var(--wd-ink);letter-spacing:normal;text-transform:none}
 body.admin-body .admin-content .ad-gb-panel :is(.ad-gb-section>h3,.ad-gb-field-group>h4){margin:0 0 14px}
 body.admin-body .admin-content .ad-gb-panel :is(.ad-gb-legacy-details,.ad-gb-secondary-section)>summary{margin:0;padding:14px 0;min-height:48px}
 body.admin-body .ad-gb-panel .ad-gb-relation-group{display:grid;gap:8px;margin-bottom:12px}
@@ -816,5 +816,5 @@ body.admin-body .ad-gb-panel .ad-gb-relation-edit-actions{display:flex;justify-c
 body.admin-body .ad-gb-panel .ad-gb-secondary-section>.ad-gb-light{margin-top:12px}
 
 /* Nested headings remain readable but subordinate to the section heading. */
-body.admin-body .admin-content .ad-gb-panel :is(.ad-gb-field-group>h4,.ad-gb-relation-group-title){font:500 16px/1.4 var(--wd-body);color:var(--wd-muted);letter-spacing:normal;text-transform:none}
+body.admin-body .admin-content .ad-gb-panel .ad-gb-relation-group-title{font:500 16px/1.4 var(--wd-body);color:var(--wd-muted);letter-spacing:normal;text-transform:none}
 body.admin-body .admin-content .ad-gb-panel .ad-gb-relation-group-title{margin:0 0 4px}
