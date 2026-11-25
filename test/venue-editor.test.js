@@ -135,3 +135,5 @@ test('Venue overview avoids decorative editorial labels',()=>{
  const html=renderVenueNewPage(venue,context('overview'));
  for(const copy of ['КРАТКО О ПЛОЩАДКЕ','Параметры для выбора','Город предпочтительнее','Единый итог для всех площадок'])assert.ok(!html.includes(copy));
 });
+
+test('Rating is one editable row per criterion, with no duplicate card groups',()=>{const html=renderVenueNewPage(venue,context('rating'));assert.equal((html.match(/data-rating-criterion="/g)||[]).length,7);assert.match(html,/vdp-rating-table/);assert.doesNotMatch(html,/vdp-rating-inputs|vdp-rating-breakdown|vdp-objective-facts|class="vdp-hero"/);assert.match(html,/data-rating-fact="entrance"/);assert.match(html,/data-rating-fact="outdoorArea"/);assert.match(html,/data-rating-fact="includedEquipment"/)});

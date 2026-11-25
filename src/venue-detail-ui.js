@@ -277,38 +277,27 @@ function infoPane(v,ctx){
  '</div>';
 }
 function ratingPane(v,ctx){
- const score=ctx.weighted(v);
- const facts=OBJECTIVE_CRITERIA.map(x=>{
-  const value=v.ratingFacts?.[x.key]??'unknown';
-  const note=(score.breakdown||[]).find(y=>y.key===x.key);
-  return '<label class="vdp-objective-fact"><span><b>'+h(x.label)+'</b><small>'+h(x.question)+'</small>'+
-   '<small class="vdp-rating-source">'+h(v.ratingFactSources?.[x.key]?'В материалах: '+v.ratingFactSources[x.key]:'Для проверки: '+x.evidence)+'</small></span>'+
-   '<select data-venue="'+h(v.id)+'" data-rating-fact="'+h(x.key)+'" aria-label="'+h(x.label)+'">'+
-   [['unknown','Нет подтверждения'],['yes','Да, подтверждено'],['no','Нет, подтверждено']].map(([id,label])=>
-    '<option value="'+id+'" '+(value===id?'selected':'')+'>'+label+'</option>').join('')+'</select>'+
-   '<strong>'+(note?.value==null?'Не оценено':Math.round(note.value*10)/10+' / '+note.maximum)+'</strong></label>';
+ const score=ctx.weighted(v),shared=displayedBudget(v,ctx),objective=Object.fromEntries(OBJECTIVE_CRITERIA.map(x=>[x.key,x]));
+ const breakdown=new Map((score.breakdown||[]).map(x=>[x.key,x]));
+ function editor(key){
+  if(key==='date')return '<div class="vdp-rating-dates">'+['18','19','20'].map(n=>'<div><span>'+n+'.06</span>'+inlineValue('date:'+n,ctx.dayText(v,n),{label:'Доступность '+n+' июня',kind:'date',className:'vdp-rating-date '+h(ctx.dayStatus(v,n))})+'</div>').join('')+'</div>';
+  if(key==='capacity')return inlineValue('capacity',v.capacity,{label:'Вместимость банкета',kind:'number',empty:'Указать вместимость'});
+  if(key==='city')return inlineValue('region',v.region==='country'?'За городом':'Санкт-Петербург',{label:'Расположение',kind:'region'});
+  if(key==='cost')return '<div class="vdp-rating-budget"><strong>'+(shared.total===null?'Не рассчитана':money(shared.total))+'</strong><a href="#/admin/venues/'+encodeURIComponent(v.id)+'/budget" title="Изменить тарифы и расходы в единой смете">Изменить смету →</a></div>';
+  const x=objective[key],raw=v.ratingFacts?.[key],value=raw===true?'yes':raw===false?'no':raw??'unknown';
+  return '<select data-venue="'+h(v.id)+'" data-rating-fact="'+h(key)+'" aria-label="'+h(x.label)+'">'+[['unknown','Нет подтверждения'],['yes','Да, подтверждено'],['no','Нет, подтверждено']].map(([id,label])=>'<option value="'+id+'" '+(value===id?'selected':'')+'>'+label+'</option>').join('')+'</select>';
+ }
+ function evidence(key,entry){
+  const x=objective[key],source=v.ratingFactSources?.[key];
+  if(x)return '<span>'+h(source||x.evidence)+'</span><details class="vdp-rating-explain"><summary>Правило оценки</summary><p>'+h(x.question)+'</p></details>';
+  if(key==='capacity')return '<span>'+h(entry.note||'')+'</span>'+(v.capacityNote?'<details class="vdp-rating-explain"><summary>Условия рассадки</summary><p>'+h(v.capacityNote)+'</p></details>':'');
+  return '<span>'+h(entry.note||'—')+'</span>';
+ }
+ const rows=RATING_CRITERIA.map(([key,label,maximum])=>{
+  const entry=breakdown.get(key)||{value:null,maximum,note:''},known=entry.value!=null;
+  return '<tr data-rating-criterion="'+h(key)+'"><th scope="row">'+h(label)+'</th><td class="vdp-rating-edit-cell">'+editor(key)+'</td><td class="vdp-rating-points'+(!known?' is-unknown':'')+'"><strong>'+(known?Math.round(entry.value*10)/10:'—')+'</strong><span> / '+entry.maximum+'</span></td><td class="vdp-rating-evidence">'+evidence(key,entry)+'</td></tr>';
  }).join('');
- const shared=displayedBudget(v,ctx);
- const editable='<div class="vdp-rating-inputs" aria-label="Редактировать оценочные параметры">'+
-  '<section><h3>Свободные даты</h3>'+dates(v,ctx)+'</section>'+
-  '<section><h3>Вместимость для банкета</h3>'+inlineValue('capacity',v.capacity,{label:'Вместимость банкета',kind:'number',empty:'Указать число гостей'})+
-   '<p>Баллы при вместимости от '+ctx.guests+' гостей.</p>'+(v.capacityNote?'<p>'+h(v.capacityNote)+'</p>':'')+'</section>'+
-  '<section><h3>Расположение</h3>'+inlineValue('region',v.region==='country'?'За городом':'Санкт-Петербург',{label:'Расположение',kind:'region'})+'</section>'+
-  '<section><h3>Стоимость для '+ctx.guests+' гостей</h3><strong>'+(shared.total===null?'Не рассчитана':money(shared.total))+'</strong>'+
-   '<p><a href="#/admin/venues/'+encodeURIComponent(v.id)+'/budget">Изменить тарифы и расходы в единой смете →</a></p></section>'+
- '</div>';
- return '<section class="vdp-pane"><h2>Рейтинг площадки</h2>'+
-  '<p>Только проверяемые критерии, одинаковые для всех площадок. Для каждого факта выберите «Да», «Нет» или «Нет подтверждения». Личных оценок по шкале 1–5 больше нет.</p>'+
-  '<p><button type="button" class="vdp-rating-method-link" data-rating-open>Настроить общие правила рейтинга</button></p>'+
-  '<div class="vdp-rating-summary"><strong>'+(score.value===null?'Нет оценки':score.value+' / '+RATING_MAX+' баллов')+'</strong>'+
-  '<span>'+score.complete+' из '+RATING_CRITERIA.length+' критериев подтверждены · '+(score.provisional?'предварительный рейтинг':'все критерии известны')+'</span></div>'+
-  '<h3>Параметры, влияющие на рейтинг</h3>'+editable+
-  '<h3>Расчёт по каждому критерию</h3><div class="vdp-rating-breakdown">'+(score.breakdown||[]).map(x=>
-   '<div><span>'+h(x.label)+' <small>макс. '+x.maximum+'</small>'+
-   '<small class="vdp-rating-reason">'+h(x.note||'Нет объяснения')+'</small></span>'+
-   '<strong>'+(x.value===null?'Нет данных':Math.round(x.value*10)/10+' / '+x.maximum)+'</strong></div>').join('')+'</div>'+
-  '<h3>Проверенные условия площадки</h3><p>Выбор сохраняется в базе и автоматически изменяет рейтинг на главной странице.</p>'+
-  '<div class="vdp-objective-facts">'+facts+'</div></section>';
+ return '<section class="vdp-pane vdp-rating-compact"><div class="vdp-rating-top"><div class="vdp-rating-total"><strong>'+(score.value===null?'—':score.value)+' <small>/ '+RATING_MAX+'</small></strong><span>'+score.complete+' из '+RATING_CRITERIA.length+' критериев · '+(score.provisional?'Предварительный рейтинг':'Все критерии известны')+'</span></div><div class="vdp-rating-top-actions"><label>Гостей <input data-state="guestCount" type="number" min="1" max="300" step="1" value="'+ctx.guests+'" aria-label="Число гостей для рейтинга"></label><button type="button" class="vdp-archive-btn" data-rating-open>Настроить рейтинг</button></div></div><div class="vdp-rating-table-wrap"><table class="vdp-rating-table"><thead><tr><th>Критерий</th><th>Значение</th><th>Баллы</th><th>Основание</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
 }
 
 
@@ -365,5 +354,5 @@ export function renderVenueNewPage(v,ctx){
  else if(tab==='terms')body=infoPane(v,ctx);
  else if(tab==='rating')body=ratingPane(v,ctx);
  else body=venueOverview(v,ctx,photos);
- return '<div class="vdp-page"><div class="vdp-top-actions"><a class="vdp-back" href="#/admin/venues">← Все площадки</a><a class="vdp-back" href="#/admin/vendors/'+encodeURIComponent(v.id)+'">Подрядчики</a><a class="vdp-back" href="#/admin/decor/'+encodeURIComponent(v.id)+'">Декор</a>'+'</div>'+(v.archived?'<p class="vdp-archived-notice">Площадка в архиве. '+h(v.archiveReason||'Исключена из основного сравнения')+' · <a href="#/admin/venues/archive">Открыть архив площадок</a></p>':'')+''+(ctx.ui.savedVenue===v.id?'<p class="vdp-save-confirmation" role="status">Изменения сохранены в общей базе. Таблица, рейтинг и смета обновлены.</p>':'') +hero(v,ctx,photos)+'<div class="vdp-venue-decision">'+(v.selected?'<span class="vdp-venue-approved">Утверждено местом торжества</span><button type="button" class="vdp-archive-btn" data-venue-unselect>Отменить утверждение</button>':(!v.archived||ctx.selectedVenueId?'<button type="button" class="vdp-primary-link vdp-approve-venue" data-venue-select="'+h(v.id)+'">Утвердить местом торжества</button>':''))+'</div><div class="vdp-layout"><nav class="vdp-tabs" aria-label="Разделы площадки">'+tabs.map(([id,l])=>'<a href="#/admin/venues/'+encodeURIComponent(v.id)+'/'+id+'" class="'+(id===tab?'selected':'')+'">'+l+'</a>').join('')+'</nav><div class="vdp-content">'+body+'</div><footer class="vdp-foot">Сметы и фотографии — из материалов площадок и Wedding Drive. Неизвестные расходы в итог не включены.</footer>'+(!ctx.selectedVenueId?'<div class="vdp-archive-footer"><button type="button" class="vdp-archive-btn" data-venue-archive="'+h(v.id)+'">'+(v.archived?'Вернуть из архива':'В архив')+'</button></div>':'')+'</div>'+lightbox(v,ctx.ui)+'</div>';
+ return '<div class="vdp-page"><div class="vdp-top-actions"><a class="vdp-back" href="#/admin/venues">← Все площадки</a><a class="vdp-back" href="#/admin/vendors/'+encodeURIComponent(v.id)+'">Подрядчики</a><a class="vdp-back" href="#/admin/decor/'+encodeURIComponent(v.id)+'">Декор</a>'+'</div>'+(v.archived?'<p class="vdp-archived-notice">Площадка в архиве. '+h(v.archiveReason||'Исключена из основного сравнения')+' · <a href="#/admin/venues/archive">Открыть архив площадок</a></p>':'')+''+(ctx.ui.savedVenue===v.id?'<p class="vdp-save-confirmation" role="status">Изменения сохранены в общей базе. Таблица, рейтинг и смета обновлены.</p>':'') +(tab==='rating'?'<div class="vdp-rating-heading admin-page-heading"><h1>'+inlineValue('name',v.name,{label:'Название площадки'})+'</h1></div>':hero(v,ctx,photos))+'<div class="vdp-venue-decision">'+(v.selected?'<span class="vdp-venue-approved">Утверждено местом торжества</span><button type="button" class="vdp-archive-btn" data-venue-unselect>Отменить утверждение</button>':(!v.archived||ctx.selectedVenueId?'<button type="button" class="vdp-primary-link vdp-approve-venue" data-venue-select="'+h(v.id)+'">Утвердить местом торжества</button>':''))+'</div><div class="vdp-layout"><nav class="vdp-tabs" aria-label="Разделы площадки">'+tabs.map(([id,l])=>'<a href="#/admin/venues/'+encodeURIComponent(v.id)+'/'+id+'" class="'+(id===tab?'selected':'')+'">'+l+'</a>').join('')+'</nav><div class="vdp-content">'+body+'</div><footer class="vdp-foot">Сметы и фотографии — из материалов площадок и Wedding Drive. Неизвестные расходы в итог не включены.</footer>'+(!ctx.selectedVenueId?'<div class="vdp-archive-footer"><button type="button" class="vdp-archive-btn" data-venue-archive="'+h(v.id)+'">'+(v.archived?'Вернуть из архива':'В архив')+'</button></div>':'')+'</div>'+lightbox(v,ctx.ui)+'</div>';
 }
