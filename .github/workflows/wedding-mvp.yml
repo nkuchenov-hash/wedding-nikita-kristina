@@ -24,6 +24,8 @@ jobs:
           echo '122a50eaaad8597e9e0c51a7fcdcd54ab5a21d05e71ca022a29d29992224a8a1  mvp-site/site.zip' | sha256sum -c -
           mkdir -p _mvp
           unzip -q mvp-site/site.zip -d _mvp
+          echo 'fffe9e59a23cf677a5010f798562072bcf46e9dcafe18c693a55800153aeb99d  mvp-site/edge-fix.zip' | sha256sum -c -
+          unzip -oq mvp-site/edge-fix.zip -d _mvp
           test -s _mvp/index.html
           node --check _mvp/script.js
           python3 - <<'PY'
