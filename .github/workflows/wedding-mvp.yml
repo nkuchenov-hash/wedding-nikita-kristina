@@ -39,6 +39,10 @@ jobs:
               b=Path('_mvp/assets/'+name+'.png').read_bytes()
               assert b[:8]==b'\x89PNG\r\n\x1a\n'
               assert b[25] in (4,6) or b'tRNS' in b, name+' must have alpha transparency'
+          css=Path('_mvp/style.css')
+          styles=css.read_text()
+          assert '@media(hover:hover) and (pointer:fine)' in styles
+          css.write_text(styles.replace('@media(hover:hover) and (pointer:fine)','@media not (pointer:coarse)'))
           p=Path('_mvp/index.html')
           html=p.read_text()
           assert html.count('data-photo-slot=')==6
