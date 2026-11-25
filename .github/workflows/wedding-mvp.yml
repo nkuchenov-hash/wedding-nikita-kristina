@@ -72,7 +72,7 @@ jobs:
           html,count=re.subn(r'<(a|button)\b([^>]*)>(.*?)</\1>',compact_link,html,flags=re.S|re.I)
           assert html.count('mvp-compact-nav-link')==5, 'Navigation items not found'
           with css.open('a') as f:
-              f.write('\n/* Compact desktop navigation; mobile untouched. */\n@media(min-width:701px){\n.mvp-compact-nav-link{font-size:clamp(16px,1.9vw,28px)!important;line-height:1.2!important;padding-block:6px!important;}\n:where(nav,header,[role="navigation"],.nav,.menu,.top-nav):has(> .mvp-compact-nav-link ~ .mvp-compact-nav-link){height:auto!important;min-height:0!important;padding-block:clamp(12px,1.4vw,21px)!important;}\n}\n')
+              f.write('\n/* Compact desktop navigation; mobile untouched. */\n@media(min-width:701px){\n.mvp-compact-nav-link{font-size:clamp(14px,1.1vw,18px)!important;line-height:1.2!important;padding-block:6px!important;flex:0 0 auto!important;width:auto!important;}\n:has(> .mvp-compact-nav-link ~ .mvp-compact-nav-link){display:flex!important;justify-content:center!important;align-items:center!important;column-gap:clamp(22px,2.7vw,44px)!important;height:auto!important;min-height:0!important;padding-block:8px!important;}\n}\n')
           assert html.count('data-photo-slot=')==6
           assert html.count('<article class="day">')==3
           assert html.count('<figure class="photo-frame')==2
@@ -117,9 +117,10 @@ jobs:
               assert.deepEqual(report.bad,[]);
               assert.equal(report.overflow,false);
               if(name!=='mobile'){
-                const nav=await p.evaluate(()=>Array.from(document.querySelectorAll('.mvp-compact-nav-link')).filter(e=>e.getClientRects().length).map(e=>({label:e.textContent.trim(),size:parseFloat(getComputedStyle(e).fontSize)})));
+                const nav=await p.evaluate(()=>Array.from(document.querySelectorAll('.mvp-compact-nav-link')).filter(e=>e.getClientRects().length).map(e=>({label:e.textContent.trim(),size:parseFloat(getComputedStyle(e).fontSize),left:e.getBoundingClientRect().left,right:e.getBoundingClientRect().right})));
                 console.log('COMPACT_NAV',JSON.stringify(nav));
-                assert.ok(nav.length===5 && nav.every(e=>e.size<=28));
+                assert.ok(nav.length===5 && nav.every(e=>e.size<=18 && e.size>=14));
+                assert.ok(Math.max(...nav.map(e=>e.right))-Math.min(...nav.map(e=>e.left))<=width*.66,JSON.stringify(nav));
               }
               assert.equal(await p.evaluate(sel=>document.querySelectorAll(sel).length,'.day'),3);
               assert.equal(await p.evaluate(sel=>document.querySelectorAll(sel).length,'img[data-photo-slot]'),6);
