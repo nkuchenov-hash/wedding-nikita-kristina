@@ -28,3 +28,13 @@ if tool:
 else:
     print('ImageMagick unavailable; original artwork preserved')
 copyfile(asset,qa/'refined-skyline.png')
+
+import re
+for name in ('cascade-hydrangea','cascade-blossom','cascade-strawberry'):
+    copyfile(Path('mvp-site')/(name+'.svg'),Path('_mvp/assets')/(name+'.svg'))
+html=p.read_text()
+start=re.search(r'<section\b[^>]*class="[^"]*\bwelcome\b[^"]*"[^>]*>',html)
+assert start, 'Welcome section not found'
+end=html.index('</section>',start.end())
+art='<img class="welcome-botanical cascade-blossom" src="assets/cascade-blossom.svg" alt="" aria-hidden="true"><img class="welcome-botanical cascade-blossom cascade-blossom-upper" src="assets/cascade-blossom.svg" alt="" aria-hidden="true"><img class="welcome-botanical cascade-hydrangea" src="assets/cascade-hydrangea.svg" alt="" aria-hidden="true"><img class="welcome-botanical cascade-strawberry" src="assets/cascade-strawberry.svg" alt="" aria-hidden="true">'
+p.write_text(html[:end]+art+html[end:])

@@ -116,12 +116,13 @@ jobs:
               assert.ok(spacing.berryOffset<30);
               const editorial=await p.evaluate(()=>{
                 const left=document.querySelector('.welcome .photo-shell:has(.frame-estate)'),right=document.querySelector('.welcome .photo-shell:has(.frame-city)'),copy=document.querySelector('.welcome-text'),lr=left.getBoundingClientRect(),rr=right.getBoundingClientRect(),cr=copy.getBoundingClientRect();
-                return {leftRatio:lr.height/lr.width,rightRatio:rr.height/rr.width,leftRotate:getComputedStyle(left).rotate,rightRotate:getComputedStyle(right).rotate,noTextOverlap:innerWidth<=700?cr.bottom<=Math.min(lr.top,rr.top)+2:lr.right<cr.left&&rr.left>cr.right};
+                return {leftRatio:lr.height/lr.width,rightRatio:rr.height/rr.width,leftRotate:getComputedStyle(left).rotate,rightRotate:getComputedStyle(right).rotate,noTextOverlap:innerWidth<=700?cr.top>=Math.max(lr.bottom,rr.bottom)-2:Math.max(lr.right,rr.right)<cr.left,photoOverlap:lr.right>rr.left&&lr.bottom>rr.top,botanicals:document.querySelectorAll('.welcome .welcome-botanical').length};
               });
               console.log('WELCOME_EDITORIAL',JSON.stringify(editorial));
               assert.ok(editorial.leftRatio>1.06&&editorial.rightRatio<.99);
               assert.ok(editorial.leftRotate!=='none'&&editorial.rightRotate!=='none');
-              assert.ok(editorial.noTextOverlap);
+              assert.ok(editorial.noTextOverlap && editorial.photoOverlap);
+              assert.equal(editorial.botanicals,4);
               await p.evaluate(()=>Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,3000))]));
               await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/'+name+'.png',fullPage:true});
               assert.equal(await p.evaluate(()=>document.querySelectorAll('.day-shell').length),3);
@@ -195,5 +196,9 @@ jobs:
           for asset in couple birch-right birch-top-left hero-lower-left welcome-left welcome-right welcome-small-left program-right flowers-left flowers-right sprig ladybird strawberry bridge skyline forest; do
             curl -fsSL --retry 3 --max-time 20 "$BASE/assets/$asset.png?v=${GITHUB_SHA:0:12}" -o /tmp/mvp-live.png
             cmp /tmp/mvp-live.png "_mvp/assets/$asset.png"
+          done
+          for asset in cascade-hydrangea cascade-blossom cascade-strawberry; do
+            curl -fsSL --retry 3 --max-time 20 "$BASE/assets/$asset.svg?v=${GITHUB_SHA:0:12}" -o /tmp/mvp-live.svg
+            cmp /tmp/mvp-live.svg "_mvp/assets/$asset.svg"
           done
           echo ONLINE_MVP_VERIFIED
