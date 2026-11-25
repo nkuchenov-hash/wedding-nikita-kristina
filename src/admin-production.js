@@ -23,9 +23,9 @@ export async function renderProduction(host,call,section){
  const details=r=>safeJson(r.details_json),tags=r=>String(r.category||'').split(',').map(x=>x.trim()).filter(Boolean);
  const venueName=id=>places.find(v=>v.id===id)?.name||'Площадка не выбрана';
  host.classList.add('production-shell');const root=el('div','production-page');host.replaceChildren(root);
- const header=el('header','admin-page-heading production-heading');header.append(el('h1','',decor?'Декор':'Подрядчики'));
+ const header=el('header','admin-page-heading production-heading'),heading=el('div','production-heading-title'),count=el('span','production-count');heading.append(el('h1','',decor?'Декор':'Подрядчики'),count);header.append(heading);
  const actions=el('div','production-actions');header.append(actions);root.append(header);
- const metrics=el('div','production-metrics'),toolbar=el('div','production-toolbar'),body=el('div','production-body');root.append(metrics,toolbar,body);
+ const toolbar=el('div','production-toolbar'),body=el('div','production-body');root.append(toolbar,body);
  const err=e=>showAdminToast(e.message||'Не удалось сохранить',{kind:'error'});
  async function save(r,fields){await call('admin/records',{method:r.id?'PATCH':'POST',body:{collection,...(r.id?{id:r.id}:{}),fields}});items=(await call('admin/records?collection='+collection)).items||[];draw();showAdminToast('Изменения сохранены.')}
  function openDrawer(title){const d=el('dialog','production-drawer');const head=el('header','production-drawer-head');head.append(el('h2','',title),btn('Закрыть',()=>d.close()));d.append(head);root.append(d);d.addEventListener('close',()=>d.remove());d.showModal();return d}
@@ -70,13 +70,13 @@ export async function renderProduction(host,call,section){
   }catch(e){err(e)}finally{submit.disabled=false}};
  }
  function draw(){actions.replaceChildren(btn(archive?'Активные':'Архив',()=>{archive=!archive;filter='all';draw()}),btn('Импорт',importPrivate),btn('Добавить',()=>edit(),'ad-tl-button ad-tl-primary'));toolbar.replaceChildren();
-  metrics.replaceChildren();const active=items.filter(r=>r.status!=='archived');for(const [label,value] of [['Всего',active.length],[decor?'Утверждено':'Выбрано',active.filter(r=>['selected','ordered','ready'].includes(r.status)).length],[decor?'Идеи':'На рассмотрении',active.filter(r=>!['selected','ordered','ready'].includes(r.status)).length]]){const m=el('div','production-metric');m.append(el('span','',label),el('strong','',String(value)));metrics.append(m)}
+  const active=items.filter(r=>(r.status==='archived')===archive);count.textContent=String(active.length);count.setAttribute('aria-label','Количество записей: '+active.length);
   const tabs=el('div','production-tabs ad-tl-main-switch'),filters=el('div','production-filters');toolbar.append(tabs,filters);
   for(const [v,t] of [['cards','Карточки'],['table','Таблица'],[decor?'refs':'compare',decor?'Референсы':'Сравнение'],...(decor?[['budget','Смета']]:[])]){const b=btn(t,()=>{view=v;draw()},'ad-tl-main-tab'+(view===v?' is-active':''));b.setAttribute('aria-pressed',String(view===v));tabs.append(b)}
-  const cats=select([['','Все категории'],...[...new Set([...(decor?zones:vendorTypes),...items.flatMap(tags)])].map(t=>[t,t])],category);cats.onchange=()=>{category=cats.value;draw()};filters.append(cats);
-  const vf=select([['','Все площадки'],...places.map(v=>[v.id,v.name])],venueFilter);vf.onchange=()=>{venueFilter=vf.value;draw()};filters.append(vf);
-  const stat=select([['all','Все статусы'],...Object.entries(statuses).filter(([k])=>k!=='archived')],filter);stat.onchange=()=>{filter=stat.value;draw()};filters.append(stat);
-  const q=el('input');q.placeholder='Поиск';q.value=search;q.oninput=()=>{search=q.value;renderBody()};filters.append(q);renderBody();
+  const cats=select([['','Все категории'],...[...new Set([...(decor?zones:vendorTypes),...items.flatMap(tags)])].map(t=>[t,t])],category);cats.setAttribute('aria-label','Категория');cats.onchange=()=>{category=cats.value;draw()};filters.append(cats);
+  const vf=select([['','Все площадки'],...places.map(v=>[v.id,v.name])],venueFilter);vf.setAttribute('aria-label','Площадка');vf.onchange=()=>{venueFilter=vf.value;draw()};filters.append(vf);
+  const stat=select([['all','Все статусы'],...Object.entries(statuses).filter(([k])=>k!=='archived')],filter);stat.setAttribute('aria-label','Статус');stat.onchange=()=>{filter=stat.value;draw()};filters.append(stat);
+  const q=el('input');q.placeholder='Поиск';q.type='search';q.setAttribute('aria-label','Поиск по записям');q.value=search;q.oninput=()=>{search=q.value;renderBody()};filters.append(q);renderBody();
  }
  function renderBody(){body.replaceChildren();const list=items.filter(r=>(r.status==='archived')===archive&&(!category||tags(r).includes(category))&&(!venueFilter||details(r).venue===venueFilter||(details(r).venues||[]).some(v=>v.id===venueFilter))&&(filter==='all'||r.status===filter)&&String(r.name+' '+r.category+' '+r.notes).toLowerCase().includes(search.toLowerCase())).sort((a,b)=>Number(b.status==='selected')-Number(a.status==='selected')||a.name.localeCompare(b.name,'ru'));
   if(view==='compare'&&!category){body.append(el('p','','Выберите категорию для сравнения исполнителей.'));return}
