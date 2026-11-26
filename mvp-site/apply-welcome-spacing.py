@@ -217,3 +217,18 @@ for source,kind,flip in [('birch-top-left','upper',True),('birch-right','lower',
         assert dest.read_bytes()[:8]==b'\x89PNG\r\n\x1a\n'
         assert dest.stat().st_size<400000
 script.write_text(script.read_text()+'\n'+"\n// Visibility only: no requestAnimationFrame, no animation-related JS.\n(()=>{\n const section=document.querySelector('.welcome');\n if(!section||section.querySelector('.welcome-shadow-layer'))return;\n const layer=document.createElement('div');layer.className='welcome-shadow-layer';layer.setAttribute('aria-hidden','true');\n for(const kind of ['upper','lower']){\n  const branch=document.createElement('div');branch.className='welcome-shadow-branch welcome-shadow-'+kind;\n  for(let i=0;i<3;i++){const img=document.createElement('img');img.className='welcome-shadow-piece';img.alt='';img.decoding='async';img.src='assets/welcome-shadow-'+kind+'-'+i+'-v18.png';img.draggable=false;branch.append(img)}\n  layer.append(branch);\n }\n section.prepend(layer);\n function align(){const r=section.getBoundingClientRect();layer.style.setProperty('--shadow-left',(-r.left)+'px');layer.style.setProperty('--shadow-width',document.documentElement.clientWidth+'px')}\n align();window.addEventListener('resize',align,{passive:true});\n if('ResizeObserver'in window)new ResizeObserver(align).observe(section);\n let visible=true;\n function sync(){layer.classList.toggle('is-visible',visible&&!document.hidden)}\n document.addEventListener('visibilitychange',sync);\n if('IntersectionObserver'in window)new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;sync()},{rootMargin:'0px'}).observe(section);\n sync();\n})();\n")
+
+# Approved panorama replacement, 2026-11-26. Preserve the exact previous
+# published skyline as a standalone rollback asset. No markup/CSS changes.
+from hashlib import sha256
+current_skyline=Path('_mvp/assets/skyline.png')
+previous_skyline=Path('_mvp/assets/skyline-previous.png')
+approved_skyline=Path('mvp-site/hero-panorama-approved-20261126.png')
+expected='abee759cddcb265efefb00f1533428f56a318cf53567e8a9328a189583b2c72c'
+assert sha256(approved_skyline.read_bytes()).hexdigest()==expected
+assert approved_skyline.read_bytes()[25]==6
+copyfile(current_skyline,previous_skyline)
+copyfile(approved_skyline,current_skyline)
+assert sha256(current_skyline.read_bytes()).hexdigest()==expected
+assert current_skyline.read_bytes()!=previous_skyline.read_bytes()
+print('HERO_PANORAMA_APPROVED',expected,'PREVIOUS_BACKUP',sha256(previous_skyline.read_bytes()).hexdigest())
