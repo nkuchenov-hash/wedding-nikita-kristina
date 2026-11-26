@@ -171,7 +171,7 @@ for kind,(name,dimensions,digest,alt) in photos.items():
     def replace_photo(m):
         img,n=re.subn(r'\bsrc="[^"]*"','src="assets/'+name+'"',m.group(2),count=1)
         assert n==1
-        img=re.sub(r'\s(?:srcset|sizes|alt|style|width|height|data-photo-[\w-]+)="[^"]*"','',img)
+        img=re.sub(r'\s(?:srcset|sizes|alt|style|width|height|data-photo-(?:credit|source|license|license-url|generated))="[^"]*"','',img)
         img=img.rstrip('>').rstrip('/')+' alt="'+escape(alt,quote=True)+'" style="object-position:50% 50%;filter:none!important;" data-photo-generated="true">'
         return m.group(1)+img+m.group(3)
     html,n=re.subn(pattern,replace_photo,html,count=1,flags=re.S)
