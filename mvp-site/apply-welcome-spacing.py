@@ -184,14 +184,36 @@ assert js.count(anchor)==1
 js=js.replace(anchor,"if(source.dataset.photoGenerated){const note=document.createElement('small');note.style.cssText='display:block;margin-top:5px;font-size:12px';note.textContent='Художественная визуализация';caption.append(note);}\n  "+anchor)
 script.write_text(js)
 
-# V16 shadow masks: trim the transparent margins, so the foliage continues
-# through the screen boundary rather than ending inside the page.
-for source,name,flip in [('birch-top-left','top',True),('birch-right','bottom',False)]:
+# V18: make six small static alpha textures from the existing birch art.
+# The broad feathering is baked into each PNG, never calculated during motion.
+import math
+def smoothstep(v):
+    v=max(0.,min(1.,v))
+    return v*v*(3.-2.*v)
+for source,kind,flip in [('birch-top-left','upper',True),('birch-right','lower',False)]:
     source_file=Path('_mvp/assets')/(source+'.png')
-    dest=Path('_mvp/assets')/('welcome-shadow-'+name+'-v16.png')
+    W,H=640,420
     args=[convert,str(source_file),'-trim','+repage']
     if flip:args+=['-flop']
-    args+=['-resize','1000x1000>','PNG32:'+str(dest)]
-    subprocess.run(args,check=True)
-    assert dest.read_bytes()[:8]==b'\x89PNG\r\n\x1a\n'
-script.write_text(script.read_text()+'\n'+"\n/* Natural leaf projection: slow flex, faster uneven flutter, independently\n   moving branch clusters. A single resize observer aligns the layer to the\n   real viewport; SVG animations are paused outside the viewport. */\n(()=>{\n const section=document.querySelector('.welcome');\n if(!section||section.querySelector('.welcome-shadow-layer'))return;\n const ns='http://www.w3.org/2000/svg';\n const layer=document.createElement('div');\n layer.className='welcome-shadow-layer';layer.setAttribute('aria-hidden','true');\n function addBranch(kind,url,seed,angle,slow,fast){\n  const svg=document.createElementNS(ns,'svg');\n  svg.setAttribute('class','welcome-shadow welcome-shadow-'+kind);\n  svg.setAttribute('viewBox','0 0 640 405');\n  svg.setAttribute('aria-hidden','true');\n  const id='welcome-projection-'+kind;\n  svg.innerHTML='<defs><filter id=\"'+id+'\" x=\"-25%\" y=\"-30%\" width=\"150%\" height=\"160%\" color-interpolation-filters=\"sRGB\">'+\n   '<feTurbulence type=\"fractalNoise\" baseFrequency=\".007 .011\" numOctaves=\"2\" seed=\"'+seed+'\" result=\"wind\">'+\n    '<animate attributeName=\"baseFrequency\" values=\".007 .011;.009 .008;.006 .013;.007 .011\" keyTimes=\"0;.29;.68;1\" dur=\"'+slow+'s\" repeatCount=\"indefinite\"/>'+\n   '</feTurbulence>'+\n   '<feDisplacementMap in=\"SourceGraphic\" in2=\"wind\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"bend\">'+\n    '<animate attributeName=\"scale\" values=\"5;13;7;16;6;5\" keyTimes=\"0;.18;.41;.67;.86;1\" dur=\"'+slow+'s\" repeatCount=\"indefinite\"/>'+\n   '</feDisplacementMap>'+\n   '<feTurbulence type=\"fractalNoise\" baseFrequency=\".04 .052\" numOctaves=\"2\" seed=\"'+(seed+13)+'\" result=\"flutter\"/>'+\n   '<feDisplacementMap in=\"bend\" in2=\"flutter\" scale=\"2.3\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"leaves\">'+\n    '<animate attributeName=\"scale\" values=\"1.5;3.5;1.8;4.6;2;1.5\" keyTimes=\"0;.12;.36;.53;.79;1\" dur=\"'+fast+'s\" repeatCount=\"indefinite\"/>'+\n   '</feDisplacementMap>'+\n   '<feColorMatrix in=\"leaves\" type=\"matrix\" values=\"0 0 0 0 .30 0 0 0 0 .34 0 0 0 0 .20 0 0 0 1 0\"/>'+\n   '<feGaussianBlur stdDeviation=\"3.3\"/>'+\n   '</filter></defs><g filter=\"url(#'+id+')\"><g><image href=\"'+url+'\" x=\"-15\" y=\"-24\" width=\"775\" height=\"475\" preserveAspectRatio=\"xMaxYMid meet\"/>'+\n   '<animateTransform attributeName=\"transform\" type=\"rotate\" values=\"'+angle[0]+' 730 170;'+angle[1]+' 730 170;'+angle[2]+' 730 170;'+angle[3]+' 730 170;'+angle[0]+' 730 170\" keyTimes=\"0;.21;.47;.77;1\" calcMode=\"spline\" keySplines=\".45 0 .55 1;.4 0 .6 1;.45 0 .55 1;.4 0 .6 1\" dur=\"'+(slow+3.7)+'s\" repeatCount=\"indefinite\"/>'+\n   '</g></g>';\n  layer.append(svg);return svg;\n }\n const upper=addBranch('upper','assets/welcome-shadow-top-v16.png',19,[-.5,1.5,-1.1,2.1],12.7,3.2);\n const lower=addBranch('lower','assets/welcome-shadow-bottom-v16.png',41,[.3,-2.2,.9,-.8],16.3,4.1);\n section.prepend(layer);\n function align(){const r=section.getBoundingClientRect();layer.style.setProperty('--shadow-left',(-r.left)+'px');layer.style.setProperty('--shadow-width',document.documentElement.clientWidth+'px')}\n align();window.addEventListener('resize',align,{passive:true});\n if('ResizeObserver'in window)new ResizeObserver(align).observe(section);\n const preference=matchMedia('(prefers-reduced-motion: reduce)');\n let visible=true;\n function sync(){[upper,lower].forEach(s=>{if(preference.matches||!visible||document.hidden)s.pauseAnimations();else s.unpauseAnimations()})}\n preference.addEventListener('change',sync);document.addEventListener('visibilitychange',sync);\n if('IntersectionObserver'in window)new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;sync()},{rootMargin:'100px'}).observe(section);\n sync();\n})();\n")
+    args+=['-resize','640x372','-background','none','-gravity','east','-extent',f'{W}x{H}','-alpha','on','-depth','8','rgba:-']
+    rgba=subprocess.check_output(args)
+    assert len(rgba)==W*H*4
+    parts=[bytearray(W*H*4) for i in range(3)]
+    for y in range(H):
+        v=y/(H-1)
+        for x in range(W):
+            u=x/(W-1);j=(y*W+x)*4
+            alpha=rgba[j+3]/255.
+            # Fade all potentially exposed edges except the off-screen root.
+            edge=smoothstep(v/.15)*smoothstep((1-v)/.17)*smoothstep(u/.075)
+            root=smoothstep((u-.36)/.49)
+            upper=1-smoothstep((v-.34)/.35)
+            weights=[root,(1-root)*upper,(1-root)*(1-upper)]
+            for k,w in enumerate(weights):
+                parts[k][j:j+4]=bytes((79,82,51,round(255*alpha*edge*w)))
+    for k,raw in enumerate(parts):
+        dest=Path('_mvp/assets')/f'welcome-shadow-{kind}-{k}-v18.png'
+        subprocess.run([convert,'-size',f'{W}x{H}','-depth','8','rgba:-','-channel','A','-blur','0x2.6','+channel','-strip','PNG32:'+str(dest)],input=raw,check=True)
+        assert dest.read_bytes()[:8]==b'\x89PNG\r\n\x1a\n'
+        assert dest.stat().st_size<400000
+script.write_text(script.read_text()+'\n'+"\n// Visibility only: no requestAnimationFrame, no animation-related JS.\n(()=>{\n const section=document.querySelector('.welcome');\n if(!section||section.querySelector('.welcome-shadow-layer'))return;\n const layer=document.createElement('div');layer.className='welcome-shadow-layer';layer.setAttribute('aria-hidden','true');\n for(const kind of ['upper','lower']){\n  const branch=document.createElement('div');branch.className='welcome-shadow-branch welcome-shadow-'+kind;\n  for(let i=0;i<3;i++){const img=document.createElement('img');img.className='welcome-shadow-piece';img.alt='';img.decoding='async';img.src='assets/welcome-shadow-'+kind+'-'+i+'-v18.png';img.draggable=false;branch.append(img)}\n  layer.append(branch);\n }\n section.prepend(layer);\n function align(){const r=section.getBoundingClientRect();layer.style.setProperty('--shadow-left',(-r.left)+'px');layer.style.setProperty('--shadow-width',document.documentElement.clientWidth+'px')}\n align();window.addEventListener('resize',align,{passive:true});\n if('ResizeObserver'in window)new ResizeObserver(align).observe(section);\n let visible=true;\n function sync(){layer.classList.toggle('is-visible',visible&&!document.hidden)}\n document.addEventListener('visibilitychange',sync);\n if('IntersectionObserver'in window)new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;sync()},{rootMargin:'0px'}).observe(section);\n sync();\n})();\n")

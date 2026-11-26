@@ -128,6 +128,11 @@ jobs:
               }
               assert.equal(await p.evaluate(sel=>document.querySelectorAll(sel).length,'.day'),3);
               assert.equal(await p.evaluate(sel=>document.querySelectorAll(sel).length,'img[data-photo-slot]'),6);
+              await p.waitForFunction(()=>document.querySelectorAll('.welcome-shadow-piece').length===6&&[...document.querySelectorAll('.welcome-shadow-piece')].every(i=>i.complete&&i.naturalWidth===640));
+              assert.equal(await p.evaluate(()=>document.querySelectorAll('.welcome-shadow-layer svg,.welcome-shadow-layer filter,.welcome-shadow-layer video').length),0);
+              assert.equal(await p.evaluate(()=>[...document.querySelectorAll('.welcome-shadow-piece')].every(i=>getComputedStyle(i).filter==='none')),true);
+              assert.equal(await p.evaluate(()=>[...document.querySelectorAll('.welcome .photo-frame img')].every(i=>i.src.includes('generated-v17.jpg')&&i.naturalWidth>1000)),true);
+
               assert.equal(await p.evaluate(sel=>document.querySelectorAll(sel).length,'.day-copy h3'),3);
               assert.equal(await p.evaluate(()=>document.querySelectorAll('.hero > img.hero-couple,.hero > img.hero-bg,.hero > img.hero-skyline').length),3);
               const spacing=await p.evaluate(()=>{
