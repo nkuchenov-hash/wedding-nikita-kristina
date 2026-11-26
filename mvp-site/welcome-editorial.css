@@ -95,14 +95,69 @@
 
 
 
-/* V13: paper, watercolor and projected shadows sampled from the approved sketch.
-   The two shadow silhouettes have irregular outlines and feathered edges. */
-.welcome{position:relative;isolation:isolate;background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201600%20900%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cfilter%20id%3D%22grain%22%3E%3CfeTurbulence%20type%3D%22fractalNoise%22%20baseFrequency%3D%22.38%20.54%22%20numOctaves%3D%224%22%20seed%3D%228%22%20stitchTiles%3D%22stitch%22%2F%3E%3CfeColorMatrix%20type%3D%22matrix%22%20values%3D%220%200%200%200%20.54%200%200%200%200%20.39%200%200%200%200%20.19%200%200%200%20.25%20-.05%22%2F%3E%3C%2Ffilter%3E%3Cfilter%20id%3D%22wash%22%20x%3D%22-10%25%22%20y%3D%22-10%25%22%20width%3D%22120%25%22%20height%3D%22120%25%22%3E%3CfeTurbulence%20type%3D%22fractalNoise%22%20baseFrequency%3D%22.012%20.024%22%20numOctaves%3D%224%22%20seed%3D%227%22%20result%3D%22n%22%2F%3E%3CfeDisplacementMap%20in%3D%22SourceGraphic%22%20in2%3D%22n%22%20scale%3D%2225%22%20xChannelSelector%3D%22R%22%20yChannelSelector%3D%22G%22%2F%3E%3CfeGaussianBlur%20stdDeviation%3D%222.5%22%2F%3E%3C%2Ffilter%3E%3CradialGradient%20id%3D%22s%22%3E%3Cstop%20stop-color%3D%22%23fffef6%22%2F%3E%3Cstop%20offset%3D%22.12%22%20stop-color%3D%22%23fff7dc%22%20stop-opacity%3D%22.96%22%2F%3E%3Cstop%20offset%3D%22.38%22%20stop-color%3D%22%23f8dfa5%22%20stop-opacity%3D%22.2%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23f8dfa5%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3ClinearGradient%20id%3D%22w%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%22.1%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23cbd1a0%22%20stop-opacity%3D%22.35%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23e3d6ae%22%20stop-opacity%3D%22.04%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22fade%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22white%22%20stop-opacity%3D%220%22%2F%3E%3Cstop%20offset%3D%22.11%22%20stop-color%3D%22white%22%2F%3E%3Cstop%20offset%3D%22.86%22%20stop-color%3D%22white%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22white%22%20stop-opacity%3D%220%22%2F%3E%3C%2FlinearGradient%3E%3Cmask%20id%3D%22m%22%3E%3Crect%20width%3D%221600%22%20height%3D%22900%22%20fill%3D%22url(%23fade)%22%2F%3E%3C%2Fmask%3E%3C%2Fdefs%3E%3Cg%20mask%3D%22url(%23m)%22%3E%3Crect%20width%3D%221600%22%20height%3D%22900%22%20fill%3D%22%23faefdf%22%20opacity%3D%22.65%22%2F%3E%3Cellipse%20cx%3D%22202%22%20cy%3D%2268%22%20rx%3D%22430%22%20ry%3D%22270%22%20fill%3D%22url(%23s)%22%2F%3E%3Cpath%20d%3D%22M-45%20825Q67%20742%20160%20799T365%20828Q510%20855%20673%20824Q808%20790%20941%20802Q1035%20755%201160%20802T1390%20779Q1500%20756%201650%20807V930H-45Z%22%20fill%3D%22url(%23w)%22%20filter%3D%22url(%23wash)%22%2F%3E%3Cpath%20d%3D%22M-30%20865Q140%20815%20275%20868T595%20886Q790%20857%20965%20842T1280%20863Q1450%20822%201630%20850V930H-30Z%22%20fill%3D%22%23e3d6a6%22%20opacity%3D%22.20%22%20filter%3D%22url(%23wash)%22%2F%3E%3Crect%20width%3D%221600%22%20height%3D%22900%22%20filter%3D%22url(%23grain)%22%20opacity%3D%22.83%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") center/100% 100% no-repeat,radial-gradient(ellipse at 14% 15%,#fff9e8 0%,transparent 55%),radial-gradient(ellipse at 65% 48%,#fcf5e9 0%,transparent 73%)!important}
+
+/* V14 — use the site's unmodified background. Shadow projections are based
+   on the actual detailed transparent botanical artwork already used on site,
+   not painted ellipses or low-resolution silhouettes. */
+.welcome{position:relative;isolation:isolate;background:transparent!important}
 .welcome .welcome-grid{position:relative;z-index:2}
-.welcome::before,.welcome::after{content:"";position:absolute;display:block;pointer-events:none;z-index:0;left:auto;overflow:hidden;background-repeat:no-repeat;background-size:100% 100%;will-change:transform,opacity;filter:blur(2px)}
-.welcome::before{right:0;top:1%;bottom:auto;width:30%;height:auto;aspect-ratio:2;background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAClUlEQVR42u1YLbPcMAzcdgwEDQMDDxYWlvfnFPTvFRY+eDDQ0FCwxH6z1ciO7XcBncYzmTnnnEharb7y6cfP75hcO4DNuZ/LpQCknNsBRLonZY9yD/RfBvAbwNuJfAHwjXSoz1ud3gD8IjmxXIkPhUnjYxGm9GLP+M0xtP7O9A6+n6xyHQCUZNZnHkUuv3srZ1jPB4M1CoAQgtZgdc5KhyFCilbPHwCegwBoOat0WUOPso/lvwrYZgCQMGG8kNF54BlL82ooAHwhpVOhaxp0RmWLUEg+yDnJ6LkZ4CM7aJQB2aFzT8FMHmbjD4fGzwFA7XoUEMUwjnPNQWxIxIS/WBsGDZpZ6oSGOhRNC4bHYvhOnpQO69iB1iGykgRH8wUL9vKELgAbKXSkkXeU9nvZ28StzJRwgfHRGJ8NVXXhvbEY1ALaepyZkU1IcLm8BACbrJQqyAoAtmqII6dVKqVRNuvzW3ix8WIoahkQF+gfG8ZrR4ceU/IVDIhUYrhkxpPeYJZVXg7hpkcMA84SuYYPxLgaem8O5ZTOYzH+1SQ3NfefZf/VqQq9DnObDQExdOTS5gk9TA+uC/QXp7QyALWDFDN3wJzJzjwTAcTwgQTn0TCT8dqYG+Qkfr05o5Vgk9lvHUdYOdN9QCaPwqupBIA2KB8bgIgJFZ41YMBtsSiZDJ8788W77mExJq1xyVEYjZiMTjaGE9ut3qK1EuWDSAC0Zom80gn2mhmdTGYjXSEPMNoAGc4UuJ+cfZcZFoyfyebeYDTz/Er5zAMfVaY/iLQS1ErIyCQAtqt86QoTSuRFGZwoZwchTrQZF6wrxuFXvydfZfxV4/Arl15Be16f/wEA8D8DgBuAG4AbgBuAG4AbgBuAG4Cr1h/9KR/u+CkWTwAAAABJRU5ErkJggg==");transform-origin:98% 5%;opacity:.52;animation:welcome-breeze-top 21s ease-in-out infinite;mask-image:linear-gradient(to bottom,transparent,#000 16%,#000 65%,transparent)}
-.welcome::after{right:0;bottom:5%;top:auto;width:27%;height:auto;aspect-ratio:2;background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAACEUlEQVR42uVZMW7DMAxkCw0cOXrUmL/0OR36zY4ZPXrUyLGLFLDEKbYjOYDlAEIc2wl0x+ORdD6+f77oyq9wQcw8OgEWoLpr4u8JA4FmcF6IKBki2N8bBgLPQAHlvBpChiNA80IqUECGjOoB6gCLOzcBn0ijVoGJiGI+XrIPFAUsmRQZtQpIJkCAB1AmY8nX40gEFLDRlbsbUMdS7g0DRT26qAsyPX9vGAT8LUeWa25fMc3TegCD+l+MTUA5ZFMR5nwunpGAkuOczcyuCAghp4SFiO7mt6ZwMqmXWj5n0L6uqzE4K/WigGRa45mINHSWpIIBpOdrrvy+uHLny15yqZGI6JeIJHSIioDWM1X6c3XHaQdhaWUPXAF/d/6QrFpCI3h2eaam02JAkHdhMZ1ai/qQAhazF6uELg9EENvqwLApTQg8O6Uo6Nr27EeNqjaT2qKAZKLvTSkCV6bKpMZmcPFR3JMePuJ0FAGot0ZuzZWRFCkpVeb3reDvO9PoEZhXCFjb3OQkWdZUmdcTIEmfpNraGLz1yREf0QqzM5yyprzUAa/lqgCVaae9/SPviEZorkQtOYIQeAWRajHHVQX3JkA3XFueRFSfeE0LCQwIfvswpBvLk66890gDbTHBV8FvyeOeYFHf0aUKtPQMRxiuvvC9RyX4PPGDkL2Dl6JKcKX/BlG7reFCwLX3LHCmVKl+/gPDPLkxpyrzHgAAAABJRU5ErkJggg==");transform-origin:98% 95%;opacity:.58;animation:welcome-breeze-bottom 17s ease-in-out infinite;mask-image:linear-gradient(to bottom,transparent,#000 18%,#000 75%,transparent)}
-@keyframes welcome-breeze-top{0%,100%{transform:rotate(-1deg) scale(1);opacity:.48}26%{transform:rotate(1.7deg) scale(1.025,.97);opacity:.56}51%{transform:rotate(.3deg) scale(1.01);opacity:.52}73%{transform:rotate(-2.2deg) scale(.99,1.03);opacity:.42}}
-@keyframes welcome-breeze-bottom{0%,100%{transform:rotate(.5deg) scale(1);opacity:.58}30%{transform:rotate(-2.4deg) scale(1.035,.98);opacity:.64}48%{transform:rotate(-.8deg) scale(1.01);opacity:.56}78%{transform:rotate(2deg) scale(.98,1.03);opacity:.47}}
-@media(max-width:700px){.welcome::before{width:46%;opacity:.35}.welcome::after{width:43%;bottom:2%;opacity:.4}}
-@media(prefers-reduced-motion:reduce){.welcome::before,.welcome::after{animation:none;will-change:auto}}
+.welcome::before,.welcome::after{
+ content:"";position:absolute;display:block;pointer-events:none;z-index:0;
+ left:auto;bottom:auto;top:auto;right:auto;
+ background-repeat:no-repeat;background-size:contain;
+ filter:brightness(0) saturate(100%) invert(34%) sepia(20%) saturate(550%) hue-rotate(20deg) brightness(93%) blur(clamp(2px,.26vw,4px));
+ will-change:transform,opacity;
+}
+.welcome::before{
+ top:0;right:1.8%;width:29%;height:34%;
+ background-image:url("assets/birch-top-left.png");background-position:left top;
+ transform-origin:98% 5%;opacity:.145;
+ mask-image:linear-gradient(180deg,#000 0%,#000 55%,transparent 100%);
+ animation:welcome-real-breeze-top 19s ease-in-out infinite;
+}
+.welcome::after{
+ bottom:2%;right:1.8%;width:29%;height:32%;
+ background-image:url("assets/birch-right.png");background-position:right bottom;
+ transform-origin:98% 94%;opacity:.155;
+ mask-image:linear-gradient(0deg,#000 0%,#000 50%,transparent 100%);
+ animation:welcome-real-breeze-bottom 23s ease-in-out infinite;
+}
+@keyframes welcome-real-breeze-top{
+ 0%,100%{transform:scaleX(-1) rotate(-.8deg) scale(1);opacity:.145}
+ 18%{transform:scaleX(-1) rotate(1.2deg) scale(1.015,.99);opacity:.16}
+ 43%{transform:scaleX(-1) rotate(-1.6deg) scale(.994,1.02);opacity:.13}
+ 65%{transform:scaleX(-1) rotate(.8deg) scale(1.01,.99);opacity:.155}
+ 83%{transform:scaleX(-1) rotate(-.5deg) scale(1);opacity:.14}
+}
+@keyframes welcome-real-breeze-bottom{
+ 0%,100%{transform:rotate(.3deg) scale(1);opacity:.155}
+ 23%{transform:rotate(-1.9deg) scale(1.02,.99);opacity:.17}
+ 47%{transform:rotate(.9deg) scale(.995,1.015);opacity:.145}
+ 74%{transform:rotate(-.6deg) scale(1.005,1);opacity:.16}
+}
+.welcome .welcome-collage .photo-shell{
+ filter:drop-shadow(1px 4px 3px #51442d24) drop-shadow(6px 13px 15px #51442d2b);
+}
+.welcome .welcome-botanical{
+ filter:drop-shadow(1px 3px 2px #51422a29) drop-shadow(5px 9px 7px #51422a30);
+}
+.welcome .welcome-lower-group{
+ filter:drop-shadow(1px 3px 2px #51422a29) drop-shadow(5px 10px 9px #51422a38);
+}
+.welcome .welcome-lower-group .welcome-botanical{filter:none}
+@media not (pointer:coarse){
+ .welcome .welcome-card:hover .photo-shell{
+  filter:drop-shadow(2px 6px 4px #51442d29) drop-shadow(7px 17px 17px #51442d32);
+ }
+}
+@media(max-width:700px){
+ .welcome::before{width:40%;height:22%;right:2.5%;opacity:.11}
+ .welcome::after{width:42%;height:20%;right:2.5%;bottom:1%;opacity:.12}
+ .welcome .welcome-collage .photo-shell{filter:drop-shadow(1px 3px 2px #51442d24) drop-shadow(3px 7px 8px #51442d2b)}
+ .welcome .welcome-botanical,.welcome .welcome-lower-group{filter:drop-shadow(1px 2px 1.5px #51422a29) drop-shadow(3px 5px 5px #51422a30)}
+ .welcome .welcome-lower-group .welcome-botanical{filter:none}
+}
+@media(prefers-reduced-motion:reduce){
+ .welcome::before,.welcome::after{animation:none!important;will-change:auto}
+ .welcome::before{transform:scaleX(-1)}
+}
