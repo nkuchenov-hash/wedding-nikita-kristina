@@ -161,6 +161,21 @@ jobs:
               assert.equal(editorial.botanicals,4);
               assert.equal(await p.evaluate(()=>[...document.querySelectorAll('.welcome .welcome-botanical')].every(i=>i.naturalWidth>0&&new URL(i.src).pathname.endsWith('.png'))),true);
               await p.evaluate(()=>Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,3000))]));
+
+              if(name==='mobile'){
+                for(const mobileWidth of [360,390,430]){
+                  await p.setViewport({width:mobileWidth,height:844,deviceScaleFactor:1});
+                  const m=await p.evaluate(()=>{
+                    const r=s=>document.querySelector(s).getBoundingClientRect();
+                    const text=r('.hero-text'),place=r('.hero-place'),sky=r('.hero-skyline'),cta=r('.hero-cta'),hero=r('.hero');
+                    return {width:innerWidth,textBottom:text.bottom,placeBottom:place.bottom,skyTop:sky.top,skyBottom:sky.bottom,ctaTop:cta.top,ctaBottom:cta.bottom,heroBottom:hero.bottom,ctaLeft:cta.left,ctaRight:cta.right,overflow:document.documentElement.scrollWidth>innerWidth};
+                  });
+                  console.log('MOBILE_HERO_LAYOUT',JSON.stringify(m));
+                  assert.ok(m.skyTop>=m.textBottom-1&&m.skyTop>=m.placeBottom-1&&m.ctaTop>=m.skyBottom+4&&m.heroBottom>=m.ctaBottom+55&&!m.overflow&&m.ctaLeft>=12&&m.ctaRight<=mobileWidth-12,JSON.stringify(m));
+                  await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/mobile-hero-'+mobileWidth+'.png'});
+                }
+                await p.setViewport({width,height,deviceScaleFactor:1});
+              }
               await p.screenshot({path:process.env.GITHUB_WORKSPACE+'/_mvp-qa/'+name+'.png',fullPage:true});
               if(name==='desktop'){
                 await p.evaluate(()=>document.querySelector('.welcome-collage').scrollIntoView({block:'center',behavior:'instant'}));
