@@ -232,3 +232,17 @@ copyfile(approved_skyline,current_skyline)
 assert sha256(current_skyline.read_bytes()).hexdigest()==expected
 assert current_skyline.read_bytes()!=previous_skyline.read_bytes()
 print('HERO_PANORAMA_APPROVED',expected,'PREVIOUS_BACKUP',sha256(previous_skyline.read_bytes()).hexdigest())
+
+# Mobile-only hero wording and restrained wave; retain the desktop shape and wording.
+html=p.read_text()
+shape=re.search(r'<clipPath\b[^>]*\bid=["\']hero-shape["\']',html)
+assert shape, 'Original hero shape missing'
+mobile_shape='<clipPath id="hero-mobile-shape" clipPathUnits="objectBoundingBox"><path d="M0 0H1V.964C.91 .946 .85 .962 .73 .979C.55 .998 .45 .989 .34 .982C.19 .965 .10 .96 0 .976Z"/></clipPath>'
+html=html[:shape.start()]+mobile_shape+html[shape.start():]
+def mobile_place(m):
+    original=m.group(2)
+    assert 'марьино' in original.lower() and 'санкт-петербург' in original.lower(),original
+    return m.group(1)+'<span class="hero-place-desktop">'+original+'</span><span class="hero-place-mobile">Санкт-Петербург</span>'+m.group(3)
+html,n=re.subn(r'(<(?:p|div|span)\b[^>]*class="[^"]*\bhero-place\b[^"]*"[^>]*>)([^<]*)(</(?:p|div|span)>)',mobile_place,html,count=1,flags=re.I)
+assert n==1, 'Hero location label missing'
+p.write_text(html)
