@@ -243,17 +243,35 @@ for kind, photo in photos.items():
         lum = .2126*r+.7152*g+.0722*b
         blue = clamp((b-r-.025)*2.4)*clamp((b-g+.12)*3.)
         green = clamp((g-r-.015)*3.2)*clamp((g-b-.015)*3.2)
-        sat = .80 - .34*blue - .19*green
-        # Gentle film curve: retain the dark foliage but avoid crushed blacks.
-        lift = .025 + .10*(1-lum)**2
-        y = clamp(lum*.95 + lift + .085*blue + .035*green)
-        rr = y+(r-lum)*sat + .035 + .043*blue + .038*green
-        gg = y+(g-lum)*sat + .012 + .016*green
-        bb = y+(b-lum)*sat - .033 - .028*green - .015*blue
-        # Sun-warmed highlights, neutral skin/architecture and no orange cast.
-        white = clamp((lum-.62)*2.1)
-        rr += .012*white
-        bb -= .009*white
+        # Bright summer editorial grade: retain sky blues and add sunlight rather
+        # than neutralising the entire photograph into a grey wash.
+        row = (i//3//pw)/ph
+        sat = .97 - .18*blue - .07*green
+        # Stronger exposure in shadows and midtones; protect bright masonry.
+        y = clamp(lum + .18*(1-lum)**1.55 + .048*green + .06*blue)
+        rr = y+(r-lum)*sat + .030 + .045*green
+        gg = y+(g-lum)*sat + .020 + .015*green
+        bb = y+(b-lum)*sat - .020 - .035*green
+        # Golden-hour clouds: sky-limited lift and peach highlights, not a flat sepia filter.
+        sky_zone = clamp((.64-row)*3.1)
+        neutral = clamp((.20-(max(r,g,b)-min(r,g,b)))*6)
+        sky = sky_zone*max(blue,neutral*.7)*clamp((lum-.22)*2.2)
+        warm_cloud = sky*neutral
+        rr += .105*sky + .085*warm_cloud
+        gg += .071*sky + .045*warm_cloud
+        bb += .090*sky - .030*warm_cloud
+        # Sunny, directional warmth, strongest toward the horizon.
+        if kind == 'city':
+            haze = .048*sky_zone*clamp((lum-.25)*2.2)
+            rr += haze
+            gg += haze*.73
+            bb += haze*.42
+        else:
+            rr += .042*green
+            gg += .024*green
+        white = clamp((lum-.72)*3.)
+        rr += .010*white
+        bb -= .008*white
         graded[i:i+3] = bytes((round(clamp(rr)*255),round(clamp(gg)*255),round(clamp(bb)*255)))
     out_ppm = target.with_suffix('.ppm')
     out_ppm.write_bytes(f'P6\n{pw} {ph}\n255\n'.encode()+graded)
