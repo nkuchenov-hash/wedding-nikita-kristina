@@ -32,6 +32,10 @@ jobs:
           unzip -oq mvp-site/botanical-v4.zip -d _mvp
           echo '3fe83bf818572ae4116d6b667ed8cc0b97255e3df1b30ce006fd3fdf1c045094  mvp-site/botanical-v5.zip' | sha256sum -c -
           unzip -oq mvp-site/botanical-v5.zip -d _mvp
+          if ! command -v magick >/dev/null && ! command -v convert >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends imagemagick
+          fi
           python3 mvp-site/apply-welcome-spacing.py
           cat mvp-site/hero-polish.css >> _mvp/style.css
           cat mvp-site/welcome-editorial.css >> _mvp/style.css
