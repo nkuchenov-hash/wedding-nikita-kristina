@@ -161,7 +161,7 @@ photos = {
         'credit': 'Yulia Pv', 'license': 'CC BY-SA 4.0',
         'license_url': 'https://creativecommons.org/licenses/by-sa/4.0/',
         'alt': 'Усадьба Марьино в Андрианово',
-        'position': '77% 45%',
+        'position': '50% 50%',
         'min_size': (2992, 2000),
     },
     'city': {
@@ -198,7 +198,7 @@ def jpeg_dimensions(data):
 
 html = p.read_text()
 for kind, photo in photos.items():
-    name = 'welcome-photo-' + kind + '-hd.jpg'
+    name = 'welcome-photo-' + kind + '-sunny-v15.jpg'
     for attempt in range(3):
         try:
             req = Request(photo['url'], headers={'User-Agent': 'WeddingMVP/1.0 (https://nikitakristina.ru; local image publication)'})
@@ -214,68 +214,79 @@ for kind, photo in photos.items():
             sleep(3 * (attempt + 1))
     target = Path('_mvp/assets') / name
     target.write_bytes(data)
-    # Prefer a compact local copy, using ImageMagick on the Ubuntu runner if present.
+    # Reframe at original resolution BEFORE resizing. Both files are final
+    # independently graded photographs; no overlay or CSS tint is required.
     import shutil, subprocess
     convert = shutil.which('magick') or shutil.which('convert')
-    if convert:
-        resized = target.with_name('tmp-' + name)
-        subprocess.run([convert, str(target), '-auto-orient', '-resize', '2400x2400>', '-strip', '-quality', '90', str(resized)], check=True)
-        rw, rh = jpeg_dimensions(resized.read_bytes())
-        assert min(rw, rh) >= 1400, (kind, rw, rh)
-        resized.replace(target)
-    # Match the approved invitation's warm summer palette without changing
-    # the underlying photograph or losing resolution. The correction is
-    # baked into the JPEG, so the lightbox and card use identical colors.
-    assert convert, 'ImageMagick required for the welcome photo color grade'
-    ppm = subprocess.check_output([convert, str(target), '-colorspace', 'sRGB', '-depth', '8', 'ppm:-'])
-    header = re.match(rb'P6\s+(\d+)\s+(\d+)\s+255[\r\n ]', ppm)
-    assert header, 'Unexpected RGB image header'
-    pw, ph = map(int, header.groups())
-    rgb = ppm[header.end():]
-    assert len(rgb) == pw*ph*3
-    graded = bytearray(len(rgb))
-    # A continuous, selective grade: muted pastel skies, olive garden greens,
-    # golden midtones, soft lifted shadows and cream rather than blue whites.
-    def clamp(v, low=0., high=1.):
-        return max(low, min(high, v))
+    assert convert, 'ImageMagick required for photo preparation'
+    ow,oh=jpeg_dimensions(data)
+    # Focus on the main portico rather than the dark lawn/tree trunk; for the
+    # city, bring the distant dome closer and remove the heavy upper clouds.
+    if kind=='estate':
+        ch=round(oh*.83); cw=round(ch*.88)
+        cx=round(ow*.705-cw*.5); cy=round(oh*.035)
+    else:
+        ch=round(oh*.79); cw=round(ch*1.14)
+        cx=round(ow*.485-cw*.5); cy=round(oh*.16)
+    cx=max(0,min(ow-cw,cx));cy=max(0,min(oh-ch,cy))
+    assert min(cw,ch)>=1400
+    ppm=subprocess.check_output([convert,str(target),'-auto-orient','-crop',f'{cw}x{ch}+{cx}+{cy}','+repage','-resize','2400x2400>','-colorspace','sRGB','-depth','8','ppm:-'])
+    header=re.match(rb'P6\s+(\d+)\s+(\d+)\s+255[\r\n ]',ppm)
+    assert header
+    pw,ph=map(int,header.groups())
+    rgb=ppm[header.end():]
+    assert len(rgb)==pw*ph*3
+    graded=bytearray(len(rgb))
+    def clamp(v,low=0.,high=1.):return max(low,min(high,v))
+    def smooth(v):
+        v=clamp(v)
+        return v*v*(3.-2.*v)
     for i in range(0,len(rgb),3):
-        r,g,b = rgb[i]/255.,rgb[i+1]/255.,rgb[i+2]/255.
-        lum = .2126*r+.7152*g+.0722*b
-        blue = clamp((b-r-.025)*2.4)*clamp((b-g+.12)*3.)
-        green = clamp((g-r-.015)*3.2)*clamp((g-b-.015)*3.2)
-        # Bright summer editorial grade: retain sky blues and add sunlight rather
-        # than neutralising the entire photograph into a grey wash.
-        row = (i//3//pw)/ph
-        sat = .97 - .18*blue - .07*green
-        # Stronger exposure in shadows and midtones; protect bright masonry.
-        y = clamp(lum + .18*(1-lum)**1.55 + .048*green + .06*blue)
-        rr = y+(r-lum)*sat + .030 + .045*green
-        gg = y+(g-lum)*sat + .020 + .015*green
-        bb = y+(b-lum)*sat - .020 - .035*green
-        # Golden-hour clouds: sky-limited lift and peach highlights, not a flat sepia filter.
-        sky_zone = clamp((.64-row)*3.1)
-        neutral = clamp((.20-(max(r,g,b)-min(r,g,b)))*6)
-        sky = sky_zone*max(blue,neutral*.7)*clamp((lum-.22)*2.2)
-        warm_cloud = sky*neutral
-        rr += .105*sky + .085*warm_cloud
-        gg += .071*sky + .045*warm_cloud
-        bb += .090*sky - .030*warm_cloud
-        # Sunny, directional warmth, strongest toward the horizon.
-        if kind == 'city':
-            haze = .048*sky_zone*clamp((lum-.25)*2.2)
-            rr += haze
-            gg += haze*.73
-            bb += haze*.42
+        r,g,b=rgb[i]/255.,rgb[i+1]/255.,rgb[i+2]/255.
+        x=(i//3%pw)/pw
+        row=(i//3//pw)/ph
+        lum=.2126*r+.7152*g+.0722*b
+        chroma=max(r,g,b)-min(r,g,b)
+        blue=smooth((b-r+.03)*3.4)*smooth((b-g+.10)*3.6)
+        green=smooth((g-r+.015)*3.3)*smooth((g-b+.015)*3.3)
+        # Recover exposure without introducing a grey black floor. Protect
+        # white columns and keep architecture, leaves and grass crisp.
+        shadow_lift=(.075 if kind=='estate' else .055)*(1-lum)**1.5
+        mid=lum**(.86 if kind=='estate' else .83)
+        y=clamp(mid+shadow_lift-.018)
+        sat=1.02-.10*green-.12*blue
+        rr=y+(r-lum)*sat
+        gg=y+(g-lum)*sat
+        bb=y+(b-lum)*sat
+        warm=smooth(lum*2.6)*(1-.58*smooth((lum-.78)*4.6))
+        rr+=.065*warm;gg+=.025*warm;bb-=.045*warm
+        # Selective olive-gold greens; keep foliage from turning fluorescent.
+        rr+=.105*green;gg+=.025*green;bb-=.037*green
+        # Blue sky remains blue and gets softer, not uniformly desaturated.
+        sky_zone=smooth((.52-row)*3.8)
+        skyblue=blue*sky_zone
+        rr+=.16*skyblue;gg+=.095*skyblue;bb+=.018*skyblue
+        # Neutral cloud color grading is separated from the blue sky and land.
+        # Apply more peach warmth to the overcast city shot's cloud highlights.
+        cloud=sky_zone*smooth((.24-chroma)*5.0)*smooth((lum-.19)*2.8)
+        if kind=='city':
+            rr+=.21*cloud;gg+=.13*cloud;bb+=.055*cloud
+            # Warm river reflections and shaded facades without a fake flare.
+            lower=smooth((row-.52)*3)*smooth((lum-.12)*2.5)
+            rr+=.055*lower;gg+=.026*lower;bb-=.019*lower
         else:
-            rr += .042*green
-            gg += .024*green
-        white = clamp((lum-.72)*3.)
-        rr += .010*white
-        bb -= .008*white
-        graded[i:i+3] = bytes((round(clamp(rr)*255),round(clamp(gg)*255),round(clamp(bb)*255)))
+            rr+=.09*cloud;gg+=.056*cloud;bb+=.021*cloud
+            # Brighten and warm lawn separately; keep contact shadows grounded.
+            lawn=smooth((row-.52)*4)*green
+            rr+=.045*lawn;gg+=.021*lawn
+        # Soft highlight shoulder protects detail from clipping.
+        def shoulder(v):
+            if v<=.91:return clamp(v)
+            return .91+.09*(1-math.exp(-(v-.91)/.105))
+        graded[i:i+3]=bytes(round(shoulder(v)*255) for v in (rr,gg,bb))
     out_ppm = target.with_suffix('.ppm')
     out_ppm.write_bytes(f'P6\n{pw} {ph}\n255\n'.encode()+graded)
-    subprocess.run([convert, str(out_ppm), '-sampling-factor', '4:4:4', '-strip', '-quality', '92', str(target)],check=True)
+    subprocess.run([convert, str(out_ppm), '-unsharp','0x0.65+0.42+0.025','-sampling-factor', '4:4:4', '-strip', '-quality', '94', str(target)],check=True)
     out_ppm.unlink()
     assert jpeg_dimensions(target.read_bytes()) == (pw,ph)
     print('WELCOME_WARM_GRADE',kind,pw,ph)
@@ -288,7 +299,7 @@ for kind, photo in photos.items():
         assert n == 1
         img = re.sub(r'\s(?:srcset|sizes|alt|style|width|height)="[^"]*"', '', img)
         attrs = {
-            'alt': photo['alt'], 'style': 'object-position:'+photo['position']+';',
+            'alt': photo['alt'], 'style': 'object-position:'+photo['position']+';filter:none!important;',
             'data-photo-credit': photo['credit'], 'data-photo-source': photo['page'],
             'data-photo-license': photo['license'], 'data-photo-license-url': photo['license_url'],
         }
