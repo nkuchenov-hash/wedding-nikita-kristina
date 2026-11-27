@@ -73,8 +73,8 @@
 .hero-place-mobile{display:none}
 @media(max-width:700px){
  .hero .hero-bg{
-  object-fit:cover!important;
-  object-position:72% center!important;
+  object-fit:fill!important;
+  object-position:center center!important;
   clip-path:url(#hero-mobile-shape)!important;
  }
  .hero::before{content:none!important;display:none!important}
@@ -82,7 +82,7 @@
   mask-image:radial-gradient(ellipse 34% 23% at 0% 96%,transparent 0%,transparent 38%,#000 100%),linear-gradient(to bottom,#000 0%,#000 62%,rgba(0,0,0,.92) 72%,transparent 100%)!important;
   mask-composite:intersect!important;
  }
- .hero .hero-leaves{top:auto!important;bottom:2%!important;left:-2.5%!important;width:25.5%!important}
+ .hero .hero-leaves{top:auto!important;bottom:2%!important;left:-5%!important;width:46%!important;z-index:2!important}
  .hero .hero-place-desktop{display:none!important}
  .hero .hero-place-mobile{display:inline!important}
  .hero .divider::before,.hero .divider::after{display:none!important}
